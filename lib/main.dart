@@ -1,5 +1,6 @@
 import 'package:sky/widgets/basic.dart';
 
+import 'card.dart';
 import 'my_button.dart';
 import 'dart:sky' as sky;
 import 'package:vector_math/vector_math.dart' as vector_math;
@@ -12,6 +13,8 @@ class HelloWorldApp extends App {
   // Accumulators for the current scroll.
   double dx = 0.0;
   double dy = 0.0;
+
+  Card c = new Card.fromString("classic h1");
 
   Transform makeTransform() {
     return new Transform(
@@ -71,7 +74,8 @@ class HelloWorldApp extends App {
       new Center(child: new Text('Scroll #${counter2}: (${dx.toStringAsFixed(3)}, ${dy.toStringAsFixed(3)})')),
       new Center(child: new Text('We did it!')),
       new Center(child: new MyToolBar()),
-      makeTransform()
+      makeTransform(),
+      new CardComponent(c, true)
     ]));
   }
 }

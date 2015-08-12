@@ -14,8 +14,9 @@ class MyButton extends Component {
   final Function onPressed;
   final Function onPointerDown;
   final Function onPointerMove;
+  final Function onPointerUp;
 
-  MyButton({this.child, this.onPressed, this.onPointerDown, this.onPointerMove});
+  MyButton({this.child, this.onPressed, this.onPointerDown, this.onPointerMove, this.onPointerUp});
 
   Container makeContainer() {
     return new Container(
@@ -48,6 +49,12 @@ class MyButton extends Component {
         print('MyButton continues to be scrolled!');
         if (this.onPointerMove != null) {
           this.onPointerMove(e);
+        }
+      },
+      onPointerUp: (e) {
+        print('MyButton pointer up!');
+        if (this.onPointerUp != null) {
+          this.onPointerUp(e);
         }
       },
       child: makeContainer()
