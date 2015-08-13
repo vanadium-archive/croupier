@@ -68,7 +68,7 @@ class HelloWorldApp extends App {
   }
 
   Widget build() {
-    return new Center(child: new Block([
+    return new Center(child: new Flex([
       new Center(child: new Text('Hello, world!')),
       new Center(child: new Text('Tap #${counter}: ${debug}')),
       new Center(child: new Text('Scroll #${counter2}: (${dx.toStringAsFixed(3)}, ${dy.toStringAsFixed(3)})')),
@@ -76,7 +76,7 @@ class HelloWorldApp extends App {
       new Center(child: new MyToolBar()),
       makeTransform(),
       new CardComponent(c, true)
-    ]));
+    ], direction: FlexDirection.vertical));
   }
 }
 

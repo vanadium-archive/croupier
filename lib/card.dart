@@ -29,6 +29,7 @@ class CardComponent extends StatefulComponent {
   double dx;
   double dy;
   bool faceUp;
+  bool scrolling;
 
   final Card card;
   final Function pointerUpCb;
@@ -42,6 +43,7 @@ class CardComponent extends StatefulComponent {
     this.faceUp = faceUp;
     dx = 0.0;
     dy = 0.0;
+    scrolling = false;
   }
 
   void syncFields(CardComponent other) {
@@ -53,6 +55,12 @@ class CardComponent extends StatefulComponent {
   void _onPressed(sky.Event e) {
     setState(() {
       this.faceUp = !this.faceUp;
+    });
+  }
+
+  void _onPointerDown(sky.Event e) {
+    setState(() {
+      scrolling = true;
     });
   }
 
@@ -68,25 +76,32 @@ class CardComponent extends StatefulComponent {
     //sky.PointerEvent pe = e as sky.PointerEvent;
     setState(() {
       if (this.pointerUpCb != null) {
-        //TODO(alexfandrianto): Left off here!!! MISSING SEMICOLON
         pointerUpCb(this.dx, this.dy, this.faceUp);
       }
       this.dx = 0.0;
       this.dy = 0.0;
       this.faceUp = true;
+      scrolling = false;
     });
   }
 
   Widget build() {
-    return new Transform(
-      child: new MyButton(
-        child: imageFromCard(this.card, faceUp),
-        onPressed: _onPressed,
-        //onPointerDown: _onPointerDown,
-        onPointerMove: _onPointerMove,
-        onPointerUp: _onPointerUp
+    return new Container(
+      child: /*new Container(
+        child: */new MyButton(
+          child: imageFromCard(this.card, faceUp),
+          onPressed: _onPressed,
+          onPointerDown: _onPointerDown,
+          onPointerMove: _onPointerMove,
+          onPointerUp: _onPointerUp
+        ),
+      //padding: const EdgeDims.all(8.0),
+      //margin: const EdgeDims.symmetric(horizontal: 8.0),
+      decoration: new BoxDecoration(
+        backgroundColor: (this.scrolling ? const Color(0xFFFF0000) : const Color(0xFF0000FF)),
+        borderRadius: 5.0
       ),
-      transform: new vector_math.Matrix4.identity().translate(-dx, dy)
+      transform: new vector_math.Matrix4.identity().translate(dx, dy)
     );
   }
 }

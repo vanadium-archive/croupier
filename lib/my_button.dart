@@ -20,9 +20,9 @@ class MyButton extends Component {
 
   Container makeContainer() {
     return new Container(
-      height: 36.0,
-      padding: const EdgeDims.all(8.0),
-      margin: const EdgeDims.symmetric(horizontal: 8.0),
+      //height: 36.0,
+      //padding: const EdgeDims.all(8.0),
+      //margin: const EdgeDims.symmetric(horizontal: 8.0),
       decoration: _decoration,
       child: new Center(
         child: this.child
