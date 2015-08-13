@@ -18,27 +18,27 @@ class HelloWorldApp extends App {
       child: new MyButton(
         child: new Text('Engage'),
         onPressed: _handleOnPressedCallback,
-        onScrollStart: _handleOnScrollStartCallback,
-        onScrollUpdate: _handleOnScrollUpdateCallback
+        onPointerDown: _handleOnPointerDownCallback,
+        onPointerMove: _handleOnPointerMoveCallback
       ),
-      transform: new vector_math.Matrix4.identity().translate(-dx, dy)
+      transform: new vector_math.Matrix4.identity().translate(dx, dy)
     );
   }
 
   void _handleOnPressedCallback(sky.Event e) {
     setState(() {
       counter++;
-      sky.GestureEvent ge = e as sky.GestureEvent;
+      sky.PointerEvent ge = e as sky.PointerEvent;
       debug = '(${ge.x.toStringAsFixed(3)}, ${ge.y.toStringAsFixed(3)})';//ge.toString();
     });
   }
 
-  void _handleOnScrollStartCallback(sky.Event e) {
+  void _handleOnPointerDownCallback(sky.Event e) {
     setState(() {
       counter2++;
       //dx = 0.0;
       //dy = 0.0;
-      //sky.GestureEvent ge = e as sky.GestureEvent;
+      //sky.PointerEvent ge = e as sky.PointerEvent;
       //debug2 = '${ge.x} ${ge.y}';
       // The field names were found from here: https://github.com/domokit/sky_engine/blob/01ff5c383fc88647c08f11a0d3392238b8bc99de/sky/engine/core/events/GestureEvent.h
       //'${ge.x} ${ge.y}';
@@ -47,9 +47,9 @@ class HelloWorldApp extends App {
     });
   }
 
-  void _handleOnScrollUpdateCallback(sky.Event e) {
+  void _handleOnPointerMoveCallback(sky.Event e) {
     setState(() {
-      sky.GestureEvent ge = e as sky.GestureEvent;
+      sky.PointerEvent ge = e as sky.PointerEvent;
       dx += ge.dx;
       dy += ge.dy;
       // debug3 = '${ge.dx} ${ge.dy}'; // Was this one for scroll update then?

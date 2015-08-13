@@ -12,10 +12,10 @@ final BoxDecoration _decoration = new BoxDecoration(
 class MyButton extends Component {
   final Widget child;
   final Function onPressed;
-  final Function onScrollStart;
-  final Function onScrollUpdate;
+  final Function onPointerDown;
+  final Function onPointerMove;
 
-  MyButton({this.child, this.onPressed, this.onScrollStart, this.onScrollUpdate});
+  MyButton({this.child, this.onPressed, this.onPointerDown, this.onPointerMove});
 
   Container makeContainer() {
     return new Container(
@@ -38,16 +38,16 @@ class MyButton extends Component {
           this.onPressed(e);
         }
       },
-      onGestureScrollStart: (e) {
+      onPointerDown: (e) {
         print('MyButton was scrolled!');
-        if (this.onScrollStart != null) {
-          this.onScrollStart(e);
+        if (this.onPointerDown != null) {
+          this.onPointerDown(e);
         }
       },
-      onGestureScrollUpdate: (e) {
+      onPointerMove: (e) {
         print('MyButton continues to be scrolled!');
-        if (this.onScrollUpdate != null) {
-          this.onScrollUpdate(e);
+        if (this.onPointerMove != null) {
+          this.onPointerMove(e);
         }
       },
       child: makeContainer()
