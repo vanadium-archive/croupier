@@ -14,15 +14,19 @@ class HelloWorldApp extends App {
   double dx = 0.0;
   double dy = 0.0;
 
-  Card c = new Card.fromString("classic h1");
-
   Transform makeTransform() {
-    return new Transform(
+    return new Container(
       child: new MyButton(
         child: new Text('Engage'),
         onPressed: _handleOnPressedCallback,
         onPointerDown: _handleOnPointerDownCallback,
         onPointerMove: _handleOnPointerMoveCallback
+      ),
+      padding: const EdgeDims.all(8.0),
+      //margin: const EdgeDims.symmetric(horizontal: 8.0),
+      decoration: new BoxDecoration(
+        backgroundColor: const Color(0xFF0000FF),
+        borderRadius: 5.0
       ),
       transform: new vector_math.Matrix4.identity().translate(dx, dy)
     );
@@ -75,7 +79,11 @@ class HelloWorldApp extends App {
       new Center(child: new Text('We did it!')),
       new Center(child: new MyToolBar()),
       makeTransform(),
-      new CardComponent(c, true)
+      new Flex([
+        new CardComponent(new Card.fromString("classic h1"), true),
+        new CardComponent(new Card.fromString("classic sk"), true),
+        new CardComponent(new Card.fromString("classic d5"), true)
+      ])
     ], direction: FlexDirection.vertical));
   }
 }

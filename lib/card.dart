@@ -65,7 +65,7 @@ class CardComponent extends StatefulComponent {
   }
 
   void _onPointerMove(sky.Event e) {
-    sky.GestureEvent ge = e as sky.GestureEvent;
+    sky.PointerEvent ge = e as sky.PointerEvent;
     setState(() {
       dx += ge.dx;
       dy += ge.dy;
@@ -95,7 +95,7 @@ class CardComponent extends StatefulComponent {
           onPointerMove: _onPointerMove,
           onPointerUp: _onPointerUp
         ),
-      //padding: const EdgeDims.all(8.0),
+      padding: const EdgeDims.all(8.0),
       //margin: const EdgeDims.symmetric(horizontal: 8.0),
       decoration: new BoxDecoration(
         backgroundColor: (this.scrolling ? const Color(0xFFFF0000) : const Color(0xFF0000FF)),
