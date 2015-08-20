@@ -1,9 +1,11 @@
-import 'package:sky/widgets/basic.dart';
+//import 'package:sky/widgets/basic.dart';
 
-import 'card.dart';
+import 'card.dart' as card;
 import 'my_button.dart';
 import 'dart:sky' as sky;
 import 'package:vector_math/vector_math.dart' as vector_math;
+import 'package:sky/theme/colors.dart' as colors;
+import 'package:sky/widgets.dart';
 
 class HelloWorldApp extends App {
   int counter = 0;
@@ -14,7 +16,17 @@ class HelloWorldApp extends App {
   double dx = 0.0;
   double dy = 0.0;
 
-  Transform makeTransform() {
+  // Used for drag/drop of the square
+  DragController _dragController;
+  Offset _displacement = Offset.zero;
+
+  // Positioning of the dotX and dotY
+  double dotX = 10.0;
+  double dotY = 10.0 + sky.view.paddingTop;
+
+  String debug3 = '';
+
+  Container makeTransform() {
     return new Container(
       child: new MyButton(
         child: new Text('Engage'),
@@ -71,6 +83,48 @@ class HelloWorldApp extends App {
     });
   }
 
+  EventDisposition _startDrag(sky.PointerEvent event) {
+    setState(() {
+      _dragController = new DragController(new DragData("Orange"));
+      _dragController.update(new Point(event.x, event.y));
+      _displacement = Offset.zero;
+      debug3 = "START ${event.x.toStringAsFixed(3)} ${event.y.toStringAsFixed(3)}";
+    });
+    return EventDisposition.consumed;
+  }
+
+  EventDisposition _updateDrag(sky.PointerEvent event) {
+    setState(() {
+      _dragController.update(new Point(event.x, event.y));
+      _displacement += new Offset(event.dx, event.dy);
+      debug3 = "DRAG ${event.x.toStringAsFixed(3)} ${event.y.toStringAsFixed(3)}";
+    });
+    return EventDisposition.consumed;
+  }
+
+  EventDisposition _cancelDrag(sky.PointerEvent event) {
+    setState(() {
+      _dragController.cancel();
+      _dragController = null;
+      debug3 = "CANCELED";
+    });
+    return EventDisposition.consumed;
+  }
+
+  EventDisposition _drop(sky.PointerEvent event) {
+    setState(() {
+      _dragController.update(new Point(event.x, event.y));
+      _dragController.drop();
+      _dragController = null;
+
+      dotX += _displacement.dx;
+      dotY += _displacement.dy;
+      _displacement = Offset.zero;
+      debug3 = "DROP ${event.x.toStringAsFixed(3)} ${event.y.toStringAsFixed(3)}";
+    });
+    return EventDisposition.consumed;
+  }
+
   Widget build() {
     return new Center(child: new Flex([
       new Center(child: new Text('Hello, world!')),
@@ -80,30 +134,106 @@ class HelloWorldApp extends App {
       new Center(child: new MyToolBar()),
       makeTransform(),
       new Flex([
-        new CardComponent(new Card.fromString("classic h1"), true),
-        new CardComponent(new Card.fromString("classic sk"), true),
-        new CardComponent(new Card.fromString("classic d5"), true)
-      ])
+        new card.CardComponent(new card.Card.fromString("classic h1"), true),
+        new card.CardComponent(new card.Card.fromString("classic sk"), true),
+        new card.CardComponent(new card.Card.fromString("classic d5"), true)
+      ]),
+      new Center(child: new Text('Drag: ${debug3}')),
+      new Center(child: new Text('X, Y: ${dotX} ${dotY}')),
+      new Container(
+        decoration: new BoxDecoration(backgroundColor: colors.Pink[500]),
+        child: new Stack([
+          new Flex([
+            new ExampleDragTarget(),
+            new ExampleDragTarget()
+          ]),
+          new Positioned(
+            top: _dragController != null ? dotY + _displacement.dy : -1000.0,
+            left: _dragController != null ? dotX + _displacement.dx : -1000.0,
+            child: new IgnorePointer(
+              child: new Opacity(
+                opacity: 1.0,
+                child: new Dot()
+              )
+            )
+          ),
+          new Listener(
+            onPointerDown: _startDrag,
+            onPointerMove: _updateDrag,
+            onPointerCancel: _cancelDrag,
+            onPointerUp: _drop,
+            child: new Positioned(
+              top: dotY,
+              left: dotX,
+              child: new Opacity(
+                opacity: _dragController != null ? 0.0 : 1.0,
+                child: new Dot()
+              )
+            )
+          )
+        ])
+      )
     ], direction: FlexDirection.vertical));
+  }
+}
+
+class Dot extends Component {
+  Widget build() {
+    return new Container(
+      width: 50.0,
+      height: 50.0,
+      decoration: new BoxDecoration(
+        backgroundColor: colors.DeepOrange[500]
+      )
+    );
+  }
+}
+
+class DragData {
+  DragData(this.text);
+
+  final String text;
+}
+
+class ExampleDragTarget extends StatefulComponent {
+  String _text = 'ready';
+
+  void syncFields(ExampleDragTarget source) {
+  }
+
+  void _handleAccept(DragData data) {
+    setState(() {
+      _text = data.text;
+    });
+  }
+
+  Widget build() {
+    return new DragTarget<DragData>(
+      onAccept: _handleAccept,
+      builder: (List<DragData> data, _) {
+        return new Container(
+          width: 100.0,
+          height: 100.0,
+          margin: new EdgeDims.all(10.0),
+          decoration: new BoxDecoration(
+            border: new Border.all(
+              width: 3.0,
+              color: data.isEmpty ? colors.white : colors.Blue[500]
+            ),
+            backgroundColor: data.isEmpty ? colors.Grey[500] : colors.Green[500]
+          ),
+          child: new Center(
+            child: new Text(_text)
+          )
+        );
+      }
+    );
   }
 }
 
 void main() {
   runApp(new HelloWorldApp());
 }
-
-/*import 'package:sky/widgets/basic.dart';
-
-
-class DemoApp extends App {
-  Widget build() {
-    return new Center(child: new MyToolBar());
-  }
-}
-
-void main() {
-  runApp(new DemoApp());
-}*/
 
 class MyToolBar extends Component {
   Widget build() {
