@@ -3,8 +3,6 @@ import '../logic/game.dart' show Game, GameType;
 import 'card_collection.dart' show CardCollectionComponent, Orientation;
 import 'package:sky/widgets/basic.dart';
 import 'package:sky/theme/colors.dart' as colors;
-import 'card_constants.dart' as card_constants;
-import 'package:vector_math/vector_math.dart' as vector_math;
 
 class GameComponent extends StatefulComponent {
   Game game;
