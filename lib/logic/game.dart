@@ -66,6 +66,7 @@ class Game {
   ];
 
   final Random random = new Random();
+  String debugString = 'hello?';
 
   Game.hearts(int playerNumber) : gameType = GameType.Hearts {
     // playerNumber would be used in a real game, but I have to ignore it for debugging.
@@ -90,15 +91,21 @@ class Game {
   void move(Card card, List<Card> dest) {
     // The first step is to find the card. Where is it?
     // then we can remove it and add to the dest.
+    debugString = 'Moving... ${card.toString()}';
     int i = findCard(card);
-    assert(i != -1);
+    if (i == -1) {
+      debugString = 'NO... ${card.toString()}';
+      return;
+    }
     cardCollections[i].remove(card);
     dest.add(card);
+    debugString = 'Move ${i} ${card.toString()}';
+    print(debugString);
   }
 
   // Which card collection has the card?
   int findCard(Card card) {
-    for (var i = 0; i < cardCollections; i++) {
+    for (int i = 0; i < cardCollections.length; i++) {
       if (cardCollections[i].contains(card)) {
         return i;
       }

@@ -11,34 +11,62 @@ enum Orientation {
 }
 
 class CardCollectionComponent extends StatefulComponent {
-  final List<Card> cards;
-  final Orientation orientation;
-  final bool faceUp;
-  final Function parentHandleAccept;
+  List<Card> cards;
+  Orientation orientation;
+  bool faceUp;
+  Function parentCallback;
 
   String status = 'bar';
 
-  CardCollectionComponent(this.cards, this.faceUp, this.orientation, this.parentHandleAccept);
+  CardCollectionComponent(this.cards, this.faceUp, this.orientation, this.parentCallback);
 
   void syncFields(CardCollectionComponent other) {
     //assert(false); // Why do we need to do this?
+    //status = other.status;
+    cards = other.cards;
+    orientation = other.orientation;
+    faceUp = other.faceUp;
+    parentCallback = other.parentCallback;
   }
 
   void _handleAccept(CardDragData data) {
     setState(() {
-      status = 'ACCEPT';
+      status = 'ACCEPT ${data.card.toString()}';
+      parentCallback(data.card, this.cards);
     });
-    this.parentHandleAccept(data.card, this.cards);
+  }
+
+  List<Widget> flexCards(List<Widget> cardWidgets) {
+    List<Widget> flexWidgets = new List<Widget>();
+    cardWidgets.forEach((cardWidget) => flexWidgets.add(new Flexible(child: cardWidget)));
+    return flexWidgets;
+  }
+
+  Widget wrapCards(List<Widget> cardWidgets) {
+    switch (this.orientation) {
+      case Orientation.vert:
+        return new Flex(flexCards(cardWidgets), direction: FlexDirection.vertical);
+      case Orientation.horz:
+        return new Flex(flexCards(cardWidgets));
+      case Orientation.fan:
+        // unimplemented, so we'll fall through to show1, for now.
+        // Probably a Stack + Positioned
+      case Orientation.show1:
+        return new Stack(cardWidgets);
+      default:
+        assert(false);
+        return null;
+    }
   }
 
   Widget build() {
     // Let's just do horizontal for now, it's too complicated otherwise.
 
-    double cardDelta = card_constants.CARD_WIDTH;
+    /*double cardDelta = card_constants.CARD_WIDTH;
     if (cards.length > 6) {
       //cardDelta = card_constants.CARD_WIDTH / cards.length; // just make it tiny
       cardDelta -= card_constants.CARD_WIDTH * (cards.length - 6) / cards.length;
-    }
+    }*/
 
     List<Widget> cardComponents = new List<Widget>();
     cardComponents.add(new Text(status));
@@ -49,10 +77,11 @@ class CardCollectionComponent extends StatefulComponent {
         // left: i * cardDelta,
         child: new CardComponent(cards[i], faceUp)
       ));*/
-      cardComponents.add(new Transform(
+      /*cardComponents.add(new Transform(
         transform: new vector_math.Matrix4.identity().translate(i * cardDelta, 40.0),
         child: new CardComponent(cards[i], faceUp)
-      ));
+      ));*/
+      cardComponents.add(new CardComponent(cards[i], faceUp)); // flex
     }
 
 
@@ -70,6 +99,8 @@ class CardCollectionComponent extends StatefulComponent {
     return new DragTarget<CardDragData>(
       onAccept: _handleAccept,
       builder: (List<CardDragData> data, _) {
+        print(this.cards.length);
+        print(data);
         return new Container(
           decoration: new BoxDecoration(
             border: new Border.all(
@@ -78,9 +109,9 @@ class CardCollectionComponent extends StatefulComponent {
             ),
             backgroundColor: data.isEmpty ? colors.Grey[500] : colors.Green[500]
           ),
-          height: 150.0,
+          height: 100.0,
           margin: new EdgeDims.all(10.0),
-          child: new Stack(cardComponents)
+          child: wrapCards(cardComponents)//new Stack(cardComponents)
         );
       }
     );

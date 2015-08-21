@@ -7,11 +7,13 @@ import 'card_constants.dart' as card_constants;
 import 'package:vector_math/vector_math.dart' as vector_math;
 
 class GameComponent extends StatefulComponent {
-  final Game game;
+  Game game;
 
   GameComponent(this.game);
 
-  void syncFields(GameComponent other) {}
+  void syncFields(GameComponent other) {
+    this.game = other.game;
+  }
 
   Widget build() {
     switch (game.gameType) {
@@ -22,38 +24,43 @@ class GameComponent extends StatefulComponent {
     }
   }
 
-  void _parentHandleAccept(Card card, List<Card> toList) {
-    // That means that this card was dragged to this other Card collection component.
+  _updateGameCallback(Card card, List<Card> dest) {
     setState(() {
-      game.move(card, toList);
+      game.move(card, dest);
     });
   }
 
   Widget buildHearts() {
     List<Widget> cardCollections = new List<Widget>();
+
+    // debugString
+    cardCollections.add(new Text(game.debugString));
+
     for (int i = 0; i < 4; i++) {
       List<Card> cards = game.cardCollections[i];
-      CardCollectionComponent c = new CardCollectionComponent(cards, true, Orientation.horz, _parentHandleAccept);
+      CardCollectionComponent c = new CardCollectionComponent(cards, true, Orientation.horz, _updateGameCallback);
 
-      cardCollections.add(new Positioned(
+      /*cardCollections.add(new Positioned(
         top: i * (card_constants.CARD_HEIGHT + 20.0),
         child: c
-      ));
+      ));*/
 
       /*cardCollections.add(new Transform(
         transform: new vector_math.Matrix4.identity().translate(0.0, i * (card_constants.CARD_HEIGHT + 20.0)),
         child: c
       ));*/
+
+      cardCollections.add(c); // flex
     }
 
     // game.cardCollections[4] is a discard pile
-    cardCollections.add(new Transform(
+    /*cardCollections.add(new Transform(
       transform: new vector_math.Matrix4.identity().translate(0.0, 4 * (card_constants.CARD_HEIGHT + 20.0)),
       child: new Container(
         decoration: new BoxDecoration(backgroundColor: colors.Green[500], borderRadius: 5.0),
         child: new CardCollectionComponent(game.cardCollections[4], true, Orientation.horz, _parentHandleAccept)
       )
-    ));
+    ));*/
     /*cardCollections.add(new Positioned(
       top: 4 * (card_constants.CARD_HEIGHT + 20.0),
       child: new Container(
@@ -62,11 +69,17 @@ class GameComponent extends StatefulComponent {
       )
     ));*/
 
+    cardCollections.add(new Container(
+      decoration: new BoxDecoration(backgroundColor: colors.Green[500], borderRadius: 5.0),
+      child: new CardCollectionComponent(game.cardCollections[4], true, Orientation.show1, _updateGameCallback)
+    ));
+
     // game.cardCollections[5] is just not shown
+
 
     return new Container(
       decoration: new BoxDecoration(backgroundColor: colors.Pink[500]),
-      child: new Stack(cardCollections)
+      child: new Flex(cardCollections, direction: FlexDirection.vertical)//new Stack(cardCollections)
     );
   }
 }
