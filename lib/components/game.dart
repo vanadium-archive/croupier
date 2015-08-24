@@ -17,9 +17,9 @@ class GameComponent extends StatefulComponent {
   Widget build() {
     switch (game.gameType) {
       case GameType.Hearts:
-        return buildHearts();
+        //return buildHearts();
         // Code to display board:
-        // return new Board([2,3,4,5], [1, 2, 3, 4]);
+        return new Board(1, [2,3,4], [1, 2, 3, 4]);
       default:
         return null; // unsupported
     }

@@ -9,30 +9,42 @@ const cardHeight = 96;
 const cardWidth = 71;
 
 class CardCluster extends widgets.Component {
-  List<int> cards; // the indicies of the 4 cards in the center, in clockwise order
-  CardCluster(this.cards);
+  List<int> cards; // the indicies of the cards in the center, in clockwise order
+  int startingPos;
+  CardCluster(this.startingPos, this.cards);
 
   widgets.Widget build() {
-
-    return new widgets.Container(
-      child: new widgets.Stack([
-        new widgets.Transform(
-            transform: new vector_math.Matrix4.identity().rotateZ(math.PI).translate(0, -cardHeight / 2),
-            child: new Card(logic_card.Card.All[cards[0]], true)
-          ),
-        new widgets.Transform(
-            transform: new vector_math.Matrix4.identity().rotateZ(math.PI/2.0).translate(0, cardWidth/2),
-            child: new Card(logic_card.Card.All[cards[1]], true)
-          ),
-        new widgets.Transform(
-            transform: new vector_math.Matrix4.identity().translate(-cardWidth, cardWidth / 2),
-            child: new Card(logic_card.Card.All[cards[2]], true)
-          ),
-        new widgets.Transform(
-            transform: new vector_math.Matrix4.identity().rotateZ(math.PI/2.0).translate(0, -cardHeight/2),
-            child: new Card(logic_card.Card.All[cards[3]], true)
-          )
-      ]));
+    var widgetsList = [];
+    for (int i = 0; i < cards.length; i++) {
+      var posMod = (startingPos + i) % 4;
+      switch (posMod) {
+        case 0:
+          widgetsList.add(new widgets.Transform(
+              transform: new vector_math.Matrix4.identity().rotateZ(math.PI).translate(0, -cardHeight / 2),
+              child: new Card(logic_card.Card.All[cards[i]], true)
+          ));
+          break;
+        case 1:
+          widgetsList.add(new widgets.Transform(
+              transform: new vector_math.Matrix4.identity().rotateZ(math.PI/2.0).translate(0, cardWidth/2),
+              child: new Card(logic_card.Card.All[cards[i]], true)
+          ));
+          break;
+        case 2:
+          widgetsList.add(new widgets.Transform(
+              transform: new vector_math.Matrix4.identity().translate(-cardWidth, cardWidth / 2),
+              child: new Card(logic_card.Card.All[cards[i]], true)
+          ));
+          break;
+        case 3:
+          widgetsList.add(new widgets.Transform(
+              transform: new vector_math.Matrix4.identity().rotateZ(math.PI/2.0).translate(0, -cardHeight/2),
+              child: new Card(logic_card.Card.All[cards[i]], true)
+          ));
+          break;
+      }
+    }
+    return new widgets.Container(child: new widgets.Stack(widgetsList));
   }
 }
 
@@ -55,8 +67,8 @@ class Board extends widgets.Component {
   CardCluster centerCluster;
   List<PlayerHand> hands; // counts of cards in players hands, in clockwise order
 
-  Board(List<int> cards, List<int> playerHandCount) :
-    centerCluster = new CardCluster(cards) {
+  Board(int firstCardPlayedPosition, List<int> cards, List<int> playerHandCount) :
+    centerCluster = new CardCluster(firstCardPlayedPosition, cards) {
       assert(playerHandCount.length == 4);
       hands = new List<PlayerHand>();
       for (int count in playerHandCount) {
