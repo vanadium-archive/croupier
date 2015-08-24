@@ -1,6 +1,5 @@
 import '../logic/card.dart' as logic_card;
 import 'package:sky/widgets.dart' as widgets;
-import 'package:sky/theme/colors.dart' as colors;
 
 class Card extends widgets.Component {
   logic_card.Card card;
@@ -10,21 +9,7 @@ class Card extends widgets.Component {
 
   widgets.Widget build() {
     return new widgets.Listener(
-      child: new widgets.Container(
-        child: new widgets.Container(
-          decoration: new widgets.BoxDecoration(
-            border: new widgets.Border.all(
-              width: 3.0,
-              color: colors.Red[500]
-            ),
-            backgroundColor: colors.Brown[500]
-          ),
-          child: new widgets.Flex([
-            imageFromCard(card, faceUp),
-            new widgets.Text('removethis')
-          ], direction: widgets.FlexDirection.vertical)
-        )
-      )
+      child: imageFromCard(card, faceUp)
     );
   }
 

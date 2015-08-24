@@ -3,6 +3,7 @@ import '../logic/game.dart' show Game, GameType;
 import 'card_collection.dart' show CardCollectionComponent, Orientation;
 import 'package:sky/widgets/basic.dart';
 import 'package:sky/theme/colors.dart' as colors;
+import 'board.dart' show Board;
 
 class GameComponent extends StatefulComponent {
   Game game;
@@ -17,6 +18,8 @@ class GameComponent extends StatefulComponent {
     switch (game.gameType) {
       case GameType.Hearts:
         return buildHearts();
+        // Code to display board:
+        // return new Board([2,3,4,5], [1, 2, 3, 4]);
       default:
         return null; // unsupported
     }
