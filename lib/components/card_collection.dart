@@ -1,17 +1,16 @@
-import '../logic/card.dart' show Card;
-import 'card.dart' show CardComponent, CardDragData;
+import '../logic/card.dart' as logic_card;
+import 'card.dart' show Card;
+import 'draggable.dart' show Draggable;
 import 'package:sky/widgets/basic.dart';
 import 'package:sky/widgets.dart' show DragTarget;
-import 'card_constants.dart' as card_constants;
 import 'package:sky/theme/colors.dart' as colors;
-import 'package:vector_math/vector_math.dart' as vector_math;
 
 enum Orientation {
   vert, horz, fan, show1
 }
 
 class CardCollectionComponent extends StatefulComponent {
-  List<Card> cards;
+  List<logic_card.Card> cards;
   Orientation orientation;
   bool faceUp;
   Function parentCallback;
@@ -29,7 +28,7 @@ class CardCollectionComponent extends StatefulComponent {
     parentCallback = other.parentCallback;
   }
 
-  void _handleAccept(CardDragData data) {
+  void _handleAccept(Card data) {
     setState(() {
       status = 'ACCEPT ${data.card.toString()}';
       parentCallback(data.card, this.cards);
@@ -75,13 +74,13 @@ class CardCollectionComponent extends StatefulComponent {
       /*cardComponents.add(new Positioned(
         top: 0.0,
         // left: i * cardDelta,
-        child: new CardComponent(cards[i], faceUp)
+        child: new Draggable<Card>(Card(cards[i], faceUp))
       ));*/
       /*cardComponents.add(new Transform(
         transform: new vector_math.Matrix4.identity().translate(i * cardDelta, 40.0),
         child: new CardComponent(cards[i], faceUp)
       ));*/
-      cardComponents.add(new CardComponent(cards[i], faceUp)); // flex
+      cardComponents.add(new Draggable<Card>(new Card(cards[i], faceUp))); // flex
     }
 
 
@@ -91,14 +90,14 @@ class CardCollectionComponent extends StatefulComponent {
 
     /*List<Widget> cardComponents = new List<Widget>();
     for (int i = 0; i < cards.length; i++) {
-      cardComponents.add(new CardComponent(cards[i], faceUp));
+      cardComponents.add(new Draggable<Card>(new Card(cards[i], faceUp)));
     }
     return new Flex(cardComponents);*/
 
     // Let's draw a stack of cards with DragTargets.
-    return new DragTarget<CardDragData>(
+    return new DragTarget<Card>(
       onAccept: _handleAccept,
-      builder: (List<CardDragData> data, _) {
+      builder: (List<Card> data, _) {
         print(this.cards.length);
         print(data);
         return new Container(

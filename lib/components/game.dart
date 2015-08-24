@@ -4,8 +4,7 @@ import 'card_collection.dart' show CardCollectionComponent, Orientation;
 import 'package:sky/widgets/basic.dart';
 import 'package:sky/widgets.dart' show FlatButton;
 import 'package:sky/theme/colors.dart' as colors;
-import 'card_constants.dart' as card_constants;
-import 'package:vector_math/vector_math.dart' as vector_math;
+import 'board.dart' show Board;
 
 class GameComponent extends StatefulComponent {
   Game game;
@@ -26,6 +25,8 @@ class GameComponent extends StatefulComponent {
     switch (game.gameType) {
       case GameType.Hearts:
         return buildHearts();
+        // Code to display board:
+        //return new Board(1, [2,3,4], [1, 2, 3, 4]); Does NOT work in checked mode since it has a Stack of Positioned Stack with Positioned Widgets.
       default:
         return null; // unsupported
     }
