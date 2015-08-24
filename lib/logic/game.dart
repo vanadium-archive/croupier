@@ -1,8 +1,11 @@
 import 'card.dart' show Card;
 import 'dart:math' show Random;
 
+// Note: Proto and Board are "fake" games intended to demonstrate what we can do.
+// Proto is just a drag cards around "game".
+// Board is meant to show how one _could_ layout a game of Hearts. This one is not hooked up very well yet.
 enum GameType {
-  Hearts
+  Proto, Hearts, Poker, Solitaire, Board
 }
 
 /// A game consists of multiple decks and tracks a single deck of cards.
@@ -15,27 +18,28 @@ class Game {
   final Random random = new Random();
   final GameLog gamelog = new GameLog();
   int playerNumber;
-  Function updateCallback;
   String debugString = 'hello?';
 
-  Game.hearts(this.playerNumber) : gameType = GameType.Hearts {
+  Function updateCallback; // Used to inform components of when a change has occurred. This is especially important when something non-UI related changes what should be drawn.
+
+  factory Game(GameType gt, int pn) {
+    switch (gt) {
+      case GameType.Proto:
+        return new ProtoGame(pn);
+      case GameType.Hearts:
+        return new HeartsGame(pn);
+      default:
+        assert(false);
+        return null;
+    }
+  }
+
+  // A super constructor, don't call this unless you're a subclass.
+  Game._create(this.gameType, this.playerNumber, int numCollections) {
     gamelog.setGame(this);
-
-    // playerNumber would be used in a real game, but I have to ignore it for debugging.
-    // It would determine faceUp/faceDown status.
-
-    deck.shuffle();
-    cardCollections.add(new List<Card>()); // Player A
-    cardCollections.add(new List<Card>()); // Player B
-    cardCollections.add(new List<Card>()); // Player C
-    cardCollections.add(new List<Card>()); // Player D
-    cardCollections.add(new List<Card>()); // an empty pile
-    cardCollections.add(new List<Card>()); // a hidden pile!
-
-    /*deal(0, 8);
-    deal(1, 5);
-    deal(2, 4);
-    deal(3, 1);*/
+    for (int i = 0; i < numCollections; i++) {
+      cardCollections.add(new List<Card>());
+    }
   }
 
   List<Card> deckPeek(int numCards) {
@@ -44,10 +48,42 @@ class Game {
     return cards;
   }
 
+  // Which card collection has the card?
+  int findCard(Card card) {
+    for (int i = 0; i < cardCollections.length; i++) {
+      if (cardCollections[i].contains(card)) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  // UNIMPLEMENTED: Let subclasses override this?
+  // Or is it improper to do so?
+  void move(Card card, List<Card> dest) {}
+}
+
+class ProtoGame extends Game {
+  ProtoGame(int playerNumber) : super._create(GameType.Proto, playerNumber, 6) {
+    // playerNumber would be used in a real game, but I have to ignore it for debugging.
+    // It would determine faceUp/faceDown status.faceDown
+
+    // TODO: Set the number of piles created to either 9 (1x per player, 1 discard, 4 play piles) or 12 (2x per player, 4 play piles)
+    // But for now, we will deal with 6. 1x per player, 1 discard, and 1 undrawn pile.
+
+    // We do some arbitrary things here... Just for setup.
+    deck.shuffle();
+    deal(0, 8);
+    deal(1, 5);
+    deal(2, 4);
+    deal(3, 1);
+  }
+
   void deal(int playerId, int numCards) {
     gamelog.add(new HeartsCommand.deal(playerId, this.deckPeek(numCards)));
   }
 
+  // Overrides Game's move method with the "move" logic for the card dragging prototype.
   void move(Card card, List<Card> dest) {
     // The first step is to find the card. Where is it?
     // then we can remove it and add to the dest.
@@ -61,22 +97,50 @@ class Game {
 
     gamelog.add(new HeartsCommand.pass(i, destId, <Card>[card]));
 
-    /*cardCollections[i].remove(card);
-    dest.add(card);*/
     debugString = 'Move ${i} ${card.toString()}';
     print(debugString);
   }
+}
 
-  // Which card collection has the card?
-  int findCard(Card card) {
-    for (int i = 0; i < cardCollections.length; i++) {
-      if (cardCollections[i].contains(card)) {
-        return i;
-      }
+class HeartsGame extends Game {
+  HeartsGame(int playerNumber) : super._create(GameType.Hearts, playerNumber, 6) {
+    // playerNumber would be used in a real game, but I have to ignore it for debugging.
+    // It would determine faceUp/faceDown status.faceDown
+
+    // TODO: Set the number of piles created to either 9 (1x per player, 1 discard, 4 play piles) or 12 (2x per player, 4 play piles)
+    // But for now, we will deal with 6. 1x per player, 1 discard, and 1 undrawn pile.
+
+    // We do some arbitrary things here... Just for setup.
+    deck.shuffle();
+    deal(0, 8);
+    deal(1, 5);
+    deal(2, 4);
+    deal(3, 1);
+  }
+
+  void deal(int playerId, int numCards) {
+    gamelog.add(new HeartsCommand.deal(playerId, this.deckPeek(numCards)));
+  }
+
+  // Overrides Game's move method with the "move" logic for Hearts.
+  void move(Card card, List<Card> dest) {
+    // The first step is to find the card. Where is it?
+    // then we can remove it and add to the dest.
+    debugString = 'Moving... ${card.toString()}';
+    int i = findCard(card);
+    if (i == -1) {
+      debugString = 'NO... ${card.toString()}';
+      return;
     }
-    return -1;
+    int destId = cardCollections.indexOf(dest);
+
+    gamelog.add(new HeartsCommand.pass(i, destId, <Card>[card]));
+
+    debugString = 'Move ${i} ${card.toString()}';
+    print(debugString);
   }
 }
+
 
 class GameLog {
   Game game;

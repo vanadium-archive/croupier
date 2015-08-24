@@ -7,22 +7,24 @@
 //import 'package:sky/theme/colors.dart' as colors;
 import 'package:sky/widgets.dart';
 
-import 'logic/game.dart' show Game, HeartsCommand;
-import 'components/game.dart' show GameComponent;
+//import 'logic/game.dart' show Game, HeartsCommand;
+//import 'components/game.dart' show GameComponent;
+import 'logic/croupier.dart' show Croupier;
+import 'components/croupier.dart' show CroupierComponent;
 
-import 'dart:io';
-import 'dart:convert';
-import 'dart:async';
+//import 'dart:io';
+//import 'dart:convert';
+//import 'dart:async';
 
 class CroupierApp extends App {
-  Game game;
+  Croupier croupier;
 
   CroupierApp() : super() {
-    this.game = new Game.hearts(0);
+    this.croupier = new Croupier();
   }
 
   Widget build() {
-    return new GameComponent(this.game);
+    return new CroupierComponent(this.croupier);
   }
 }
 
@@ -31,7 +33,7 @@ void main() {
 
   // Had difficulty reading from a file, so I can use this to simulate it.
   // Seems like only NetworkImage exists, but why not also have NetworkFile?
-  List<String> commands = <String>[
+  /*List<String> commands = <String>[
     "Deal:0:classic h1:classic h2:classic h3:classic h4:END",
     "Deal:1:classic d1:classic d2:classic d3:classic d4:END",
     "Deal:2:classic s1:classic s2:classic s3:classic s4:END",
@@ -49,10 +51,8 @@ void main() {
         app.game.gamelog.add(new HeartsCommand(commands[i]));
       });
     }
-  });
+  });*/
 
 
   runApp(app);
-
-
 }
