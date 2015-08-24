@@ -109,7 +109,7 @@ class CardCollectionComponent extends StatefulComponent {
             ),
             backgroundColor: data.isEmpty ? colors.Grey[500] : colors.Green[500]
           ),
-          height: 100.0,
+          height: 80.0,
           margin: new EdgeDims.all(10.0),
           child: wrapCards(cardComponents)//new Stack(cardComponents)
         );

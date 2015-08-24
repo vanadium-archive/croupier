@@ -1,7 +1,8 @@
 import '../logic/card.dart' show Card;
-import '../logic/game.dart' show Game, GameType;
+import '../logic/game.dart' show Game, GameType, Viewer;
 import 'card_collection.dart' show CardCollectionComponent, Orientation;
 import 'package:sky/widgets/basic.dart';
+import 'package:sky/widgets.dart' show FlatButton;
 import 'package:sky/theme/colors.dart' as colors;
 import 'card_constants.dart' as card_constants;
 import 'package:vector_math/vector_math.dart' as vector_math;
@@ -9,7 +10,13 @@ import 'package:vector_math/vector_math.dart' as vector_math;
 class GameComponent extends StatefulComponent {
   Game game;
 
-  GameComponent(this.game);
+  GameComponent(this.game) {
+    game.updateCallback = update;
+  }
+
+  void update() {
+    setState(() {});
+  }
 
   void syncFields(GameComponent other) {
     this.game = other.game;
@@ -22,6 +29,12 @@ class GameComponent extends StatefulComponent {
       default:
         return null; // unsupported
     }
+  }
+
+  _switchPlayersCallback() {
+    setState(() {
+      game.playerNumber = (game.playerNumber + 1) % 4;
+    });
   }
 
   _updateGameCallback(Card card, List<Card> dest) {
@@ -38,7 +51,7 @@ class GameComponent extends StatefulComponent {
 
     for (int i = 0; i < 4; i++) {
       List<Card> cards = game.cardCollections[i];
-      CardCollectionComponent c = new CardCollectionComponent(cards, true, Orientation.horz, _updateGameCallback);
+      CardCollectionComponent c = new CardCollectionComponent(cards, game.playerNumber == i, Orientation.horz, _updateGameCallback);
 
       /*cardCollections.add(new Positioned(
         top: i * (card_constants.CARD_HEIGHT + 20.0),
@@ -76,6 +89,10 @@ class GameComponent extends StatefulComponent {
 
     // game.cardCollections[5] is just not shown
 
+    cardCollections.add(new FlatButton(
+      child: new Text('Switch View'),
+      onPressed: _switchPlayersCallback
+    ));
 
     return new Container(
       decoration: new BoxDecoration(backgroundColor: colors.Pink[500]),

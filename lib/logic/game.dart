@@ -11,81 +11,94 @@ class Game {
   final GameType gameType;
   final List<List<Card>> cardCollections = new List<List<Card>>();
   final List<Card> deck = <Card>[
-    const Card("classic", "c1"),
-    const Card("classic", "c2"),
-    const Card("classic", "c3"),
-    const Card("classic", "c4"),
-    const Card("classic", "c5"),
-    const Card("classic", "c6"),
-    const Card("classic", "c7"),
-    const Card("classic", "c8"),
-    const Card("classic", "c9"),
-    const Card("classic", "c10"),
-    const Card("classic", "cj"),
-    const Card("classic", "cq"),
-    const Card("classic", "ck"),
-    const Card("classic", "d1"),
-    const Card("classic", "d2"),
-    const Card("classic", "d3"),
-    const Card("classic", "d4"),
-    const Card("classic", "d5"),
-    const Card("classic", "d6"),
-    const Card("classic", "d7"),
-    const Card("classic", "d8"),
-    const Card("classic", "d9"),
-    const Card("classic", "d10"),
-    const Card("classic", "dj"),
-    const Card("classic", "dq"),
-    const Card("classic", "dk"),
-    const Card("classic", "h1"),
-    const Card("classic", "h2"),
-    const Card("classic", "h3"),
-    const Card("classic", "h4"),
-    const Card("classic", "h5"),
-    const Card("classic", "h6"),
-    const Card("classic", "h7"),
-    const Card("classic", "h8"),
-    const Card("classic", "h9"),
-    const Card("classic", "h10"),
-    const Card("classic", "hj"),
-    const Card("classic", "hq"),
-    const Card("classic", "hk"),
-    const Card("classic", "s1"),
-    const Card("classic", "s2"),
-    const Card("classic", "s3"),
-    const Card("classic", "s4"),
-    const Card("classic", "s5"),
-    const Card("classic", "s6"),
-    const Card("classic", "s7"),
-    const Card("classic", "s8"),
-    const Card("classic", "s9"),
-    const Card("classic", "s10"),
-    const Card("classic", "sj"),
-    const Card("classic", "sq"),
-    const Card("classic", "sk"),
+    new Card("classic", "c1"),
+    new Card("classic", "c2"),
+    new Card("classic", "c3"),
+    new Card("classic", "c4"),
+    new Card("classic", "c5"),
+    new Card("classic", "c6"),
+    new Card("classic", "c7"),
+    new Card("classic", "c8"),
+    new Card("classic", "c9"),
+    new Card("classic", "c10"),
+    new Card("classic", "cj"),
+    new Card("classic", "cq"),
+    new Card("classic", "ck"),
+    new Card("classic", "d1"),
+    new Card("classic", "d2"),
+    new Card("classic", "d3"),
+    new Card("classic", "d4"),
+    new Card("classic", "d5"),
+    new Card("classic", "d6"),
+    new Card("classic", "d7"),
+    new Card("classic", "d8"),
+    new Card("classic", "d9"),
+    new Card("classic", "d10"),
+    new Card("classic", "dj"),
+    new Card("classic", "dq"),
+    new Card("classic", "dk"),
+    new Card("classic", "h1"),
+    new Card("classic", "h2"),
+    new Card("classic", "h3"),
+    new Card("classic", "h4"),
+    new Card("classic", "h5"),
+    new Card("classic", "h6"),
+    new Card("classic", "h7"),
+    new Card("classic", "h8"),
+    new Card("classic", "h9"),
+    new Card("classic", "h10"),
+    new Card("classic", "hj"),
+    new Card("classic", "hq"),
+    new Card("classic", "hk"),
+    new Card("classic", "s1"),
+    new Card("classic", "s2"),
+    new Card("classic", "s3"),
+    new Card("classic", "s4"),
+    new Card("classic", "s5"),
+    new Card("classic", "s6"),
+    new Card("classic", "s7"),
+    new Card("classic", "s8"),
+    new Card("classic", "s9"),
+    new Card("classic", "s10"),
+    new Card("classic", "sj"),
+    new Card("classic", "sq"),
+    new Card("classic", "sk"),
   ];
 
   final Random random = new Random();
+  final GameLog gamelog = new GameLog();
+  int playerNumber;
+  Function updateCallback;
   String debugString = 'hello?';
 
-  Game.hearts(int playerNumber) : gameType = GameType.Hearts {
+  Game.hearts(this.playerNumber) : gameType = GameType.Hearts {
+    gamelog.setGame(this);
+
     // playerNumber would be used in a real game, but I have to ignore it for debugging.
     // It would determine faceUp/faceDown status.
 
     deck.shuffle();
-    cardCollections.add(this.deal(10));
-    cardCollections.add(this.deal(5));
-    cardCollections.add(this.deal(1));
-    cardCollections.add(this.deal(1));
-    cardCollections.add(new List<Card>()); // an empty pile TODO(alexfandrianto): Why can't I just have an empty stack?
+    cardCollections.add(new List<Card>()); // Player A
+    cardCollections.add(new List<Card>()); // Player B
+    cardCollections.add(new List<Card>()); // Player C
+    cardCollections.add(new List<Card>()); // Player D
+    cardCollections.add(new List<Card>()); // an empty pile
     cardCollections.add(new List<Card>()); // a hidden pile!
+
+    /*deal(0, 8);
+    deal(1, 5);
+    deal(2, 4);
+    deal(3, 1);*/
   }
 
-  List<Card> deal(int numCards) {
+  List<Card> deckPeek(int numCards) {
     assert(deck.length >= numCards);
     List<Card> cards = new List<Card>.from(deck.take(numCards));
-    deck.removeRange(0, numCards);
     return cards;
+  }
+
+  void deal(int playerId, int numCards) {
+    gamelog.add(new HeartsCommand.deal(playerId, this.deckPeek(numCards)));
   }
 
   void move(Card card, List<Card> dest) {
@@ -97,8 +110,12 @@ class Game {
       debugString = 'NO... ${card.toString()}';
       return;
     }
-    cardCollections[i].remove(card);
-    dest.add(card);
+    int destId = cardCollections.indexOf(dest);
+
+    gamelog.add(new HeartsCommand.pass(i, destId, <Card>[card]));
+
+    /*cardCollections[i].remove(card);
+    dest.add(card);*/
     debugString = 'Move ${i} ${card.toString()}';
     print(debugString);
   }
@@ -111,5 +128,118 @@ class Game {
       }
     }
     return -1;
+  }
+}
+
+class GameLog {
+  Game game;
+  List<GameCommand> log = new List<GameCommand>();
+  int position = 0;
+
+  void setGame(Game g) {
+    this.game = g;
+  }
+
+  // This adds and executes the GameCommand.
+  void add(GameCommand gc) {
+    log.add(gc);
+
+    while (position < log.length) {
+      log[position].execute(game);
+      if (game.updateCallback != null) {
+        game.updateCallback();
+      }
+      position++;
+    }
+  }
+}
+
+abstract class GameCommand {
+  void execute(Game game);
+}
+
+
+class HeartsCommand extends GameCommand {
+  final String data; // This will be parsed.
+
+  // Usually this constructor is used when reading from a log/syncbase.
+  HeartsCommand(this.data);
+
+  // The following constructors are used for the player generating the HeartsCommand.
+  HeartsCommand.deal(int playerId, List<Card> cards) :
+    this.data = computeDeal(playerId, cards);
+
+  // TODO: receiverId is actually implied by the game round. So it may end up being removable.
+  HeartsCommand.pass(int senderId, int receiverId, List<Card> cards) :
+    this.data = computePass(senderId, receiverId, cards);
+
+  HeartsCommand.play(int playerId, Card c) :
+    this.data = computePlay(playerId, c);
+
+  static computeDeal(int playerId, List<Card> cards) {
+    StringBuffer buff = new StringBuffer();
+    buff.write("Deal:${playerId}:");
+    cards.forEach((card) => buff.write("${card.toString()}:"));
+    buff.write("END");
+    return buff.toString();
+  }
+  static computePass(int senderId, int receiverId, List<Card> cards) {
+    StringBuffer buff = new StringBuffer();
+    buff.write("Pass:${senderId}:${receiverId}:");
+    cards.forEach((card) => buff.write("${card.toString()}:"));
+    buff.write("END");
+    return buff.toString();
+  }
+  static computePlay(int playerId, Card c) {
+    return "Play:${playerId}:${c.toString()}:END";
+  }
+
+  void execute(Game game) {
+    print("HeartsCommand is executing: ${data}");
+    List<String> parts = data.split(":");
+    switch (parts[0]) {
+      case "Deal":
+        // Deal appends cards to playerId's hand.
+        int playerId = int.parse(parts[1]);
+        List<Card> hand = game.cardCollections[playerId];
+
+        // The last part is 'END', but the rest are cards.
+        for (int i = 2; i < parts.length - 1; i++) {
+          Card c = new Card.fromString(parts[i]);
+          this.transfer(game.deck, hand, c);
+        }
+        return;
+      case "Pass":
+        // Pass moves a set of cards from senderId to receiverId.
+        int senderId = int.parse(parts[1]);
+        int receiverId = int.parse(parts[2]);
+        List<Card> handS = game.cardCollections[senderId];
+        List<Card> handR = game.cardCollections[receiverId];
+
+        // The last part is 'END', but the rest are cards.
+        for (int i = 3; i < parts.length - 1; i++) {
+          Card c = new Card.fromString(parts[i]);
+          this.transfer(handS, handR, c);
+        }
+        return;
+      case "Play":
+        // In this case, move it to the designated discard pile.
+        // For now, the discard pile is pile #4. This may change.
+        int playerId = int.parse(parts[1]);
+        List<Card> hand = game.cardCollections[playerId];
+
+        Card c = new Card.fromString(parts[2]);
+        this.transfer(hand, game.cardCollections[4], c);
+        return;
+      default:
+        print(data);
+        assert(false); // How could this have happened?
+    }
+  }
+
+  void transfer(List<Card> sender, List<Card> receiver, Card c) {
+    assert(sender.contains(c));
+    sender.remove(c);
+    receiver.add(c);
   }
 }
