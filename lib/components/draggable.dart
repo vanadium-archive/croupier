@@ -9,7 +9,7 @@ class Draggable<T extends widgets.Widget> extends widgets.StatefulComponent {
 
   Draggable(this.child);
 
-  void syncFields(Draggable other) {
+  void syncConstructorArguments(Draggable other) {
     child = other.child;
   }
 

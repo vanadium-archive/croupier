@@ -17,7 +17,7 @@ class GameComponent extends StatefulComponent {
     setState(() {});
   }
 
-  void syncFields(GameComponent other) {
+  void syncConstructorArguments(GameComponent other) {
     this.game = other.game;
   }
 

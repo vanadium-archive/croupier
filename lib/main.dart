@@ -29,6 +29,7 @@ class CroupierApp extends App {
 }
 
 void main() {
+  print('started');
   CroupierApp app = new CroupierApp();
 
   // Had difficulty reading from a file, so I can use this to simulate it.
@@ -55,4 +56,5 @@ void main() {
 
 
   runApp(app);
+  print('running');
 }

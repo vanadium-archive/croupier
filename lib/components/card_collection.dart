@@ -19,7 +19,7 @@ class CardCollectionComponent extends StatefulComponent {
 
   CardCollectionComponent(this.cards, this.faceUp, this.orientation, this.parentCallback);
 
-  void syncFields(CardCollectionComponent other) {
+  void syncConstructorArguments(CardCollectionComponent other) {
     //assert(false); // Why do we need to do this?
     //status = other.status;
     cards = other.cards;

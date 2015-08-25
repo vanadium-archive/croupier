@@ -10,7 +10,7 @@ class CroupierComponent extends StatefulComponent {
 
   CroupierComponent(this.croupier) : super();
 
-  void syncFields(CroupierComponent other) {
+  void syncConstructorArguments(CroupierComponent other) {
     croupier = other.croupier;
   }
 
