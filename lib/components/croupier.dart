@@ -69,7 +69,10 @@ class CroupierComponent extends StatefulComponent {
       case logic_croupier.CroupierState.ArrangePlayers:
         return null; // If needed, lists the players around and what devices they'd like to use.
       case logic_croupier.CroupierState.PlayGame:
-        return new GameComponent(croupier.game); // Asks the game UI to draw itself.
+        return new Container(
+          padding: new EdgeDims.only(top: sky.view.paddingTop),
+          child: new GameComponent(croupier.game) // Asks the game UI to draw itself.
+        );
       default:
         assert(false);
         return null;

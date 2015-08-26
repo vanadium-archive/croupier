@@ -1,5 +1,5 @@
 import '../logic/card.dart' show Card;
-import '../logic/game.dart' show Game, GameType, Viewer;
+import '../logic/game.dart' show Game, GameType, Viewer, HeartsGame, HeartsPhase;
 import 'card_collection.dart' show CardCollectionComponent, Orientation;
 import 'package:sky/widgets/basic.dart';
 import 'package:sky/widgets.dart' show FlatButton;
@@ -43,7 +43,12 @@ class GameComponent extends StatefulComponent {
 
   _updateGameCallback(Card card, List<Card> dest) {
     setState(() {
-      game.move(card, dest);
+      try {
+        game.move(card, dest);
+      } catch(e) {
+        print("You can't do that! ${e.toString()}");
+        game.debugString = e.toString();
+      }
     });
   }
 
@@ -104,7 +109,42 @@ class GameComponent extends StatefulComponent {
     );
   }
 
+  Widget _makeSwitchViewButton() =>_makeButton('Switch View', _switchPlayersCallback);
+
+  Widget _makeButton(String text, Function callback) {
+    return new FlatButton(
+      child: new Text(text),
+      onPressed: callback
+    );
+  }
+
   Widget buildHearts() {
+    HeartsGame game = this.game as HeartsGame;
+
+    switch (game.phase) {
+      case HeartsPhase.Deal:
+        return new Container(
+          decoration: new BoxDecoration(backgroundColor: colors.Pink[500]),
+          child: new Flex([
+            new Text('Player ${game.playerNumber}'),
+            _makeButton('Deal', game.dealCards),
+            _makeSwitchViewButton()
+          ], direction: FlexDirection.vertical)
+        );
+      case HeartsPhase.Pass:
+      case HeartsPhase.Take:
+      case HeartsPhase.Play:
+      case HeartsPhase.Score:
+        return showBoard();
+      default:
+        assert(false); // What?
+        return null;
+    }
+  }
+
+  Widget showBoard() {
+    HeartsGame game = this.game as HeartsGame;
+
     List<Widget> cardCollections = new List<Widget>();
 
     cardCollections.add(new Text(game.debugString));

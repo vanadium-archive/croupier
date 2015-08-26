@@ -1,6 +1,7 @@
 # Get the packages used by the dart project, according to pubspec.yaml
-# I don't know why but pub get reverts me... Or perhaps Sublime does?
-get-packages:
+# Can also use `pub get`, but Sublime occasionally reverts me to an ealier version.
+# Only `pub upgrade` can escape such a thing.
+get-packages: pubspec.yaml
 	pub upgrade
 
 TEST_FILES := $(shell find test -name *.dart ! -name *.part.dart)
@@ -8,18 +9,21 @@ TEST_FILES := $(shell find test -name *.dart ! -name *.part.dart)
 check-fmt:
 	dartfmt -n lib/main.dart $(TEST_FILES)
 
-lint: get-packages
+lint:
 	dartanalyzer lib/main.dart
 	dartanalyzer $(TEST_FILES)
 
-start: get-packages
+start:
 	./packages/sky/sky_tool start
 
 install: get-packages
 	./packages/sky/sky_tool start --install
 
-test: get-packages
-	pub run test
+# Could use `pub run test` too, but I like seeing every assertion print out.
+test:
+	dart --checked $(TEST_FILES)
 
 clean:
 	rm -rf packages
+
+.PHONY: check-fmt lint start install test clean

@@ -1,5 +1,5 @@
 import 'card.dart' show Card;
-import 'dart:math' show Random;
+import 'dart:math' as math;
 
 // Note: Proto and Board are "fake" games intended to demonstrate what we can do.
 // Proto is just a drag cards around "game".
@@ -15,7 +15,7 @@ class Game {
   final List<List<Card>> cardCollections = new List<List<Card>>();
   final List<Card> deck = new List<Card>.from(Card.All);
 
-  final Random random = new Random();
+  final math.Random random = new math.Random();
   final GameLog gamelog = new GameLog();
   int playerNumber;
   String debugString = 'hello?';
@@ -139,51 +139,45 @@ class HeartsGame extends Game {
   static const OFFSET_TRICK = 8;
   static const OFFSET_PASS = 12;
 
+  static const MAX_SCORE = 100; // Play until someone gets to 100.
+
   // Note: These cards are final because the "classic" deck has 52 cards.
   // It is up to the renderer to reskin those cards as needed.
   final Card TWO_OF_CLUBS = new Card("classic", "c2");
   final Card QUEEN_OF_SPADES = new Card("classic", "sq");
 
-  HeartsPhase phase;
-  int roundNumber;
+  HeartsPhase _phase = HeartsPhase.Deal;
+  HeartsPhase get phase => _phase;
+  void set phase(HeartsPhase other) {
+    print('setting phase from ${_phase} to ${other}');
+    _phase = other;
+  }
+  int roundNumber = 0;
   int lastTrickTaker;
   bool heartsBroken;
+  int trickNumber;
 
   // Used by the score screen to track scores and see which players are ready to continue to the next round.
   List<int> scores = [0, 0, 0, 0];
   List<bool> ready;
 
   HeartsGame(int playerNumber) : super._create(GameType.Hearts, playerNumber, 16) {
-    prepareRound();
+    resetGame();
   }
 
-  void prepareRound() {
-    if (roundNumber == null) {
-      roundNumber = 0;
-    } else {
-      roundNumber++;
-    }
-
-    phase = HeartsPhase.Deal;
-
+  void resetGame() {
     this.resetCards();
     heartsBroken = false;
     lastTrickTaker = null;
+    trickNumber = 0;
+  }
+
+  void dealCards() {
     deck.shuffle();
     deal(PLAYER_A, 13);
     deal(PLAYER_B, 13);
     deal(PLAYER_C, 13);
     deal(PLAYER_D, 13);
-
-    if (this.passTarget != null) {
-      phase = HeartsPhase.Pass;
-    } else {
-      phase = HeartsPhase.Play;
-    }
-  }
-
-  int get trickNumber {
-    return 13 - cardCollections[0].length;
   }
 
   int get passTarget {
@@ -201,14 +195,15 @@ class HeartsGame extends Game {
         return null;
     }
   }
-  int get takeTarget {
+  int get takeTarget => _getTakeTarget(playerNumber);
+  int _getTakeTarget(takerId) {
     switch (roundNumber % 4) { // is a 4-cycle
       case 0:
-        return (playerNumber + 1) % 4; // takeRight
+        return (takerId + 1) % 4; // takeRight
       case 1:
-        return (playerNumber - 1) % 4; // takeLeft
+        return (takerId - 1) % 4; // takeLeft
       case 2:
-        return (playerNumber + 2) % 4; // taleAcross
+        return (takerId + 2) % 4; // taleAcross
       case 3:
         return null; // no player to pass to
       default:
@@ -222,17 +217,13 @@ class HeartsGame extends Game {
     if (phase != HeartsPhase.Play) {
       return null;
     }
-    if (trickNumber == 0) {
-      return (this.findCard(TWO_OF_CLUBS) + this.numPlayed) % 4;
-    } else {
-      return (lastTrickTaker + this.numPlayed) % 4;
-    }
+    return (lastTrickTaker + this.numPlayed) % 4;
   }
 
   int getCardValue(Card c) {
     String remainder = c.identifier.substring(1);
     switch (remainder) {
-      case "0": // ace
+      case "1": // ace
         return 14;
       case "k":
         return 13;
@@ -271,24 +262,27 @@ class HeartsGame extends Game {
   }
 
   Card get leadingCard {
-    assert(this.numPlayed == 1);
-    for (int i = 0; i < 4; i++) {
-      if (cardCollections[i + OFFSET_HAND].length == 1) {
-        return cardCollections[i + OFFSET_HAND][0];
-      }
+    if(this.numPlayed >= 1) {
+      return cardCollections[this.lastTrickTaker + OFFSET_PLAY][0];
     }
-    assert(false);
     return null;
   }
   int get numPlayed {
     int count = 0;
     for (int i = 0; i < 4; i++) {
-      if (cardCollections[i + OFFSET_HAND].length == 1) {
+      if (cardCollections[i + OFFSET_PLAY].length == 1) {
         count++;
       }
     }
     return count;
   }
+
+  bool get hasGameEnded => this.scores.reduce(math.max) >= HeartsGame.MAX_SCORE;
+
+  bool get allDealt => cardCollections[PLAYER_A].length == 13 &&
+    cardCollections[PLAYER_B].length == 13 &&
+    cardCollections[PLAYER_C].length == 13 &&
+    cardCollections[PLAYER_D].length == 13;
 
   bool get allPassed => cardCollections[PLAYER_A_PASS].length == 3 &&
     cardCollections[PLAYER_B_PASS].length == 3 &&
@@ -317,7 +311,7 @@ class HeartsGame extends Game {
   void passCards(List<Card> cards) {
     assert(phase == HeartsPhase.Pass && this.passTarget != null);
     if (cards.length != 3) {
-      throw new ArgumentError('3 cards expected, but got: ${cards.toString()}');
+      throw new StateError('3 cards expected, but got: ${cards.toString()}');
     }
     gamelog.add(new HeartsCommand.pass(playerNumber, cards));
   }
@@ -375,6 +369,16 @@ class HeartsGame extends Game {
   void triggerEvents() {
     switch (this.phase) {
       case HeartsPhase.Deal:
+        if (this.allDealt) {
+          if (this.passTarget != null) {
+            phase = HeartsPhase.Pass;
+          } else {
+            // All cards are dealt. The person who "won" the last trick goes first.
+            // In this case, we'll just pretend it's the person with the 2 of clubs.
+            this.lastTrickTaker = this.findCard(TWO_OF_CLUBS);
+            phase = HeartsPhase.Play;
+          }
+        }
         return;
       case HeartsPhase.Pass:
         if (this.allPassed) {
@@ -383,6 +387,9 @@ class HeartsGame extends Game {
         return;
       case HeartsPhase.Take:
         if (this.allTaken) {
+          // All cards are dealt. The person who "won" the last trick goes first.
+          // In this case, we'll just pretend it's the person with the 2 of clubs.
+          this.lastTrickTaker = this.findCard(TWO_OF_CLUBS);
           phase = HeartsPhase.Play;
         }
         return;
@@ -404,16 +411,20 @@ class HeartsGame extends Game {
 
           // Set them as the next person to go.
           this.lastTrickTaker = winner;
+          this.trickNumber++;
 
           // Additionally, if that was the last trick, move onto the score phase.
           if (this.trickNumber == 13) {
+            phase = HeartsPhase.Score;
             this.prepareScore();
           }
         }
         return;
       case HeartsPhase.Score:
-        if (this.allReady) {
-          this.prepareRound();
+        if (!this.hasGameEnded && this.allReady) {
+          this.roundNumber++;
+          phase = HeartsPhase.Deal;
+          this.resetGame();
         }
         return;
       default:
@@ -438,13 +449,15 @@ class HeartsGame extends Game {
     if (trickNumber == 0 && isPenaltyCard(c)) {
       return "Cannot play a penalty card on the first round of Hearts.";
     }
-    if (isHeartsCard(c) && !heartsBroken) {
+    if (this.numPlayed == 0 && isHeartsCard(c) && !heartsBroken) {
       return "Cannot lead with a heart when the suit has not been broken yet.";
     }
-    String leadingSuit = getCardSuit(this.leadingCard);
-    String otherSuit = getCardSuit(c);
-    if (this.numPlayed >= 1 && leadingSuit != otherSuit && hasSuit(player, leadingSuit)) {
-      return "Must follow with a ${leadingSuit}.";
+    if (this.leadingCard != null) {
+      String leadingSuit = getCardSuit(this.leadingCard);
+      String otherSuit = getCardSuit(c);
+      if (this.numPlayed >= 1 && leadingSuit != otherSuit && hasSuit(player, leadingSuit)) {
+        return "Must follow with a ${leadingSuit}.";
+      }
     }
     return null;
   }
@@ -467,9 +480,13 @@ class HeartsGame extends Game {
   }
   void prepareScore() {
     this.unsetReady();
+    this.updateScore();
 
-    phase = HeartsPhase.Score;
+    // At this point, it's up to the UI to determine what to do if the game is 'over'.
+    // Check this.hasGameEnded to determine if that is the case. Logically, there is nothing for this game to do.
+  }
 
+  void updateScore() {
     // Count up points and check if someone shot the moon.
     int shotMoon = null;
     for (int i = 0; i < 4; i++) {
@@ -596,6 +613,9 @@ class HeartsCommand extends GameCommand {
         // Deal appends cards to playerId's hand.
         int playerId = int.parse(parts[1]);
         List<Card> hand = game.cardCollections[playerId];
+        if (hand.length + parts.length - 3 > 13) {
+          throw new StateError("Cannot deal more than 13 cards to a hand");
+        }
 
         // The last part is 'END', but the rest are cards.
         for (int i = 2; i < parts.length - 1; i++) {
@@ -613,6 +633,11 @@ class HeartsCommand extends GameCommand {
         List<Card> handS = game.cardCollections[senderId];
         List<Card> handR = game.cardCollections[receiverId];
 
+        int numPassing = parts.length - 3;
+        if (numPassing != 3) {
+          throw new StateError("Must pass 3 cards, attempted ${numPassing}");
+        }
+
         // The last part is 'END', but the rest are cards.
         for (int i = 2; i < parts.length - 1; i++) {
           Card c = new Card.fromString(parts[i]);
@@ -624,11 +649,11 @@ class HeartsCommand extends GameCommand {
           throw new StateError("Cannot process take commands when not in Take phase");
         }
         int takerId = int.parse(parts[1]);
-        int senderPile = game.takeTarget + HeartsGame.OFFSET_PASS;
-        List<Card> handS = game.cardCollections[senderPile];
+        int senderPile = game._getTakeTarget(takerId) + HeartsGame.OFFSET_PASS;
         List<Card> handT = game.cardCollections[takerId];
-        handS.addAll(handT);
-        handT.clear();
+        List<Card> handS = game.cardCollections[senderPile];
+        handT.addAll(handS);
+        handS.clear();
         return;
       case "Play":
         if (game.phase != HeartsPhase.Play) {
@@ -651,6 +676,9 @@ class HeartsCommand extends GameCommand {
         this.transfer(hand, discard, c);
         return;
       case "Ready":
+        if (game.hasGameEnded) {
+          throw new StateError("Game has already ended. Start a new one to play again.");
+        }
         if (game.phase != HeartsPhase.Score) {
           throw new StateError("Cannot process ready commands when not in Score phase");
         }
@@ -664,7 +692,9 @@ class HeartsCommand extends GameCommand {
   }
 
   void transfer(List<Card> sender, List<Card> receiver, Card c) {
-    assert(sender.contains(c));
+    if (!sender.contains(c)) {
+      throw new StateError("Sender ${sender.toString()} lacks Card ${c.toString()}");
+    }
     sender.remove(c);
     receiver.add(c);
   }

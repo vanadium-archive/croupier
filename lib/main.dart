@@ -24,7 +24,13 @@ class CroupierApp extends App {
   }
 
   Widget build() {
-    return new CroupierComponent(this.croupier);
+    return new Container(
+      decoration: new BoxDecoration(
+        backgroundColor: const Color(0xFF0000FF),
+        borderRadius: 5.0
+      ),
+      child: new CroupierComponent(this.croupier)
+    );
   }
 }
 
