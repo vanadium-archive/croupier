@@ -16,7 +16,8 @@ class CroupierComponent extends StatefulComponent {
     croupier = other.croupier;
   }
 
-  Function setStateCallbackFactory(logic_croupier.CroupierState s, [var data = null]) {
+  Function setStateCallbackFactory(logic_croupier.CroupierState s,
+      [var data = null]) {
     return () => setState(() {
       croupier.setState(s, data);
     });
@@ -27,54 +28,50 @@ class CroupierComponent extends StatefulComponent {
       case logic_croupier.CroupierState.Welcome:
         // in which we show them a UI to start a new game, join a game, or change some settings.
         return new Container(
-          padding: new EdgeDims.only(top: sky.view.paddingTop),
-          child: new Flex([
-            new FlatButton(
+            padding: new EdgeDims.only(top: sky.view.paddingTop),
+            child: new Flex([
+          new FlatButton(
               child: new Text('Create Game'),
-              onPressed: setStateCallbackFactory(logic_croupier.CroupierState.ChooseGame)
-            ),
-            new FlatButton(
-              child: new Text('Join Game')
-            ),
-            new FlatButton(
-              child: new Text('Settings')
-            )
-          ], direction: FlexDirection.vertical
-        )
-      );
+              onPressed: setStateCallbackFactory(
+                  logic_croupier.CroupierState.ChooseGame)),
+          new FlatButton(child: new Text('Join Game')),
+          new FlatButton(child: new Text('Settings'))
+        ], direction: FlexDirection.vertical));
       case logic_croupier.CroupierState.Settings:
         return null; // in which we let them pick an avatar, name, and color. And return to the previous screen after (NOT IMPLEMENTED YET)
       case logic_croupier.CroupierState.ChooseGame:
         // in which we let them pick a game out of the many possible games... There aren't that many.
         return new Container(
-          padding: new EdgeDims.only(top: sky.view.paddingTop),
-          child: new Flex([
-            new FlatButton(
+            padding: new EdgeDims.only(top: sky.view.paddingTop),
+            child: new Flex([
+          new FlatButton(
               child: new Text('Proto'),
-              onPressed: setStateCallbackFactory(logic_croupier.CroupierState.PlayGame, logic_game.GameType.Proto)
-            ),
-            new FlatButton(
+              onPressed: setStateCallbackFactory(
+                  logic_croupier.CroupierState.PlayGame,
+                  logic_game.GameType.Proto)),
+          new FlatButton(
               child: new Text('Hearts'),
-              onPressed: setStateCallbackFactory(logic_croupier.CroupierState.PlayGame, logic_game.GameType.Hearts)
-            ),
-            new FlatButton(
-              child: new Text('Poker')
-            ),
-            new FlatButton(
-              child: new Text('Solitaire')
-            )
-          ], direction: FlexDirection.vertical
-        )
-      );
+              onPressed: setStateCallbackFactory(
+                  logic_croupier.CroupierState.PlayGame,
+                  logic_game.GameType.Hearts)),
+          new FlatButton(child: new Text('Poker')),
+          new FlatButton(child: new Text('Solitaire')),
+          new FlatButton(
+              child: new Text('Syncbase Echo'),
+              onPressed: setStateCallbackFactory(
+                  logic_croupier.CroupierState.PlayGame,
+                  logic_game.GameType.SyncbaseEcho))
+        ], direction: FlexDirection.vertical));
       case logic_croupier.CroupierState.AwaitGame:
         return null; // in which players wait for game invitations to arrive.
       case logic_croupier.CroupierState.ArrangePlayers:
         return null; // If needed, lists the players around and what devices they'd like to use.
       case logic_croupier.CroupierState.PlayGame:
         return new Container(
-          padding: new EdgeDims.only(top: sky.view.paddingTop),
-          child: new GameComponent(croupier.game) // Asks the game UI to draw itself.
-        );
+            padding: new EdgeDims.only(top: sky.view.paddingTop),
+            child: new GameComponent(
+                croupier.game) // Asks the game UI to draw itself.
+            );
       default:
         assert(false);
         return null;

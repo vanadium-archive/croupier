@@ -1,7 +1,12 @@
 import 'game.dart' show Game, GameType;
 
 enum CroupierState {
-  Welcome, Settings, ChooseGame, AwaitGame, ArrangePlayers, PlayGame
+  Welcome,
+  Settings,
+  ChooseGame,
+  AwaitGame,
+  ArrangePlayers,
+  PlayGame
 }
 
 class Croupier {

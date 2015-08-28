@@ -5,7 +5,9 @@ class Card {
   final String identifier;
 
   Card(this.deck, this.identifier);
-  Card.fromString(String cardData) : deck = cardData.split(" ")[0], identifier = cardData.split(" ")[1];
+  Card.fromString(String cardData)
+      : deck = cardData.split(" ")[0],
+        identifier = cardData.split(" ")[1];
 
   bool operator ==(Object other) {
     if (other is! Card) return false;

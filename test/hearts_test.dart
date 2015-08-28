@@ -11,22 +11,54 @@ void main() {
       game.dealCards(); // What the dealer actually runs to get cards to everybody.
 
       // By virtue of creating the game, HeartsGame should have 4 collections with 13 cards and 8 collections with 0 cards each.
-      expect(game.cardCollections[HeartsGame.PLAYER_A + HeartsGame.OFFSET_HAND].length, equals(13), reason: "Dealt 13 cards to A");
-      expect(game.cardCollections[HeartsGame.PLAYER_B + HeartsGame.OFFSET_HAND].length, equals(13), reason: "Dealt 13 cards to B");
-      expect(game.cardCollections[HeartsGame.PLAYER_C + HeartsGame.OFFSET_HAND].length, equals(13), reason: "Dealt 13 cards to C");
-      expect(game.cardCollections[HeartsGame.PLAYER_D + HeartsGame.OFFSET_HAND].length, equals(13), reason: "Dealt 13 cards to D");
-      expect(game.cardCollections[HeartsGame.PLAYER_A + HeartsGame.OFFSET_PLAY].length, equals(0), reason: "Not playing yet");
-      expect(game.cardCollections[HeartsGame.PLAYER_B + HeartsGame.OFFSET_PLAY].length, equals(0), reason: "Not playing yet");
-      expect(game.cardCollections[HeartsGame.PLAYER_C + HeartsGame.OFFSET_PLAY].length, equals(0), reason: "Not playing yet");
-      expect(game.cardCollections[HeartsGame.PLAYER_D + HeartsGame.OFFSET_PLAY].length, equals(0), reason: "Not playing yet");
-      expect(game.cardCollections[HeartsGame.PLAYER_A + HeartsGame.OFFSET_PASS].length, equals(0), reason: "Not passing yet");
-      expect(game.cardCollections[HeartsGame.PLAYER_B + HeartsGame.OFFSET_PASS].length, equals(0), reason: "Not passing yet");
-      expect(game.cardCollections[HeartsGame.PLAYER_C + HeartsGame.OFFSET_PASS].length, equals(0), reason: "Not passing yet");
-      expect(game.cardCollections[HeartsGame.PLAYER_D + HeartsGame.OFFSET_PASS].length, equals(0), reason: "Not passing yet");
-      expect(game.cardCollections[HeartsGame.PLAYER_A + HeartsGame.OFFSET_TRICK].length, equals(0), reason: "No tricks yet");
-      expect(game.cardCollections[HeartsGame.PLAYER_B + HeartsGame.OFFSET_TRICK].length, equals(0), reason: "No tricks yet");
-      expect(game.cardCollections[HeartsGame.PLAYER_C + HeartsGame.OFFSET_TRICK].length, equals(0), reason: "No tricks yet");
-      expect(game.cardCollections[HeartsGame.PLAYER_D + HeartsGame.OFFSET_TRICK].length, equals(0), reason: "No tricks yet");
+      expect(game.cardCollections[
+          HeartsGame.PLAYER_A + HeartsGame.OFFSET_HAND].length, equals(13),
+          reason: "Dealt 13 cards to A");
+      expect(game.cardCollections[
+          HeartsGame.PLAYER_B + HeartsGame.OFFSET_HAND].length, equals(13),
+          reason: "Dealt 13 cards to B");
+      expect(game.cardCollections[
+          HeartsGame.PLAYER_C + HeartsGame.OFFSET_HAND].length, equals(13),
+          reason: "Dealt 13 cards to C");
+      expect(game.cardCollections[
+          HeartsGame.PLAYER_D + HeartsGame.OFFSET_HAND].length, equals(13),
+          reason: "Dealt 13 cards to D");
+      expect(game.cardCollections[
+          HeartsGame.PLAYER_A + HeartsGame.OFFSET_PLAY].length, equals(0),
+          reason: "Not playing yet");
+      expect(game.cardCollections[
+          HeartsGame.PLAYER_B + HeartsGame.OFFSET_PLAY].length, equals(0),
+          reason: "Not playing yet");
+      expect(game.cardCollections[
+          HeartsGame.PLAYER_C + HeartsGame.OFFSET_PLAY].length, equals(0),
+          reason: "Not playing yet");
+      expect(game.cardCollections[
+          HeartsGame.PLAYER_D + HeartsGame.OFFSET_PLAY].length, equals(0),
+          reason: "Not playing yet");
+      expect(game.cardCollections[
+          HeartsGame.PLAYER_A + HeartsGame.OFFSET_PASS].length, equals(0),
+          reason: "Not passing yet");
+      expect(game.cardCollections[
+          HeartsGame.PLAYER_B + HeartsGame.OFFSET_PASS].length, equals(0),
+          reason: "Not passing yet");
+      expect(game.cardCollections[
+          HeartsGame.PLAYER_C + HeartsGame.OFFSET_PASS].length, equals(0),
+          reason: "Not passing yet");
+      expect(game.cardCollections[
+          HeartsGame.PLAYER_D + HeartsGame.OFFSET_PASS].length, equals(0),
+          reason: "Not passing yet");
+      expect(game.cardCollections[
+          HeartsGame.PLAYER_A + HeartsGame.OFFSET_TRICK].length, equals(0),
+          reason: "No tricks yet");
+      expect(game.cardCollections[
+          HeartsGame.PLAYER_B + HeartsGame.OFFSET_TRICK].length, equals(0),
+          reason: "No tricks yet");
+      expect(game.cardCollections[
+          HeartsGame.PLAYER_C + HeartsGame.OFFSET_TRICK].length, equals(0),
+          reason: "No tricks yet");
+      expect(game.cardCollections[
+          HeartsGame.PLAYER_D + HeartsGame.OFFSET_TRICK].length, equals(0),
+          reason: "No tricks yet");
     });
   });
 
@@ -44,7 +76,8 @@ void main() {
         new Card("classic", "h4")
       ];
 
-      expect(game.computeScore(HeartsGame.PLAYER_A), equals(4), reason: "Player A has 4 hearts");
+      expect(game.computeScore(HeartsGame.PLAYER_A), equals(4),
+          reason: "Player A has 4 hearts");
 
       // In this alternative situation, what's the score?
       game.cardCollections[HeartsGame.PLAYER_B_TRICK] = <Card>[
@@ -60,14 +93,16 @@ void main() {
         new Card("classic", "s2")
       ];
 
-      expect(game.computeScore(HeartsGame.PLAYER_B), equals(8), reason: "Player B has 8 hearts.");
+      expect(game.computeScore(HeartsGame.PLAYER_B), equals(8),
+          reason: "Player B has 8 hearts.");
 
       // Should prepare C as well.
       game.cardCollections[HeartsGame.PLAYER_C_TRICK] = <Card>[
         new Card("classic", "h5"),
         new Card("classic", "sq")
       ];
-      expect(game.computeScore(HeartsGame.PLAYER_C), equals(14), reason: "Player C has 1 heart and the queen of spades.");
+      expect(game.computeScore(HeartsGame.PLAYER_C), equals(14),
+          reason: "Player C has 1 heart and the queen of spades.");
 
       // Now, update the score, modifying game.scores.
       game.updateScore();
@@ -116,7 +151,8 @@ void main() {
     void runCommand() {
       String c = commands[commandIndex];
       commandIndex++;
-      if (c == "" || c[0] == "#") { // Essentially, this case allows empty lines and comments.
+      if (c == "" || c[0] == "#") {
+        // Essentially, this case allows empty lines and comments.
         runCommand();
       } else {
         game.gamelog.add(new HeartsCommand(c));
@@ -133,10 +169,18 @@ void main() {
       runCommand();
 
       // Confirm cards in hands.
-      List<Card> expectedAHand = new List<Card>.from(Card.All.getRange(26, 26+5))..addAll(Card.All.getRange(13+5, 26));
-      List<Card> expectedBHand = new List<Card>.from(Card.All.getRange(13, 13+5))..addAll(Card.All.getRange(39+5, 52));
-      List<Card> expectedCHand = new List<Card>.from(Card.All.getRange(39, 39+5))..addAll(Card.All.getRange(0+5, 13));
-      List<Card> expectedDHand = new List<Card>.from(Card.All.getRange(0, 0+5))..addAll(Card.All.getRange(26+5, 39));
+      List<Card> expectedAHand =
+          new List<Card>.from(Card.All.getRange(26, 26 + 5))
+        ..addAll(Card.All.getRange(13 + 5, 26));
+      List<Card> expectedBHand =
+          new List<Card>.from(Card.All.getRange(13, 13 + 5))
+        ..addAll(Card.All.getRange(39 + 5, 52));
+      List<Card> expectedCHand =
+          new List<Card>.from(Card.All.getRange(39, 39 + 5))
+        ..addAll(Card.All.getRange(0 + 5, 13));
+      List<Card> expectedDHand =
+          new List<Card>.from(Card.All.getRange(0, 0 + 5))
+        ..addAll(Card.All.getRange(26 + 5, 39));
       expect(game.cardCollections[HeartsGame.PLAYER_A], equals(expectedAHand));
       expect(game.cardCollections[HeartsGame.PLAYER_B], equals(expectedBHand));
       expect(game.cardCollections[HeartsGame.PLAYER_C], equals(expectedCHand));
@@ -152,22 +196,38 @@ void main() {
       runCommand();
 
       // Confirm cards in hands and passes.
-      List<Card> expectedAHand = new List<Card>.from(Card.All.getRange(26+3, 26+5))..addAll(Card.All.getRange(13+5, 26));
-      List<Card> expectedBHand = new List<Card>.from(Card.All.getRange(13+3, 13+5))..addAll(Card.All.getRange(39+5, 52));
-      List<Card> expectedCHand = new List<Card>.from(Card.All.getRange(39+3, 39+5))..addAll(Card.All.getRange(0+5, 13));
-      List<Card> expectedDHand = new List<Card>.from(Card.All.getRange(0+3, 0+5))..addAll(Card.All.getRange(26+5, 39));
-      List<Card> expectedAPass = new List<Card>.from(Card.All.getRange(26, 26+3));
-      List<Card> expectedBPass = new List<Card>.from(Card.All.getRange(13, 13+3));
-      List<Card> expectedCPass = new List<Card>.from(Card.All.getRange(39, 39+3));
-      List<Card> expectedDPass = new List<Card>.from(Card.All.getRange(0, 0+3));
+      List<Card> expectedAHand =
+          new List<Card>.from(Card.All.getRange(26 + 3, 26 + 5))
+        ..addAll(Card.All.getRange(13 + 5, 26));
+      List<Card> expectedBHand =
+          new List<Card>.from(Card.All.getRange(13 + 3, 13 + 5))
+        ..addAll(Card.All.getRange(39 + 5, 52));
+      List<Card> expectedCHand =
+          new List<Card>.from(Card.All.getRange(39 + 3, 39 + 5))
+        ..addAll(Card.All.getRange(0 + 5, 13));
+      List<Card> expectedDHand =
+          new List<Card>.from(Card.All.getRange(0 + 3, 0 + 5))
+        ..addAll(Card.All.getRange(26 + 5, 39));
+      List<Card> expectedAPass =
+          new List<Card>.from(Card.All.getRange(26, 26 + 3));
+      List<Card> expectedBPass =
+          new List<Card>.from(Card.All.getRange(13, 13 + 3));
+      List<Card> expectedCPass =
+          new List<Card>.from(Card.All.getRange(39, 39 + 3));
+      List<Card> expectedDPass =
+          new List<Card>.from(Card.All.getRange(0, 0 + 3));
       expect(game.cardCollections[HeartsGame.PLAYER_A], equals(expectedAHand));
       expect(game.cardCollections[HeartsGame.PLAYER_B], equals(expectedBHand));
       expect(game.cardCollections[HeartsGame.PLAYER_C], equals(expectedCHand));
       expect(game.cardCollections[HeartsGame.PLAYER_D], equals(expectedDHand));
-      expect(game.cardCollections[HeartsGame.PLAYER_A_PASS], equals(expectedAPass));
-      expect(game.cardCollections[HeartsGame.PLAYER_B_PASS], equals(expectedBPass));
-      expect(game.cardCollections[HeartsGame.PLAYER_C_PASS], equals(expectedCPass));
-      expect(game.cardCollections[HeartsGame.PLAYER_D_PASS], equals(expectedDPass));
+      expect(game.cardCollections[HeartsGame.PLAYER_A_PASS],
+          equals(expectedAPass));
+      expect(game.cardCollections[HeartsGame.PLAYER_B_PASS],
+          equals(expectedBPass));
+      expect(game.cardCollections[HeartsGame.PLAYER_C_PASS],
+          equals(expectedCPass));
+      expect(game.cardCollections[HeartsGame.PLAYER_D_PASS],
+          equals(expectedDPass));
     });
     test("Take Phase", () {
       expect(game.phase, equals(HeartsPhase.Take));
@@ -180,23 +240,26 @@ void main() {
 
       // Confirm cards in hands again.
       // Note: I will eventually want to do a sorted comparison or set comparison instead.
-      List<Card> expectedAHand = new List<Card>.from(Card.All.getRange(26+3, 26+5))
-        ..addAll(Card.All.getRange(13+5, 26))
-        ..addAll(Card.All.getRange(13, 13+3));
-      List<Card> expectedBHand = new List<Card>.from(Card.All.getRange(13+3, 13+5))
-        ..addAll(Card.All.getRange(39+5, 52))
-        ..addAll(Card.All.getRange(39, 39+3));
-      List<Card> expectedCHand = new List<Card>.from(Card.All.getRange(39+3, 39+5))
-        ..addAll(Card.All.getRange(0+5, 13))
-        ..addAll(Card.All.getRange(0, 0+3));
-      List<Card> expectedDHand = new List<Card>.from(Card.All.getRange(0+3, 0+5))
-        ..addAll(Card.All.getRange(26+5, 39))
-        ..addAll(Card.All.getRange(26, 26+3));
+      List<Card> expectedAHand =
+          new List<Card>.from(Card.All.getRange(26 + 3, 26 + 5))
+        ..addAll(Card.All.getRange(13 + 5, 26))
+        ..addAll(Card.All.getRange(13, 13 + 3));
+      List<Card> expectedBHand =
+          new List<Card>.from(Card.All.getRange(13 + 3, 13 + 5))
+        ..addAll(Card.All.getRange(39 + 5, 52))
+        ..addAll(Card.All.getRange(39, 39 + 3));
+      List<Card> expectedCHand =
+          new List<Card>.from(Card.All.getRange(39 + 3, 39 + 5))
+        ..addAll(Card.All.getRange(0 + 5, 13))
+        ..addAll(Card.All.getRange(0, 0 + 3));
+      List<Card> expectedDHand =
+          new List<Card>.from(Card.All.getRange(0 + 3, 0 + 5))
+        ..addAll(Card.All.getRange(26 + 5, 39))
+        ..addAll(Card.All.getRange(26, 26 + 3));
       expect(game.cardCollections[HeartsGame.PLAYER_A], equals(expectedAHand));
       expect(game.cardCollections[HeartsGame.PLAYER_B], equals(expectedBHand));
       expect(game.cardCollections[HeartsGame.PLAYER_C], equals(expectedCHand));
       expect(game.cardCollections[HeartsGame.PLAYER_D], equals(expectedDHand));
-
     });
     test("Play Phase - Trick 1", () {
       expect(game.phase, equals(HeartsPhase.Play));
@@ -208,8 +271,10 @@ void main() {
       runCommand();
 
       // Confirm the winner of the round.
-      expect(game.lastTrickTaker, equals(3), reason: "Player 3 played 4 of Clubs");
-      expect(game.cardCollections[HeartsGame.PLAYER_D_TRICK].length, equals(4), reason: "Player 3 won 1 trick.");
+      expect(game.lastTrickTaker, equals(3),
+          reason: "Player 3 played 4 of Clubs");
+      expect(game.cardCollections[HeartsGame.PLAYER_D_TRICK].length, equals(4),
+          reason: "Player 3 won 1 trick.");
     });
     test("Play Phase - Trick 2", () {
       expect(game.phase, equals(HeartsPhase.Play));
@@ -221,10 +286,12 @@ void main() {
       runCommand();
 
       // Confirm the winner of the round.
-      expect(game.lastTrickTaker, equals(2), reason: "Player 2 played Ace of Clubs");
-      expect(game.cardCollections[HeartsGame.PLAYER_C_TRICK].length, equals(4), reason: "Player 2 won 1 trick.");
-      expect(game.cardCollections[HeartsGame.PLAYER_D_TRICK].length, equals(4), reason: "Player 3 won 1 trick.");
-
+      expect(game.lastTrickTaker, equals(2),
+          reason: "Player 2 played Ace of Clubs");
+      expect(game.cardCollections[HeartsGame.PLAYER_C_TRICK].length, equals(4),
+          reason: "Player 2 won 1 trick.");
+      expect(game.cardCollections[HeartsGame.PLAYER_D_TRICK].length, equals(4),
+          reason: "Player 3 won 1 trick.");
     });
     test("Play Phase - Trick 13", () {
       expect(game.phase, equals(HeartsPhase.Play));
@@ -236,17 +303,33 @@ void main() {
       }
 
       // Assert that hands/plays/passes are empty.
-      expect(game.cardCollections[HeartsGame.PLAYER_A + HeartsGame.OFFSET_HAND].length, equals(0), reason: "Played all cards");
-      expect(game.cardCollections[HeartsGame.PLAYER_B + HeartsGame.OFFSET_HAND].length, equals(0), reason: "Played all cards");
-      expect(game.cardCollections[HeartsGame.PLAYER_C + HeartsGame.OFFSET_HAND].length, equals(0), reason: "Played all cards");
-      expect(game.cardCollections[HeartsGame.PLAYER_D + HeartsGame.OFFSET_HAND].length, equals(0), reason: "Played all cards");
+      expect(game.cardCollections[
+          HeartsGame.PLAYER_A + HeartsGame.OFFSET_HAND].length, equals(0),
+          reason: "Played all cards");
+      expect(game.cardCollections[
+          HeartsGame.PLAYER_B + HeartsGame.OFFSET_HAND].length, equals(0),
+          reason: "Played all cards");
+      expect(game.cardCollections[
+          HeartsGame.PLAYER_C + HeartsGame.OFFSET_HAND].length, equals(0),
+          reason: "Played all cards");
+      expect(game.cardCollections[
+          HeartsGame.PLAYER_D + HeartsGame.OFFSET_HAND].length, equals(0),
+          reason: "Played all cards");
 
       // Check that all 52 cards are in tricks.
-      expect(game.lastTrickTaker, equals(0), reason: "Player 0 won the last trick.");
-      expect(game.cardCollections[HeartsGame.PLAYER_A_TRICK].length, equals(4*8), reason: "Player 0 won 8 tricks.");
-      expect(game.cardCollections[HeartsGame.PLAYER_B_TRICK].length, equals(4*2), reason: "Player 1 won 2 tricks.");
-      expect(game.cardCollections[HeartsGame.PLAYER_C_TRICK].length, equals(4*2), reason: "Player 2 won 2 tricks.");
-      expect(game.cardCollections[HeartsGame.PLAYER_D_TRICK].length, equals(4), reason: "Player 3 won 1 trick.");
+      expect(game.lastTrickTaker, equals(0),
+          reason: "Player 0 won the last trick.");
+      expect(
+          game.cardCollections[HeartsGame.PLAYER_A_TRICK].length, equals(4 * 8),
+          reason: "Player 0 won 8 tricks.");
+      expect(
+          game.cardCollections[HeartsGame.PLAYER_B_TRICK].length, equals(4 * 2),
+          reason: "Player 1 won 2 tricks.");
+      expect(
+          game.cardCollections[HeartsGame.PLAYER_C_TRICK].length, equals(4 * 2),
+          reason: "Player 2 won 2 tricks.");
+      expect(game.cardCollections[HeartsGame.PLAYER_D_TRICK].length, equals(4),
+          reason: "Player 3 won 1 trick.");
     });
     test("Score Phase", () {
       expect(game.phase, equals(HeartsPhase.Score));
@@ -274,29 +357,41 @@ void main() {
       for (int i = 0; i < 68; i++) {
         runCommand();
       }
-      expect(game.scores, equals([21+0, 3+26, 2+26, 0+26]));
+      expect(game.scores, equals([21 + 0, 3 + 26, 2 + 26, 0 + 26]));
       expect(game.hasGameEnded, isFalse);
 
       // 3rd Round: 4 deal, 4 pass, 4 take, 52 play, 4 ready
       for (int i = 0; i < 68; i++) {
         runCommand();
       }
-      expect(game.scores, equals([21+0+0, 3+26+26, 2+26+26, 0+26+26]));
+      expect(game.scores,
+          equals([21 + 0 + 0, 3 + 26 + 26, 2 + 26 + 26, 0 + 26 + 26]));
       expect(game.hasGameEnded, isFalse);
 
       // 4th Round: 4 deal, 52 play, 4 ready
       for (int i = 0; i < 60; i++) {
         runCommand();
       }
-      expect(game.scores, equals([21+0+0+0, 3+26+26+26, 2+26+26+26, 0+26+26+26]));
+      expect(game.scores, equals([
+        21 + 0 + 0 + 0,
+        3 + 26 + 26 + 26,
+        2 + 26 + 26 + 26,
+        0 + 26 + 26 + 26
+      ]));
       expect(game.hasGameEnded, isFalse);
 
       // 5th round: 4 deal, 4 pass, 4 take, 52 play. Game is over, so no ready phase.
       for (int i = 0; i < 64; i++) {
         runCommand();
       }
-      expect(game.scores, equals([21+0+0+0+0, 3+26+26+26+26, 2+26+26+26+26, 0+26+26+26+26]));
-      expect(game.hasGameEnded, isTrue); // assumes game ends after about 100 points.
+      expect(game.scores, equals([
+        21 + 0 + 0 + 0 + 0,
+        3 + 26 + 26 + 26 + 26,
+        2 + 26 + 26 + 26 + 26,
+        0 + 26 + 26 + 26 + 26
+      ]));
+      expect(game.hasGameEnded,
+          isTrue); // assumes game ends after about 100 points.
     });
   });
 
@@ -305,53 +400,66 @@ void main() {
       expect(() {
         HeartsGame game = new HeartsGame(0);
         game.phase = HeartsPhase.Score;
-        game.gamelog.add(new HeartsCommand.deal(0, new List<Card>.from(Card.All.getRange(0, 13))));
+        game.gamelog.add(new HeartsCommand.deal(
+            0, new List<Card>.from(Card.All.getRange(0, 13))));
       }, throwsA(new isInstanceOf<StateError>()));
     });
     test("Dealing - missing card", () {
       expect(() {
         HeartsGame game = new HeartsGame(0);
-        game.gamelog.add(new HeartsCommand.deal(0, <Card>[new Card("fake", "not real")]));
+        game.gamelog.add(
+            new HeartsCommand.deal(0, <Card>[new Card("fake", "not real")]));
       }, throwsA(new isInstanceOf<StateError>()));
     });
     test("Dealing - too many cards dealt", () {
       expect(() {
         HeartsGame game = new HeartsGame(0);
-        game.gamelog.add(new HeartsCommand.deal(0, new List<Card>.from(Card.All.getRange(0, 15))));
+        game.gamelog.add(new HeartsCommand.deal(
+            0, new List<Card>.from(Card.All.getRange(0, 15))));
       }, throwsA(new isInstanceOf<StateError>()));
       expect(() {
         HeartsGame game = new HeartsGame(0);
-        game.gamelog.add(new HeartsCommand.deal(0, new List<Card>.from(Card.All.getRange(0, 5))));
-        game.gamelog.add(new HeartsCommand.deal(0, new List<Card>.from(Card.All.getRange(5, 15))));
+        game.gamelog.add(new HeartsCommand.deal(
+            0, new List<Card>.from(Card.All.getRange(0, 5))));
+        game.gamelog.add(new HeartsCommand.deal(
+            0, new List<Card>.from(Card.All.getRange(5, 15))));
       }, throwsA(new isInstanceOf<StateError>()));
     });
     test("Passing - wrong phase", () {
       expect(() {
         HeartsGame game = new HeartsGame(0);
-        game.gamelog.add(new HeartsCommand.deal(0, new List<Card>.from(Card.All.getRange(0, 13))));
-        game.gamelog.add(new HeartsCommand.pass(0, new List<Card>.from(Card.All.getRange(0, 4))));
+        game.gamelog.add(new HeartsCommand.deal(
+            0, new List<Card>.from(Card.All.getRange(0, 13))));
+        game.gamelog.add(new HeartsCommand.pass(
+            0, new List<Card>.from(Card.All.getRange(0, 4))));
       }, throwsA(new isInstanceOf<StateError>()));
     });
     test("Passing - missing card", () {
       expect(() {
         HeartsGame game = new HeartsGame(0);
-        game.gamelog.add(new HeartsCommand.deal(0, new List<Card>.from(Card.All.getRange(0, 13))));
+        game.gamelog.add(new HeartsCommand.deal(
+            0, new List<Card>.from(Card.All.getRange(0, 13))));
         game.phase = HeartsPhase.Pass;
-        game.gamelog.add(new HeartsCommand.pass(0, new List<Card>.from(Card.All.getRange(13, 16))));
+        game.gamelog.add(new HeartsCommand.pass(
+            0, new List<Card>.from(Card.All.getRange(13, 16))));
       }, throwsA(new isInstanceOf<StateError>()));
     });
     test("Passing - wrong number of cards", () {
       expect(() {
         HeartsGame game = new HeartsGame(0);
-        game.gamelog.add(new HeartsCommand.deal(0, new List<Card>.from(Card.All.getRange(0, 13))));
+        game.gamelog.add(new HeartsCommand.deal(
+            0, new List<Card>.from(Card.All.getRange(0, 13))));
         game.phase = HeartsPhase.Pass;
-        game.gamelog.add(new HeartsCommand.pass(0, new List<Card>.from(Card.All.getRange(0, 2))));
+        game.gamelog.add(new HeartsCommand.pass(
+            0, new List<Card>.from(Card.All.getRange(0, 2))));
       }, throwsA(new isInstanceOf<StateError>()));
       expect(() {
         HeartsGame game = new HeartsGame(0);
-        game.gamelog.add(new HeartsCommand.deal(0, new List<Card>.from(Card.All.getRange(0, 13))));
+        game.gamelog.add(new HeartsCommand.deal(
+            0, new List<Card>.from(Card.All.getRange(0, 13))));
         game.phase = HeartsPhase.Pass;
-        game.gamelog.add(new HeartsCommand.pass(0, new List<Card>.from(Card.All.getRange(0, 4))));
+        game.gamelog.add(new HeartsCommand.pass(
+            0, new List<Card>.from(Card.All.getRange(0, 4))));
       }, throwsA(new isInstanceOf<StateError>()));
     });
     test("Taking - wrong phase", () {
@@ -363,14 +471,16 @@ void main() {
     test("Playing - wrong phase", () {
       expect(() {
         HeartsGame game = new HeartsGame(0);
-        game.gamelog.add(new HeartsCommand.deal(0, new List<Card>.from(Card.All.getRange(0, 13))));
+        game.gamelog.add(new HeartsCommand.deal(
+            0, new List<Card>.from(Card.All.getRange(0, 13))));
         game.gamelog.add(new HeartsCommand.play(0, Card.All[0]));
       }, throwsA(new isInstanceOf<StateError>()));
     });
     test("Playing - missing card", () {
       expect(() {
         HeartsGame game = new HeartsGame(0);
-        game.gamelog.add(new HeartsCommand.deal(0, new List<Card>.from(Card.All.getRange(0, 13))));
+        game.gamelog.add(new HeartsCommand.deal(
+            0, new List<Card>.from(Card.All.getRange(0, 13))));
         game.phase = HeartsPhase.Play;
         game.gamelog.add(new HeartsCommand.play(0, Card.All[13]));
       }, throwsA(new isInstanceOf<StateError>()));
@@ -378,7 +488,8 @@ void main() {
     test("Playing - invalid card (not 2 of clubs as first card)", () {
       expect(() {
         HeartsGame game = new HeartsGame(0);
-        game.gamelog.add(new HeartsCommand.deal(0, new List<Card>.from(Card.All.getRange(0, 13))));
+        game.gamelog.add(new HeartsCommand.deal(
+            0, new List<Card>.from(Card.All.getRange(0, 13))));
         game.phase = HeartsPhase.Play;
         game.lastTrickTaker = 0;
         game.gamelog.add(new HeartsCommand.play(0, Card.All[0]));
@@ -389,10 +500,14 @@ void main() {
       // But the odds are miniscule, so this rule will be enforced.
       expect(() {
         HeartsGame game = new HeartsGame(0);
-        game.gamelog.add(new HeartsCommand.deal(0, new List<Card>.from(Card.All.getRange(0, 13))));
-        game.gamelog.add(new HeartsCommand.deal(1, new List<Card>.from(Card.All.getRange(13, 26))));
-        game.gamelog.add(new HeartsCommand.deal(2, new List<Card>.from(Card.All.getRange(26, 39))));
-        game.gamelog.add(new HeartsCommand.deal(3, new List<Card>.from(Card.All.getRange(39, 52))));
+        game.gamelog.add(new HeartsCommand.deal(
+            0, new List<Card>.from(Card.All.getRange(0, 13))));
+        game.gamelog.add(new HeartsCommand.deal(
+            1, new List<Card>.from(Card.All.getRange(13, 26))));
+        game.gamelog.add(new HeartsCommand.deal(
+            2, new List<Card>.from(Card.All.getRange(26, 39))));
+        game.gamelog.add(new HeartsCommand.deal(
+            3, new List<Card>.from(Card.All.getRange(39, 52))));
         game.phase = HeartsPhase.Play;
         game.lastTrickTaker = 0;
         game.gamelog.add(new HeartsCommand.play(0, Card.All[1]));
@@ -403,42 +518,57 @@ void main() {
     test("Playing - wrong turn", () {
       expect(() {
         HeartsGame game = new HeartsGame(0);
-        game.gamelog.add(new HeartsCommand.deal(0, new List<Card>.from(Card.All.getRange(0, 13))));
-        game.gamelog.add(new HeartsCommand.deal(1, new List<Card>.from(Card.All.getRange(13, 26))));
-        game.gamelog.add(new HeartsCommand.deal(2, new List<Card>.from(Card.All.getRange(26, 39))));
-        game.gamelog.add(new HeartsCommand.deal(3, new List<Card>.from(Card.All.getRange(39, 52))));
+        game.gamelog.add(new HeartsCommand.deal(
+            0, new List<Card>.from(Card.All.getRange(0, 13))));
+        game.gamelog.add(new HeartsCommand.deal(
+            1, new List<Card>.from(Card.All.getRange(13, 26))));
+        game.gamelog.add(new HeartsCommand.deal(
+            2, new List<Card>.from(Card.All.getRange(26, 39))));
+        game.gamelog.add(new HeartsCommand.deal(
+            3, new List<Card>.from(Card.All.getRange(39, 52))));
         game.phase = HeartsPhase.Play;
         game.lastTrickTaker = 0;
-        game.gamelog.add(new HeartsCommand.play(1, Card.All[13])); // player 0's turn, not player 1's.
+        game.gamelog.add(new HeartsCommand.play(
+            1, Card.All[13])); // player 0's turn, not player 1's.
       }, throwsA(new isInstanceOf<StateError>()));
     });
     test("Playing - invalid card (suit mismatch)", () {
       expect(() {
         HeartsGame game = new HeartsGame(0);
-        game.gamelog.add(new HeartsCommand.deal(0, new List<Card>.from(Card.All.getRange(0, 12))..add(Card.All[25])));
-        game.gamelog.add(new HeartsCommand.deal(1, new List<Card>.from(Card.All.getRange(12, 25))));
-        game.gamelog.add(new HeartsCommand.deal(2, new List<Card>.from(Card.All.getRange(26, 39))));
-        game.gamelog.add(new HeartsCommand.deal(3, new List<Card>.from(Card.All.getRange(39, 52))));
+        game.gamelog.add(new HeartsCommand.deal(0,
+            new List<Card>.from(Card.All.getRange(0, 12))..add(Card.All[25])));
+        game.gamelog.add(new HeartsCommand.deal(
+            1, new List<Card>.from(Card.All.getRange(12, 25))));
+        game.gamelog.add(new HeartsCommand.deal(
+            2, new List<Card>.from(Card.All.getRange(26, 39))));
+        game.gamelog.add(new HeartsCommand.deal(
+            3, new List<Card>.from(Card.All.getRange(39, 52))));
         game.phase = HeartsPhase.Play;
         game.lastTrickTaker = 0;
         game.gamelog.add(new HeartsCommand.play(0, Card.All[1]));
-        game.gamelog.add(new HeartsCommand.play(0, Card.All[13])); // should play 12
+        game.gamelog
+            .add(new HeartsCommand.play(0, Card.All[13])); // should play 12
       }, throwsA(new isInstanceOf<StateError>()));
     });
     test("Playing - invalid card (hearts not broken yet)", () {
       expect(() {
         HeartsGame game = new HeartsGame(0);
-        game.gamelog.add(new HeartsCommand.deal(0, new List<Card>.from(Card.All.getRange(0, 12))..add(Card.All[38])));
-        game.gamelog.add(new HeartsCommand.deal(1, new List<Card>.from(Card.All.getRange(13, 26))));
-        game.gamelog.add(new HeartsCommand.deal(2, new List<Card>.from(Card.All.getRange(26, 38))..add(Card.All[12])));
-        game.gamelog.add(new HeartsCommand.deal(3, new List<Card>.from(Card.All.getRange(39, 52))));
+        game.gamelog.add(new HeartsCommand.deal(0,
+            new List<Card>.from(Card.All.getRange(0, 12))..add(Card.All[38])));
+        game.gamelog.add(new HeartsCommand.deal(
+            1, new List<Card>.from(Card.All.getRange(13, 26))));
+        game.gamelog.add(new HeartsCommand.deal(2,
+            new List<Card>.from(Card.All.getRange(26, 38))..add(Card.All[12])));
+        game.gamelog.add(new HeartsCommand.deal(
+            3, new List<Card>.from(Card.All.getRange(39, 52))));
         game.phase = HeartsPhase.Play;
         game.lastTrickTaker = 0;
         game.gamelog.add(new HeartsCommand.play(0, Card.All[1]));
         game.gamelog.add(new HeartsCommand.play(1, Card.All[13]));
         game.gamelog.add(new HeartsCommand.play(2, Card.All[12])); // 2 won!
         game.gamelog.add(new HeartsCommand.play(3, Card.All[39]));
-        game.gamelog.add(new HeartsCommand.play(2, Card.All[26])); // But 2 can't lead with a hearts.
+        game.gamelog.add(new HeartsCommand.play(
+            2, Card.All[26])); // But 2 can't lead with a hearts.
       }, throwsA(new isInstanceOf<StateError>()));
     });
   });

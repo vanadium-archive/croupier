@@ -3,3 +3,7 @@ dependencies:
   sky: any
   sky_tools: any
   test: any
+  ether: any
+dependency_overrides:
+  ether:
+    path: ../../mojo/syncbase/dart

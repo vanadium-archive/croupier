@@ -1,12 +1,11 @@
 import 'card.dart' show Card;
 import 'dart:math' as math;
+import 'syncbase_echo.dart' show SyncbaseEcho;
 
 // Note: Proto and Board are "fake" games intended to demonstrate what we can do.
 // Proto is just a drag cards around "game".
 // Board is meant to show how one _could_ layout a game of Hearts. This one is not hooked up very well yet.
-enum GameType {
-  Proto, Hearts, Poker, Solitaire, Board
-}
+enum GameType { Proto, Hearts, Poker, Solitaire, Board, SyncbaseEcho }
 
 /// A game consists of multiple decks and tracks a single deck of cards.
 /// It also handles events; when cards are dragged to and from decks.
@@ -28,11 +27,19 @@ class Game {
         return new ProtoGame(pn);
       case GameType.Hearts:
         return new HeartsGame(pn);
+      case GameType.SyncbaseEcho:
+        return new SyncbaseEcho();
       default:
         assert(false);
         return null;
     }
   }
+
+  // A public super constructor that doesn't really do anything.
+  // TODO(alexfandrianto): The proper way to handle this would be to use 'parts'.
+  // That way, I can have all the game logic split up across multiple files and
+  // still access private constructors.
+  Game.dummy(this.gameType) {}
 
   // A super constructor, don't call this unless you're a subclass.
   Game._create(this.gameType, this.playerNumber, int numCollections) {
@@ -112,9 +119,7 @@ class ProtoGame extends Game {
   }
 }
 
-enum HeartsPhase {
-  Deal, Pass, Take, Play, Score
-}
+enum HeartsPhase { Deal, Pass, Take, Play, Score }
 
 class HeartsGame extends Game {
   static const PLAYER_A = 0;
@@ -161,7 +166,8 @@ class HeartsGame extends Game {
   List<int> scores = [0, 0, 0, 0];
   List<bool> ready;
 
-  HeartsGame(int playerNumber) : super._create(GameType.Hearts, playerNumber, 16) {
+  HeartsGame(int playerNumber)
+      : super._create(GameType.Hearts, playerNumber, 16) {
     resetGame();
   }
 
@@ -181,7 +187,8 @@ class HeartsGame extends Game {
   }
 
   int get passTarget {
-    switch (roundNumber % 4) { // is a 4-cycle
+    switch (roundNumber % 4) {
+      // is a 4-cycle
       case 0:
         return (playerNumber - 1) % 4; // passLeft
       case 1:
@@ -197,7 +204,8 @@ class HeartsGame extends Game {
   }
   int get takeTarget => _getTakeTarget(playerNumber);
   int _getTakeTarget(takerId) {
-    switch (roundNumber % 4) { // is a 4-cycle
+    switch (roundNumber % 4) {
+      // is a 4-cycle
       case 0:
         return (takerId + 1) % 4; // takeRight
       case 1:
@@ -255,14 +263,12 @@ class HeartsGame extends Game {
 
   bool hasSuit(int player, String suit) {
     Card matchesSuit = this.cardCollections[player + OFFSET_HAND].firstWhere(
-      (Card element) => (getCardSuit(element) == suit),
-      orElse: () => null
-    );
+        (Card element) => (getCardSuit(element) == suit), orElse: () => null);
     return matchesSuit != null;
   }
 
   Card get leadingCard {
-    if(this.numPlayed >= 1) {
+    if (this.numPlayed >= 1) {
       return cardCollections[this.lastTrickTaker + OFFSET_PLAY][0];
     }
     return null;
@@ -280,18 +286,18 @@ class HeartsGame extends Game {
   bool get hasGameEnded => this.scores.reduce(math.max) >= HeartsGame.MAX_SCORE;
 
   bool get allDealt => cardCollections[PLAYER_A].length == 13 &&
-    cardCollections[PLAYER_B].length == 13 &&
-    cardCollections[PLAYER_C].length == 13 &&
-    cardCollections[PLAYER_D].length == 13;
+      cardCollections[PLAYER_B].length == 13 &&
+      cardCollections[PLAYER_C].length == 13 &&
+      cardCollections[PLAYER_D].length == 13;
 
   bool get allPassed => cardCollections[PLAYER_A_PASS].length == 3 &&
-    cardCollections[PLAYER_B_PASS].length == 3 &&
-    cardCollections[PLAYER_C_PASS].length == 3 &&
-    cardCollections[PLAYER_D_PASS].length == 3;
+      cardCollections[PLAYER_B_PASS].length == 3 &&
+      cardCollections[PLAYER_C_PASS].length == 3 &&
+      cardCollections[PLAYER_D_PASS].length == 3;
   bool get allTaken => cardCollections[PLAYER_A_PASS].length == 0 &&
-    cardCollections[PLAYER_B_PASS].length == 0 &&
-    cardCollections[PLAYER_C_PASS].length == 0 &&
-    cardCollections[PLAYER_D_PASS].length == 0;
+      cardCollections[PLAYER_B_PASS].length == 0 &&
+      cardCollections[PLAYER_C_PASS].length == 0 &&
+      cardCollections[PLAYER_D_PASS].length == 0;
   bool get allPlayed => this.numPlayed == 4;
 
   bool get allReady => ready[0] && ready[1] && ready[2] && ready[3];
@@ -344,14 +350,17 @@ class HeartsGame extends Game {
 
     int i = findCard(card);
     if (i == -1) {
-      throw new StateError('card does not exist or was not dealt: ${card.toString()}');
+      throw new StateError(
+          'card does not exist or was not dealt: ${card.toString()}');
     }
     int destId = cardCollections.indexOf(dest);
     if (destId == -1) {
-      throw new StateError('destination list does not exist: ${dest.toString()}');
+      throw new StateError(
+          'destination list does not exist: ${dest.toString()}');
     }
     if (destId != playerNumber + OFFSET_PLAY) {
-      throw new StateError('player ${playerNumber} is not playing to the correct list: ${destId}');
+      throw new StateError(
+          'player ${playerNumber} is not playing to the correct list: ${destId}');
     }
 
     gamelog.add(new HeartsCommand.play(playerNumber, card));
@@ -405,7 +414,8 @@ class HeartsGame extends Game {
             if (!heartsBroken && isHeartsCard(play[0])) {
               heartsBroken = true;
             }
-            this.cardCollections[winner + OFFSET_TRICK].addAll(play); // or add(play[0])
+            this.cardCollections[winner + OFFSET_TRICK]
+                .addAll(play); // or add(play[0])
             play.clear();
           }
 
@@ -435,7 +445,7 @@ class HeartsGame extends Game {
   // Returns null or the reason that the player cannot play the card.
   String canPlay(int player, Card c) {
     if (phase != HeartsPhase.Play) {
-     return "It is not the Play phase of Hearts.";
+      return "It is not the Play phase of Hearts.";
     }
     if (!cardCollections[player].contains(c)) {
       return "Player ${player} does not have the card (${c.toString()})";
@@ -455,7 +465,9 @@ class HeartsGame extends Game {
     if (this.leadingCard != null) {
       String leadingSuit = getCardSuit(this.leadingCard);
       String otherSuit = getCardSuit(c);
-      if (this.numPlayed >= 1 && leadingSuit != otherSuit && hasSuit(player, leadingSuit)) {
+      if (this.numPlayed >= 1 &&
+          leadingSuit != otherSuit &&
+          hasSuit(player, leadingSuit)) {
         return "Must follow with a ${leadingSuit}.";
       }
     }
@@ -470,7 +482,8 @@ class HeartsGame extends Game {
       Card c = cardCollections[i + OFFSET_PLAY][0];
       int value = this.getCardValue(c);
       String suit = this.getCardSuit(c);
-      if (suit == leadingSuit && (highestIndex == null || highestValue < value)) {
+      if (suit == leadingSuit &&
+          (highestIndex == null || highestValue < value)) {
         highestIndex = i;
         highestValue = value;
       }
@@ -492,7 +505,8 @@ class HeartsGame extends Game {
     for (int i = 0; i < 4; i++) {
       int delta = computeScore(i);
       this.scores[i] += delta;
-      if (delta == 26) { // Shot the moon!
+      if (delta == 26) {
+        // Shot the moon!
         shotMoon = i;
       }
     }
@@ -524,7 +538,6 @@ class HeartsGame extends Game {
     return total;
   }
 }
-
 
 class GameLog {
   Game game;
@@ -561,20 +574,18 @@ class HeartsCommand extends GameCommand {
   HeartsCommand(this.data);
 
   // The following constructors are used for the player generating the HeartsCommand.
-  HeartsCommand.deal(int playerId, List<Card> cards) :
-    this.data = computeDeal(playerId, cards);
+  HeartsCommand.deal(int playerId, List<Card> cards)
+      : this.data = computeDeal(playerId, cards);
 
-  HeartsCommand.pass(int senderId, List<Card> cards) :
-    this.data = computePass(senderId, cards);
+  HeartsCommand.pass(int senderId, List<Card> cards)
+      : this.data = computePass(senderId, cards);
 
-  HeartsCommand.take(int takerId) :
-    this.data = computeTake(takerId);
+  HeartsCommand.take(int takerId) : this.data = computeTake(takerId);
 
-  HeartsCommand.play(int playerId, Card c) :
-    this.data = computePlay(playerId, c);
+  HeartsCommand.play(int playerId, Card c)
+      : this.data = computePlay(playerId, c);
 
-  HeartsCommand.ready(int playerId) :
-    this.data = computeReady(playerId);
+  HeartsCommand.ready(int playerId) : this.data = computeReady(playerId);
 
   static computeDeal(int playerId, List<Card> cards) {
     StringBuffer buff = new StringBuffer();
@@ -608,7 +619,8 @@ class HeartsCommand extends GameCommand {
     switch (parts[0]) {
       case "Deal":
         if (game.phase != HeartsPhase.Deal) {
-          throw new StateError("Cannot process deal commands when not in Deal phase");
+          throw new StateError(
+              "Cannot process deal commands when not in Deal phase");
         }
         // Deal appends cards to playerId's hand.
         int playerId = int.parse(parts[1]);
@@ -625,7 +637,8 @@ class HeartsCommand extends GameCommand {
         return;
       case "Pass":
         if (game.phase != HeartsPhase.Pass) {
-          throw new StateError("Cannot process pass commands when not in Pass phase");
+          throw new StateError(
+              "Cannot process pass commands when not in Pass phase");
         }
         // Pass moves a set of cards from senderId to receiverId.
         int senderId = int.parse(parts[1]);
@@ -646,7 +659,8 @@ class HeartsCommand extends GameCommand {
         return;
       case "Take":
         if (game.phase != HeartsPhase.Take) {
-          throw new StateError("Cannot process take commands when not in Take phase");
+          throw new StateError(
+              "Cannot process take commands when not in Take phase");
         }
         int takerId = int.parse(parts[1]);
         int senderPile = game._getTakeTarget(takerId) + HeartsGame.OFFSET_PASS;
@@ -657,7 +671,8 @@ class HeartsCommand extends GameCommand {
         return;
       case "Play":
         if (game.phase != HeartsPhase.Play) {
-          throw new StateError("Cannot process play commands when not in Play phase");
+          throw new StateError(
+              "Cannot process play commands when not in Play phase");
         }
 
         // Play the card from the player's hand to their play pile.
@@ -671,16 +686,19 @@ class HeartsCommand extends GameCommand {
         // If the card isn't valid, then we have an error.
         String reason = game.canPlay(playerId, c);
         if (reason != null) {
-          throw new StateError("Player ${playerId} cannot play ${c.toString()} because ${reason}");
+          throw new StateError(
+              "Player ${playerId} cannot play ${c.toString()} because ${reason}");
         }
         this.transfer(hand, discard, c);
         return;
       case "Ready":
         if (game.hasGameEnded) {
-          throw new StateError("Game has already ended. Start a new one to play again.");
+          throw new StateError(
+              "Game has already ended. Start a new one to play again.");
         }
         if (game.phase != HeartsPhase.Score) {
-          throw new StateError("Cannot process ready commands when not in Score phase");
+          throw new StateError(
+              "Cannot process ready commands when not in Score phase");
         }
         int playerId = int.parse(parts[1]);
         game.setReady(playerId);
@@ -693,7 +711,8 @@ class HeartsCommand extends GameCommand {
 
   void transfer(List<Card> sender, List<Card> receiver, Card c) {
     if (!sender.contains(c)) {
-      throw new StateError("Sender ${sender.toString()} lacks Card ${c.toString()}");
+      throw new StateError(
+          "Sender ${sender.toString()} lacks Card ${c.toString()}");
     }
     sender.remove(c);
     receiver.add(c);
@@ -707,15 +726,15 @@ class ProtoCommand extends GameCommand {
   ProtoCommand(this.data);
 
   // The following constructors are used for the player generating the ProtoCommand.
-  ProtoCommand.deal(int playerId, List<Card> cards) :
-    this.data = computeDeal(playerId, cards);
+  ProtoCommand.deal(int playerId, List<Card> cards)
+      : this.data = computeDeal(playerId, cards);
 
   // TODO: receiverId is actually implied by the game round. So it may end up being removable.
-  ProtoCommand.pass(int senderId, int receiverId, List<Card> cards) :
-    this.data = computePass(senderId, receiverId, cards);
+  ProtoCommand.pass(int senderId, int receiverId, List<Card> cards)
+      : this.data = computePass(senderId, receiverId, cards);
 
-  ProtoCommand.play(int playerId, Card c) :
-    this.data = computePlay(playerId, c);
+  ProtoCommand.play(int playerId, Card c)
+      : this.data = computePlay(playerId, c);
 
   static computeDeal(int playerId, List<Card> cards) {
     StringBuffer buff = new StringBuffer();

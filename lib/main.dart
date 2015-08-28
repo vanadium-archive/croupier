@@ -12,12 +12,9 @@ class CroupierApp extends App {
 
   Widget build() {
     return new Container(
-      decoration: new BoxDecoration(
-        backgroundColor: const Color(0xFF6666FF),
-        borderRadius: 5.0
-      ),
-      child: new CroupierComponent(this.croupier)
-    );
+        decoration: new BoxDecoration(
+            backgroundColor: const Color(0xFF6666FF), borderRadius: 5.0),
+        child: new CroupierComponent(this.croupier));
   }
 }
 

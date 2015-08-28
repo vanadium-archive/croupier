@@ -16,14 +16,14 @@ class Draggable<T extends widgets.Widget> extends widgets.StatefulComponent {
 
   widgets.Widget build() {
     return new widgets.Listener(
-      onPointerDown: _startDrag,
-      onPointerMove: _updateDrag,
-      onPointerCancel: _cancelDrag,
-      onPointerUp: _drop,
-      child:     new widgets.Transform(
-                  transform: new vector_math.Matrix4.identity().translate(displacement.dx, displacement.dy),
-                  child: child)
-    );
+        onPointerDown: _startDrag,
+        onPointerMove: _updateDrag,
+        onPointerCancel: _cancelDrag,
+        onPointerUp: _drop,
+        child: new widgets.Transform(
+            transform: new vector_math.Matrix4.identity().translate(
+                displacement.dx, displacement.dy),
+            child: child));
   }
 
   widgets.EventDisposition _startDrag(sky.PointerEvent event) {
