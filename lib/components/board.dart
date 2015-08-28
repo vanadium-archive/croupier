@@ -1,8 +1,10 @@
 import './card.dart' show Card;
 import '../logic/card.dart' as logic_card;
+
+import 'dart:math' as math;
+
 import 'package:sky/widgets.dart' as widgets;
 import 'package:vector_math/vector_math.dart' as vector_math;
-import 'dart:math' as math;
 import 'package:sky/theme/colors.dart' as colors;
 
 const double cardHeight = 96.0;

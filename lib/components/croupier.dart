@@ -1,8 +1,10 @@
 import '../logic/croupier.dart' as logic_croupier;
 import '../logic/game.dart' as logic_game;
+import 'game.dart' show GameComponent;
+
 import 'package:sky/widgets.dart' show FlatButton;
 import 'package:sky/widgets/basic.dart';
-import 'game.dart' show GameComponent;
+
 import 'dart:sky' as sky;
 
 class CroupierComponent extends StatefulComponent {

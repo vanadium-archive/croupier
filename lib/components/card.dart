@@ -14,6 +14,9 @@ class Card extends widgets.Component {
   }
 
   static widgets.Widget imageFromCard(logic_card.Card c, bool faceUp) {
+    // TODO(alexfandrianto): If we allow an optional prefix in front of this,
+    // we would be able to have multiple skins of the same deck.
+    // TODO(alexfandrianto): Better card organization?
     String imageName = "${c.deck}/${faceUp ? 'up' : 'down'}/${c.identifier}.png";
     return new widgets.NetworkImage(src: imageName);
   }
