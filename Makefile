@@ -1,5 +1,5 @@
 # This beginning section is used to setup the environment for running with mojo_shell.
-ETHER_DIR := $(V23_ROOT)/roadmap/mojo/syncbase
+ETHER_DIR := $(V23_ROOT)/release/mojo/syncbase
 CROUPIER_DIR := $(shell pwd)
 SHELL := /bin/bash -euo pipefail
 
