@@ -1,0 +1,41 @@
+# This describes how we access our mojo services, including the sky_viewer.
+
+{
+  'dev_servers': [
+    {
+      'host': 'https://croupier.v.io/',
+      'mappings': [
+        ('packages/', [
+          # For croupier packages.
+          '@{CROUPIER_DIR}/packages',
+        ]),
+        ('', [
+          # For croupier/lib/main.dart.
+          '@{CROUPIER_DIR}',
+        ]),
+      ]
+    },
+    {
+      'host': 'https://mojo.v.io/',
+      'mappings': [
+        ('', [
+          # For echo_server.mojo and syncbase_server.mojo.
+          '@{ETHER_BUILD_DIR}',
+        ]),
+      ],
+    },
+    {
+      'host': 'https://sky/',
+      'mappings': [
+        ('', [
+          # For sky_viewer.mojo.
+          '@{SKY_BUILD_DIR}'
+        ]),
+      ],
+    }
+  ],
+
+  'content_handlers': {
+    'application/dart': 'https://sky/sky_viewer.mojo',
+  }
+}
