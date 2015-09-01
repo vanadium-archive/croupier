@@ -1,9 +1,8 @@
 import '../logic/croupier.dart' as logic_croupier;
 import '../logic/game.dart' as logic_game;
-import 'game.dart' show GameComponent;
+import 'game.dart' show createGameComponent;
 
-import 'package:sky/widgets.dart' show FlatButton;
-import 'package:sky/widgets/basic.dart';
+import 'package:sky/widgets.dart';
 
 import 'dart:sky' as sky;
 
@@ -69,8 +68,7 @@ class CroupierComponent extends StatefulComponent {
       case logic_croupier.CroupierState.PlayGame:
         return new Container(
             padding: new EdgeDims.only(top: sky.view.paddingTop),
-            child: new GameComponent(
-                croupier.game) // Asks the game UI to draw itself.
+            child: createGameComponent(croupier.game) // Asks the game UI to draw itself.
             );
       default:
         assert(false);

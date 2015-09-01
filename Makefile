@@ -49,16 +49,25 @@ dartfmt:
 
 .PHONY: lint
 lint:
-	dartanalyzer lib/main.dart
-	dartanalyzer $(DART_TEST_FILES)
+	dartanalyzer lib/main.dart | grep -v "\[warning\] The imported libraries"
+	dartanalyzer $(DART_TEST_FILES) | grep -v "\[warning\] The imported libraries"
 
 .PHONY: start
 start:
-	./packages/sky/sky_tool start
+	./packages/sky/sky_tool start --checked
+
+.PHONY: mock
+mock:
+	mv lib/src/syncbase/log_writer.dart lib/src/syncbase/log_writer.dart.backup
+	cp lib/src/mocks/log_writer.dart lib/src/syncbase/
+
+.PHONY: unmock
+unmock:
+	mv lib/src/syncbase/log_writer.dart.backup lib/src/syncbase/log_writer.dart
 
 .PHONY: install
 install: packages
-	./packages/sky/sky_tool start --install
+	./packages/sky/sky_tool start --install --checked
 
 .PHONY: env-check
 env-check:
@@ -81,12 +90,15 @@ endif
 start-with-mojo: env-check packages
 	$(MOJO_DIR)/src/mojo/devtools/common/mojo_run --config-file $(PWD)/mojoconfig $(MOJO_SHELL_FLAGS) $(MOJO_ANDROID_FLAGS) 'mojo:window_manager https://croupier.v.io/lib/main.dart'
 
-# Could use `pub run test` too, but I like seeing every assertion print out.
 # TODO(alexfandrianto): I split off the syncbase logic from game.dart because it
 # would not run in a stand-alone VM. We will need to add mojo_test eventually.
 .PHONY: test
 test: packages
-	dart --checked $(DART_TEST_FILES)
+	# Protect src/syncbase/log_writer.dart
+	mv lib/src/syncbase/log_writer.dart lib/src/syncbase/log_writer.dart.backup
+	cp lib/src/mocks/log_writer.dart lib/src/syncbase/
+	pub run test -r expanded $(DART_TEST_FILES) || (mv lib/src/syncbase/log_writer.dart.backup lib/src/syncbase/log_writer.dart && exit 1)
+	mv lib/src/syncbase/log_writer.dart.backup lib/src/syncbase/log_writer.dart
 
 .PHONY: clean
 clean:

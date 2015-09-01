@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert' show UTF8;
 
-import 'game.dart' show Game;
+import '../../logic/game.dart' show Game;
 
 import 'package:sky/mojo/embedder.dart' show embedder;
 

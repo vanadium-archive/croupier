@@ -22,11 +22,12 @@ class Draggable<T extends widgets.Widget> extends widgets.StatefulComponent {
         onPointerUp: _drop,
         child: new widgets.Transform(
             transform: new vector_math.Matrix4.identity().translate(
-                displacement.dx, displacement.dy),
+                0.0,0.0),//displacement.dx, displacement.dy),
             child: child));
   }
 
   widgets.EventDisposition _startDrag(sky.PointerEvent event) {
+    print("Drag Start");
     setState(() {
       dragController = new widgets.DragController(this.child);
       dragController.update(new widgets.Point(event.x, event.y));
@@ -44,6 +45,7 @@ class Draggable<T extends widgets.Widget> extends widgets.StatefulComponent {
   }
 
   widgets.EventDisposition _cancelDrag(sky.PointerEvent event) {
+    print("Drag Cancel");
     setState(() {
       dragController.cancel();
       dragController = null;
@@ -52,6 +54,7 @@ class Draggable<T extends widgets.Widget> extends widgets.StatefulComponent {
   }
 
   widgets.EventDisposition _drop(sky.PointerEvent event) {
+    print("Drag Drop");
     setState(() {
       dragController.update(new widgets.Point(event.x, event.y));
       dragController.drop();

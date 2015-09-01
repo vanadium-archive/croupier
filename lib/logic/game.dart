@@ -1,6 +1,7 @@
 import 'card.dart' show Card;
 import 'dart:math' as math;
 import 'syncbase_echo.dart' show SyncbaseEcho;
+import '../src/syncbase/log_writer.dart' show LogWriter;
 
 // Note: Proto and Board are "fake" games intended to demonstrate what we can do.
 // Proto is just a drag cards around "game".
@@ -15,7 +16,7 @@ class Game {
   final List<Card> deck = new List<Card>.from(Card.All);
 
   final math.Random random = new math.Random();
-  final GameLog gamelog = new GameLog();
+  final GameLog gamelog;
   int playerNumber;
   String debugString = 'hello?';
 
@@ -39,19 +40,19 @@ class Game {
   // TODO(alexfandrianto): The proper way to handle this would be to use 'parts'.
   // That way, I can have all the game logic split up across multiple files and
   // still access private constructors.
-  Game.dummy(this.gameType) {}
+  Game.dummy(this.gameType, this.gamelog) {}
 
   // A super constructor, don't call this unless you're a subclass.
-  Game._create(this.gameType, this.playerNumber, int numCollections) {
+  Game._create(this.gameType, this.gamelog, this.playerNumber, int numCollections) {
     gamelog.setGame(this);
     for (int i = 0; i < numCollections; i++) {
       cardCollections.add(new List<Card>());
     }
   }
 
-  List<Card> deckPeek(int numCards) {
+  List<Card> deckPeek(int numCards, [int start = 0]) {
     assert(deck.length >= numCards);
-    List<Card> cards = new List<Card>.from(deck.take(numCards));
+    List<Card> cards = new List<Card>.from(deck.getRange(start, start + numCards));
     return cards;
   }
 
@@ -81,7 +82,7 @@ class Game {
 }
 
 class ProtoGame extends Game {
-  ProtoGame(int playerNumber) : super._create(GameType.Proto, playerNumber, 6) {
+  ProtoGame(int playerNumber) : super._create(GameType.Proto, new ProtoGameLog(), playerNumber, 6) {
     // playerNumber would be used in a real game, but I have to ignore it for debugging.
     // It would determine faceUp/faceDown status.faceDown
 
@@ -167,7 +168,7 @@ class HeartsGame extends Game {
   List<bool> ready;
 
   HeartsGame(int playerNumber)
-      : super._create(GameType.Hearts, playerNumber, 16) {
+      : super._create(GameType.Hearts, new HeartsGameLog(), playerNumber, 16) {
     resetGame();
   }
 
@@ -180,10 +181,12 @@ class HeartsGame extends Game {
 
   void dealCards() {
     deck.shuffle();
-    deal(PLAYER_A, 13);
-    deal(PLAYER_B, 13);
-    deal(PLAYER_C, 13);
-    deal(PLAYER_D, 13);
+
+    // These things happen asynchronously, so we have to specify all cards now.
+    deal(PLAYER_A, this.deckPeek(13, 0));
+    deal(PLAYER_B, this.deckPeek(13, 13));
+    deal(PLAYER_C, this.deckPeek(13, 26));
+    deal(PLAYER_D, this.deckPeek(13, 39));
   }
 
   int get passTarget {
@@ -308,8 +311,8 @@ class HeartsGame extends Game {
     ready = <bool>[false, false, false, false];
   }
 
-  void deal(int playerId, int numCards) {
-    gamelog.add(new HeartsCommand.deal(playerId, this.deckPeek(numCards)));
+  void deal(int playerId, List<Card> cards) {
+    gamelog.add(new HeartsCommand.deal(playerId, cards));
   }
 
   // Note that this will be called by the UI.
@@ -539,32 +542,139 @@ class HeartsGame extends Game {
   }
 }
 
-class GameLog {
+abstract class GameLog {
   Game game;
   List<GameCommand> log = new List<GameCommand>();
-  int position = 0;
+  List<GameCommand> pendingCommands = new List<GameCommand>(); // This list is normally empty, but may grow if multiple commands arrive.
+  bool hasFired = false;
+  //int position = 0;
 
   void setGame(Game g) {
     this.game = g;
   }
 
-  // This adds and executes the GameCommand.
   void add(GameCommand gc) {
-    log.add(gc);
+    pendingCommands.add(gc);
+    _tryPendingCommand();
+  }
 
-    while (position < log.length) {
-      log[position].execute(game);
-      game.triggerEvents();
+  void _tryPendingCommand() {
+    if (pendingCommands.length > 0 && !hasFired) {
+      GameCommand gc = pendingCommands[0];
+      if (gc.canExecute(game)) {
+        hasFired = true;
+        addToLogCb(log, gc);
+      } else {
+        // What can we do if the first command isn't allowed to fire?
+        throw new StateError("Cannot run ${gc.data}");
+      }
+    }
+  }
+
+  void update(List<GameCommand> otherLog) {
+    int numMatches = 0;
+    while (numMatches < log.length && numMatches < otherLog.length && log[numMatches] == otherLog[numMatches]) {
+      numMatches++;
+    }
+
+    // At this point, i is at the farthest point of common-ness.
+    // If i matches the log length, then take the rest of the other log.
+    if (numMatches == log.length) {
+      for (int j = numMatches; j < otherLog.length; j++) {
+        log.add(otherLog[j]);
+        if (pendingCommands[0] == otherLog[j]) {
+          pendingCommands.removeAt(0);
+          hasFired = false;
+        }
+        log[j].execute(game);
+        game.triggerEvents();
+      }
       if (game.updateCallback != null) {
         game.updateCallback();
       }
-      position++;
+    } else if (numMatches == otherLog.length) {
+      // We seem to have done more valid moves, so we can just ignore the other side.
+      // TODO(alexfandrianto): If we play a game with actual 'undo' moves,
+      // do we want to record them or erase history?
+      print('Ignoring shorter log');
+    } else {
+      // This case is weird, we have some amount of common log and some mismatch.
+      // Ask the game itself what to do.
+      print('Oh no! A conflict!');
+      log = updateLogCb(log, otherLog, numMatches);
+      assert(false); // What we need to do here is to undo the moves that didn't match and then replay the new ones.
+      // TODO(alexfandrianto): At worst, we can also just reset the game and play through all of it. (No UI updates till the end).
     }
+
+    // Now that we got an update, let's try our other pending commands.
+    _tryPendingCommand();
+  }
+
+  // UNIMPLEMENTED: Let subclasses override this.
+  void addToLogCb(List<GameCommand> log, GameCommand newCommand);
+  List<GameCommand> updateLogCb(List<GameCommand> current, List<GameCommand> other, int mismatchIndex);
+}
+
+class HeartsGameLog extends GameLog {
+  LogWriter logWriter;
+
+  HeartsGameLog() {
+    logWriter = new LogWriter(handleSyncUpdate);
+  }
+
+  Map<String, String> _toLogData(List<GameCommand> log, GameCommand newCommand) {
+    Map<String, String> data = new Map<String, String>();
+    for (int i = 0; i < log.length; i++) {
+      data["${i}"] = log[i].data;
+    }
+    data["${log.length}"] = newCommand.data;
+    return data;
+  }
+  List<HeartsCommand> _logFromData(Map<String, String> data) {
+    List<HeartsCommand> otherlog = new List<HeartsCommand>();
+    otherlog.length = data.length;
+    data.forEach((String k, String v) {
+      otherlog[int.parse(k)] = new HeartsCommand(v);
+    });
+    return otherlog;
+  }
+
+  void handleSyncUpdate(Map<String, String> data) {
+    this.update(_logFromData(data));
+  }
+
+  void addToLogCb(List<GameCommand> log, GameCommand newCommand) {
+    logWriter.write(_toLogData(log, newCommand));
+  }
+  List<GameCommand> updateLogCb(List<GameCommand> current, List<GameCommand> other, int mismatchIndex) {
+    assert(false); // TODO(alexfandrianto): How do you handle conflicts with Hearts?
+    return current;
+  }
+}
+
+class ProtoGameLog extends GameLog {
+  void addToLogCb(List<GameCommand> log, GameCommand newCommand) {
+    update(new List<GameCommand>.from(log)..add(newCommand));
+  }
+  List<GameCommand> updateLogCb(List<GameCommand> current, List<GameCommand> other, int mismatchIndex) {
+    assert(false); // This game can't have conflicts.
+    return current;
   }
 }
 
 abstract class GameCommand {
+  bool canExecute(Game game);
   void execute(Game game);
+  String get data;
+  bool operator ==(Object other) {
+    if (other is GameCommand) {
+      return this.data == other.data;
+    }
+    return false;
+  }
+  String toString() {
+    return data;
+  }
 }
 
 class HeartsCommand extends GameCommand {
@@ -609,6 +719,10 @@ class HeartsCommand extends GameCommand {
   }
   static computeReady(int playerId) {
     return "Ready:${playerId}:END";
+  }
+
+  bool canExecute(Game g) {
+    return true; // TODO(alexfandrianto): not really. Should do validation too.
   }
 
   void execute(Game g) {
@@ -752,6 +866,10 @@ class ProtoCommand extends GameCommand {
   }
   static computePlay(int playerId, Card c) {
     return "Play:${playerId}:${c.toString()}:END";
+  }
+
+  bool canExecute(Game game) {
+    return true;
   }
 
   void execute(Game game) {
