@@ -52,6 +52,7 @@ class Game {
 
   List<Card> deckPeek(int numCards, [int start = 0]) {
     assert(deck.length >= numCards);
+
     List<Card> cards = new List<Card>.from(deck.getRange(start, start + numCards));
     return cards;
   }
@@ -70,6 +71,7 @@ class Game {
     for (int i = 0; i < cardCollections.length; i++) {
       cardCollections[i].clear();
     }
+    deck.clear();
     deck.addAll(Card.All);
   }
 
@@ -183,10 +185,15 @@ class HeartsGame extends Game {
     deck.shuffle();
 
     // These things happen asynchronously, so we have to specify all cards now.
-    deal(PLAYER_A, this.deckPeek(13, 0));
-    deal(PLAYER_B, this.deckPeek(13, 13));
-    deal(PLAYER_C, this.deckPeek(13, 26));
-    deal(PLAYER_D, this.deckPeek(13, 39));
+    List<Card> forA = this.deckPeek(13, 0);
+    List<Card> forB = this.deckPeek(13, 13);
+    List<Card> forC = this.deckPeek(13, 26);
+    List<Card> forD = this.deckPeek(13, 39);
+
+    deal(PLAYER_A, forA);
+    deal(PLAYER_B, forB);
+    deal(PLAYER_C, forC);
+    deal(PLAYER_D, forD);
   }
 
   int get passTarget {
@@ -318,7 +325,8 @@ class HeartsGame extends Game {
   // Note that this will be called by the UI.
   // It won't be possible to pass for other players, except via the GameLog.
   void passCards(List<Card> cards) {
-    assert(phase == HeartsPhase.Pass && this.passTarget != null);
+    assert(phase == HeartsPhase.Pass);
+    assert(this.passTarget != null);
     if (cards.length != 3) {
       throw new StateError('3 cards expected, but got: ${cards.toString()}');
     }
@@ -328,7 +336,8 @@ class HeartsGame extends Game {
   // Note that this will be called by the UI.
   // It won't be possible to take cards for other players, except via the GameLog.
   void takeCards() {
-    assert(phase == HeartsPhase.Take && this.takeTarget != null);
+    assert(phase == HeartsPhase.Take);
+    assert(this.takeTarget != null);
     List<Card> cards = this.cardCollections[takeTarget + OFFSET_PASS];
     assert(cards.length == 3);
 
@@ -349,7 +358,8 @@ class HeartsGame extends Game {
   // The UI will handle the drag-drop of the Pass Phase with its own state.
   // The UI will initiate pass separately.
   void move(Card card, List<Card> dest) {
-    assert(phase == HeartsPhase.Play && whoseTurn == playerNumber);
+    assert(phase == HeartsPhase.Play);
+    assert(whoseTurn == playerNumber);
 
     int i = findCard(card);
     if (i == -1) {
@@ -540,6 +550,25 @@ class HeartsGame extends Game {
     }
     return total;
   }
+
+  // TODO(alexfandrianto): Remove. This is just for testing the UI without having
+  // to play through the whole game.
+  void jumpToScorePhaseDebug() {
+    for (int i = 0; i < 4; i++) {
+      // Move the hand cards, pass cards, etc. to the tricks for each player.
+      // If you're in the deal phase, this will probably do nothing.
+      List<Card> trick = cardCollections[i + OFFSET_TRICK];
+      trick.addAll(cardCollections[i + OFFSET_HAND]);
+      cardCollections[i + OFFSET_HAND].clear();
+      trick.addAll(cardCollections[i + OFFSET_PLAY]);
+      cardCollections[i + OFFSET_PLAY].clear();
+      trick.addAll(cardCollections[i + OFFSET_PASS]);
+      cardCollections[i + OFFSET_PASS].clear();
+    }
+
+    phase = HeartsPhase.Score;
+    this.prepareScore();
+  }
 }
 
 abstract class GameLog {
@@ -608,6 +637,10 @@ abstract class GameLog {
 
     // Now that we got an update, let's try our other pending commands.
     _tryPendingCommand();
+  }
+
+  String toString() {
+    return log.toString();
   }
 
   // UNIMPLEMENTED: Let subclasses override this.

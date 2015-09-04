@@ -3,6 +3,10 @@ ETHER_DIR := $(V23_ROOT)/release/mojo/syncbase
 CROUPIER_DIR := $(shell pwd)
 SHELL := /bin/bash -euo pipefail
 
+# Sky wants us to use a later version of pub, so just in case, use theirs when getting packages.
+# TODO(alexfandrianto): How do I update my actual pub and my sublime pub?
+PATH := $(SKY_DIR)/src/third_party/dart-sdk/dart-sdk/bin:$(PATH)
+
 ifdef ANDROID
 	MOJO_ANDROID_FLAGS := --android
 

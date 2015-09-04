@@ -30,6 +30,12 @@ class CardCollectionComponent extends StatefulComponent {
     acceptType = other.acceptType;
   }
 
+  bool _handleWillAccept(dynamic data) {
+    print('will accept?');
+    print(data);
+    return true;
+  }
+
   void _handleAccept(component_card.Card data) {
     print('accept');
     setState(() {
@@ -82,7 +88,14 @@ class CardCollectionComponent extends StatefulComponent {
 
   Widget _buildHearts() {
     List<Widget> cardComponents = new List<Widget>();
-    cardComponents.add(new Text(status));
+    if (cards.length == 0) {
+      // TODO(alexfandrianto): I wish I could remove this, but Sky actually
+      // complains about a sizing issue when you do that.
+      // This is likely related to the Positioning an unsized child bug.
+      // I think we have to control our size a bit too much in Sky.
+      // https://github.com/domokit/sky_engine/blob/master/sky/packages/sky/lib/src/widgets/sizing.md
+      cardComponents.add(new Text("")); // new Text(status)
+    }
     for (int i = 0; i < cards.length; i++) {
       component_card.Card c = new component_card.Card(cards[i], faceUp);
 
@@ -110,9 +123,8 @@ class CardCollectionComponent extends StatefulComponent {
         );
       case DropType.card:
         return new DragTarget<component_card.Card>(
+            onWillAccept: _handleWillAccept,
             onAccept: _handleAccept, builder: (List<component_card.Card> data, _) {
-          print(this.cards.length);
-          print(data);
           return new Container(
               decoration: new BoxDecoration(
                   border: new Border.all(
@@ -127,9 +139,8 @@ class CardCollectionComponent extends StatefulComponent {
         });
       case DropType.card_collection:
         return new DragTarget<CardCollectionComponent>(
+            onWillAccept: _handleWillAccept,
             onAccept: _handleAcceptMultiple, builder: (List<CardCollectionComponent> data, _) {
-          print('CC ${this.cards.length}');
-          print(data);
           return new Container(
               decoration: new BoxDecoration(
                   border: new Border.all(

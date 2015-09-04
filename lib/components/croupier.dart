@@ -15,7 +15,7 @@ class CroupierComponent extends StatefulComponent {
     croupier = other.croupier;
   }
 
-  Function setStateCallbackFactory(logic_croupier.CroupierState s,
+  Function makeSetStateCallback(logic_croupier.CroupierState s,
       [var data = null]) {
     return () => setState(() {
       croupier.setState(s, data);
@@ -31,7 +31,7 @@ class CroupierComponent extends StatefulComponent {
             child: new Flex([
           new FlatButton(
               child: new Text('Create Game'),
-              onPressed: setStateCallbackFactory(
+              onPressed: makeSetStateCallback(
                   logic_croupier.CroupierState.ChooseGame)),
           new FlatButton(child: new Text('Join Game')),
           new FlatButton(child: new Text('Settings'))
@@ -45,19 +45,19 @@ class CroupierComponent extends StatefulComponent {
             child: new Flex([
           new FlatButton(
               child: new Text('Proto'),
-              onPressed: setStateCallbackFactory(
+              onPressed: makeSetStateCallback(
                   logic_croupier.CroupierState.PlayGame,
                   logic_game.GameType.Proto)),
           new FlatButton(
               child: new Text('Hearts'),
-              onPressed: setStateCallbackFactory(
+              onPressed: makeSetStateCallback(
                   logic_croupier.CroupierState.PlayGame,
                   logic_game.GameType.Hearts)),
           new FlatButton(child: new Text('Poker')),
           new FlatButton(child: new Text('Solitaire')),
           new FlatButton(
               child: new Text('Syncbase Echo'),
-              onPressed: setStateCallbackFactory(
+              onPressed: makeSetStateCallback(
                   logic_croupier.CroupierState.PlayGame,
                   logic_game.GameType.SyncbaseEcho))
         ], direction: FlexDirection.vertical));
@@ -68,7 +68,9 @@ class CroupierComponent extends StatefulComponent {
       case logic_croupier.CroupierState.PlayGame:
         return new Container(
             padding: new EdgeDims.only(top: sky.view.paddingTop),
-            child: createGameComponent(croupier.game) // Asks the game UI to draw itself.
+            child: createGameComponent(
+              croupier.game,
+              makeSetStateCallback(logic_croupier.CroupierState.Welcome))
             );
       default:
         assert(false);
