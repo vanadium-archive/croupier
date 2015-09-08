@@ -38,9 +38,9 @@ class LogWriter {
   final Function updateCallback; // Takes in Map<String, String> data
   final SyncbaseClient _syncbaseClient;
 
-  LogWriter(this.updateCallback) :
-    _syncbaseClient = new SyncbaseClient(embedder.connectToService,
-        'https://mojo.v.io/syncbase_server.mojo');
+  LogWriter(this.updateCallback)
+      : _syncbaseClient = new SyncbaseClient(embedder.connectToService,
+            'https://mojo.v.io/syncbase_server.mojo');
 
   int seq = 0;
   SyncbaseTable tb;

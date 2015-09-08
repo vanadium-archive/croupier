@@ -18,8 +18,8 @@ class CroupierComponent extends StatefulComponent {
   Function makeSetStateCallback(logic_croupier.CroupierState s,
       [var data = null]) {
     return () => setState(() {
-      croupier.setState(s, data);
-    });
+          croupier.setState(s, data);
+        });
   }
 
   Widget build() {
@@ -29,13 +29,13 @@ class CroupierComponent extends StatefulComponent {
         return new Container(
             padding: new EdgeDims.only(top: sky.view.paddingTop),
             child: new Flex([
-          new FlatButton(
-              child: new Text('Create Game'),
-              onPressed: makeSetStateCallback(
-                  logic_croupier.CroupierState.ChooseGame)),
-          new FlatButton(child: new Text('Join Game')),
-          new FlatButton(child: new Text('Settings'))
-        ], direction: FlexDirection.vertical));
+              new FlatButton(
+                  child: new Text('Create Game'),
+                  onPressed: makeSetStateCallback(
+                      logic_croupier.CroupierState.ChooseGame)),
+              new FlatButton(child: new Text('Join Game')),
+              new FlatButton(child: new Text('Settings'))
+            ], direction: FlexDirection.vertical));
       case logic_croupier.CroupierState.Settings:
         return null; // in which we let them pick an avatar, name, and color. And return to the previous screen after (NOT IMPLEMENTED YET)
       case logic_croupier.CroupierState.ChooseGame:
@@ -43,24 +43,24 @@ class CroupierComponent extends StatefulComponent {
         return new Container(
             padding: new EdgeDims.only(top: sky.view.paddingTop),
             child: new Flex([
-          new FlatButton(
-              child: new Text('Proto'),
-              onPressed: makeSetStateCallback(
-                  logic_croupier.CroupierState.PlayGame,
-                  logic_game.GameType.Proto)),
-          new FlatButton(
-              child: new Text('Hearts'),
-              onPressed: makeSetStateCallback(
-                  logic_croupier.CroupierState.PlayGame,
-                  logic_game.GameType.Hearts)),
-          new FlatButton(child: new Text('Poker')),
-          new FlatButton(child: new Text('Solitaire')),
-          new FlatButton(
-              child: new Text('Syncbase Echo'),
-              onPressed: makeSetStateCallback(
-                  logic_croupier.CroupierState.PlayGame,
-                  logic_game.GameType.SyncbaseEcho))
-        ], direction: FlexDirection.vertical));
+              new FlatButton(
+                  child: new Text('Proto'),
+                  onPressed: makeSetStateCallback(
+                      logic_croupier.CroupierState.PlayGame,
+                      logic_game.GameType.Proto)),
+              new FlatButton(
+                  child: new Text('Hearts'),
+                  onPressed: makeSetStateCallback(
+                      logic_croupier.CroupierState.PlayGame,
+                      logic_game.GameType.Hearts)),
+              new FlatButton(child: new Text('Poker')),
+              new FlatButton(child: new Text('Solitaire')),
+              new FlatButton(
+                  child: new Text('Syncbase Echo'),
+                  onPressed: makeSetStateCallback(
+                      logic_croupier.CroupierState.PlayGame,
+                      logic_game.GameType.SyncbaseEcho))
+            ], direction: FlexDirection.vertical));
       case logic_croupier.CroupierState.AwaitGame:
         return null; // in which players wait for game invitations to arrive.
       case logic_croupier.CroupierState.ArrangePlayers:
@@ -68,10 +68,8 @@ class CroupierComponent extends StatefulComponent {
       case logic_croupier.CroupierState.PlayGame:
         return new Container(
             padding: new EdgeDims.only(top: sky.view.paddingTop),
-            child: createGameComponent(
-              croupier.game,
-              makeSetStateCallback(logic_croupier.CroupierState.Welcome))
-            );
+            child: createGameComponent(croupier.game,
+                makeSetStateCallback(logic_croupier.CroupierState.Welcome)));
       default:
         assert(false);
         return null;

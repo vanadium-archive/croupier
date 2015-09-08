@@ -14,6 +14,7 @@ class Card {
     Card o = other as Card;
     return deck == o.deck && identifier == o.identifier;
   }
+
   int get hashCode => 37 * (deck.hashCode + 41 * identifier.hashCode);
 
   static final List<Card> All = new UnmodifiableListView<Card>([

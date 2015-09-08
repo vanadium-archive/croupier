@@ -3,7 +3,8 @@ import '../logic/game.dart'
     show Game, GameType, Viewer, HeartsGame, HeartsPhase;
 import '../src/syncbase/syncbase_echo_impl.dart' show SyncbaseEchoImpl;
 //import 'board.dart' show Board;
-import 'card_collection.dart' show CardCollectionComponent, DropType, Orientation;
+import 'card_collection.dart'
+    show CardCollectionComponent, DropType, Orientation;
 import 'draggable.dart' show Draggable;
 
 import 'package:sky/widgets.dart';
@@ -40,7 +41,7 @@ abstract class GameComponent extends StatefulComponent {
 }
 
 GameComponent createGameComponent(Game game, Function gameEndCallback) {
-  switch(game.gameType) {
+  switch (game.gameType) {
     case GameType.Proto:
       return new ProtoGameComponent(game, gameEndCallback);
     case GameType.Hearts:
@@ -54,7 +55,6 @@ GameComponent createGameComponent(Game game, Function gameEndCallback) {
   }
 }
 
-
 class ProtoGameComponent extends GameComponent {
   ProtoGameComponent(Game game, Function cb) : super(game, cb);
 
@@ -65,8 +65,9 @@ class ProtoGameComponent extends GameComponent {
 
     for (int i = 0; i < 4; i++) {
       List<logic_card.Card> cards = game.cardCollections[i];
-      CardCollectionComponent c = new CardCollectionComponent(
-          cards, game.playerNumber == i, Orientation.horz, _makeGameMoveCallback, dragChildren: true, acceptType: DropType.card);
+      CardCollectionComponent c = new CardCollectionComponent(cards,
+          game.playerNumber == i, Orientation.horz, _makeGameMoveCallback,
+          dragChildren: true, acceptType: DropType.card);
       cardCollections.add(c); // flex
     }
 
@@ -74,7 +75,8 @@ class ProtoGameComponent extends GameComponent {
         decoration: new BoxDecoration(
             backgroundColor: colors.Green[500], borderRadius: 5.0),
         child: new CardCollectionComponent(game.cardCollections[4], true,
-            Orientation.show1, _makeGameMoveCallback, dragChildren: true, acceptType: DropType.card)));
+            Orientation.show1, _makeGameMoveCallback,
+            dragChildren: true, acceptType: DropType.card)));
 
     cardCollections.add(_makeDebugButtons());
 
@@ -94,12 +96,11 @@ class ProtoGameComponent extends GameComponent {
     });
   }
 
-  Widget _makeDebugButtons() =>
-    new Flex([
-      new Text('P${game.playerNumber}'),
-      _makeButton('Switch View', _switchPlayersCallback),
-      _makeButton('Quit', _quitGameCallback)
-    ]);
+  Widget _makeDebugButtons() => new Flex([
+        new Text('P${game.playerNumber}'),
+        _makeButton('Switch View', _switchPlayersCallback),
+        _makeButton('Quit', _quitGameCallback)
+      ]);
 
   void _switchPlayersCallback() {
     setState(() {
@@ -122,17 +123,17 @@ class SyncbaseEchoGameComponent extends GameComponent {
 
   Widget buildSyncbaseEcho() {
     return new Container(
-        decoration: const BoxDecoration(
-            backgroundColor: const Color(0xFF00ACC1)),
+        decoration:
+            const BoxDecoration(backgroundColor: const Color(0xFF00ACC1)),
         child: new Flex([
-      new RaisedButton(child: new Text('doEcho'), onPressed: s.doEcho),
-      new Text('sendMsg: ${s.sendMsg}'),
-      new Text('recvMsg: ${s.recvMsg}'),
-      new RaisedButton(child: new Text('doPutGet'), onPressed: s.doPutGet),
-      new Text('putStr: ${s.putStr}'),
-      new Text('getStr: ${s.getStr}'),
-      _makeButton('Quit', _quitGameCallback)
-    ], direction: FlexDirection.vertical));
+          new RaisedButton(child: new Text('doEcho'), onPressed: s.doEcho),
+          new Text('sendMsg: ${s.sendMsg}'),
+          new Text('recvMsg: ${s.recvMsg}'),
+          new RaisedButton(child: new Text('doPutGet'), onPressed: s.doPutGet),
+          new Text('putStr: ${s.putStr}'),
+          new Text('getStr: ${s.getStr}'),
+          _makeButton('Quit', _quitGameCallback)
+        ], direction: FlexDirection.vertical));
   }
 }
 
@@ -152,7 +153,9 @@ class HeartsGameComponent extends GameComponent {
   // Does not actually move anything in game logic terms.
   void _uiPassCardCallback(logic_card.Card card, List<logic_card.Card> dest) {
     setState(() {
-      if (dest == passingCards && !passingCards.contains(card) && passingCards.length < 3) {
+      if (dest == passingCards &&
+          !passingCards.contains(card) &&
+          passingCards.length < 3) {
         passingCards.add(card);
       } else if (dest != passingCards && passingCards.contains(card)) {
         passingCards.remove(card);
@@ -168,7 +171,8 @@ class HeartsGameComponent extends GameComponent {
     });
   }
 
-  void _makeGamePassCallback(List<logic_card.Card> cards, List<logic_card.Card> dest) {
+  void _makeGamePassCallback(
+      List<logic_card.Card> cards, List<logic_card.Card> dest) {
     setState(() {
       try {
         HeartsGame game = this.game as HeartsGame;
@@ -181,7 +185,8 @@ class HeartsGameComponent extends GameComponent {
     });
   }
 
-  void _makeGameTakeCallback(List<logic_card.Card> cards, List<logic_card.Card> dest) {
+  void _makeGameTakeCallback(
+      List<logic_card.Card> cards, List<logic_card.Card> dest) {
     setState(() {
       try {
         HeartsGame game = this.game as HeartsGame;
@@ -211,14 +216,17 @@ class HeartsGameComponent extends GameComponent {
     });
   }
 
-  Widget _makeDebugButtons() =>
-    new Flex([
-      new Flexible(flex: 1, child: new Text('P${game.playerNumber}')),
-      new Flexible(flex: 5, child: _makeButton('Switch View', _switchPlayersCallback)),
-      new Flexible(flex: 5, child: _makeButton('Dump Log', () => print(this.game.gamelog))),
-      new Flexible(flex: 5, child: _makeButton('End Round', _endRoundDebugCallback)),
-      new Flexible(flex: 4, child: _makeButton('Quit', _quitGameCallback))
-    ]);
+  Widget _makeDebugButtons() => new Flex([
+        new Flexible(flex: 1, child: new Text('P${game.playerNumber}')),
+        new Flexible(
+            flex: 5, child: _makeButton('Switch View', _switchPlayersCallback)),
+        new Flexible(
+            flex: 5,
+            child: _makeButton('Dump Log', () => print(this.game.gamelog))),
+        new Flexible(
+            flex: 5, child: _makeButton('End Round', _endRoundDebugCallback)),
+        new Flexible(flex: 4, child: _makeButton('Quit', _quitGameCallback))
+      ]);
 
   Widget _makeButton(String text, Function callback) {
     return new FlatButton(child: new Text(text), onPressed: callback);
@@ -253,8 +261,9 @@ class HeartsGameComponent extends GameComponent {
 
     for (int i = 0; i < 4; i++) {
       List<logic_card.Card> cards = game.cardCollections[i];
-      CardCollectionComponent c = new CardCollectionComponent(
-          cards, game.playerNumber == i, Orientation.horz, _makeGameMoveCallback, dragChildren: game.whoseTurn == i);
+      CardCollectionComponent c = new CardCollectionComponent(cards,
+          game.playerNumber == i, Orientation.horz, _makeGameMoveCallback,
+          dragChildren: game.whoseTurn == i);
       cardCollections.add(c); // flex
     }
 
@@ -265,10 +274,16 @@ class HeartsGameComponent extends GameComponent {
         t = DropType.card;
       }
       plays.add(new Container(
-        decoration: new BoxDecoration(
-            backgroundColor: game.whoseTurn == i ? colors.Blue[500] : colors.Green[500], borderRadius: 5.0),
-        child: new CardCollectionComponent(game.cardCollections[i + HeartsGame.OFFSET_PLAY], true,
-            Orientation.show1, _makeGameMoveCallback, acceptType: t)));
+          decoration: new BoxDecoration(
+              backgroundColor:
+                  game.whoseTurn == i ? colors.Blue[500] : colors.Green[500],
+              borderRadius: 5.0),
+          child: new CardCollectionComponent(
+              game.cardCollections[i + HeartsGame.OFFSET_PLAY],
+              true,
+              Orientation.show1,
+              _makeGameMoveCallback,
+              acceptType: t)));
     }
 
     cardCollections.add(new Flex(plays));
@@ -295,33 +310,35 @@ class HeartsGameComponent extends GameComponent {
     return new Container(
         decoration: new BoxDecoration(backgroundColor: colors.Pink[500]),
         child: new Flex([
-      new Text('Player ${game.playerNumber}'),
-      new Text('${game.scores}'), // TODO(alexfandrianto): we want to show round by round, deltas too, don't we?
-      w,
-      _makeButton("Return to Lobby", _quitGameCallback),
-      _makeDebugButtons()
-    ], direction: FlexDirection.vertical));
+          new Text('Player ${game.playerNumber}'),
+          // TODO(alexfandrianto): we want to show round by round, deltas too, don't we?
+          new Text('${game.scores}'),
+          w,
+          _makeButton("Return to Lobby", _quitGameCallback),
+          _makeDebugButtons()
+        ], direction: FlexDirection.vertical));
   }
 
   Widget showDeal() {
     return new Container(
         decoration: new BoxDecoration(backgroundColor: colors.Pink[500]),
         child: new Flex([
-      new Text('Player ${game.playerNumber}'),
-      _makeButton('Deal', game.dealCards),
-      _makeDebugButtons()
-    ], direction: FlexDirection.vertical));
+          new Text('Player ${game.playerNumber}'),
+          _makeButton('Deal', game.dealCards),
+          _makeDebugButtons()
+        ], direction: FlexDirection.vertical));
   }
 
   Widget showPass() {
     HeartsGame game = this.game as HeartsGame;
 
-    List<logic_card.Card> passCards = game.cardCollections[game.playerNumber + HeartsGame.OFFSET_PASS];
+    List<logic_card.Card> passCards =
+        game.cardCollections[game.playerNumber + HeartsGame.OFFSET_PASS];
 
     List<logic_card.Card> playerCards = game.cardCollections[game.playerNumber];
     List<logic_card.Card> remainingCards = new List<logic_card.Card>();
     playerCards.forEach((logic_card.Card c) {
-      if (!passingCards.contains(c)){
+      if (!passingCards.contains(c)) {
         remainingCards.add(c);
       }
     });
@@ -334,12 +351,15 @@ class HeartsGameComponent extends GameComponent {
         decoration: new BoxDecoration(backgroundColor: colors.Pink[500]),
         child: new Flex(<Widget>[
           new Text(game.debugString),
-          new CardCollectionComponent(passCards, true,
-                Orientation.horz, _makeGamePassCallback, acceptType: DropType.card_collection),
-          new Draggable<CardCollectionComponent>(new CardCollectionComponent(passingCards, true,
-                Orientation.horz, _uiPassCardCallback, dragChildren: !hasPassed, acceptType: DropType.card)),
-          new CardCollectionComponent(remainingCards, true,
-                Orientation.horz, _uiPassCardCallback, dragChildren: !hasPassed, acceptType: DropType.card),
+          new CardCollectionComponent(
+              passCards, true, Orientation.horz, _makeGamePassCallback,
+              acceptType: DropType.card_collection),
+          new Draggable<CardCollectionComponent>(new CardCollectionComponent(
+              passingCards, true, Orientation.horz, _uiPassCardCallback,
+              dragChildren: !hasPassed, acceptType: DropType.card)),
+          new CardCollectionComponent(
+              remainingCards, true, Orientation.horz, _uiPassCardCallback,
+              dragChildren: !hasPassed, acceptType: DropType.card),
           _makeDebugButtons()
         ], direction: FlexDirection.vertical));
   }
@@ -348,12 +368,13 @@ class HeartsGameComponent extends GameComponent {
     HeartsGame game = this.game as HeartsGame;
 
     List<logic_card.Card> playerCards = game.cardCollections[game.playerNumber];
-    List<logic_card.Card> takeCards = game.cardCollections[game.takeTarget + HeartsGame.OFFSET_PASS];
+    List<logic_card.Card> takeCards =
+        game.cardCollections[game.takeTarget + HeartsGame.OFFSET_PASS];
 
     bool hasTaken = takeCards.length == 0;
 
-    Widget take = new CardCollectionComponent(takeCards, true,
-                Orientation.horz, _makeGameTakeCallback);
+    Widget take = new CardCollectionComponent(
+        takeCards, true, Orientation.horz, _makeGameTakeCallback);
     if (!hasTaken) {
       take = new Draggable<CardCollectionComponent>(take);
     }
@@ -363,8 +384,9 @@ class HeartsGameComponent extends GameComponent {
         child: new Flex(<Widget>[
           new Text(game.debugString),
           take,
-          new CardCollectionComponent(playerCards, true,
-                Orientation.horz, _makeGameTakeCallback, dragChildren: true, acceptType: DropType.card_collection),
+          new CardCollectionComponent(
+              playerCards, true, Orientation.horz, _makeGameTakeCallback,
+              dragChildren: true, acceptType: DropType.card_collection),
           _makeDebugButtons()
         ], direction: FlexDirection.vertical));
   }

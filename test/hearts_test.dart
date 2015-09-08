@@ -11,53 +11,85 @@ void main() {
       game.dealCards(); // What the dealer actually runs to get cards to everybody.
 
       // By virtue of creating the game, HeartsGame should have 4 collections with 13 cards and 8 collections with 0 cards each.
-      expect(game.cardCollections[
-          HeartsGame.PLAYER_A + HeartsGame.OFFSET_HAND].length, equals(13),
+      expect(
+          game.cardCollections[HeartsGame.PLAYER_A + HeartsGame.OFFSET_HAND]
+              .length,
+          equals(13),
           reason: "Dealt 13 cards to A");
-      expect(game.cardCollections[
-          HeartsGame.PLAYER_B + HeartsGame.OFFSET_HAND].length, equals(13),
+      expect(
+          game.cardCollections[HeartsGame.PLAYER_B + HeartsGame.OFFSET_HAND]
+              .length,
+          equals(13),
           reason: "Dealt 13 cards to B");
-      expect(game.cardCollections[
-          HeartsGame.PLAYER_C + HeartsGame.OFFSET_HAND].length, equals(13),
+      expect(
+          game.cardCollections[HeartsGame.PLAYER_C + HeartsGame.OFFSET_HAND]
+              .length,
+          equals(13),
           reason: "Dealt 13 cards to C");
-      expect(game.cardCollections[
-          HeartsGame.PLAYER_D + HeartsGame.OFFSET_HAND].length, equals(13),
+      expect(
+          game.cardCollections[HeartsGame.PLAYER_D + HeartsGame.OFFSET_HAND]
+              .length,
+          equals(13),
           reason: "Dealt 13 cards to D");
-      expect(game.cardCollections[
-          HeartsGame.PLAYER_A + HeartsGame.OFFSET_PLAY].length, equals(0),
+      expect(
+          game.cardCollections[HeartsGame.PLAYER_A + HeartsGame.OFFSET_PLAY]
+              .length,
+          equals(0),
           reason: "Not playing yet");
-      expect(game.cardCollections[
-          HeartsGame.PLAYER_B + HeartsGame.OFFSET_PLAY].length, equals(0),
+      expect(
+          game.cardCollections[HeartsGame.PLAYER_B + HeartsGame.OFFSET_PLAY]
+              .length,
+          equals(0),
           reason: "Not playing yet");
-      expect(game.cardCollections[
-          HeartsGame.PLAYER_C + HeartsGame.OFFSET_PLAY].length, equals(0),
+      expect(
+          game.cardCollections[HeartsGame.PLAYER_C + HeartsGame.OFFSET_PLAY]
+              .length,
+          equals(0),
           reason: "Not playing yet");
-      expect(game.cardCollections[
-          HeartsGame.PLAYER_D + HeartsGame.OFFSET_PLAY].length, equals(0),
+      expect(
+          game.cardCollections[HeartsGame.PLAYER_D + HeartsGame.OFFSET_PLAY]
+              .length,
+          equals(0),
           reason: "Not playing yet");
-      expect(game.cardCollections[
-          HeartsGame.PLAYER_A + HeartsGame.OFFSET_PASS].length, equals(0),
+      expect(
+          game.cardCollections[HeartsGame.PLAYER_A + HeartsGame.OFFSET_PASS]
+              .length,
+          equals(0),
           reason: "Not passing yet");
-      expect(game.cardCollections[
-          HeartsGame.PLAYER_B + HeartsGame.OFFSET_PASS].length, equals(0),
+      expect(
+          game.cardCollections[HeartsGame.PLAYER_B + HeartsGame.OFFSET_PASS]
+              .length,
+          equals(0),
           reason: "Not passing yet");
-      expect(game.cardCollections[
-          HeartsGame.PLAYER_C + HeartsGame.OFFSET_PASS].length, equals(0),
+      expect(
+          game.cardCollections[HeartsGame.PLAYER_C + HeartsGame.OFFSET_PASS]
+              .length,
+          equals(0),
           reason: "Not passing yet");
-      expect(game.cardCollections[
-          HeartsGame.PLAYER_D + HeartsGame.OFFSET_PASS].length, equals(0),
+      expect(
+          game.cardCollections[HeartsGame.PLAYER_D + HeartsGame.OFFSET_PASS]
+              .length,
+          equals(0),
           reason: "Not passing yet");
-      expect(game.cardCollections[
-          HeartsGame.PLAYER_A + HeartsGame.OFFSET_TRICK].length, equals(0),
+      expect(
+          game.cardCollections[HeartsGame.PLAYER_A + HeartsGame.OFFSET_TRICK]
+              .length,
+          equals(0),
           reason: "No tricks yet");
-      expect(game.cardCollections[
-          HeartsGame.PLAYER_B + HeartsGame.OFFSET_TRICK].length, equals(0),
+      expect(
+          game.cardCollections[HeartsGame.PLAYER_B + HeartsGame.OFFSET_TRICK]
+              .length,
+          equals(0),
           reason: "No tricks yet");
-      expect(game.cardCollections[
-          HeartsGame.PLAYER_C + HeartsGame.OFFSET_TRICK].length, equals(0),
+      expect(
+          game.cardCollections[HeartsGame.PLAYER_C + HeartsGame.OFFSET_TRICK]
+              .length,
+          equals(0),
           reason: "No tricks yet");
-      expect(game.cardCollections[
-          HeartsGame.PLAYER_D + HeartsGame.OFFSET_TRICK].length, equals(0),
+      expect(
+          game.cardCollections[HeartsGame.PLAYER_D + HeartsGame.OFFSET_TRICK]
+              .length,
+          equals(0),
           reason: "No tricks yet");
     });
   });
@@ -171,16 +203,16 @@ void main() {
       // Confirm cards in hands.
       List<Card> expectedAHand =
           new List<Card>.from(Card.All.getRange(26, 26 + 5))
-        ..addAll(Card.All.getRange(13 + 5, 26));
+            ..addAll(Card.All.getRange(13 + 5, 26));
       List<Card> expectedBHand =
           new List<Card>.from(Card.All.getRange(13, 13 + 5))
-        ..addAll(Card.All.getRange(39 + 5, 52));
+            ..addAll(Card.All.getRange(39 + 5, 52));
       List<Card> expectedCHand =
           new List<Card>.from(Card.All.getRange(39, 39 + 5))
-        ..addAll(Card.All.getRange(0 + 5, 13));
+            ..addAll(Card.All.getRange(0 + 5, 13));
       List<Card> expectedDHand =
           new List<Card>.from(Card.All.getRange(0, 0 + 5))
-        ..addAll(Card.All.getRange(26 + 5, 39));
+            ..addAll(Card.All.getRange(26 + 5, 39));
       expect(game.cardCollections[HeartsGame.PLAYER_A], equals(expectedAHand));
       expect(game.cardCollections[HeartsGame.PLAYER_B], equals(expectedBHand));
       expect(game.cardCollections[HeartsGame.PLAYER_C], equals(expectedCHand));
@@ -198,16 +230,16 @@ void main() {
       // Confirm cards in hands and passes.
       List<Card> expectedAHand =
           new List<Card>.from(Card.All.getRange(26 + 3, 26 + 5))
-        ..addAll(Card.All.getRange(13 + 5, 26));
+            ..addAll(Card.All.getRange(13 + 5, 26));
       List<Card> expectedBHand =
           new List<Card>.from(Card.All.getRange(13 + 3, 13 + 5))
-        ..addAll(Card.All.getRange(39 + 5, 52));
+            ..addAll(Card.All.getRange(39 + 5, 52));
       List<Card> expectedCHand =
           new List<Card>.from(Card.All.getRange(39 + 3, 39 + 5))
-        ..addAll(Card.All.getRange(0 + 5, 13));
+            ..addAll(Card.All.getRange(0 + 5, 13));
       List<Card> expectedDHand =
           new List<Card>.from(Card.All.getRange(0 + 3, 0 + 5))
-        ..addAll(Card.All.getRange(26 + 5, 39));
+            ..addAll(Card.All.getRange(26 + 5, 39));
       List<Card> expectedAPass =
           new List<Card>.from(Card.All.getRange(26, 26 + 3));
       List<Card> expectedBPass =
@@ -242,20 +274,20 @@ void main() {
       // Note: I will eventually want to do a sorted comparison or set comparison instead.
       List<Card> expectedAHand =
           new List<Card>.from(Card.All.getRange(26 + 3, 26 + 5))
-        ..addAll(Card.All.getRange(13 + 5, 26))
-        ..addAll(Card.All.getRange(13, 13 + 3));
+            ..addAll(Card.All.getRange(13 + 5, 26))
+            ..addAll(Card.All.getRange(13, 13 + 3));
       List<Card> expectedBHand =
           new List<Card>.from(Card.All.getRange(13 + 3, 13 + 5))
-        ..addAll(Card.All.getRange(39 + 5, 52))
-        ..addAll(Card.All.getRange(39, 39 + 3));
+            ..addAll(Card.All.getRange(39 + 5, 52))
+            ..addAll(Card.All.getRange(39, 39 + 3));
       List<Card> expectedCHand =
           new List<Card>.from(Card.All.getRange(39 + 3, 39 + 5))
-        ..addAll(Card.All.getRange(0 + 5, 13))
-        ..addAll(Card.All.getRange(0, 0 + 3));
+            ..addAll(Card.All.getRange(0 + 5, 13))
+            ..addAll(Card.All.getRange(0, 0 + 3));
       List<Card> expectedDHand =
           new List<Card>.from(Card.All.getRange(0 + 3, 0 + 5))
-        ..addAll(Card.All.getRange(26 + 5, 39))
-        ..addAll(Card.All.getRange(26, 26 + 3));
+            ..addAll(Card.All.getRange(26 + 5, 39))
+            ..addAll(Card.All.getRange(26, 26 + 3));
       expect(game.cardCollections[HeartsGame.PLAYER_A], equals(expectedAHand));
       expect(game.cardCollections[HeartsGame.PLAYER_B], equals(expectedBHand));
       expect(game.cardCollections[HeartsGame.PLAYER_C], equals(expectedCHand));
@@ -303,17 +335,25 @@ void main() {
       }
 
       // Assert that hands/plays/passes are empty.
-      expect(game.cardCollections[
-          HeartsGame.PLAYER_A + HeartsGame.OFFSET_HAND].length, equals(0),
+      expect(
+          game.cardCollections[HeartsGame.PLAYER_A + HeartsGame.OFFSET_HAND]
+              .length,
+          equals(0),
           reason: "Played all cards");
-      expect(game.cardCollections[
-          HeartsGame.PLAYER_B + HeartsGame.OFFSET_HAND].length, equals(0),
+      expect(
+          game.cardCollections[HeartsGame.PLAYER_B + HeartsGame.OFFSET_HAND]
+              .length,
+          equals(0),
           reason: "Played all cards");
-      expect(game.cardCollections[
-          HeartsGame.PLAYER_C + HeartsGame.OFFSET_HAND].length, equals(0),
+      expect(
+          game.cardCollections[HeartsGame.PLAYER_C + HeartsGame.OFFSET_HAND]
+              .length,
+          equals(0),
           reason: "Played all cards");
-      expect(game.cardCollections[
-          HeartsGame.PLAYER_D + HeartsGame.OFFSET_HAND].length, equals(0),
+      expect(
+          game.cardCollections[HeartsGame.PLAYER_D + HeartsGame.OFFSET_HAND]
+              .length,
+          equals(0),
           reason: "Played all cards");
 
       // Check that all 52 cards are in tricks.
@@ -372,24 +412,28 @@ void main() {
       for (int i = 0; i < 60; i++) {
         runCommand();
       }
-      expect(game.scores, equals([
-        21 + 0 + 0 + 0,
-        3 + 26 + 26 + 26,
-        2 + 26 + 26 + 26,
-        0 + 26 + 26 + 26
-      ]));
+      expect(
+          game.scores,
+          equals([
+            21 + 0 + 0 + 0,
+            3 + 26 + 26 + 26,
+            2 + 26 + 26 + 26,
+            0 + 26 + 26 + 26
+          ]));
       expect(game.hasGameEnded, isFalse);
 
       // 5th round: 4 deal, 4 pass, 4 take, 52 play. Game is over, so no ready phase.
       for (int i = 0; i < 64; i++) {
         runCommand();
       }
-      expect(game.scores, equals([
-        21 + 0 + 0 + 0 + 0,
-        3 + 26 + 26 + 26 + 26,
-        2 + 26 + 26 + 26 + 26,
-        0 + 26 + 26 + 26 + 26
-      ]));
+      expect(
+          game.scores,
+          equals([
+            21 + 0 + 0 + 0 + 0,
+            3 + 26 + 26 + 26 + 26,
+            2 + 26 + 26 + 26 + 26,
+            0 + 26 + 26 + 26 + 26
+          ]));
       expect(game.hasGameEnded,
           isTrue); // assumes game ends after about 100 points.
     });

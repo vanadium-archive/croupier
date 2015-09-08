@@ -43,7 +43,8 @@ class Game {
   Game.dummy(this.gameType, this.gamelog) {}
 
   // A super constructor, don't call this unless you're a subclass.
-  Game._create(this.gameType, this.gamelog, this.playerNumber, int numCollections) {
+  Game._create(
+      this.gameType, this.gamelog, this.playerNumber, int numCollections) {
     gamelog.setGame(this);
     for (int i = 0; i < numCollections; i++) {
       cardCollections.add(new List<Card>());
@@ -53,7 +54,8 @@ class Game {
   List<Card> deckPeek(int numCards, [int start = 0]) {
     assert(deck.length >= numCards);
 
-    List<Card> cards = new List<Card>.from(deck.getRange(start, start + numCards));
+    List<Card> cards =
+        new List<Card>.from(deck.getRange(start, start + numCards));
     return cards;
   }
 
@@ -84,7 +86,8 @@ class Game {
 }
 
 class ProtoGame extends Game {
-  ProtoGame(int playerNumber) : super._create(GameType.Proto, new ProtoGameLog(), playerNumber, 6) {
+  ProtoGame(int playerNumber)
+      : super._create(GameType.Proto, new ProtoGameLog(), playerNumber, 6) {
     // playerNumber would be used in a real game, but I have to ignore it for debugging.
     // It would determine faceUp/faceDown status.faceDown
 
@@ -160,6 +163,7 @@ class HeartsGame extends Game {
     print('setting phase from ${_phase} to ${other}');
     _phase = other;
   }
+
   int roundNumber = 0;
   int lastTrickTaker;
   bool heartsBroken;
@@ -212,6 +216,7 @@ class HeartsGame extends Game {
         return null;
     }
   }
+
   int get takeTarget => _getTakeTarget(playerNumber);
   int _getTakeTarget(takerId) {
     switch (roundNumber % 4) {
@@ -257,12 +262,15 @@ class HeartsGame extends Game {
   String getCardSuit(Card c) {
     return c.identifier[0];
   }
+
   bool isHeartsCard(Card c) {
     return getCardSuit(c) == 'h' && c.deck == 'classic';
   }
+
   bool isQSCard(Card c) {
     return c == QUEEN_OF_SPADES;
   }
+
   bool isFirstCard(Card c) {
     return c == TWO_OF_CLUBS;
   }
@@ -273,7 +281,8 @@ class HeartsGame extends Game {
 
   bool hasSuit(int player, String suit) {
     Card matchesSuit = this.cardCollections[player + OFFSET_HAND].firstWhere(
-        (Card element) => (getCardSuit(element) == suit), orElse: () => null);
+        (Card element) => (getCardSuit(element) == suit),
+        orElse: () => null);
     return matchesSuit != null;
   }
 
@@ -283,6 +292,7 @@ class HeartsGame extends Game {
     }
     return null;
   }
+
   int get numPlayed {
     int count = 0;
     for (int i = 0; i < 4; i++) {
@@ -314,6 +324,7 @@ class HeartsGame extends Game {
   void setReady(int playerId) {
     ready[playerId] = true;
   }
+
   void unsetReady() {
     ready = <bool>[false, false, false, false];
   }
@@ -504,6 +515,7 @@ class HeartsGame extends Game {
 
     return highestIndex;
   }
+
   void prepareScore() {
     this.unsetReady();
     this.updateScore();
@@ -574,7 +586,8 @@ class HeartsGame extends Game {
 abstract class GameLog {
   Game game;
   List<GameCommand> log = new List<GameCommand>();
-  List<GameCommand> pendingCommands = new List<GameCommand>(); // This list is normally empty, but may grow if multiple commands arrive.
+  // This list is normally empty, but may grow if multiple commands arrive.
+  List<GameCommand> pendingCommands = new List<GameCommand>();
   bool hasFired = false;
   //int position = 0;
 
@@ -602,7 +615,9 @@ abstract class GameLog {
 
   void update(List<GameCommand> otherLog) {
     int numMatches = 0;
-    while (numMatches < log.length && numMatches < otherLog.length && log[numMatches] == otherLog[numMatches]) {
+    while (numMatches < log.length &&
+        numMatches < otherLog.length &&
+        log[numMatches] == otherLog[numMatches]) {
       numMatches++;
     }
 
@@ -631,7 +646,8 @@ abstract class GameLog {
       // Ask the game itself what to do.
       print('Oh no! A conflict!');
       log = updateLogCb(log, otherLog, numMatches);
-      assert(false); // What we need to do here is to undo the moves that didn't match and then replay the new ones.
+      // What we need to do here is to undo the moves that didn't match and then replay the new ones.
+      assert(false);
       // TODO(alexfandrianto): At worst, we can also just reset the game and play through all of it. (No UI updates till the end).
     }
 
@@ -645,7 +661,8 @@ abstract class GameLog {
 
   // UNIMPLEMENTED: Let subclasses override this.
   void addToLogCb(List<GameCommand> log, GameCommand newCommand);
-  List<GameCommand> updateLogCb(List<GameCommand> current, List<GameCommand> other, int mismatchIndex);
+  List<GameCommand> updateLogCb(
+      List<GameCommand> current, List<GameCommand> other, int mismatchIndex);
 }
 
 class HeartsGameLog extends GameLog {
@@ -655,7 +672,8 @@ class HeartsGameLog extends GameLog {
     logWriter = new LogWriter(handleSyncUpdate);
   }
 
-  Map<String, String> _toLogData(List<GameCommand> log, GameCommand newCommand) {
+  Map<String, String> _toLogData(
+      List<GameCommand> log, GameCommand newCommand) {
     Map<String, String> data = new Map<String, String>();
     for (int i = 0; i < log.length; i++) {
       data["${i}"] = log[i].data;
@@ -663,6 +681,7 @@ class HeartsGameLog extends GameLog {
     data["${log.length}"] = newCommand.data;
     return data;
   }
+
   List<HeartsCommand> _logFromData(Map<String, String> data) {
     List<HeartsCommand> otherlog = new List<HeartsCommand>();
     otherlog.length = data.length;
@@ -679,8 +698,11 @@ class HeartsGameLog extends GameLog {
   void addToLogCb(List<GameCommand> log, GameCommand newCommand) {
     logWriter.write(_toLogData(log, newCommand));
   }
-  List<GameCommand> updateLogCb(List<GameCommand> current, List<GameCommand> other, int mismatchIndex) {
-    assert(false); // TODO(alexfandrianto): How do you handle conflicts with Hearts?
+
+  List<GameCommand> updateLogCb(
+      List<GameCommand> current, List<GameCommand> other, int mismatchIndex) {
+    // TODO(alexfandrianto): How do you handle conflicts with Hearts?
+    assert(false);
     return current;
   }
 }
@@ -689,7 +711,9 @@ class ProtoGameLog extends GameLog {
   void addToLogCb(List<GameCommand> log, GameCommand newCommand) {
     update(new List<GameCommand>.from(log)..add(newCommand));
   }
-  List<GameCommand> updateLogCb(List<GameCommand> current, List<GameCommand> other, int mismatchIndex) {
+
+  List<GameCommand> updateLogCb(
+      List<GameCommand> current, List<GameCommand> other, int mismatchIndex) {
     assert(false); // This game can't have conflicts.
     return current;
   }
@@ -705,6 +729,7 @@ abstract class GameCommand {
     }
     return false;
   }
+
   String toString() {
     return data;
   }
@@ -737,6 +762,7 @@ class HeartsCommand extends GameCommand {
     buff.write("END");
     return buff.toString();
   }
+
   static computePass(int senderId, List<Card> cards) {
     StringBuffer buff = new StringBuffer();
     buff.write("Pass:${senderId}:");
@@ -744,12 +770,15 @@ class HeartsCommand extends GameCommand {
     buff.write("END");
     return buff.toString();
   }
+
   static computeTake(int takerId) {
     return "Take:${takerId}:END";
   }
+
   static computePlay(int playerId, Card c) {
     return "Play:${playerId}:${c.toString()}:END";
   }
+
   static computeReady(int playerId) {
     return "Ready:${playerId}:END";
   }
@@ -890,6 +919,7 @@ class ProtoCommand extends GameCommand {
     buff.write("END");
     return buff.toString();
   }
+
   static computePass(int senderId, int receiverId, List<Card> cards) {
     StringBuffer buff = new StringBuffer();
     buff.write("Pass:${senderId}:${receiverId}:");
@@ -897,6 +927,7 @@ class ProtoCommand extends GameCommand {
     buff.write("END");
     return buff.toString();
   }
+
   static computePlay(int playerId, Card c) {
     return "Play:${playerId}:${c.toString()}:END";
   }

@@ -21,9 +21,11 @@ class Draggable<T extends widgets.Widget> extends widgets.StatefulComponent {
         onPointerCancel: _cancelDrag,
         onPointerUp: _drop,
         child: new widgets.Transform(
-            transform: new vector_math.Matrix4.identity().translate(
-                0.0, 0.0), // displacement.dx, displacement.dy),
-            child: new widgets.Opacity(child: child, opacity: displacement != widgets.Offset.zero ? 0.5 : 1.0)));
+            transform: new vector_math.Matrix4.identity()
+                .translate(0.0, 0.0), // displacement.dx, displacement.dy),
+            child: new widgets.Opacity(
+                child: child,
+                opacity: displacement != widgets.Offset.zero ? 0.5 : 1.0)));
   }
 
   widgets.EventDisposition _startDrag(sky.PointerEvent event) {

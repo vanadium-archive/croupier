@@ -11,7 +11,8 @@ const double cardHeight = 96.0;
 const double cardWidth = 71.0;
 
 class CardCluster extends widgets.Component {
-  List<int> cards; // the indicies of the cards in the center, in clockwise order
+  // cards is the indicies of the cards in the center, in clockwise order
+  List<int> cards;
   int startingPos;
   CardCluster(this.startingPos, this.cards);
 
@@ -36,8 +37,8 @@ class CardCluster extends widgets.Component {
           break;
         case 2:
           widgetsList.add(new widgets.Transform(
-              transform: new vector_math.Matrix4.identity().translate(
-                  -cardWidth, cardWidth / 2),
+              transform: new vector_math.Matrix4.identity()
+                  .translate(-cardWidth, cardWidth / 2),
               child: new Card(logic_card.Card.All[cards[i]], true)));
           break;
         case 3:
@@ -71,7 +72,8 @@ class PlayerHand extends widgets.Component {
 
 class Board extends widgets.Component {
   CardCluster centerCluster;
-  List<PlayerHand> hands; // counts of cards in players hands, in clockwise order
+  // hands is the counts of cards in players hands, in clockwise order
+  List<PlayerHand> hands;
 
   Board(int firstCardPlayedPosition, List<int> cards, List<int> playerHandCount)
       : centerCluster = new CardCluster(firstCardPlayedPosition, cards) {
@@ -84,31 +86,32 @@ class Board extends widgets.Component {
 
   widgets.Widget build() {
     return new widgets.Container(
-        decoration: new widgets.BoxDecoration(
-            backgroundColor: colors.Pink[500]),
+        decoration:
+            new widgets.BoxDecoration(backgroundColor: colors.Pink[500]),
         child: new widgets.Stack([
-      new widgets.Positioned(child: hands[0], top: 0.0, left: 250.0),
-      new widgets.Positioned(
-          child: new widgets.Transform(
-              transform: new vector_math.Matrix4.identity()
-                  .rotateZ(math.PI / 2.0),
-              child: hands[1]),
-          left: 100.0,
-          top: 400.0),
-      new widgets.Positioned(
-          child: new widgets.Transform(
-              transform: new vector_math.Matrix4.identity().rotateZ(math.PI),
-              child: hands[2]),
-          top: 820.0,
-          left: 350.0),
-      new widgets.Positioned(
-          child: new widgets.Transform(
-              transform: new vector_math.Matrix4.identity()
-                  .rotateZ(math.PI / 2.0),
-              child: hands[3]),
-          left: 500.0,
-          top: 400.0),
-      new widgets.Positioned(child: centerCluster, top: 400.0, left: 300.0),
-    ]));
+          new widgets.Positioned(child: hands[0], top: 0.0, left: 250.0),
+          new widgets.Positioned(
+              child: new widgets.Transform(
+                  transform:
+                      new vector_math.Matrix4.identity().rotateZ(math.PI / 2.0),
+                  child: hands[1]),
+              left: 100.0,
+              top: 400.0),
+          new widgets.Positioned(
+              child: new widgets.Transform(
+                  transform:
+                      new vector_math.Matrix4.identity().rotateZ(math.PI),
+                  child: hands[2]),
+              top: 820.0,
+              left: 350.0),
+          new widgets.Positioned(
+              child: new widgets.Transform(
+                  transform:
+                      new vector_math.Matrix4.identity().rotateZ(math.PI / 2.0),
+                  child: hands[3]),
+              left: 500.0,
+              top: 400.0),
+          new widgets.Positioned(child: centerCluster, top: 400.0, left: 300.0),
+        ]));
   }
 }
