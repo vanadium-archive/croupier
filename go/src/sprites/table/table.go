@@ -50,7 +50,7 @@ func (t *Table) SendTrick() {
 	trickSuit := t.trick[t.firstPlayed].GetSuit()
 	highest := -1
 	highestIndex := -1
-	for i := 0; i < 4; i++ {
+	for i := 0; i < len(t.trick); i++ {
 		curCard := t.trick[i]
 		if curCard.GetSuit() == trickSuit && curCard.GetNum() > highest {
 			highest = curCard.GetNum()
@@ -65,10 +65,10 @@ func (t *Table) SendTrick() {
 }
 
 func (t *Table) ScoreRound() {
-	roundScores := []int{0, 0, 0, 0}
+	roundScores := make([]int, len(t.players))
 	shotMoon := false
 	shooter := -1
-	for i := 0; i < 4; i++ {
+	for i := 0; i < len(t.players); i++ {
 		roundScores[i] = t.players[i].CalculateScore()
 		if roundScores[i] == 26 {
 			shotMoon = true
@@ -77,7 +77,7 @@ func (t *Table) ScoreRound() {
 	}
 	//if the moon was shot
 	if shotMoon == true {
-		for i := 0; i < 4; i++ {
+		for i := 0; i < len(t.players); i++ {
 			if i == shooter {
 				roundScores[i] = 0
 			} else {
@@ -86,21 +86,25 @@ func (t *Table) ScoreRound() {
 		}
 	}
 	//sending scores to players
-	for i := 0; i < 4; i++ {
+	for i := 0; i < len(t.players); i++ {
 		t.players[i].UpdateScore(roundScores[i])
 	}
 }
 
 func (t *Table) Deal() {
+	numPlayers := len(t.players)
 	if t.allCards == nil {
 		t.GenerateCards()
 	}
 	shuffle := rand.Perm(52)
-	for i := 0; i < 4; i++ {
-		hand := make([]*card.Card, 0)
-		for j := 0; j < 13; j++ {
-			hand = append(hand, t.allCards[shuffle[j+13*i]])
-		}
-		t.players[i].SetHand(hand)
+	for i := 0; i < len(t.allCards); i++ {
+		t.players[i%numPlayers].AddToHand(t.allCards[shuffle[i]])
+	}
+}
+
+func (t *Table) EndRound() {
+	t.ScoreRound()
+	for _, p := range t.players {
+		p.ResetTricks()
 	}
 }

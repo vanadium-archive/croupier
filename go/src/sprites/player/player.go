@@ -28,8 +28,8 @@ func (p *Player) GetScore() int {
 	return p.score
 }
 
-func (p *Player) SetHand(cards []*card.Card) {
-	p.hand = cards
+func (p *Player) AddToHand(card *card.Card) {
+	p.hand = append(p.hand, card)
 }
 
 func (p *Player) TakeTrick(cards []*card.Card) {
@@ -42,13 +42,25 @@ func (p *Player) UpdateScore(score int) {
 
 func (p *Player) CalculateScore() int {
 	score := 0
-	for i := 0; i < len(p.tricks); i++ {
-		curCard := p.tricks[i]
-		if curCard.GetSuit() == "H" {
+	for _, card := range p.tricks {
+		if card.GetSuit() == "H" {
 			score += 1
-		} else if curCard.GetSuit() == "S" && curCard.GetNum() == 12 {
+		} else if card.GetSuit() == "S" && card.GetNum() == 12 {
 			score += 13
 		}
 	}
 	return score
+}
+
+func (p *Player) ResetTricks() {
+	p.tricks = nil
+}
+
+func (p *Player) HasSuit(suit string) bool {
+	for _, card := range p.hand {
+		if card.GetSuit() == suit {
+			return true
+		}
+	}
+	return false
 }
