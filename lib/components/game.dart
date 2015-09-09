@@ -320,6 +320,8 @@ class HeartsGameComponent extends GameComponent {
   }
 
   Widget showDeal() {
+    HeartsGame game = this.game as HeartsGame;
+
     return new Container(
         decoration: new BoxDecoration(backgroundColor: colors.Pink[500]),
         child: new Flex([
