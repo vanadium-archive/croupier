@@ -28,7 +28,6 @@ endif
 # very large, and can interfere with C++ memory if they are in the same
 # process.
 MOJO_SHELL_FLAGS := -v --enable-multiprocess \
-	--config-alias MOJO_BUILD_DIR=$(MOJO_BUILD_DIR) \
 	--config-alias SKY_DIR=$(SKY_DIR) \
 	--config-alias SKY_BUILD_DIR=$(SKY_BUILD_DIR) \
 	--config-alias ETHER_DIR=$(ETHER_DIR) \
@@ -52,12 +51,12 @@ dartfmt:
 	dartfmt -w $(DART_LIB_FILES) $(DART_TEST_FILES)
 
 .PHONY: lint
-lint:
+lint: packages
 	dartanalyzer lib/main.dart | grep -v "\[warning\] The imported libraries"
 	dartanalyzer $(DART_TEST_FILES) | grep -v "\[warning\] The imported libraries"
 
 .PHONY: start
-start:
+start: packages
 	./packages/sky/sky_tool start --checked
 
 .PHONY: mock
@@ -92,7 +91,7 @@ endif
 # If syncbase doesn't load, it could be that port 4002 is still in use; try fuser 4002/tcp.
 .PHONY: start-with-mojo
 start-with-mojo: env-check packages
-	$(MOJO_DIR)/src/mojo/devtools/common/mojo_run --config-file $(PWD)/mojoconfig $(MOJO_SHELL_FLAGS) $(MOJO_ANDROID_FLAGS) 'mojo:window_manager https://croupier.v.io/lib/main.dart'
+	$(MOJO_DIR)/src/mojo/devtools/common/mojo_run --config-file $(PWD)/mojoconfig $(MOJO_SHELL_FLAGS) $(MOJO_ANDROID_FLAGS) 'https://core.mojoapps.io/kiosk_wm.mojo https://croupier.v.io/lib/main.dart'
 
 # TODO(alexfandrianto): I split off the syncbase logic from game.dart because it
 # would not run in a stand-alone VM. We will need to add mojo_test eventually.
@@ -106,4 +105,4 @@ test: packages
 
 .PHONY: clean
 clean:
-	rm -rf packages
+	rm -rf .packages packages .pubspec.lock
