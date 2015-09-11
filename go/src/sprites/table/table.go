@@ -12,10 +12,13 @@ import (
 
 func NewTable(p []*player.Player) *Table {
 	return &Table{
-		players:     p,
-		trick:       []*card.Card{nil, nil, nil, nil},
-		firstPlayed: -1,
-		allCards:    nil,
+		players:      p,
+		trick:        make([]*card.Card, len(p)),
+		firstPlayed:  -1,
+		allCards:     nil,
+		heartsBroken: false,
+		firstTrick:   true,
+		winCondition: 100,
 	}
 }
 
@@ -24,15 +27,18 @@ type Table struct {
 	players []*player.Player
 	trick   []*card.Card
 	//firstPlayed is the index in trick of the card played first
-	firstPlayed int
-	allCards    []*card.Card
+	firstPlayed  int
+	allCards     []*card.Card
+	heartsBroken bool
+	firstTrick   bool
+	winCondition int
 }
 
 func (t *Table) GetPlayers() []*player.Player {
 	return t.players
 }
 
-func (t *Table) SetFirst(index int) {
+func (t *Table) SetFirstPlayed(index int) {
 	t.firstPlayed = index
 }
 
@@ -48,6 +54,36 @@ func (t *Table) GenerateCards() {
 
 func (t *Table) PlayCard(c *card.Card, playerIndex int) {
 	t.trick[playerIndex] = c
+	if c.GetSuit() == "H" && t.heartsBroken == false {
+		t.heartsBroken = true
+	}
+}
+
+func (t *Table) ValidPlay(c *card.Card, playerIndex int) bool {
+	player := t.players[playerIndex]
+	if t.firstPlayed == playerIndex {
+		if t.firstTrick == false {
+			if c.GetSuit() != "H" || t.heartsBroken == true {
+				return true
+			} else if player.HasSuit("C") == false && player.HasSuit("D") == false && player.HasSuit("S") == false {
+				return true
+			}
+		} else if c.GetSuit() == "C" && c.GetNum() == 2 {
+			return true
+		}
+	} else {
+		firstPlayedSuit := t.trick[t.firstPlayed].GetSuit()
+		if c.GetSuit() == firstPlayedSuit || player.HasSuit(firstPlayedSuit) == false {
+			if t.firstTrick == false {
+				return true
+			} else if c.GetSuit() == "D" || c.GetSuit() == "C" || (c.GetSuit() == "S" && c.GetNum() != 12) {
+				return true
+			} else if player.HasAllPoints() == true {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func (t *Table) SendTrick() {
@@ -63,8 +99,11 @@ func (t *Table) SendTrick() {
 	}
 	//clear trick
 	t.players[highestIndex].TakeTrick(t.trick)
-	for i := 0; i < 4; i++ {
+	for i := 0; i < len(t.trick); i++ {
 		t.trick[i] = nil
+	}
+	if t.firstTrick == true {
+		t.firstTrick = false
 	}
 }
 
@@ -106,9 +145,20 @@ func (t *Table) Deal() {
 	}
 }
 
-func (t *Table) EndRound() {
+//returns -1 if the game hasn't been won, playerIndex of the winner if it has
+func (t *Table) EndRound() int {
 	t.ScoreRound()
 	for _, p := range t.players {
 		p.ResetTricks()
+		if p.GetScore() >= 100 {
+			return p.GetPlayerIndex()
+		}
 	}
+	return -1
+}
+
+func (t *Table) NewRound() {
+	t.heartsBroken = false
+	t.firstTrick = true
+	t.Deal()
 }

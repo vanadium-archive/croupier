@@ -32,6 +32,10 @@ func (p *Player) GetScore() int {
 	return p.score
 }
 
+func (p *Player) GetPlayerIndex() int {
+	return p.playerIndex
+}
+
 func (p *Player) AddToHand(card *card.Card) {
 	p.hand = append(p.hand, card)
 }
@@ -67,4 +71,15 @@ func (p *Player) HasSuit(suit string) bool {
 		}
 	}
 	return false
+}
+
+func (p *Player) HasAllPoints() bool {
+	for _, card := range p.hand {
+		if card.GetSuit() == "D" || card.GetSuit() == "C" {
+			return false
+		} else if card.GetSuit() == "S" && card.GetNum() != 12 {
+			return false
+		}
+	}
+	return true
 }
