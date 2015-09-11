@@ -9,7 +9,16 @@ import (
 	"golang.org/x/mobile/exp/sprite"
 )
 
-func NewCard(n int, s string) *Card {
+type Suit string
+
+const (
+	Heart   Suit = "H"
+	Diamond Suit = "D"
+	Spade   Suit = "S"
+	Club    Suit = "C"
+)
+
+func NewCard(n int, s Suit) *Card {
 	return &Card{
 		suit:   s,
 		num:    n,
@@ -22,7 +31,7 @@ func NewCard(n int, s string) *Card {
 }
 
 type Card struct {
-	suit string
+	suit Suit
 	//num ranges from 2-14; jack is 11, queen is 12, king is 13, ace is 14
 	num    int
 	node   *sprite.Node
@@ -32,7 +41,7 @@ type Card struct {
 	height float32
 }
 
-func (c *Card) GetSuit() string {
+func (c *Card) GetSuit() Suit {
 	return c.suit
 }
 

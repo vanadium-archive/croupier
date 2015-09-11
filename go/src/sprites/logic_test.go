@@ -22,10 +22,10 @@ func TestOne(test *testing.T) {
 	players := []*player.Player{p0, p1, p2, p3}
 	t := table.NewTable(players)
 	t.SetFirstPlayed(1)
-	t.PlayCard(card.NewCard(3, "H"), 1)
-	t.PlayCard(card.NewCard(7, "H"), 2)
-	t.PlayCard(card.NewCard(12, "S"), 3)
-	t.PlayCard(card.NewCard(4, "D"), 0)
+	t.PlayCard(card.NewCard(3, card.Heart), 1)
+	t.PlayCard(card.NewCard(7, card.Heart), 2)
+	t.PlayCard(card.NewCard(12, card.Spade), 3)
+	t.PlayCard(card.NewCard(4, card.Diamond), 0)
 	t.SendTrick()
 	t.EndRound()
 	score := p0.GetScore()
@@ -58,16 +58,16 @@ func TestTwo(test *testing.T) {
 	players := []*player.Player{p0, p1, p2, p3}
 	t := table.NewTable(players)
 	t.SetFirstPlayed(1)
-	t.PlayCard(card.NewCard(3, "H"), 1)
-	t.PlayCard(card.NewCard(7, "H"), 2)
-	t.PlayCard(card.NewCard(12, "S"), 3)
-	t.PlayCard(card.NewCard(4, "D"), 0)
+	t.PlayCard(card.NewCard(3, card.Heart), 1)
+	t.PlayCard(card.NewCard(7, card.Heart), 2)
+	t.PlayCard(card.NewCard(12, card.Spade), 3)
+	t.PlayCard(card.NewCard(4, card.Diamond), 0)
 	t.SendTrick()
 	t.SetFirstPlayed(2)
-	t.PlayCard(card.NewCard(5, "D"), 2)
-	t.PlayCard(card.NewCard(2, "H"), 3)
-	t.PlayCard(card.NewCard(13, "D"), 0)
-	t.PlayCard(card.NewCard(14, "S"), 1)
+	t.PlayCard(card.NewCard(5, card.Diamond), 2)
+	t.PlayCard(card.NewCard(2, card.Heart), 3)
+	t.PlayCard(card.NewCard(13, card.Diamond), 0)
+	t.PlayCard(card.NewCard(14, card.Spade), 1)
 	t.SendTrick()
 	t.EndRound()
 	score := p0.GetScore()
@@ -100,29 +100,29 @@ func TestThree(test *testing.T) {
 	players := []*player.Player{p0, p1, p2, p3}
 	t := table.NewTable(players)
 	t.SetFirstPlayed(1)
-	t.PlayCard(card.NewCard(8, "H"), 1)
-	t.PlayCard(card.NewCard(12, "S"), 2)
-	t.PlayCard(card.NewCard(13, "S"), 3)
-	t.PlayCard(card.NewCard(8, "C"), 0)
+	t.PlayCard(card.NewCard(8, card.Heart), 1)
+	t.PlayCard(card.NewCard(12, card.Spade), 2)
+	t.PlayCard(card.NewCard(13, card.Spade), 3)
+	t.PlayCard(card.NewCard(8, card.Club), 0)
 	t.SendTrick()
 	t.SetFirstPlayed(2)
-	t.PlayCard(card.NewCard(5, "C"), 2)
-	t.PlayCard(card.NewCard(2, "C"), 3)
-	t.PlayCard(card.NewCard(13, "H"), 0)
-	t.PlayCard(card.NewCard(11, "S"), 1)
+	t.PlayCard(card.NewCard(5, card.Club), 2)
+	t.PlayCard(card.NewCard(2, card.Club), 3)
+	t.PlayCard(card.NewCard(13, card.Heart), 0)
+	t.PlayCard(card.NewCard(11, card.Spade), 1)
 	t.SendTrick()
 	t.EndRound()
 	t.SetFirstPlayed(3)
-	t.PlayCard(card.NewCard(5, "S"), 3)
-	t.PlayCard(card.NewCard(6, "S"), 0)
-	t.PlayCard(card.NewCard(7, "S"), 1)
-	t.PlayCard(card.NewCard(10, "H"), 2)
+	t.PlayCard(card.NewCard(5, card.Spade), 3)
+	t.PlayCard(card.NewCard(6, card.Spade), 0)
+	t.PlayCard(card.NewCard(7, card.Spade), 1)
+	t.PlayCard(card.NewCard(10, card.Heart), 2)
 	t.SendTrick()
 	t.SetFirstPlayed(1)
-	t.PlayCard(card.NewCard(6, "D"), 1)
-	t.PlayCard(card.NewCard(2, "C"), 2)
-	t.PlayCard(card.NewCard(13, "H"), 3)
-	t.PlayCard(card.NewCard(11, "H"), 0)
+	t.PlayCard(card.NewCard(6, card.Diamond), 1)
+	t.PlayCard(card.NewCard(2, card.Club), 2)
+	t.PlayCard(card.NewCard(13, card.Heart), 3)
+	t.PlayCard(card.NewCard(11, card.Heart), 0)
 	t.SendTrick()
 	t.EndRound()
 	score := p0.GetScore()
@@ -203,12 +203,12 @@ func TestFive(test *testing.T) {
 //Testing playing a card-- HasSuit()
 func TestSix(test *testing.T) {
 	p := player.NewPlayer(0)
-	p.AddToHand(card.NewCard(6, "D"))
-	p.AddToHand(card.NewCard(4, "S"))
-	if p.HasSuit("D") == false || p.HasSuit("S") == false {
+	p.AddToHand(card.NewCard(6, card.Diamond))
+	p.AddToHand(card.NewCard(4, card.Spade))
+	if p.HasSuit(card.Diamond) == false || p.HasSuit(card.Spade) == false {
 		test.Errorf("False negative")
 	}
-	if p.HasSuit("C") == true || p.HasSuit("H") == true {
+	if p.HasSuit(card.Club) == true || p.HasSuit(card.Heart) == true {
 		test.Errorf("False positive")
 	}
 }
@@ -217,10 +217,10 @@ func TestSix(test *testing.T) {
 func TestSeven(test *testing.T) {
 	p1 := player.NewPlayer(0)
 	p2 := player.NewPlayer(1)
-	p1.AddToHand(card.NewCard(6, "H"))
-	p1.AddToHand(card.NewCard(12, "S"))
-	p2.AddToHand(card.NewCard(2, "D"))
-	p2.AddToHand(card.NewCard(5, "H"))
+	p1.AddToHand(card.NewCard(6, card.Heart))
+	p1.AddToHand(card.NewCard(12, card.Spade))
+	p2.AddToHand(card.NewCard(2, card.Diamond))
+	p2.AddToHand(card.NewCard(5, card.Heart))
 	if p1.HasAllPoints() == false {
 		test.Errorf("False negative")
 	}
@@ -235,9 +235,9 @@ func TestEight(test *testing.T) {
 	players := []*player.Player{p0}
 	t := table.NewTable(players)
 	t.SetFirstPlayed(0)
-	if t.ValidPlay(card.NewCard(8, "C"), 0) == true {
+	if t.ValidPlay(card.NewCard(8, card.Club), 0) == true {
 		test.Errorf("Expected invalid play for starting round with card other than 2 of Clubs")
-	} else if t.ValidPlay(card.NewCard(2, "C"), 0) == false {
+	} else if t.ValidPlay(card.NewCard(2, card.Club), 0) == false {
 		test.Errorf("Expected valid play for starting round with 2 of Clubs")
 	}
 }
@@ -246,13 +246,13 @@ func TestEight(test *testing.T) {
 func TestNine(test *testing.T) {
 	p0 := player.NewPlayer(0)
 	p1 := player.NewPlayer(1)
-	p1.AddToHand(card.NewCard(12, "S"))
-	p1.AddToHand(card.NewCard(3, "D"))
+	p1.AddToHand(card.NewCard(12, card.Spade))
+	p1.AddToHand(card.NewCard(3, card.Diamond))
 	players := []*player.Player{p0, p1}
 	t := table.NewTable(players)
 	t.SetFirstPlayed(0)
-	t.PlayCard(card.NewCard(2, "C"), 0)
-	if t.ValidPlay(card.NewCard(12, "S"), 1) == true {
+	t.PlayCard(card.NewCard(2, card.Club), 0)
+	if t.ValidPlay(card.NewCard(12, card.Spade), 1) == true {
 		test.Errorf("Expected invalid play for points on the first round")
 	}
 }
@@ -261,29 +261,29 @@ func TestNine(test *testing.T) {
 func TestTen(test *testing.T) {
 	p0 := player.NewPlayer(0)
 	p1 := player.NewPlayer(1)
-	p0.AddToHand(card.NewCard(5, "H"))
-	p1.AddToHand(card.NewCard(2, "H"))
-	p1.AddToHand(card.NewCard(3, "D"))
+	p0.AddToHand(card.NewCard(5, card.Heart))
+	p1.AddToHand(card.NewCard(2, card.Heart))
+	p1.AddToHand(card.NewCard(3, card.Diamond))
 	players := []*player.Player{p0, p1}
 	t := table.NewTable(players)
 	t.SetFirstPlayed(0)
-	t.PlayCard(card.NewCard(2, "C"), 0)
-	t.PlayCard(card.NewCard(3, "C"), 1)
+	t.PlayCard(card.NewCard(2, card.Club), 0)
+	t.PlayCard(card.NewCard(3, card.Club), 1)
 	t.SendTrick()
 	t.SetFirstPlayed(0)
-	if t.ValidPlay(card.NewCard(5, "H"), 0) == false {
+	if t.ValidPlay(card.NewCard(5, card.Heart), 0) == false {
 		test.Errorf("Expected valid play for opener rightfully breaking Hearts")
 	}
 	t.SetFirstPlayed(1)
-	if t.ValidPlay(card.NewCard(2, "H"), 1) == true {
+	if t.ValidPlay(card.NewCard(2, card.Heart), 1) == true {
 		test.Errorf("Expected invalid play for opener wrongfully breaking Hearts")
 	}
-	t.PlayCard(card.NewCard(3, "D"), 1)
-	if t.ValidPlay(card.NewCard(5, "H"), 0) == false {
+	t.PlayCard(card.NewCard(3, card.Diamond), 1)
+	if t.ValidPlay(card.NewCard(5, card.Heart), 0) == false {
 		test.Errorf("Expected valid play for follower rightfully breaking Hearts")
 	}
-	p0.AddToHand(card.NewCard(7, "D"))
-	if t.ValidPlay(card.NewCard(5, "H"), 0) == true {
+	p0.AddToHand(card.NewCard(7, card.Diamond))
+	if t.ValidPlay(card.NewCard(5, card.Heart), 0) == true {
 		test.Errorf("Expected invalid play for follower wrongfully breaking Hearts")
 	}
 }
@@ -292,20 +292,20 @@ func TestTen(test *testing.T) {
 func TestEleven(test *testing.T) {
 	p0 := player.NewPlayer(0)
 	p1 := player.NewPlayer(1)
-	p0.AddToHand(card.NewCard(2, "C"))
-	p1.AddToHand(card.NewCard(3, "D"))
+	p0.AddToHand(card.NewCard(2, card.Club))
+	p1.AddToHand(card.NewCard(3, card.Diamond))
 	players := []*player.Player{p0, p1}
 	t := table.NewTable(players)
 	t.SetFirstPlayed(0)
-	t.PlayCard(card.NewCard(2, "C"), 0)
-	if t.ValidPlay(card.NewCard(3, "D"), 1) == false {
+	t.PlayCard(card.NewCard(2, card.Club), 0)
+	if t.ValidPlay(card.NewCard(3, card.Diamond), 1) == false {
 		test.Errorf("Expected valid play for not following suit when player doesn't have suit")
 	}
-	p1.AddToHand(card.NewCard(5, "C"))
-	if t.ValidPlay(card.NewCard(5, "C"), 1) == false {
+	p1.AddToHand(card.NewCard(5, card.Club))
+	if t.ValidPlay(card.NewCard(5, card.Club), 1) == false {
 		test.Errorf("Expected valid play for following suit")
 	}
-	if t.ValidPlay(card.NewCard(3, "D"), 1) == true {
+	if t.ValidPlay(card.NewCard(3, card.Diamond), 1) == true {
 		test.Errorf("Expected invalid play for not following suit when player has suit")
 	}
 }
@@ -316,11 +316,11 @@ func TestTwelve(test *testing.T) {
 	players := []*player.Player{p0}
 	t := table.NewTable(players)
 	t.SetFirstPlayed(0)
-	t.PlayCard(card.NewCard(12, "S"), 0)
+	t.PlayCard(card.NewCard(12, card.Spade), 0)
 	t.SendTrick()
-	t.PlayCard(card.NewCard(12, "S"), 0)
+	t.PlayCard(card.NewCard(12, card.Spade), 0)
 	t.SendTrick()
-	t.PlayCard(card.NewCard(12, "S"), 0)
+	t.PlayCard(card.NewCard(12, card.Spade), 0)
 	t.SendTrick()
 	winner := t.EndRound()
 	expect := -1
@@ -328,17 +328,17 @@ func TestTwelve(test *testing.T) {
 		test.Errorf("Expected %d, got %d", expect, winner)
 	}
 	t.NewRound()
-	t.PlayCard(card.NewCard(12, "S"), 0)
+	t.PlayCard(card.NewCard(12, card.Spade), 0)
 	t.SendTrick()
-	t.PlayCard(card.NewCard(12, "S"), 0)
+	t.PlayCard(card.NewCard(12, card.Spade), 0)
 	t.SendTrick()
-	t.PlayCard(card.NewCard(12, "S"), 0)
+	t.PlayCard(card.NewCard(12, card.Spade), 0)
 	t.SendTrick()
-	t.PlayCard(card.NewCard(12, "S"), 0)
+	t.PlayCard(card.NewCard(12, card.Spade), 0)
 	t.SendTrick()
-	t.PlayCard(card.NewCard(12, "S"), 0)
+	t.PlayCard(card.NewCard(12, card.Spade), 0)
 	t.SendTrick()
-	t.PlayCard(card.NewCard(12, "S"), 0)
+	t.PlayCard(card.NewCard(12, card.Spade), 0)
 	t.SendTrick()
 	winner = t.EndRound()
 	expect = 0
