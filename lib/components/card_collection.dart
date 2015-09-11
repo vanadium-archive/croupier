@@ -1,3 +1,7 @@
+// Copyright 2015 The Vanadium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 import '../logic/card.dart' as logic_card;
 import 'card.dart' as component_card;
 import 'draggable.dart' show Draggable;

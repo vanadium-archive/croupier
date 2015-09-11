@@ -1,10 +1,14 @@
+// Copyright 2015 The Vanadium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 package discovery
 
 import (
-	"net/http"
-	"io/ioutil"
-	"strings"
 	"errors"
+	"io/ioutil"
+	"net/http"
+	"strings"
 )
 
 func FindNamespace(host string) (string, error) {
@@ -29,7 +33,7 @@ func FindNamespace(host string) (string, error) {
 						return cleanNamespace, nil
 					}
 				}
-			} 
+			}
 		}
 	}
 	//no instance of "v23.namespace.root=" is found

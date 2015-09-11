@@ -1,3 +1,7 @@
+// Copyright 2015 The Vanadium Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 /// The goal of log writer is to generically manage game logs.
 /// Syncbase will produce values that combine to form a List<GameCommand> while
 /// the in-memory GameLog will also hold such a list.

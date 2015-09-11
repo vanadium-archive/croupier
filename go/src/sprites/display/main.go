@@ -27,8 +27,6 @@
 // below. (Note: It currently doesn't work on Windows.)
 //   $ go install golang.org/x/mobile/example/sprite && sprite
 
-
-
 package main
 
 import (
@@ -37,8 +35,8 @@ import (
 	//"math"
 	"time"
 
-	_ "image/jpeg"
 	_ "image/gif"
+	_ "image/jpeg"
 
 	"golang.org/x/mobile/app"
 	"golang.org/x/mobile/asset"
@@ -57,24 +55,24 @@ import (
 )
 
 var (
-	startTime 			= time.Now()
-	eng       			= glsprite.Engine()
-	scene     			*sprite.Node
-	sprites   			[]*sprite.Node
-	spritesXY 			[][]float32
-	initialSpritesXY 	[][]float32
-	curSpriteIndex 		= -1
-	lastMouseXY	  		= []float32{-1,-1}
-	numCards   			= 4
-	numDropTargets 		= 3
-	numDecks			= 2
-	cardWidth 			= float32(175)
-	cardHeight 			= float32(245)
-	dropWidth 			= float32(768/2)
-	dropHeight 			= float32(620/2)
-	paddingSize 		= float32(cardWidth/5)
-	middleSize 			= float32(cardHeight)
-	windowSize 			= []float32{-1,-1}
+	startTime        = time.Now()
+	eng              = glsprite.Engine()
+	scene            *sprite.Node
+	sprites          []*sprite.Node
+	spritesXY        [][]float32
+	initialSpritesXY [][]float32
+	curSpriteIndex   = -1
+	lastMouseXY      = []float32{-1, -1}
+	numCards         = 4
+	numDropTargets   = 3
+	numDecks         = 2
+	cardWidth        = float32(175)
+	cardHeight       = float32(245)
+	dropWidth        = float32(768 / 2)
+	dropHeight       = float32(620 / 2)
+	paddingSize      = float32(cardWidth / 5)
+	middleSize       = float32(cardHeight)
+	windowSize       = []float32{-1, -1}
 )
 
 func main() {
@@ -100,62 +98,62 @@ func onTouch(t touch.Event) {
 	switch t.Type.String() {
 	case "begin":
 		//i > numDropTargets excludes drop targets, draw, and discard so they can't move
-		for i := len(sprites)-1; i >= numDropTargets+2; i-- {
-			if t.X >= spritesXY[i][0] && 
-			   t.Y >= spritesXY[i][1] &&
-			   t.X <= spritesXY[i][2]+spritesXY[i][0] &&
-			   t.Y <= spritesXY[i][3]+spritesXY[i][1] {
-			   		curSpriteIndex = i
-			   		lastMouseXY[0] = t.X
-			   		lastMouseXY[1] = t.Y
-			   		return
-			   }
+		for i := len(sprites) - 1; i >= numDropTargets+2; i-- {
+			if t.X >= spritesXY[i][0] &&
+				t.Y >= spritesXY[i][1] &&
+				t.X <= spritesXY[i][2]+spritesXY[i][0] &&
+				t.Y <= spritesXY[i][3]+spritesXY[i][1] {
+				curSpriteIndex = i
+				lastMouseXY[0] = t.X
+				lastMouseXY[1] = t.Y
+				return
+			}
 		}
 		//checking if draw or discard is clicked
 		for i := 1; i >= 0; i-- {
-			if t.X >= spritesXY[i][0] && 
-			   t.Y >= spritesXY[i][1] &&
-			   t.X <= spritesXY[i][2]+spritesXY[i][0] &&
-			   t.Y <= spritesXY[i][3]+spritesXY[i][1] {
-			   		if i == 0 {
-			   			//draw is clicked
-			   			numCards++
+			if t.X >= spritesXY[i][0] &&
+				t.Y >= spritesXY[i][1] &&
+				t.X <= spritesXY[i][2]+spritesXY[i][0] &&
+				t.Y <= spritesXY[i][3]+spritesXY[i][1] {
+				if i == 0 {
+					//draw is clicked
+					numCards++
+					loadScene()
+				} else {
+					//discard is clicked
+					if numCards > 0 {
+						numCards--
 						loadScene()
-			   		} else {
-			   			//discard is clicked
-			   			if numCards > 0 {
-			   				numCards--
-			   				loadScene()
-			   			}
-			   		}
-			   }
+					}
+				}
+			}
 		}
 	case "move":
 		if curSpriteIndex > -1 {
 			eng.SetTransform(sprites[curSpriteIndex], f32.Affine{
-				{spritesXY[curSpriteIndex][2], 0, spritesXY[curSpriteIndex][0]+t.X-lastMouseXY[0]},
-				{0, spritesXY[curSpriteIndex][3], spritesXY[curSpriteIndex][1]+t.Y-lastMouseXY[1]},
+				{spritesXY[curSpriteIndex][2], 0, spritesXY[curSpriteIndex][0] + t.X - lastMouseXY[0]},
+				{0, spritesXY[curSpriteIndex][3], spritesXY[curSpriteIndex][1] + t.Y - lastMouseXY[1]},
 			})
-			spritesXY[curSpriteIndex][0] = spritesXY[curSpriteIndex][0]+t.X-lastMouseXY[0]
-			spritesXY[curSpriteIndex][1] = spritesXY[curSpriteIndex][1]+t.Y-lastMouseXY[1]
+			spritesXY[curSpriteIndex][0] = spritesXY[curSpriteIndex][0] + t.X - lastMouseXY[0]
+			spritesXY[curSpriteIndex][1] = spritesXY[curSpriteIndex][1] + t.Y - lastMouseXY[1]
 			lastMouseXY[0] = t.X
 			lastMouseXY[1] = t.Y
 		}
 	case "end":
 		onTarget := false
 		for i := 2; i < numDropTargets+2; i++ {
-			if curSpriteIndex > -1 && 
-			   spritesXY[curSpriteIndex][0] + spritesXY[curSpriteIndex][2]/2 >= spritesXY[i][0] && 
-			   spritesXY[curSpriteIndex][1] + spritesXY[curSpriteIndex][3]/2 >= spritesXY[i][1] && 
-			   spritesXY[curSpriteIndex][0] + spritesXY[curSpriteIndex][2]/2 <= spritesXY[i][2]+spritesXY[i][0] &&
-			   spritesXY[curSpriteIndex][1] + spritesXY[curSpriteIndex][3]/2 <= spritesXY[i][3]+spritesXY[i][1] {
-			   		eng.SetTransform(sprites[curSpriteIndex], f32.Affine{
-						{spritesXY[curSpriteIndex][2], 0, spritesXY[i][0]+spritesXY[i][2]/2-spritesXY[curSpriteIndex][2]/2},
-						{0, spritesXY[curSpriteIndex][3], spritesXY[i][1]+spritesXY[i][3]/2-spritesXY[curSpriteIndex][3]/2},
-					})
-					spritesXY[curSpriteIndex][0] = spritesXY[i][0]+spritesXY[i][2]/2-spritesXY[curSpriteIndex][2]/2
-					spritesXY[curSpriteIndex][1] = spritesXY[i][1]+spritesXY[i][3]/2-spritesXY[curSpriteIndex][3]/2
-					onTarget = true
+			if curSpriteIndex > -1 &&
+				spritesXY[curSpriteIndex][0]+spritesXY[curSpriteIndex][2]/2 >= spritesXY[i][0] &&
+				spritesXY[curSpriteIndex][1]+spritesXY[curSpriteIndex][3]/2 >= spritesXY[i][1] &&
+				spritesXY[curSpriteIndex][0]+spritesXY[curSpriteIndex][2]/2 <= spritesXY[i][2]+spritesXY[i][0] &&
+				spritesXY[curSpriteIndex][1]+spritesXY[curSpriteIndex][3]/2 <= spritesXY[i][3]+spritesXY[i][1] {
+				eng.SetTransform(sprites[curSpriteIndex], f32.Affine{
+					{spritesXY[curSpriteIndex][2], 0, spritesXY[i][0] + spritesXY[i][2]/2 - spritesXY[curSpriteIndex][2]/2},
+					{0, spritesXY[curSpriteIndex][3], spritesXY[i][1] + spritesXY[i][3]/2 - spritesXY[curSpriteIndex][3]/2},
+				})
+				spritesXY[curSpriteIndex][0] = spritesXY[i][0] + spritesXY[i][2]/2 - spritesXY[curSpriteIndex][2]/2
+				spritesXY[curSpriteIndex][1] = spritesXY[i][1] + spritesXY[i][3]/2 - spritesXY[curSpriteIndex][3]/2
+				onTarget = true
 			}
 		}
 		if onTarget == false && curSpriteIndex > -1 {
@@ -196,8 +194,8 @@ func addSprite(x float32, y float32, xSize float32, ySize float32, spriteTex spr
 		{0, ySize, y},
 	})
 	sprites = append(sprites, n)
-	spritesXY = append(spritesXY, []float32{x,y,xSize,ySize})
-	initialSpritesXY = append(initialSpritesXY, []float32{x,y,xSize,ySize})
+	spritesXY = append(spritesXY, []float32{x, y, xSize, ySize})
+	initialSpritesXY = append(initialSpritesXY, []float32{x, y, xSize, ySize})
 }
 
 func loadScene() {
@@ -212,27 +210,27 @@ func loadScene() {
 		{0, 1, 0},
 	})
 
-	dropXScaler := (float32(numDropTargets)*dropWidth+float32(numDropTargets+1)*paddingSize)/windowSize[0]
-	cardXScaler := (float32(numCards)*cardWidth+(float32(numCards)+1)*paddingSize)/windowSize[0]
-	deckXScaler := (float32(numDecks+2)*cardWidth+(float32(numDecks+2)+1)*paddingSize)/windowSize[0]
-	yScaler := (dropHeight+cardHeight+middleSize+4*paddingSize)/windowSize[1]
+	dropXScaler := (float32(numDropTargets)*dropWidth + float32(numDropTargets+1)*paddingSize) / windowSize[0]
+	cardXScaler := (float32(numCards)*cardWidth + (float32(numCards)+1)*paddingSize) / windowSize[0]
+	deckXScaler := (float32(numDecks+2)*cardWidth + (float32(numDecks+2)+1)*paddingSize) / windowSize[0]
+	yScaler := (dropHeight + cardHeight + middleSize + 4*paddingSize) / windowSize[1]
 	cardTexs := []sprite.SubTex{texs[card1], texs[card2], texs[card3], texs[card4]}
 	for yScaler > cardXScaler {
-		cardXScaler += (cardWidth+paddingSize)/windowSize[0]
+		cardXScaler += (cardWidth + paddingSize) / windowSize[0]
 	}
 	//deck and discard must be added first
-	addSprite((2*paddingSize+cardWidth)/deckXScaler, (2*paddingSize+cardHeight)/yScaler, 
+	addSprite((2*paddingSize+cardWidth)/deckXScaler, (2*paddingSize+cardHeight)/yScaler,
 		cardWidth/deckXScaler, cardHeight/yScaler, texs[draw])
-	addSprite((3*paddingSize+2*cardWidth)/deckXScaler, (2*paddingSize+cardHeight)/yScaler, 
+	addSprite((3*paddingSize+2*cardWidth)/deckXScaler, (2*paddingSize+cardHeight)/yScaler,
 		cardWidth/deckXScaler, cardHeight/yScaler, texs[discard])
 
 	//all drop targets must be added before all cards
 	for i := 0; i < numDropTargets; i++ {
-		addSprite((float32(i+1)*paddingSize+float32(i)*dropWidth)/dropXScaler, (cardHeight+middleSize+3*paddingSize)/yScaler, 
+		addSprite((float32(i+1)*paddingSize+float32(i)*dropWidth)/dropXScaler, (cardHeight+middleSize+3*paddingSize)/yScaler,
 			dropWidth/dropXScaler, dropHeight/yScaler, texs[dropTarget])
 	}
 	for i := 0; i < numCards; i++ {
-		addSprite((float32(i+1)*paddingSize+float32(i)*cardWidth)/cardXScaler, paddingSize/yScaler, 
+		addSprite((float32(i+1)*paddingSize+float32(i)*cardWidth)/cardXScaler, paddingSize/yScaler,
 			cardWidth/cardXScaler, cardHeight/cardXScaler, cardTexs[i%len(cardTexs)])
 	}
 }
@@ -294,13 +292,12 @@ func loadTextures() []sprite.SubTex {
 	}
 
 	return []sprite.SubTex{
-		card1: sprite.SubTex{t, image.Rect(15, 15, 190, 260)},
-		card2: sprite.SubTex{t, image.Rect(195, 60, 370, 305)},
-		card3: sprite.SubTex{t, image.Rect(375, 107, 550, 350)},
-		card4: sprite.SubTex{t, image.Rect(555, 135, 730, 377)},
-		dropTarget: sprite.SubTex{t2, image.Rect(0,0,766,620)},
-		draw: sprite.SubTex{t3, image.Rect(0,0,1506/2,1052)},
-		discard: sprite.SubTex{t3, image.Rect(1506/2,0,1506,1052)},
+		card1:      sprite.SubTex{t, image.Rect(15, 15, 190, 260)},
+		card2:      sprite.SubTex{t, image.Rect(195, 60, 370, 305)},
+		card3:      sprite.SubTex{t, image.Rect(375, 107, 550, 350)},
+		card4:      sprite.SubTex{t, image.Rect(555, 135, 730, 377)},
+		dropTarget: sprite.SubTex{t2, image.Rect(0, 0, 766, 620)},
+		draw:       sprite.SubTex{t3, image.Rect(0, 0, 1506/2, 1052)},
+		discard:    sprite.SubTex{t3, image.Rect(1506/2, 0, 1506, 1052)},
 	}
 }
-
