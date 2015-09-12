@@ -8,7 +8,7 @@ import 'draggable.dart' show Draggable;
 import 'package:sky/widgets.dart';
 import 'package:sky/theme/colors.dart' as colors;
 
-enum Orientation { vert, horz, fan, show1 }
+enum Orientation { vert, horz, fan, show1, suit }
 enum DropType {
   none,
   card,
@@ -23,12 +23,13 @@ class CardCollectionComponent extends StatefulComponent {
   Function parentCallback;
   bool dragChildren;
   DropType acceptType;
+  Function comparator;
 
   String status = 'bar';
 
   CardCollectionComponent(
       this.cards, this.faceUp, this.orientation, this.parentCallback,
-      {this.dragChildren: false, this.acceptType: DropType.none});
+      {this.dragChildren: false, this.acceptType: DropType.none, this.comparator: null});
 
   void syncConstructorArguments(CardCollectionComponent other) {
     cards = other.cards;
@@ -37,6 +38,7 @@ class CardCollectionComponent extends StatefulComponent {
     parentCallback = other.parentCallback;
     dragChildren = other.dragChildren;
     acceptType = other.acceptType;
+    comparator = other.comparator;
   }
 
   bool _handleWillAccept(dynamic data) {
@@ -61,25 +63,100 @@ class CardCollectionComponent extends StatefulComponent {
     });
   }
 
-  List<Widget> flexCards(List<Widget> cardWidgets) {
+  List<logic_card.Card> get _sortedCards {
+    assert(this.comparator != null);
+    List<logic_card.Card> cs = new List<logic_card.Card>();
+    cs.addAll(this.cards);
+    cs.sort(comparator);
+    return cs;
+  }
+
+  List<Widget> flexChildren(List<Widget> children) {
     List<Widget> flexWidgets = new List<Widget>();
-    cardWidgets.forEach(
-        (cardWidget) => flexWidgets.add(new Flexible(child: cardWidget)));
+    children.forEach(
+        (child) => flexWidgets.add(new Flexible(child: child)));
     return flexWidgets;
+  }
+
+  // returns null if it's up to the container (like a Flex) to figure this out.
+  double get desiredHeight {
+    switch (this.orientation) {
+      case Orientation.vert:
+        return null;
+      case Orientation.horz:
+      case Orientation.fan:
+      case Orientation.show1:
+        return 60.0;
+      case Orientation.suit:
+        return 240.0;
+      default:
+        assert(false);
+        return null;
+    }
+  }
+
+  // returns null if it's up to the container (like a Flex) to figure this out.
+  double get desiredWidth {
+    switch (this.orientation) {
+      case Orientation.vert:
+      case Orientation.show1:
+        return 60.0;
+      case Orientation.horz:
+      case Orientation.fan:
+      case Orientation.suit:
+        return null;
+      default:
+        assert(false);
+        return null;
+    }
   }
 
   Widget wrapCards(List<Widget> cardWidgets) {
     switch (this.orientation) {
       case Orientation.vert:
-        return new Flex(flexCards(cardWidgets),
+        return new Flex(flexChildren(cardWidgets),
             direction: FlexDirection.vertical);
       case Orientation.horz:
-        return new Flex(flexCards(cardWidgets));
+        return new Flex(flexChildren(cardWidgets));
       case Orientation.fan:
       // unimplemented, so we'll fall through to show1, for now.
       // Probably a Stack + Positioned
       case Orientation.show1:
         return new Stack(cardWidgets);
+      case Orientation.suit:
+        if (cards.length == 0) {
+          return new Stack(cardWidgets);
+        }
+        List<Widget> cs = new List<Widget>();
+        List<Widget> ds = new List<Widget>();
+        List<Widget> hs = new List<Widget>();
+        List<Widget> ss = new List<Widget>();
+
+        List<logic_card.Card> theCards =
+          this.comparator != null ? this._sortedCards : this.cards;
+        for (int i = 0; i < theCards.length; i++) {
+          // Group by suit. Then sort.
+          logic_card.Card c = theCards[i];
+          switch(c.identifier[0]) {
+            case 'c':
+              cs.add(cardWidgets[i]);
+              break;
+            case 'd':
+              ds.add(cardWidgets[i]);
+              break;
+            case 'h':
+              hs.add(cardWidgets[i]);
+              break;
+            case 's':
+              ss.add(cardWidgets[i]);
+              break;
+            default:
+              assert(false);
+          }
+        }
+        return new Flex(flexChildren(<Widget>[
+          new Flex(flexChildren(cs)), new Flex(flexChildren(ds)), new Flex(flexChildren(hs)), new Flex(flexChildren(ss))
+        ]), direction: FlexDirection.vertical);
       default:
         assert(false);
         return null;
@@ -104,8 +181,10 @@ class CardCollectionComponent extends StatefulComponent {
       // https://github.com/domokit/sky_engine/blob/master/sky/packages/sky/lib/src/widgets/sizing.md
       cardComponents.add(new Text("")); // new Text(status)
     }
-    for (int i = 0; i < cards.length; i++) {
-      component_card.Card c = new component_card.Card(cards[i], faceUp);
+    List<logic_card.Card> cs = this.comparator != null ? this._sortedCards : this.cards;
+
+    for (int i = 0; i < cs.length; i++) {
+      component_card.Card c = new component_card.Card(cs[i], faceUp);
 
       if (dragChildren) {
         cardComponents.add(new Draggable<component_card.Card>(c));
@@ -123,7 +202,8 @@ class CardCollectionComponent extends StatefulComponent {
             decoration: new BoxDecoration(
                 border: new Border.all(width: 3.0, color: colors.white),
                 backgroundColor: colors.Grey[500]),
-            height: 80.0,
+            height: this.desiredHeight,
+            width: this.desiredWidth,
             margin: new EdgeDims.all(10.0),
             child: wrapCards(cardComponents));
       case DropType.card:
@@ -137,7 +217,8 @@ class CardCollectionComponent extends StatefulComponent {
                       color: data.isEmpty ? colors.white : colors.Blue[500]),
                   backgroundColor:
                       data.isEmpty ? colors.Grey[500] : colors.Green[500]),
-              height: 80.0,
+              height: this.desiredHeight,
+              width: this.desiredWidth,
               margin: new EdgeDims.all(10.0),
               child: wrapCards(cardComponents));
         });
@@ -152,7 +233,8 @@ class CardCollectionComponent extends StatefulComponent {
                       color: data.isEmpty ? colors.white : colors.Blue[500]),
                   backgroundColor:
                       data.isEmpty ? colors.Grey[500] : colors.Green[500]),
-              height: 80.0,
+              height: this.desiredHeight,
+              width: this.desiredWidth,
               margin: new EdgeDims.all(10.0),
               child: wrapCards(cardComponents));
         });

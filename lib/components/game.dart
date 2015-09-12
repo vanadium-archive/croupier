@@ -167,6 +167,15 @@ class HeartsGameComponent extends GameComponent {
     });
   }
 
+  int _compareCards(logic_card.Card a, logic_card.Card b) {
+    if (a == b) return 0;
+    assert(a.deck == "classic" && b.deck == "classic");
+    HeartsGame game = this.game as HeartsGame;
+    int r = game.getCardSuit(a).compareTo(game.getCardSuit(b));
+    if (r != 0) return r;
+    return game.getCardValue(a) < game.getCardValue(b) ? -1 : 1;
+  }
+
   // This shouldn't always be here, but for now, we have little choice.
   void _switchPlayersCallback() {
     setState(() {
@@ -262,14 +271,14 @@ class HeartsGameComponent extends GameComponent {
     List<Widget> cardCollections = new List<Widget>();
 
     cardCollections.add(new Text(game.debugString));
+    cardCollections.add(new Text("Player ${game.whoseTurn}'s turn"));
 
-    for (int i = 0; i < 4; i++) {
-      List<logic_card.Card> cards = game.cardCollections[i];
-      CardCollectionComponent c = new CardCollectionComponent(cards,
-          game.playerNumber == i, Orientation.horz, _makeGameMoveCallback,
-          dragChildren: game.whoseTurn == i);
-      cardCollections.add(c); // flex
-    }
+    int i = game.playerNumber;
+    List<logic_card.Card> cards = game.cardCollections[i];
+    CardCollectionComponent c = new CardCollectionComponent(cards,
+        game.playerNumber == i, Orientation.suit, _makeGameMoveCallback,
+        dragChildren: game.whoseTurn == i, comparator: _compareCards);
+    cardCollections.add(c); // flex
 
     List<Widget> plays = new List<Widget>();
     for (int i = 0; i < 4; i++) {
@@ -365,7 +374,7 @@ class HeartsGameComponent extends GameComponent {
               dragChildren: !hasPassed, acceptType: DropType.card)),
           new CardCollectionComponent(
               remainingCards, true, Orientation.horz, _uiPassCardCallback,
-              dragChildren: !hasPassed, acceptType: DropType.card),
+              dragChildren: !hasPassed, acceptType: DropType.card, comparator: _compareCards),
           _makeDebugButtons()
         ], direction: FlexDirection.vertical));
   }
@@ -392,7 +401,7 @@ class HeartsGameComponent extends GameComponent {
           take,
           new CardCollectionComponent(
               playerCards, true, Orientation.horz, _makeGameTakeCallback,
-              dragChildren: true, acceptType: DropType.card_collection),
+              dragChildren: true, acceptType: DropType.card_collection, comparator: _compareCards),
           _makeDebugButtons()
         ], direction: FlexDirection.vertical));
   }

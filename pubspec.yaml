@@ -1,7 +1,9 @@
 name: your_app_name
 dependencies:
-  sky: any
+  sky: 0.0.41
   sky_tools: any
+  sky_engine: 0.0.18
+  sky_services: 0.0.18
   test: any
   ether: any
 dependency_overrides:
