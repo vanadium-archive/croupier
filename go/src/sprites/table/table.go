@@ -23,14 +23,20 @@ func NewTable(p []*player.Player) *Table {
 }
 
 type Table struct {
-	//players and trick should each have 4 elements
+	//players contains all players in the game, indexed by playerIndex
 	players []*player.Player
-	trick   []*card.Card
+	//trick contains all cards in the current trick, indexed by the playerIndex of the player who played them
+	trick []*card.Card
 	//firstPlayed is the index in trick of the card played first
-	firstPlayed  int
-	allCards     []*card.Card
+	firstPlayed int
+	//allCards contains all 52 cards in the deck. GenerateCards() populates this
+	allCards []*card.Card
+	//heartsBroken returns true if a heart has been played yet in the round, otherwise false
 	heartsBroken bool
-	firstTrick   bool
+	//firstTrick returns true if the current trick is the first in the round, otherwise false
+	firstTrick bool
+	//winCondition is the number of points needed to win the game
+	//traditionally 100, could set higher or lower for longer or shorter game
 	winCondition int
 }
 
@@ -45,16 +51,16 @@ func (t *Table) SetFirstPlayed(index int) {
 func (t *Table) GenerateCards() {
 	t.allCards = make([]*card.Card, 0)
 	for i := 0; i < 13; i++ {
-		t.allCards = append(t.allCards, card.NewCard(i+2, "C"))
-		t.allCards = append(t.allCards, card.NewCard(i+2, "D"))
-		t.allCards = append(t.allCards, card.NewCard(i+2, "S"))
-		t.allCards = append(t.allCards, card.NewCard(i+2, "H"))
+		t.allCards = append(t.allCards, card.NewCard(i+2, card.Club))
+		t.allCards = append(t.allCards, card.NewCard(i+2, card.Diamond))
+		t.allCards = append(t.allCards, card.NewCard(i+2, card.Spade))
+		t.allCards = append(t.allCards, card.NewCard(i+2, card.Heart))
 	}
 }
 
 func (t *Table) PlayCard(c *card.Card, playerIndex int) {
 	t.trick[playerIndex] = c
-	if c.GetSuit() == "H" && t.heartsBroken == false {
+	if c.GetSuit() == card.Heart && t.heartsBroken == false {
 		t.heartsBroken = true
 	}
 }
@@ -63,12 +69,14 @@ func (t *Table) ValidPlay(c *card.Card, playerIndex int) bool {
 	player := t.players[playerIndex]
 	if t.firstPlayed == playerIndex {
 		if t.firstTrick == false {
-			if c.GetSuit() != "H" || t.heartsBroken == true {
+			if c.GetSuit() != card.Heart || t.heartsBroken == true {
 				return true
-			} else if player.HasSuit("C") == false && player.HasSuit("D") == false && player.HasSuit("S") == false {
-				return true
+			} else {
+				if player.HasSuit(card.Club) == false && player.HasSuit(card.Diamond) == false && player.HasSuit(card.Spade) == false {
+					return true
+				}
 			}
-		} else if c.GetSuit() == "C" && c.GetNum() == 2 {
+		} else if c.GetSuit() == card.Club && c.GetNum() == 2 {
 			return true
 		}
 	} else {
@@ -76,7 +84,7 @@ func (t *Table) ValidPlay(c *card.Card, playerIndex int) bool {
 		if c.GetSuit() == firstPlayedSuit || player.HasSuit(firstPlayedSuit) == false {
 			if t.firstTrick == false {
 				return true
-			} else if c.GetSuit() == "D" || c.GetSuit() == "C" || (c.GetSuit() == "S" && c.GetNum() != 12) {
+			} else if c.GetSuit() == card.Diamond || c.GetSuit() == card.Club || (c.GetSuit() == card.Spade && c.GetNum() != 12) {
 				return true
 			} else if player.HasAllPoints() == true {
 				return true

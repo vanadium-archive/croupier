@@ -50,10 +50,10 @@ func (p *Player) UpdateScore(score int) {
 
 func (p *Player) CalculateScore() int {
 	score := 0
-	for _, card := range p.tricks {
-		if card.GetSuit() == "H" {
+	for _, c := range p.tricks {
+		if c.GetSuit() == card.Heart {
 			score += 1
-		} else if card.GetSuit() == "S" && card.GetNum() == 12 {
+		} else if c.GetSuit() == card.Spade && c.GetNum() == 12 {
 			score += 13
 		}
 	}
@@ -64,9 +64,9 @@ func (p *Player) ResetTricks() {
 	p.tricks = nil
 }
 
-func (p *Player) HasSuit(suit string) bool {
-	for _, card := range p.hand {
-		if card.GetSuit() == suit {
+func (p *Player) HasSuit(suit card.Suit) bool {
+	for _, c := range p.hand {
+		if c.GetSuit() == suit {
 			return true
 		}
 	}
@@ -74,10 +74,10 @@ func (p *Player) HasSuit(suit string) bool {
 }
 
 func (p *Player) HasAllPoints() bool {
-	for _, card := range p.hand {
-		if card.GetSuit() == "D" || card.GetSuit() == "C" {
+	for _, c := range p.hand {
+		if c.GetSuit() == card.Diamond || c.GetSuit() == card.Club {
 			return false
-		} else if card.GetSuit() == "S" && card.GetNum() != 12 {
+		} else if c.GetSuit() == card.Spade && c.GetNum() != 12 {
 			return false
 		}
 	}
