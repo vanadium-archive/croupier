@@ -25,17 +25,23 @@ import (
 )
 
 var (
-	startTime          = time.Now()
-	eng                = glsprite.Engine()
-	scene              *sprite.Node
-	cards              []*sprite.Node
-	cardsXY            [][]float32
-	initialCardsXY     [][]float32
-	curCardIndex       = -1
-	lastMouseXY        = []float32{-1, -1}
-	cardWidth          = float32(100)
-	cardHeight         = float32(100)
-	windowSize         = []float32{-1, -1}
+	startTime = time.Now()
+	eng       = glsprite.Engine()
+	scene     *sprite.Node
+	cards     []*sprite.Node
+	//cardsXY and initialCardsXY are in Pt
+	cardsXY        [][]float32
+	initialCardsXY [][]float32
+	curCardIndex   = -1
+	//lastMouseXY is in Px: divide by ppp to get Pt
+	lastMouseXY = []float32{-1, -1}
+	cardWidth   = float32(50)
+	cardHeight  = float32(50)
+	//windowSize is in Pt
+	windowSize = []float32{-1, -1}
+	//ppp stands for pixels per pt
+	ppp float32
+	//to-do: test and fine-tune these thresholds
 	swipeMoveThreshold = 70
 	swipeTimeThreshold = .5
 	swipeStart         time.Time
@@ -50,8 +56,13 @@ func main() {
 			switch e := app.Filter(e).(type) {
 			case size.Event:
 				sz = e
-				windowSize[0] = float32(sz.WidthPx)
-				windowSize[1] = float32(sz.HeightPx)
+				oldWidth := windowSize[0]
+				oldHeight := windowSize[1]
+				windowSize[0] = float32(sz.WidthPt)
+				windowSize[1] = float32(sz.HeightPt)
+				pixelsX := float32(sz.WidthPx)
+				ppp = pixelsX / windowSize[0]
+				adjustCards(oldWidth, oldHeight)
 			case touch.Event:
 				onTouch(e)
 			case paint.Event:
@@ -66,10 +77,10 @@ func onTouch(t touch.Event) {
 	switch t.Type.String() {
 	case "begin":
 		for i := len(cards) - 1; i >= 0; i-- {
-			if t.X >= getCardX(i) &&
-				t.Y >= getCardY(i) &&
-				t.X <= cardWidth+getCardX(i) &&
-				t.Y <= cardHeight+getCardY(i) {
+			if t.X/ppp >= getCardX(i) &&
+				t.Y/ppp >= getCardY(i) &&
+				t.X/ppp <= cardWidth+getCardX(i) &&
+				t.Y/ppp <= cardHeight+getCardY(i) {
 				swipeStart = time.Now()
 				curCardIndex = i
 				node := getCardNode(i)
@@ -82,11 +93,11 @@ func onTouch(t touch.Event) {
 	case "move":
 		if curCardIndex > -1 {
 			eng.SetTransform(cards[curCardIndex], f32.Affine{
-				{cardWidth, 0, getCardX(curCardIndex) + t.X - lastMouseXY[0]},
-				{0, cardHeight, getCardY(curCardIndex) + t.Y - lastMouseXY[1]},
+				{cardWidth, 0, getCardX(curCardIndex) + (t.X-lastMouseXY[0])/ppp},
+				{0, cardHeight, getCardY(curCardIndex) + (t.Y-lastMouseXY[1])/ppp},
 			})
-			setCardX(curCardIndex, getCardX(curCardIndex)+t.X-lastMouseXY[0])
-			setCardY(curCardIndex, getCardY(curCardIndex)+t.Y-lastMouseXY[1])
+			setCardX(curCardIndex, getCardX(curCardIndex)+(t.X-lastMouseXY[0])/ppp)
+			setCardY(curCardIndex, getCardY(curCardIndex)+(t.Y-lastMouseXY[1])/ppp)
 			lastMouseXY[0] = t.X
 			lastMouseXY[1] = t.Y
 		}
@@ -107,6 +118,28 @@ func onTouch(t touch.Event) {
 			}
 		}
 		curCardIndex = -1
+	}
+}
+
+func adjustCards(oldWidth, oldHeight float32) {
+	for i := 0; i < len(cards); i++ {
+		node := getCardNode(i)
+		oldX := getCardX(i)
+		newX := (oldX+cardWidth/2)/oldWidth*windowSize[0] - cardWidth/2
+		oldY := getCardY(i)
+		newY := (oldY+cardHeight/2)/oldHeight*windowSize[1] - cardHeight/2
+		eng.SetTransform(node, f32.Affine{
+			{cardWidth, 0, newX},
+			{0, cardHeight, newY},
+		})
+		setCardX(i, newX)
+		setCardY(i, newY)
+		oldInitialX := getInitialX(i)
+		newInitialX := (oldInitialX+cardWidth/2)/oldWidth*windowSize[0] - cardWidth/2
+		oldInitialY := getInitialY(i)
+		newInitialY := (oldInitialY+cardHeight/2)/oldHeight*windowSize[1] - cardHeight/2
+		setInitialX(i, newInitialX)
+		setInitialY(i, newInitialY)
 	}
 }
 
@@ -164,6 +197,7 @@ func newNode() *sprite.Node {
 	return n
 }
 
+//x and y should be in Pt
 func addCard(x float32, y float32, spriteTex sprite.SubTex) {
 	n := newNode()
 	eng.SetSubTex(n, spriteTex)
@@ -202,6 +236,14 @@ func getInitialX(cardIndex int) float32 {
 
 func getInitialY(cardIndex int) float32 {
 	return initialCardsXY[cardIndex][1]
+}
+
+func setInitialX(cardIndex int, newX float32) {
+	initialCardsXY[cardIndex][0] = newX
+}
+
+func setInitialY(cardIndex int, newY float32) {
+	initialCardsXY[cardIndex][1] = newY
 }
 
 func loadScene() {
