@@ -5,11 +5,10 @@
 import 'dart:async';
 import 'dart:convert' show UTF8;
 
-import '../../logic/game.dart' show Game;
+import '../../logic/game/game.dart' show Game;
 
 import 'package:sky/mojo/embedder.dart' show embedder;
 
-import 'package:ether/echo_client.dart' show EchoClient;
 import 'package:ether/syncbase_client.dart'
     show Perms, SyncbaseClient, SyncbaseTable;
 
@@ -21,35 +20,16 @@ log(String msg) {
 Perms emptyPerms() => new Perms()..json = '{}';
 
 class SyncbaseEchoImpl {
-  final EchoClient _echoClient;
   final SyncbaseClient _syncbaseClient;
   final Game game;
 
   SyncbaseEchoImpl(this.game)
-      : _echoClient = new EchoClient(
-            embedder.connectToService, 'https://mojo.v.io/echo_server.mojo'),
-        _syncbaseClient = new SyncbaseClient(embedder.connectToService,
+      : _syncbaseClient = new SyncbaseClient(embedder.connectToService,
             'https://mojo.v.io/syncbase_server.mojo');
 
   int seq = 0;
   SyncbaseTable tb;
   String sendMsg, recvMsg, putStr, getStr;
-
-  Future doEcho() async {
-    log('DemoApp.doEcho');
-
-    sendMsg = seq.toString();
-    recvMsg = '';
-    seq++;
-    log('setState sendMsg done');
-
-    String recvMsgAsync = await _echoClient.echo(sendMsg);
-
-    recvMsg = recvMsgAsync;
-    log('setState recvMsg done');
-
-    game.updateCallback(); // tell the UI to set/update state.
-  }
 
   Future doSyncbaseInit() async {
     log('DemoApp.doSyncbaseInit');

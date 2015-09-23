@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 import "package:test/test.dart";
-import "../lib/logic/game.dart";
+import "../lib/logic/hearts/hearts.dart";
 import "../lib/logic/card.dart";
 
 import "dart:io";

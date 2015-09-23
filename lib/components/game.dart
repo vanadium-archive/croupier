@@ -3,8 +3,8 @@
 // license that can be found in the LICENSE file.
 
 import '../logic/card.dart' as logic_card;
-import '../logic/game.dart'
-    show Game, GameType, Viewer, HeartsGame, HeartsPhase;
+import '../logic/game/game.dart' show Game, GameType;
+import '../logic/hearts/hearts.dart' show HeartsGame, HeartsPhase;
 import '../src/syncbase/syncbase_echo_impl.dart' show SyncbaseEchoImpl;
 //import 'board.dart' show Board;
 import 'card_collection.dart'
@@ -131,9 +131,6 @@ class SyncbaseEchoGameComponent extends GameComponent {
         decoration:
             const BoxDecoration(backgroundColor: const Color(0xFF00ACC1)),
         child: new Flex([
-          new RaisedButton(child: new Text('doEcho'), onPressed: s.doEcho),
-          new Text('sendMsg: ${s.sendMsg}'),
-          new Text('recvMsg: ${s.recvMsg}'),
           new RaisedButton(child: new Text('doPutGet'), onPressed: s.doPutGet),
           new Text('putStr: ${s.putStr}'),
           new Text('getStr: ${s.getStr}'),

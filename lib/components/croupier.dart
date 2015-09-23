@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 import '../logic/croupier.dart' as logic_croupier;
-import '../logic/game.dart' as logic_game;
+import '../logic/game/game.dart' as logic_game;
 import 'game.dart' show createGameComponent;
 
 import 'package:sky/widgets.dart';

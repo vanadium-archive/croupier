@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-import 'game.dart' show Game, GameType;
+import 'game/game.dart' show Game, GameType;
+import 'create_game.dart' as cg;
 
 enum CroupierState {
   Welcome,
@@ -39,12 +40,12 @@ class Croupier {
       case CroupierState.ChooseGame:
         // data should be the game id here.
         GameType gt = data as GameType;
-        game = new Game(gt, 0); // Start as player 0 of whatever game type.
+        game = cg.createGame(gt, 0); // Start as player 0 of whatever game type.
         break;
       case CroupierState.AwaitGame:
         // data would probably be the game id again.
         GameType gt = data as GameType;
-        game = new Game(gt, 0); // Start as player 0 of whatever game type.
+        game = cg.createGame(gt, 0); // Start as player 0 of whatever game type.
         break;
       case CroupierState.ArrangePlayers:
         // data should be empty.

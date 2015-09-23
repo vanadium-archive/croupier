@@ -2,13 +2,9 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-import 'game/game.dart' show Game, GameType, GameLog, GameCommand;
+part of proto;
 
-class SyncbaseEcho extends Game {
-  SyncbaseEcho() : super.dummy(GameType.SyncbaseEcho, new SyncbaseEchoLog());
-}
-
-class SyncbaseEchoLog extends GameLog {
+class ProtoLog extends GameLog {
   void addToLogCb(List<GameCommand> log, GameCommand newCommand) {
     update(new List<GameCommand>.from(log)..add(newCommand));
   }
