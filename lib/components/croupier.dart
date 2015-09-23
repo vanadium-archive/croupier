@@ -12,6 +12,7 @@ import 'dart:sky' as sky;
 
 class CroupierComponent extends StatefulComponent {
   logic_croupier.Croupier croupier;
+  sky.Size screenSize;
 
   CroupierComponent(this.croupier) : super();
 
@@ -26,7 +27,19 @@ class CroupierComponent extends StatefulComponent {
         });
   }
 
+  void sizeChanged(sky.Size newSize) {
+    print(newSize);
+    screenSize = newSize;
+  }
+
   Widget build() {
+    return new SizeObserver(
+      callback: sizeChanged,
+      child: _buildHelper()
+    );
+  }
+
+  Widget _buildHelper() {
     switch (croupier.state) {
       case logic_croupier.CroupierState.Welcome:
         // in which we show them a UI to start a new game, join a game, or change some settings.
@@ -73,7 +86,8 @@ class CroupierComponent extends StatefulComponent {
         return new Container(
             padding: new EdgeDims.only(top: sky.view.paddingTop),
             child: createGameComponent(croupier.game,
-                makeSetStateCallback(logic_croupier.CroupierState.Welcome)));
+                makeSetStateCallback(logic_croupier.CroupierState.Welcome),
+                width: screenSize.width, height: screenSize.height));
       default:
         assert(false);
         return null;

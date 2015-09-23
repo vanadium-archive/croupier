@@ -9,7 +9,6 @@ import '../src/syncbase/syncbase_echo_impl.dart' show SyncbaseEchoImpl;
 //import 'board.dart' show Board;
 import 'card_collection.dart'
     show CardCollectionComponent, DropType, Orientation;
-import 'draggable.dart' show Draggable;
 
 import 'package:sky/widgets.dart';
 import 'package:sky/theme/colors.dart' as colors;
@@ -17,8 +16,10 @@ import 'package:sky/theme/colors.dart' as colors;
 abstract class GameComponent extends StatefulComponent {
   Game game;
   Function gameEndCallback;
+  double width;
+  double height;
 
-  GameComponent(this.game, this.gameEndCallback) {
+  GameComponent(this.game, this.gameEndCallback, {this.width, this.height}) {
     game.updateCallback = update;
   }
 
@@ -44,12 +45,12 @@ abstract class GameComponent extends StatefulComponent {
   Widget build();
 }
 
-GameComponent createGameComponent(Game game, Function gameEndCallback) {
+GameComponent createGameComponent(Game game, Function gameEndCallback, {double width, double height}) {
   switch (game.gameType) {
     case GameType.Proto:
-      return new ProtoGameComponent(game, gameEndCallback);
+      return new ProtoGameComponent(game, gameEndCallback, width: width, height: height);
     case GameType.Hearts:
-      return new HeartsGameComponent(game, gameEndCallback);
+      return new HeartsGameComponent(game, gameEndCallback, width: width, height: height);
     case GameType.SyncbaseEcho:
       return new SyncbaseEchoGameComponent(game, gameEndCallback);
     default:
@@ -60,7 +61,7 @@ GameComponent createGameComponent(Game game, Function gameEndCallback) {
 }
 
 class ProtoGameComponent extends GameComponent {
-  ProtoGameComponent(Game game, Function cb) : super(game, cb);
+  ProtoGameComponent(Game game, Function cb, {double width, double height}) : super(game, cb, width: width, height: height);
 
   Widget build() {
     List<Widget> cardCollections = new List<Widget>();
@@ -71,7 +72,7 @@ class ProtoGameComponent extends GameComponent {
       List<logic_card.Card> cards = game.cardCollections[i];
       CardCollectionComponent c = new CardCollectionComponent(cards,
           game.playerNumber == i, Orientation.horz, _makeGameMoveCallback,
-          dragChildren: true, acceptType: DropType.card);
+          dragChildren: true, acceptType: DropType.card, width: width);
       cardCollections.add(c); // flex
     }
 
@@ -80,7 +81,7 @@ class ProtoGameComponent extends GameComponent {
             backgroundColor: colors.Green[500], borderRadius: 5.0),
         child: new CardCollectionComponent(game.cardCollections[4], true,
             Orientation.show1, _makeGameMoveCallback,
-            dragChildren: true, acceptType: DropType.card)));
+            dragChildren: true, acceptType: DropType.card, width: width)));
 
     cardCollections.add(_makeDebugButtons());
 
@@ -142,27 +143,34 @@ class SyncbaseEchoGameComponent extends GameComponent {
 }
 
 class HeartsGameComponent extends GameComponent {
-  List<logic_card.Card> passingCards = new List<logic_card.Card>();
+  List<logic_card.Card> passingCards1 = new List<logic_card.Card>();
+  List<logic_card.Card> passingCards2 = new List<logic_card.Card>();
+  List<logic_card.Card> passingCards3 = new List<logic_card.Card>();
 
-  HeartsGameComponent(Game game, Function cb) : super(game, cb);
+  HeartsGameComponent(Game game, Function cb, {double width, double height}) : super(game, cb, width: width, height: height);
   Widget build() {
-    return buildHearts();
-    // Does NOT work in checked mode since it has a Stack of Positioned Stack with Positioned Widgets.
-    // Issue and possible workaround? https://github.com/domokit/sky_engine/issues/732
-    // return new Board(1, [2, 3, 4], [1, 2, 3, 4]);
-    // For GameType.Board
+    return new Container(
+      decoration: new BoxDecoration(
+        backgroundColor: colors.Grey[300]
+      ),
+      child: buildHearts()
+    );
   }
 
   // Passing between the temporary pass list and the player's hand.
   // Does not actually move anything in game logic terms.
   void _uiPassCardCallback(logic_card.Card card, List<logic_card.Card> dest) {
     setState(() {
-      if (dest == passingCards &&
-          !passingCards.contains(card) &&
-          passingCards.length < 3) {
-        passingCards.add(card);
-      } else if (dest != passingCards && passingCards.contains(card)) {
-        passingCards.remove(card);
+      if (passingCards1.contains(card)) { passingCards1.remove(card); }
+      if (passingCards2.contains(card)) { passingCards2.remove(card); }
+      if (passingCards3.contains(card)) { passingCards3.remove(card); }
+
+      if (dest == passingCards1 && passingCards1.length == 0) {
+        passingCards1.add(card);
+      } else if (dest == passingCards2 && passingCards2.length == 0) {
+        passingCards2.add(card);
+      } else if (dest == passingCards3 && passingCards3.length == 0) {
+        passingCards3.add(card);
       }
     });
   }
@@ -176,21 +184,33 @@ class HeartsGameComponent extends GameComponent {
     return game.getCardValue(a) < game.getCardValue(b) ? -1 : 1;
   }
 
+  void _clearPassing() {
+    passingCards1.clear();
+    passingCards2.clear();
+    passingCards3.clear();
+  }
+  List<logic_card.Card> _combinePassing() {
+    List<logic_card.Card> ls = new List<logic_card.Card>();
+    ls.addAll(passingCards1);
+    ls.addAll(passingCards2);
+    ls.addAll(passingCards3);
+    return ls;
+  }
+
   // This shouldn't always be here, but for now, we have little choice.
   void _switchPlayersCallback() {
     setState(() {
       game.playerNumber = (game.playerNumber + 1) % 4;
-      passingCards.clear(); // Just for sanity.
+      _clearPassing(); // Just for sanity.
     });
   }
 
-  void _makeGamePassCallback(
-      List<logic_card.Card> cards, List<logic_card.Card> dest) {
+  void _makeGamePassCallback() {
     setState(() {
       try {
         HeartsGame game = this.game as HeartsGame;
-        game.passCards(cards);
-        passingCards.clear();
+        game.passCards(_combinePassing());
+        _clearPassing();
       } catch (e) {
         print("You can't do that! ${e.toString()}");
         game.debugString = e.toString();
@@ -198,8 +218,7 @@ class HeartsGameComponent extends GameComponent {
     });
   }
 
-  void _makeGameTakeCallback(
-      List<logic_card.Card> cards, List<logic_card.Card> dest) {
+  void _makeGameTakeCallback() {
     setState(() {
       try {
         HeartsGame game = this.game as HeartsGame;
@@ -229,7 +248,9 @@ class HeartsGameComponent extends GameComponent {
     });
   }
 
-  Widget _makeDebugButtons() => new Flex([
+  Widget _makeDebugButtons() => new Container(
+    width: this.width,
+    child: new Flex([
         new Flexible(flex: 1, child: new Text('P${game.playerNumber}')),
         new Flexible(
             flex: 5, child: _makeButton('Switch View', _switchPlayersCallback)),
@@ -239,10 +260,24 @@ class HeartsGameComponent extends GameComponent {
         new Flexible(
             flex: 5, child: _makeButton('End Round', _endRoundDebugCallback)),
         new Flexible(flex: 4, child: _makeButton('Quit', _quitGameCallback))
-      ]);
+      ])
+  );
 
-  Widget _makeButton(String text, Function callback) {
-    return new FlatButton(child: new Text(text), onPressed: callback);
+  Widget _makeButton(String text, Function callback, {bool inactive: false}) {
+    var borderColor = inactive ? colors.Grey[500] : colors.white;
+    var backgroundColor = inactive ? colors.Grey[500] : null;
+    return new FlatButton(
+      child: new Container(
+        decoration: new BoxDecoration(
+          border: new Border.all(width: 1.0, color: borderColor),
+          backgroundColor: backgroundColor
+        ),
+        padding: new EdgeDims.all(10.0),
+        child: new Text(text)
+      ),
+      enabled: !inactive,
+      onPressed: inactive ? null : callback
+    );
   }
 
   Widget buildHearts() {
@@ -270,42 +305,58 @@ class HeartsGameComponent extends GameComponent {
 
     List<Widget> cardCollections = new List<Widget>();
 
-    cardCollections.add(new Text(game.debugString));
-    cardCollections.add(new Text("Player ${game.whoseTurn}'s turn"));
-
-    int i = game.playerNumber;
-    List<logic_card.Card> cards = game.cardCollections[i];
-    CardCollectionComponent c = new CardCollectionComponent(cards,
-        game.playerNumber == i, Orientation.suit, _makeGameMoveCallback,
-        dragChildren: game.whoseTurn == i, comparator: _compareCards);
-    cardCollections.add(c); // flex
-
     List<Widget> plays = new List<Widget>();
     for (int i = 0; i < 4; i++) {
-      DropType t = DropType.none;
-      if (game.playerNumber == i) {
-        t = DropType.card;
-      }
-      plays.add(new Container(
-          decoration: new BoxDecoration(
-              backgroundColor:
-                  game.whoseTurn == i ? colors.Blue[500] : colors.Green[500],
-              borderRadius: 5.0),
-          child: new CardCollectionComponent(
-              game.cardCollections[i + HeartsGame.OFFSET_PLAY],
-              true,
-              Orientation.show1,
-              _makeGameMoveCallback,
-              acceptType: t)));
+      plays.add(new CardCollectionComponent(
+        game.cardCollections[i + HeartsGame.OFFSET_PLAY],
+        true,
+        Orientation.show1,
+        _makeGameMoveCallback,
+        width: width
+      ));
     }
+    cardCollections.add(new Container(
+      decoration: new BoxDecoration(
+        backgroundColor: colors.Teal[600]
+      ),
+      width: this.width,
+      child: new Flex(plays, justifyContent: FlexJustifyContent.spaceAround)
+    ));
 
-    cardCollections.add(new Flex(plays));
 
+    int p = game.playerNumber;
+
+    Widget playArea = new Container(
+      decoration: new BoxDecoration(
+        backgroundColor: colors.Teal[500]
+      ),
+      width: this.width,
+      child: new Center(
+        child: new CardCollectionComponent(
+          game.cardCollections[p + HeartsGame.OFFSET_PLAY],
+          true,
+          Orientation.show1,
+          _makeGameMoveCallback,
+          acceptType: p == game.whoseTurn ? DropType.card : DropType.none,
+          width: width,
+          backgroundColor: p == game.whoseTurn ? colors.white : colors.Grey[500],
+          altColor: p == game.whoseTurn ? colors.Grey[200] : colors.Grey[600]
+        )
+      )
+    );
+    cardCollections.add(playArea);
+
+    List<logic_card.Card> cards = game.cardCollections[p];
+    CardCollectionComponent c = new CardCollectionComponent(cards,
+        game.playerNumber == p, Orientation.suit, _makeGameMoveCallback,
+        dragChildren: game.whoseTurn == p, comparator: _compareCards, width: width);
+    cardCollections.add(c); // flex
+
+    cardCollections.add(new Text("Player ${game.whoseTurn}'s turn"));
+    cardCollections.add(new Text(game.debugString));
     cardCollections.add(_makeDebugButtons());
 
-    return new Container(
-        decoration: new BoxDecoration(backgroundColor: colors.Pink[500]),
-        child: new Flex(cardCollections, direction: FlexDirection.vertical));
+    return new Column(cardCollections, justifyContent: FlexJustifyContent.spaceBetween);
   }
 
   Widget showScore() {
@@ -341,9 +392,12 @@ class HeartsGameComponent extends GameComponent {
           new Text('Player ${game.playerNumber}'),
           _makeButton('Deal', game.dealCards),
           _makeDebugButtons()
-        ], direction: FlexDirection.vertical));
+        ], direction: FlexDirection.vertical, justifyContent: FlexJustifyContent.spaceBetween));
   }
 
+  // the pass phase screen consists of 2 parts:
+  // The cards being passed + Pass button.
+  // The cards in your hand.
   Widget showPass() {
     HeartsGame game = this.game as HeartsGame;
 
@@ -353,7 +407,9 @@ class HeartsGameComponent extends GameComponent {
     List<logic_card.Card> playerCards = game.cardCollections[game.playerNumber];
     List<logic_card.Card> remainingCards = new List<logic_card.Card>();
     playerCards.forEach((logic_card.Card c) {
-      if (!passingCards.contains(c)) {
+      if (!passingCards1.contains(c) && !passingCards2.contains(c) &&
+        !passingCards3.contains(c)) {
+
         remainingCards.add(c);
       }
     });
@@ -362,21 +418,56 @@ class HeartsGameComponent extends GameComponent {
     // TODO(alexfandrianto): You can pass as many times as you want... which is silly.
     // Luckily, later passes shouldn't do anything.
 
-    return new Container(
-        decoration: new BoxDecoration(backgroundColor: colors.Pink[500]),
-        child: new Flex(<Widget>[
-          new Text(game.debugString),
-          new CardCollectionComponent(
-              passCards, true, Orientation.horz, _makeGamePassCallback,
-              acceptType: DropType.card_collection),
-          new Draggable<CardCollectionComponent>(new CardCollectionComponent(
-              passingCards, true, Orientation.horz, _uiPassCardCallback,
-              dragChildren: !hasPassed, acceptType: DropType.card)),
-          new CardCollectionComponent(
-              remainingCards, true, Orientation.horz, _uiPassCardCallback,
-              dragChildren: !hasPassed, acceptType: DropType.card, comparator: _compareCards),
-          _makeDebugButtons()
-        ], direction: FlexDirection.vertical));
+    List<Widget> passingCardWidgets = <Widget>[
+      new Container(margin: new EdgeDims.all(10.0), child: new CardCollectionComponent(
+          passingCards1, true, Orientation.show1, _uiPassCardCallback,
+          dragChildren: !hasPassed, acceptType: DropType.card,
+          backgroundColor: colors.white, altColor: colors.Grey[200])),
+      new Container(margin: new EdgeDims.all(10.0), child: new CardCollectionComponent(
+          passingCards2, true, Orientation.show1, _uiPassCardCallback,
+          dragChildren: !hasPassed, acceptType: DropType.card,
+          backgroundColor: colors.white, altColor: colors.Grey[200])),
+      new Container(margin: new EdgeDims.all(10.0), child: new CardCollectionComponent(
+          passingCards3, true, Orientation.show1, _uiPassCardCallback,
+          dragChildren: !hasPassed, acceptType: DropType.card,
+          backgroundColor: colors.white, altColor: colors.Grey[200]))
+    ];
+    Widget passArea;
+    if (hasPassed) {
+      passArea = new Container(
+        decoration: new BoxDecoration(
+          backgroundColor: colors.Teal[600]
+        ),
+        width: this.width,
+        child: new Flex(
+          passingCardWidgets..add(_makeButton("Pass", null, inactive: true)),
+          justifyContent: FlexJustifyContent.spaceBetween
+        )
+      );
+    } else {
+      passArea = new Container(
+        decoration: new BoxDecoration(
+          backgroundColor: colors.Teal[500]
+        ),
+        width: this.width,
+        child: new Flex(
+          passingCardWidgets..add(_makeButton("Pass", _makeGamePassCallback)),
+          justifyContent: FlexJustifyContent.spaceBetween
+        )
+      );
+    }
+
+    // Return the pass cards and the player's remaining hand.
+    // (Also includes debug info)
+    return new Column(<Widget>[
+      passArea,
+      new CardCollectionComponent(
+          remainingCards, true, Orientation.suit, _uiPassCardCallback,
+          dragChildren: !hasPassed, acceptType: DropType.card, comparator: _compareCards, width: width,
+          backgroundColor: colors.Grey[500], altColor: colors.Grey[700]),
+      new Text(game.debugString),
+      _makeDebugButtons()
+    ], justifyContent: FlexJustifyContent.spaceBetween);
   }
 
   Widget showTake() {
@@ -388,21 +479,56 @@ class HeartsGameComponent extends GameComponent {
 
     bool hasTaken = takeCards.length == 0;
 
-    Widget take = new CardCollectionComponent(
-        takeCards, true, Orientation.horz, _makeGameTakeCallback);
-    if (!hasTaken) {
-      take = new Draggable<CardCollectionComponent>(take);
+    List<logic_card.Card> take1 = takeCards.length != 0 ? takeCards.sublist(0, 1) : [];
+    List<logic_card.Card> take2 = takeCards.length != 0 ? takeCards.sublist(1, 2) : [];
+    List<logic_card.Card> take3 = takeCards.length != 0 ? takeCards.sublist(2, 3) : [];
+
+    List<Widget> takeCardWidgets = <Widget>[
+      new Container(margin: new EdgeDims.all(10.0), child: new CardCollectionComponent(
+          take1, true, Orientation.show1, null,
+          backgroundColor: colors.white, altColor: colors.Grey[200])),
+      new Container(margin: new EdgeDims.all(10.0), child: new CardCollectionComponent(
+          take2, true, Orientation.show1, null,
+          backgroundColor: colors.white, altColor: colors.Grey[200])),
+      new Container(margin: new EdgeDims.all(10.0), child: new CardCollectionComponent(
+          take3, true, Orientation.show1, null,
+          backgroundColor: colors.white, altColor: colors.Grey[200]))
+    ];
+    Widget takeArea;
+    if (hasTaken) {
+      takeArea = new Container(
+        decoration: new BoxDecoration(
+          backgroundColor: colors.Teal[600]
+        ),
+        width: this.width,
+        child: new Flex(
+          takeCardWidgets..add(_makeButton("Take", null, inactive: true)),
+          justifyContent: FlexJustifyContent.spaceBetween
+        )
+      );
+    } else {
+      takeArea = new Container(
+        decoration: new BoxDecoration(
+          backgroundColor: colors.Teal[500]
+        ),
+        width: this.width,
+        child: new Flex(
+          takeCardWidgets..add(_makeButton("Take", _makeGameTakeCallback)),
+          justifyContent: FlexJustifyContent.spaceBetween
+        )
+      );
     }
 
-    return new Container(
-        decoration: new BoxDecoration(backgroundColor: colors.Pink[500]),
-        child: new Flex(<Widget>[
-          new Text(game.debugString),
-          take,
-          new CardCollectionComponent(
-              playerCards, true, Orientation.horz, _makeGameTakeCallback,
-              dragChildren: true, acceptType: DropType.card_collection, comparator: _compareCards),
-          _makeDebugButtons()
-        ], direction: FlexDirection.vertical));
+    // Return the passsed cards and the player's hand.
+    // (Also includes debug info)
+    return new Column(<Widget>[
+      takeArea,
+      new CardCollectionComponent(
+          playerCards, true, Orientation.suit, null,
+          comparator: _compareCards, width: width,
+          backgroundColor: colors.Grey[500], altColor: colors.Grey[700]),
+      new Text(game.debugString),
+      _makeDebugButtons()
+    ], justifyContent: FlexJustifyContent.spaceBetween);
   }
 }

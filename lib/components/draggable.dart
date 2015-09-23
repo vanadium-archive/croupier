@@ -26,7 +26,7 @@ class Draggable<T extends widgets.Widget> extends widgets.StatefulComponent {
         onPointerUp: _drop,
         child: new widgets.Transform(
             transform: new vector_math.Matrix4.identity()
-                .translate(0.0, 0.0), // displacement.dx, displacement.dy),
+                .translate(displacement.dx, displacement.dy),
             child: new widgets.Opacity(
                 child: child,
                 opacity: displacement != widgets.Offset.zero ? 0.5 : 1.0)));

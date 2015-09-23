@@ -8,11 +8,19 @@ import 'package:sky/widgets.dart' as widgets;
 class Card extends widgets.Component {
   logic_card.Card card;
   bool faceUp;
+  double width;
+  double height;
 
-  Card(this.card, this.faceUp);
+  Card(this.card, this.faceUp, {this.width, this.height});
 
   widgets.Widget build() {
-    return new widgets.Listener(child: _imageFromCard(card, faceUp));
+    return new widgets.Listener(
+      child: new widgets.Container(
+        width: width,
+        height: height,
+        child: _imageFromCard(card, faceUp)
+      )
+    );
   }
 
   static widgets.Widget _imageFromCard(logic_card.Card c, bool faceUp) {

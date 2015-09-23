@@ -5,6 +5,9 @@
 import '../logic/card.dart' as logic_card;
 import 'card.dart' as component_card;
 import 'draggable.dart' show Draggable;
+import 'util.dart' as util;
+
+import 'dart:math' as math;
 import 'package:sky/widgets.dart';
 import 'package:sky/theme/colors.dart' as colors;
 
@@ -16,6 +19,14 @@ enum DropType {
   // I can see that both would be nice, but I'm not sure how to do that yet.
 }
 
+const double DEFAULT_WIDTH = 200.0;
+const double DEFAULT_CARD_HEIGHT = 60.0;
+const double DEFAULT_CARD_WIDTH = 60.0;
+
+const double CARD_MARGIN = 3.0; // transparent
+const double WHITE_LINE_HEIGHT = 2.0; // white
+const double WHITE_LINE_MARGIN = 4.0; // each side
+
 class CardCollectionComponent extends StatefulComponent {
   List<logic_card.Card> cards;
   Orientation orientation;
@@ -24,12 +35,27 @@ class CardCollectionComponent extends StatefulComponent {
   bool dragChildren;
   DropType acceptType;
   Function comparator;
+  double width;
+  double widthCard;
+  double heightCard;
+  var backgroundColor;
+  var altColor;
 
   String status = 'bar';
 
   CardCollectionComponent(
       this.cards, this.faceUp, this.orientation, this.parentCallback,
-      {this.dragChildren: false, this.acceptType: DropType.none, this.comparator: null});
+      {this.dragChildren: false, this.acceptType: DropType.none, this.comparator: null,
+      this.width: DEFAULT_WIDTH, this.widthCard: DEFAULT_CARD_WIDTH, this.heightCard: DEFAULT_CARD_HEIGHT,
+      this.backgroundColor, this.altColor}) {
+
+    if (this.backgroundColor == null) {
+      backgroundColor = colors.Grey[500];
+    }
+    if (this.altColor == null) {
+      altColor = colors.Grey[600];
+    }
+  }
 
   void syncConstructorArguments(CardCollectionComponent other) {
     cards = other.cards;
@@ -39,6 +65,11 @@ class CardCollectionComponent extends StatefulComponent {
     dragChildren = other.dragChildren;
     acceptType = other.acceptType;
     comparator = other.comparator;
+    width = other.width;
+    widthCard = other.widthCard;
+    heightCard = other.heightCard;
+    backgroundColor = other.backgroundColor;
+    altColor = other.altColor;
   }
 
   bool _handleWillAccept(dynamic data) {
@@ -71,13 +102,6 @@ class CardCollectionComponent extends StatefulComponent {
     return cs;
   }
 
-  List<Widget> flexChildren(List<Widget> children) {
-    List<Widget> flexWidgets = new List<Widget>();
-    children.forEach(
-        (child) => flexWidgets.add(new Flexible(child: child)));
-    return flexWidgets;
-  }
-
   // returns null if it's up to the container (like a Flex) to figure this out.
   double get desiredHeight {
     switch (this.orientation) {
@@ -86,9 +110,9 @@ class CardCollectionComponent extends StatefulComponent {
       case Orientation.horz:
       case Orientation.fan:
       case Orientation.show1:
-        return 60.0;
+        return _produceRowHeight;
       case Orientation.suit:
-        return 240.0;
+        return _produceRowHeight * 4 + _whiteLineHeight * 3;
       default:
         assert(false);
         return null;
@@ -100,33 +124,71 @@ class CardCollectionComponent extends StatefulComponent {
     switch (this.orientation) {
       case Orientation.vert:
       case Orientation.show1:
-        return 60.0;
+        return widthCard;
       case Orientation.horz:
       case Orientation.fan:
       case Orientation.suit:
-        return null;
+        return this.width;
       default:
         assert(false);
         return null;
     }
   }
 
+  double get _produceRowHeight => heightCard + CARD_MARGIN * 2;
+  Widget _produceRow(List<Widget> cardWidgets, {emptyBackgroundImage: ""}) {
+    if (cardWidgets.length == 0) {
+      // Just return a centered background image.
+      return new Container(
+        decoration: new BoxDecoration(backgroundColor: this.backgroundColor),
+        height: _produceRowHeight,
+        width: this.width,
+        child: new Center(child: new Opacity(
+          opacity: 0.45,
+          child: new Container(
+            height: heightCard,
+            child: emptyBackgroundImage == "" ? null : new NetworkImage(src: emptyBackgroundImage)
+          )
+        ))
+      );
+    }
+
+    // Let's do a stack of positioned cards!
+    List<Widget> kids = new List<Widget>();
+
+    double w =  this.width ?? widthCard * 5;
+    double spacing = math.min(widthCard + CARD_MARGIN * 2, (w - widthCard - 2 * CARD_MARGIN) / (cardWidgets.length - 1));
+
+    for (int i = 0; i < cardWidgets.length; i++) {
+      kids.add(new Positioned(
+        top: CARD_MARGIN,
+        left: CARD_MARGIN + spacing * i,
+        child: cardWidgets[i]
+      ));
+    }
+    return new Container(
+      decoration: new BoxDecoration(backgroundColor: this.backgroundColor),
+      height: _produceRowHeight,
+      width: this.width,
+      child: new Stack(kids)
+    );
+  }
+
+  double get _whiteLineHeight => WHITE_LINE_HEIGHT;
+
   Widget wrapCards(List<Widget> cardWidgets) {
     switch (this.orientation) {
       case Orientation.vert:
-        return new Flex(flexChildren(cardWidgets),
+        return new Flex(util.flexChildren(cardWidgets),
             direction: FlexDirection.vertical);
       case Orientation.horz:
-        return new Flex(flexChildren(cardWidgets));
+        return _produceRow(cardWidgets);
       case Orientation.fan:
       // unimplemented, so we'll fall through to show1, for now.
       // Probably a Stack + Positioned
       case Orientation.show1:
         return new Stack(cardWidgets);
       case Orientation.suit:
-        if (cards.length == 0) {
-          return new Stack(cardWidgets);
-        }
         List<Widget> cs = new List<Widget>();
         List<Widget> ds = new List<Widget>();
         List<Widget> hs = new List<Widget>();
@@ -154,9 +216,27 @@ class CardCollectionComponent extends StatefulComponent {
               assert(false);
           }
         }
-        return new Flex(flexChildren(<Widget>[
-          new Flex(flexChildren(cs)), new Flex(flexChildren(ds)), new Flex(flexChildren(hs)), new Flex(flexChildren(ss))
-        ]), direction: FlexDirection.vertical);
+        return new Container(
+          decoration: new BoxDecoration(backgroundColor: colors.white),
+          child: new Stack(<Widget>[
+            new Positioned(
+              top: 0.0,
+              child: _produceRow(ss, emptyBackgroundImage: "images/suits/Spade.png")
+            ),
+            new Positioned(
+              top: _produceRowHeight + _whiteLineHeight,
+              child: _produceRow(hs, emptyBackgroundImage: "images/suits/Heart.png")
+            ),
+            new Positioned(
+              top: 2 * _produceRowHeight + 2 * _whiteLineHeight,
+              child: _produceRow(cs, emptyBackgroundImage: "images/suits/Club.png")
+            ),
+            new Positioned(
+              top: 3 * _produceRowHeight + 3 * _whiteLineHeight,
+              child: _produceRow(ds, emptyBackgroundImage: "images/suits/Diamond.png")
+            )
+          ])
+        );
       default:
         assert(false);
         return null;
@@ -164,27 +244,15 @@ class CardCollectionComponent extends StatefulComponent {
   }
 
   Widget build() {
-    Widget w = new Container(
-        decoration: new BoxDecoration(
-            backgroundColor: colors.Green[500], borderRadius: 5.0),
-        child: _buildHearts());
-    return w;
+    return _buildCollection();
   }
 
-  Widget _buildHearts() {
+  Widget _buildCollection() {
     List<Widget> cardComponents = new List<Widget>();
-    if (cards.length == 0) {
-      // TODO(alexfandrianto): I wish I could remove this, but Sky actually
-      // complains about a sizing issue when you do that.
-      // This is likely related to the Positioning an unsized child bug.
-      // I think we have to control our size a bit too much in Sky.
-      // https://github.com/domokit/sky_engine/blob/master/sky/packages/sky/lib/src/widgets/sizing.md
-      cardComponents.add(new Text("")); // new Text(status)
-    }
     List<logic_card.Card> cs = this.comparator != null ? this._sortedCards : this.cards;
 
     for (int i = 0; i < cs.length; i++) {
-      component_card.Card c = new component_card.Card(cs[i], faceUp);
+      component_card.Card c = new component_card.Card(cs[i], faceUp, width: widthCard, height: heightCard);
 
       if (dragChildren) {
         cardComponents.add(new Draggable<component_card.Card>(c));
@@ -200,11 +268,9 @@ class CardCollectionComponent extends StatefulComponent {
       case DropType.none:
         return new Container(
             decoration: new BoxDecoration(
-                border: new Border.all(width: 3.0, color: colors.white),
-                backgroundColor: colors.Grey[500]),
+                backgroundColor: this.backgroundColor),
             height: this.desiredHeight,
             width: this.desiredWidth,
-            margin: new EdgeDims.all(10.0),
             child: wrapCards(cardComponents));
       case DropType.card:
         return new DragTarget<component_card.Card>(
@@ -212,14 +278,10 @@ class CardCollectionComponent extends StatefulComponent {
             builder: (List<component_card.Card> data, _) {
           return new Container(
               decoration: new BoxDecoration(
-                  border: new Border.all(
-                      width: 3.0,
-                      color: data.isEmpty ? colors.white : colors.Blue[500]),
                   backgroundColor:
-                      data.isEmpty ? colors.Grey[500] : colors.Green[500]),
+                      data.isEmpty ? this.backgroundColor : this.altColor),
               height: this.desiredHeight,
               width: this.desiredWidth,
-              margin: new EdgeDims.all(10.0),
               child: wrapCards(cardComponents));
         });
       case DropType.card_collection:
@@ -228,14 +290,10 @@ class CardCollectionComponent extends StatefulComponent {
             builder: (List<CardCollectionComponent> data, _) {
           return new Container(
               decoration: new BoxDecoration(
-                  border: new Border.all(
-                      width: 3.0,
-                      color: data.isEmpty ? colors.white : colors.Blue[500]),
                   backgroundColor:
-                      data.isEmpty ? colors.Grey[500] : colors.Green[500]),
+                      data.isEmpty ? this.backgroundColor : this.altColor),
               height: this.desiredHeight,
               width: this.desiredWidth,
-              margin: new EdgeDims.all(10.0),
               child: wrapCards(cardComponents));
         });
     }
