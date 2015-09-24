@@ -1,5 +1,5 @@
 # This beginning section is used to setup the environment for running with mojo_shell.
-ETHER_DIR := $(V23_ROOT)/release/mojo/syncbase
+ETHER_DIR := $(JIRI_ROOT)/release/mojo/syncbase
 CROUPIER_DIR := $(shell pwd)
 SHELL := /bin/bash -euo pipefail
 
@@ -75,8 +75,8 @@ env-check:
 ifndef MOJO_DIR
 	$(error MOJO_DIR is not set)
 endif
-ifndef V23_ROOT
-	$(error V23_ROOT is not set)
+ifndef JIRI_ROOT
+	$(error JIRI_ROOT is not set)
 endif
 ifeq ($(wildcard $(MOJO_BUILD_DIR)),)
 	$(error ERROR: $(MOJO_BUILD_DIR) does not exist.  Please see README.md for instructions on compiling Mojo resources.)
