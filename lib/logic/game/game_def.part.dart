@@ -7,7 +7,7 @@ part of game;
 // Note: Proto and Board are "fake" games intended to demonstrate what we can do.
 // Proto is just a drag cards around "game".
 // Board is meant to show how one _could_ layout a game of Hearts. This one is not hooked up very well yet.
-enum GameType { Proto, Hearts, Poker, Solitaire, Board, SyncbaseEcho }
+enum GameType { Proto, Hearts, Poker, Solitaire, Board }
 
 /// A game consists of multiple decks and tracks a single deck of cards.
 /// It also handles events; when cards are dragged to and from decks.

@@ -3,21 +3,15 @@ ETHER_DIR := $(V23_ROOT)/release/mojo/syncbase
 CROUPIER_DIR := $(shell pwd)
 SHELL := /bin/bash -euo pipefail
 
-# Sky wants us to use a later version of pub, so just in case, use theirs when getting packages.
-# TODO(alexfandrianto): How do I update my actual pub and my sublime pub?
-PATH := $(SKY_DIR)/src/third_party/dart-sdk/dart-sdk/bin:$(PATH)
-
 ifdef ANDROID
 	MOJO_ANDROID_FLAGS := --android
 
 	MOJO_BUILD_DIR := $(MOJO_DIR)/src/out/android_Debug
-	SKY_BUILD_DIR := $(SKY_DIR)/src/out/android_Debug
 	ETHER_BUILD_DIR := $(ETHER_DIR)/gen/mojo/android
 
 	SYNCBASE_DATA_DIR := /data/data/org.chromium.mojo.shell/app_home/syncbase_data
 else
 	MOJO_BUILD_DIR := $(MOJO_DIR)/src/out/Debug
-	SKY_BUILD_DIR := $(SKY_DIR)/src/out/Debug
 	ETHER_BUILD_DIR := $(ETHER_DIR)/gen/mojo/linux_amd64
 
 	SYNCBASE_DATA_DIR := /tmp/syncbase_data
@@ -28,8 +22,6 @@ endif
 # very large, and can interfere with C++ memory if they are in the same
 # process.
 MOJO_SHELL_FLAGS := -v --enable-multiprocess \
-	--config-alias SKY_DIR=$(SKY_DIR) \
-	--config-alias SKY_BUILD_DIR=$(SKY_BUILD_DIR) \
 	--config-alias ETHER_DIR=$(ETHER_DIR) \
 	--config-alias ETHER_BUILD_DIR=$(ETHER_BUILD_DIR) \
 	--config-alias CROUPIER_DIR=$(CROUPIER_DIR)
@@ -55,9 +47,15 @@ lint: packages
 	dartanalyzer lib/main.dart | grep -v "\[warning\] The imported libraries"
 	dartanalyzer $(DART_TEST_FILES) | grep -v "\[warning\] The imported libraries"
 
+.PHONY: build
+build: croupier.flx
+
+croupier.flx: packages
+	pub run sky_tools -v build --manifest manifest.yaml --output-file $@
+
 .PHONY: start
-start: packages
-	./packages/sky/sky_tool start --checked
+start: croupier.flx env-check packages
+	pub run sky_tools -v --very-verbose run_mojo --mojo-path $(MOJO_DIR)/src --app $< $(MOJO_ANDROID_FLAGS)
 
 .PHONY: mock
 mock:
@@ -77,21 +75,12 @@ env-check:
 ifndef MOJO_DIR
 	$(error MOJO_DIR is not set)
 endif
-ifndef SKY_DIR
-	$(error SKY_DIR is not set)
-endif
 ifndef V23_ROOT
 	$(error V23_ROOT is not set)
 endif
 ifeq ($(wildcard $(MOJO_BUILD_DIR)),)
 	$(error ERROR: $(MOJO_BUILD_DIR) does not exist.  Please see README.md for instructions on compiling Mojo resources.)
 endif
-
-# Run the Sky program with mojo shell. This allows use of Syncbase and Mojo.
-# If syncbase doesn't load, it could be that port 4002 is still in use; try fuser 4002/tcp.
-.PHONY: start-with-mojo
-start-with-mojo: env-check packages
-	$(MOJO_DIR)/src/mojo/devtools/common/mojo_run --config-file $(PWD)/mojoconfig $(MOJO_SHELL_FLAGS) $(MOJO_ANDROID_FLAGS) 'https://core.mojoapps.io/kiosk_wm.mojo https://croupier.v.io/lib/main.dart'
 
 # TODO(alexfandrianto): I split off the syncbase logic from game.dart because it
 # would not run in a stand-alone VM. We will need to add mojo_test eventually.
@@ -105,4 +94,8 @@ test: packages
 
 .PHONY: clean
 clean:
-	rm -rf .packages packages .pubspec.lock
+	rm -f croupier.flx snapshot_blob.bin
+
+.PHONY: veryclean
+veryclean: clean
+	rm -rf .packages .pub packages pubspec.lock

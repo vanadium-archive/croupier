@@ -15,12 +15,8 @@ class Card extends widgets.Component {
 
   widgets.Widget build() {
     return new widgets.Listener(
-      child: new widgets.Container(
-        width: width,
-        height: height,
-        child: _imageFromCard(card, faceUp)
-      )
-    );
+        child: new widgets.Container(
+            width: width, height: height, child: _imageFromCard(card, faceUp)));
   }
 
   static widgets.Widget _imageFromCard(logic_card.Card c, bool faceUp) {

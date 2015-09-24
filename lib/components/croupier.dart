@@ -33,10 +33,7 @@ class CroupierComponent extends StatefulComponent {
   }
 
   Widget build() {
-    return new SizeObserver(
-      callback: sizeChanged,
-      child: _buildHelper()
-    );
+    return new SizeObserver(callback: sizeChanged, child: _buildHelper());
   }
 
   Widget _buildHelper() {
@@ -71,12 +68,7 @@ class CroupierComponent extends StatefulComponent {
                       logic_croupier.CroupierState.PlayGame,
                       logic_game.GameType.Hearts)),
               new FlatButton(child: new Text('Poker')),
-              new FlatButton(child: new Text('Solitaire')),
-              new FlatButton(
-                  child: new Text('Syncbase Echo'),
-                  onPressed: makeSetStateCallback(
-                      logic_croupier.CroupierState.PlayGame,
-                      logic_game.GameType.SyncbaseEcho))
+              new FlatButton(child: new Text('Solitaire'))
             ], direction: FlexDirection.vertical));
       case logic_croupier.CroupierState.AwaitGame:
         return null; // in which players wait for game invitations to arrive.

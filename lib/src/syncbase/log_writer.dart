@@ -26,7 +26,7 @@
 import 'dart:async';
 import 'dart:convert' show UTF8, JSON;
 
-import 'package:sky/mojo/embedder.dart' show embedder;
+import 'package:sky/services.dart' show embedder;
 
 import 'package:ether/syncbase_client.dart'
     show Perms, SyncbaseClient, SyncbaseTable;

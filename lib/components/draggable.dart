@@ -32,34 +32,31 @@ class Draggable<T extends widgets.Widget> extends widgets.StatefulComponent {
                 opacity: displacement != widgets.Offset.zero ? 0.5 : 1.0)));
   }
 
-  widgets.EventDisposition _startDrag(sky.PointerEvent event) {
+  void _startDrag(sky.PointerEvent event) {
     print("Drag Start");
     setState(() {
       dragController = new widgets.DragController(this.child);
       dragController.update(new widgets.Point(event.x, event.y));
       displacement = widgets.Offset.zero;
     });
-    return widgets.EventDisposition.consumed;
   }
 
-  widgets.EventDisposition _updateDrag(sky.PointerEvent event) {
+  void _updateDrag(sky.PointerEvent event) {
     setState(() {
       dragController.update(new widgets.Point(event.x, event.y));
       displacement += new widgets.Offset(event.dx, event.dy);
     });
-    return widgets.EventDisposition.consumed;
   }
 
-  widgets.EventDisposition _cancelDrag(sky.PointerEvent event) {
+  void _cancelDrag(sky.PointerEvent event) {
     print("Drag Cancel");
     setState(() {
       dragController.cancel();
       dragController = null;
     });
-    return widgets.EventDisposition.consumed;
   }
 
-  widgets.EventDisposition _drop(sky.PointerEvent event) {
+  void _drop(sky.PointerEvent event) {
     print("Drag Drop");
     setState(() {
       dragController.update(new widgets.Point(event.x, event.y));
@@ -68,6 +65,5 @@ class Draggable<T extends widgets.Widget> extends widgets.StatefulComponent {
 
       displacement = widgets.Offset.zero;
     });
-    return widgets.EventDisposition.consumed;
   }
 }
