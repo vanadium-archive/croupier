@@ -4,7 +4,7 @@
 
 import '../logic/croupier.dart' as logic_croupier;
 import '../logic/game/game.dart' as logic_game;
-import 'game.dart' show createGameComponent;
+import 'game.dart' show createGameComponent, NoArgCb;
 
 import 'package:sky/widgets.dart';
 
@@ -20,7 +20,7 @@ class CroupierComponent extends StatefulComponent {
     croupier = other.croupier;
   }
 
-  Function makeSetStateCallback(logic_croupier.CroupierState s,
+  NoArgCb makeSetStateCallback(logic_croupier.CroupierState s,
       [var data = null]) {
     return () => setState(() {
           croupier.setState(s, data);

@@ -8,39 +8,32 @@ class HeartsLog extends GameLog {
   LogWriter logWriter;
 
   HeartsLog() {
-    logWriter = new LogWriter(handleSyncUpdate);
+    logWriter = new LogWriter(handleSyncUpdate, [0, 1, 2, 3]);
   }
 
-  Map<String, String> _toLogData(
-      List<GameCommand> log, GameCommand newCommand) {
-    Map<String, String> data = new Map<String, String>();
-    for (int i = 0; i < log.length; i++) {
-      data["${i}"] = log[i].data;
-    }
-    data["${log.length}"] = newCommand.data;
-    return data;
+  @override
+  void setGame(Game g) {
+    this.game = g;
+    logWriter.associatedUser = this.game.playerNumber;
   }
 
-  List<HeartsCommand> _logFromData(Map<String, String> data) {
-    List<HeartsCommand> otherlog = new List<HeartsCommand>();
-    otherlog.length = data.length;
-    data.forEach((String k, String v) {
-      otherlog[int.parse(k)] = new HeartsCommand(v);
-    });
-    return otherlog;
+  void handleSyncUpdate(String key, String cmd) {
+    // In Hearts, we can ignore the key. Our in-memory log does not need to
+    // guarantee the event order of the INDEPENDENT phase, which can reference
+    // keys from the "earlier" actions of other players.
+    HeartsCommand hc = new HeartsCommand.fromCommand(cmd);
+    this.update(hc);
   }
 
-  void handleSyncUpdate(Map<String, String> data) {
-    this.update(_logFromData(data));
-  }
-
+  @override
   void addToLogCb(List<GameCommand> log, GameCommand newCommand) {
-    logWriter.write(_toLogData(log, newCommand));
+    logWriter.write(newCommand.simultaneity, newCommand.command);
   }
 
+  @override
   List<GameCommand> updateLogCb(
       List<GameCommand> current, List<GameCommand> other, int mismatchIndex) {
-    // TODO(alexfandrianto): How do you handle conflicts with Hearts?
+    // Note: The Hearts schema avoids all conflict, so this should never be called.
     assert(false);
     return current;
   }

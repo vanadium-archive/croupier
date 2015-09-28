@@ -6,6 +6,7 @@ library game;
 
 import '../card.dart' show Card;
 import 'dart:math' as math;
+import '../../src/syncbase/log_writer.dart' show SimulLevel;
 
 part 'game_def.part.dart';
 part 'game_command.part.dart';

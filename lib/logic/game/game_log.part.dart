@@ -29,12 +29,38 @@ abstract class GameLog {
         addToLogCb(log, gc);
       } else {
         // What can we do if the first command isn't allowed to fire?
-        throw new StateError("Cannot run ${gc.data}");
+        throw new StateError("Cannot run ${gc.command}");
       }
     }
   }
 
-  void update(List<GameCommand> otherLog) {
+  void update(GameCommand newCmd) {
+    _updateAndRun(newCmd);
+    _runUpdateCallback();
+
+    // Now that we've run this command, let's try our other pending commands.
+    _tryPendingCommand();
+  }
+
+  void _updateAndRun(GameCommand newCmd) {
+    log.add(newCmd);
+    if (pendingCommands[0] == newCmd) {
+      pendingCommands.removeAt(0);
+      hasFired = false;
+    }
+    newCmd.execute(game);
+    game.triggerEvents();
+  }
+
+  void _runUpdateCallback() {
+    if (game.updateCallback != null) {
+      game.updateCallback();
+    }
+  }
+
+  // TODO(alexfandrianto): We may want to remove 'merge', since nobody uses it.
+  // This would also let us remove updateLogCb (conflict resolution callback).
+  void merge(List<GameCommand> otherLog) {
     int numMatches = 0;
     while (numMatches < log.length &&
         numMatches < otherLog.length &&
@@ -46,17 +72,9 @@ abstract class GameLog {
     // If i matches the log length, then take the rest of the other log.
     if (numMatches == log.length) {
       for (int j = numMatches; j < otherLog.length; j++) {
-        log.add(otherLog[j]);
-        if (pendingCommands[0] == otherLog[j]) {
-          pendingCommands.removeAt(0);
-          hasFired = false;
-        }
-        log[j].execute(game);
-        game.triggerEvents();
+        _updateAndRun(otherLog[j]);
       }
-      if (game.updateCallback != null) {
-        game.updateCallback();
-      }
+      _runUpdateCallback();
     } else if (numMatches == otherLog.length) {
       // We seem to have done more valid moves, so we can just ignore the other side.
       // TODO(alexfandrianto): If we play a game with actual 'undo' moves,

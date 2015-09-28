@@ -19,6 +19,8 @@ enum DropType {
   // I can see that both would be nice, but I'm not sure how to do that yet.
 }
 
+typedef void AcceptCb(dynamic data, List<logic_card.Card> cards);
+
 const double DEFAULT_WIDTH = 200.0;
 const double DEFAULT_CARD_HEIGHT = 60.0;
 const double DEFAULT_CARD_WIDTH = 60.0;
@@ -31,10 +33,10 @@ class CardCollectionComponent extends StatefulComponent {
   List<logic_card.Card> cards;
   Orientation orientation;
   bool faceUp;
-  Function parentCallback;
+  AcceptCb acceptCallback;
   bool dragChildren;
   DropType acceptType;
-  Function comparator;
+  Comparator<logic_card.Card> comparator;
   double width;
   double widthCard;
   double heightCard;
@@ -44,9 +46,10 @@ class CardCollectionComponent extends StatefulComponent {
   String status = 'bar';
 
   CardCollectionComponent(
-      this.cards, this.faceUp, this.orientation, this.parentCallback,
+      this.cards, this.faceUp, this.orientation,
       {this.dragChildren: false,
       this.acceptType: DropType.none,
+      this.acceptCallback: null,
       this.comparator: null,
       this.width: DEFAULT_WIDTH,
       this.widthCard: DEFAULT_CARD_WIDTH,
@@ -65,7 +68,7 @@ class CardCollectionComponent extends StatefulComponent {
     cards = other.cards;
     orientation = other.orientation;
     faceUp = other.faceUp;
-    parentCallback = other.parentCallback;
+    acceptCallback = other.acceptCallback;
     dragChildren = other.dragChildren;
     acceptType = other.acceptType;
     comparator = other.comparator;
@@ -86,7 +89,7 @@ class CardCollectionComponent extends StatefulComponent {
     print('accept');
     setState(() {
       status = 'ACCEPT ${data.card.toString()}';
-      parentCallback(data.card, this.cards);
+      acceptCallback(data.card, this.cards);
     });
   }
 
@@ -94,7 +97,7 @@ class CardCollectionComponent extends StatefulComponent {
     print('acceptMulti');
     setState(() {
       status = 'ACCEPT multi: ${data.cards.toString()}';
-      parentCallback(data.cards, this.cards);
+      acceptCallback(data.cards, this.cards);
     });
   }
 

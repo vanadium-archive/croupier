@@ -26,6 +26,7 @@ class ProtoGame extends Game {
   }
 
   // Overrides Game's move method with the "move" logic for the card dragging prototype.
+  @override
   void move(Card card, List<Card> dest) {
     // The first step is to find the card. Where is it?
     // then we can remove it and add to the dest.
@@ -42,4 +43,7 @@ class ProtoGame extends Game {
     debugString = 'Move ${i} ${card.toString()}';
     print(debugString);
   }
+
+  @override
+  void triggerEvents() {}
 }

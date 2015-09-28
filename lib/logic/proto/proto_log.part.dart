@@ -5,10 +5,12 @@
 part of proto;
 
 class ProtoLog extends GameLog {
+  @override
   void addToLogCb(List<GameCommand> log, GameCommand newCommand) {
-    update(new List<GameCommand>.from(log)..add(newCommand));
+    update(newCommand);
   }
 
+  @override
   List<GameCommand> updateLogCb(
       List<GameCommand> current, List<GameCommand> other, int mismatchIndex) {
     assert(false); // This game can't have conflicts.

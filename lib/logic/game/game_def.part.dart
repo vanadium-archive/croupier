@@ -9,19 +9,28 @@ part of game;
 // Board is meant to show how one _could_ layout a game of Hearts. This one is not hooked up very well yet.
 enum GameType { Proto, Hearts, Poker, Solitaire, Board }
 
+typedef void NoArgCb();
+
 /// A game consists of multiple decks and tracks a single deck of cards.
 /// It also handles events; when cards are dragged to and from decks.
-class Game {
+abstract class Game {
   final GameType gameType;
   final List<List<Card>> cardCollections = new List<List<Card>>();
   final List<Card> deck = new List<Card>.from(Card.All);
 
   final math.Random random = new math.Random();
   final GameLog gamelog;
-  int playerNumber;
+
+  int _playerNumber;
+  int get playerNumber => _playerNumber;
+  // Some subclasses may wish to override this setter to do extra work.
+  void set playerNumber(int other) {
+    _playerNumber = other;
+  }
+
   String debugString = 'hello?';
 
-  Function updateCallback; // Used to inform components of when a change has occurred. This is especially important when something non-UI related changes what should be drawn.
+  NoArgCb updateCallback; // Used to inform components of when a change has occurred. This is especially important when something non-UI related changes what should be drawn.
 
   // A public super constructor that doesn't really do anything.
   // Don't call this unless you're a subclass.
@@ -29,7 +38,7 @@ class Game {
 
   // A super constructor, don't call this unless you're a subclass.
   Game.create(
-      this.gameType, this.gamelog, this.playerNumber, int numCollections) {
+      this.gameType, this.gamelog, this._playerNumber, int numCollections) {
     gamelog.setGame(this);
     for (int i = 0; i < numCollections; i++) {
       cardCollections.add(new List<Card>());
@@ -62,10 +71,7 @@ class Game {
     deck.addAll(Card.All);
   }
 
-  // UNIMPLEMENTED: Let subclasses override this?
-  // Or is it improper to do so?
-  void move(Card card, List<Card> dest) {}
-
-  // UNIMPLEMENTED: Override this to implement game-specific logic after each event.
-  void triggerEvents() {}
+  // UNIMPLEMENTED
+  void move(Card card, List<Card> dest);
+  void triggerEvents();
 }

@@ -1,20 +1,20 @@
 # Deal
-Deal:0:classic h1:classic h2:classic h3:classic h4:classic h5:classic d6:classic d7:classic d8:classic d9:classic d10:classic dj:classic dq:classic dk:END
-Deal:1:classic d1:classic d2:classic d3:classic d4:classic d5:classic s6:classic s7:classic s8:classic s9:classic s10:classic sj:classic sq:classic sk:END
-Deal:2:classic s1:classic s2:classic s3:classic s4:classic s5:classic c6:classic c7:classic c8:classic c9:classic c10:classic cj:classic cq:classic ck:END
-Deal:3:classic c1:classic c2:classic c3:classic c4:classic c5:classic h6:classic h7:classic h8:classic h9:classic h10:classic hj:classic hq:classic hk:END
+Deal|0:classic h1:classic h2:classic h3:classic h4:classic h5:classic d6:classic d7:classic d8:classic d9:classic d10:classic dj:classic dq:classic dk:END
+Deal|1:classic d1:classic d2:classic d3:classic d4:classic d5:classic s6:classic s7:classic s8:classic s9:classic s10:classic sj:classic sq:classic sk:END
+Deal|2:classic s1:classic s2:classic s3:classic s4:classic s5:classic c6:classic c7:classic c8:classic c9:classic c10:classic cj:classic cq:classic ck:END
+Deal|3:classic c1:classic c2:classic c3:classic c4:classic c5:classic h6:classic h7:classic h8:classic h9:classic h10:classic hj:classic hq:classic hk:END
 
 # Pass
-Pass:3:classic c1:classic c2:classic c3:END
-Pass:2:classic s1:classic s2:classic s3:END
-Pass:0:classic h1:classic h2:classic h3:END
-Pass:1:classic d1:classic d2:classic d3:END
+Pass|3:classic c1:classic c2:classic c3:END
+Pass|2:classic s1:classic s2:classic s3:END
+Pass|0:classic h1:classic h2:classic h3:END
+Pass|1:classic d1:classic d2:classic d3:END
 
 # Take
-Take:1:END
-Take:2:END
-Take:0:END
-Take:3:END
+Take|1:END
+Take|2:END
+Take|0:END
+Take|3:END
 
 # 0 has all diamonds except for h4 and h5
 # 1 has all spades except for d4 and d5
@@ -22,487 +22,487 @@ Take:3:END
 # 3 has all hearts except for c4 and c5
 
 # Trick 1 (2 leads with 2 of clubs)
-Play:2:classic c2:END
-Play:3:classic c4:END
-Play:0:classic d1:END
-Play:1:classic s1:END
+Play|2:classic c2:END
+Play|3:classic c4:END
+Play|0:classic d1:END
+Play|1:classic s1:END
 
 # Trick 2 (3 won last round with 4 of clubs)
-Play:3:classic c5:END
-Play:0:classic d2:END
-Play:1:classic s2:END
-Play:2:classic c1:END
+Play|3:classic c5:END
+Play|0:classic d2:END
+Play|1:classic s2:END
+Play|2:classic c1:END
 
 # Trick 3 (2 won with ace of clubs)
-Play:2:classic s4:END
-Play:3:classic h1:END
-Play:0:classic h5:END
-Play:1:classic s3:END
+Play|2:classic s4:END
+Play|3:classic h1:END
+Play|0:classic h5:END
+Play|1:classic s3:END
 
 # Trick 4 (2 won with s4)
-Play:2:classic s5:END
-Play:3:classic hk:END
-Play:0:classic h4:END
-Play:1:classic sk:END
+Play|2:classic s5:END
+Play|3:classic hk:END
+Play|0:classic h4:END
+Play|1:classic sk:END
 
 # Trick 5 (1 won with sk)
-Play:1:classic d5:END
-Play:2:classic ck:END
-Play:3:classic hq:END
-Play:0:classic d3:END
+Play|1:classic d5:END
+Play|2:classic ck:END
+Play|3:classic hq:END
+Play|0:classic d3:END
 
 # Trick 6 (1 won with d5)
-Play:1:classic d4:END
-Play:2:classic cq:END
-Play:3:classic hj:END
-Play:0:classic dk:END
+Play|1:classic d4:END
+Play|2:classic cq:END
+Play|3:classic hj:END
+Play|0:classic dk:END
 
 # Trick 7 (0 won with dk)
-Play:0:classic dq:END
-Play:1:classic sq:END
-Play:2:classic c3:END
-Play:3:classic h2:END
+Play|0:classic dq:END
+Play|1:classic sq:END
+Play|2:classic c3:END
+Play|3:classic h2:END
 
 # Trick 8 (0 won with dq)
-Play:0:classic dj:END
-Play:1:classic sj:END
-Play:2:classic cj:END
-Play:3:classic h3:END
+Play|0:classic dj:END
+Play|1:classic sj:END
+Play|2:classic cj:END
+Play|3:classic h3:END
 
 # Trick 9 (0 won with dj)
-Play:0:classic d10:END
-Play:1:classic s10:END
-Play:2:classic c10:END
-Play:3:classic h10:END
+Play|0:classic d10:END
+Play|1:classic s10:END
+Play|2:classic c10:END
+Play|3:classic h10:END
 
 # Trick 10 (0 won with d10)
-Play:0:classic d9:END
-Play:1:classic s9:END
-Play:2:classic c9:END
-Play:3:classic h9:END
+Play|0:classic d9:END
+Play|1:classic s9:END
+Play|2:classic c9:END
+Play|3:classic h9:END
 
 # Trick 11 (0 won with d9)
-Play:0:classic d8:END
-Play:1:classic s8:END
-Play:2:classic c8:END
-Play:3:classic h8:END
+Play|0:classic d8:END
+Play|1:classic s8:END
+Play|2:classic c8:END
+Play|3:classic h8:END
 
 # Trick 12 (0 won with d8)
-Play:0:classic d7:END
-Play:1:classic s7:END
-Play:2:classic c7:END
-Play:3:classic h7:END
+Play|0:classic d7:END
+Play|1:classic s7:END
+Play|2:classic c7:END
+Play|3:classic h7:END
 
 # Trick 13 (0 won with d7)
-Play:0:classic d6:END
-Play:1:classic s6:END
-Play:2:classic c6:END
-Play:3:classic h6:END
+Play|0:classic d6:END
+Play|1:classic s6:END
+Play|2:classic c6:END
+Play|3:classic h6:END
 
 # Score Phase (ready)
-Ready:2:END
-Ready:0:END
-Ready:3:END
-Ready:1:END
+Ready|2:END
+Ready|0:END
+Ready|3:END
+Ready|1:END
 
 # The score is [21, 3, 2, 0]
 
 # 2nd Round here
 
 # Deal
-Deal:0:classic d1:classic d2:classic d3:classic c4:classic c5:classic c6:classic c7:classic c8:classic c9:classic c10:classic cj:classic cq:classic ck:END
-Deal:1:classic h1:classic h2:classic h3:classic s4:classic d5:classic d6:classic d7:classic d8:classic d9:classic d10:classic dj:classic dq:classic dk:END
-Deal:2:classic s1:classic s2:classic s3:classic d4:classic h5:classic h6:classic h7:classic h8:classic h9:classic h10:classic hj:classic hq:classic hk:END
-Deal:3:classic c1:classic c2:classic c3:classic h4:classic s5:classic s6:classic s7:classic s8:classic s9:classic s10:classic sj:classic sq:classic sk:END
+Deal|0:classic d1:classic d2:classic d3:classic c4:classic c5:classic c6:classic c7:classic c8:classic c9:classic c10:classic cj:classic cq:classic ck:END
+Deal|1:classic h1:classic h2:classic h3:classic s4:classic d5:classic d6:classic d7:classic d8:classic d9:classic d10:classic dj:classic dq:classic dk:END
+Deal|2:classic s1:classic s2:classic s3:classic d4:classic h5:classic h6:classic h7:classic h8:classic h9:classic h10:classic hj:classic hq:classic hk:END
+Deal|3:classic c1:classic c2:classic c3:classic h4:classic s5:classic s6:classic s7:classic s8:classic s9:classic s10:classic sj:classic sq:classic sk:END
 
 # Pass
-Pass:1:classic h1:classic h2:classic h3:END
-Pass:2:classic s1:classic s2:classic s3:END
-Pass:3:classic c1:classic c2:classic c3:END
-Pass:0:classic d1:classic d2:classic d3:END
+Pass|1:classic h1:classic h2:classic h3:END
+Pass|2:classic s1:classic s2:classic s3:END
+Pass|3:classic c1:classic c2:classic c3:END
+Pass|0:classic d1:classic d2:classic d3:END
 
 # Take
-Take:1:END
-Take:2:END
-Take:0:END
-Take:3:END
+Take|1:END
+Take|2:END
+Take|0:END
+Take|3:END
 
 # Trick 1
-Play:0:classic c2:END
-Play:1:classic d2:END
-Play:2:classic d4:END
-Play:3:classic s2:END
+Play|0:classic c2:END
+Play|1:classic d2:END
+Play|2:classic d4:END
+Play|3:classic s2:END
 
 # Trick 2
-Play:0:classic c3:END
-Play:1:classic d3:END
-Play:2:classic h3:END
-Play:3:classic s3:END
+Play|0:classic c3:END
+Play|1:classic d3:END
+Play|2:classic h3:END
+Play|3:classic s3:END
 
 # Trick 3
-Play:0:classic c4:END
-Play:1:classic s4:END
-Play:2:classic h2:END
-Play:3:classic h4:END
+Play|0:classic c4:END
+Play|1:classic s4:END
+Play|2:classic h2:END
+Play|3:classic h4:END
 
 # Trick 4
-Play:0:classic c5:END
-Play:1:classic d5:END
-Play:2:classic h5:END
-Play:3:classic s5:END
+Play|0:classic c5:END
+Play|1:classic d5:END
+Play|2:classic h5:END
+Play|3:classic s5:END
 
 # Trick 5
-Play:0:classic c6:END
-Play:1:classic d6:END
-Play:2:classic h6:END
-Play:3:classic s6:END
+Play|0:classic c6:END
+Play|1:classic d6:END
+Play|2:classic h6:END
+Play|3:classic s6:END
 
 # Trick 6
-Play:0:classic c7:END
-Play:1:classic d7:END
-Play:2:classic h7:END
-Play:3:classic s7:END
+Play|0:classic c7:END
+Play|1:classic d7:END
+Play|2:classic h7:END
+Play|3:classic s7:END
 
 # Trick 7
-Play:0:classic c8:END
-Play:1:classic d8:END
-Play:2:classic h8:END
-Play:3:classic s8:END
+Play|0:classic c8:END
+Play|1:classic d8:END
+Play|2:classic h8:END
+Play|3:classic s8:END
 
 # Trick 8
-Play:0:classic c9:END
-Play:1:classic d9:END
-Play:2:classic h9:END
-Play:3:classic s9:END
+Play|0:classic c9:END
+Play|1:classic d9:END
+Play|2:classic h9:END
+Play|3:classic s9:END
 
 # Trick 9
-Play:0:classic c1:END
-Play:1:classic d1:END
-Play:2:classic h1:END
-Play:3:classic s1:END
+Play|0:classic c1:END
+Play|1:classic d1:END
+Play|2:classic h1:END
+Play|3:classic s1:END
 
 # Trick 10
-Play:0:classic c10:END
-Play:1:classic d10:END
-Play:2:classic h10:END
-Play:3:classic s10:END
+Play|0:classic c10:END
+Play|1:classic d10:END
+Play|2:classic h10:END
+Play|3:classic s10:END
 
 # Trick 11
-Play:0:classic cj:END
-Play:1:classic dj:END
-Play:2:classic hj:END
-Play:3:classic sj:END
+Play|0:classic cj:END
+Play|1:classic dj:END
+Play|2:classic hj:END
+Play|3:classic sj:END
 
 # Trick 12
-Play:0:classic cq:END
-Play:1:classic dq:END
-Play:2:classic hq:END
-Play:3:classic sq:END
+Play|0:classic cq:END
+Play|1:classic dq:END
+Play|2:classic hq:END
+Play|3:classic sq:END
 
 # Trick 13
-Play:0:classic ck:END
-Play:1:classic dk:END
-Play:2:classic hk:END
-Play:3:classic sk:END
+Play|0:classic ck:END
+Play|1:classic dk:END
+Play|2:classic hk:END
+Play|3:classic sk:END
 
 # Score Phase (ready)
-Ready:2:END
-Ready:0:END
-Ready:3:END
-Ready:1:END
+Ready|2:END
+Ready|0:END
+Ready|3:END
+Ready|1:END
 
 # 3rd Round here
 
 # Deal
-Deal:0:classic h1:classic h2:classic h3:classic c4:classic c5:classic c6:classic c7:classic c8:classic c9:classic c10:classic cj:classic cq:classic ck:END
-Deal:1:classic s1:classic s2:classic s3:classic s4:classic d5:classic d6:classic d7:classic d8:classic d9:classic d10:classic dj:classic dq:classic dk:END
-Deal:2:classic c1:classic c2:classic c3:classic d4:classic h5:classic h6:classic h7:classic h8:classic h9:classic h10:classic hj:classic hq:classic hk:END
-Deal:3:classic d1:classic d2:classic d3:classic h4:classic s5:classic s6:classic s7:classic s8:classic s9:classic s10:classic sj:classic sq:classic sk:END
+Deal|0:classic h1:classic h2:classic h3:classic c4:classic c5:classic c6:classic c7:classic c8:classic c9:classic c10:classic cj:classic cq:classic ck:END
+Deal|1:classic s1:classic s2:classic s3:classic s4:classic d5:classic d6:classic d7:classic d8:classic d9:classic d10:classic dj:classic dq:classic dk:END
+Deal|2:classic c1:classic c2:classic c3:classic d4:classic h5:classic h6:classic h7:classic h8:classic h9:classic h10:classic hj:classic hq:classic hk:END
+Deal|3:classic d1:classic d2:classic d3:classic h4:classic s5:classic s6:classic s7:classic s8:classic s9:classic s10:classic sj:classic sq:classic sk:END
 
 # Pass
-Pass:0:classic h1:classic h2:classic h3:END
-Pass:1:classic s1:classic s2:classic s3:END
-Pass:2:classic c1:classic c2:classic c3:END
-Pass:3:classic d1:classic d2:classic d3:END
+Pass|0:classic h1:classic h2:classic h3:END
+Pass|1:classic s1:classic s2:classic s3:END
+Pass|2:classic c1:classic c2:classic c3:END
+Pass|3:classic d1:classic d2:classic d3:END
 
 # Take
-Take:1:END
-Take:2:END
-Take:0:END
-Take:3:END
+Take|1:END
+Take|2:END
+Take|0:END
+Take|3:END
 
 # Trick 1
-Play:0:classic c2:END
-Play:1:classic d2:END
-Play:2:classic d4:END
-Play:3:classic s2:END
+Play|0:classic c2:END
+Play|1:classic d2:END
+Play|2:classic d4:END
+Play|3:classic s2:END
 
 # Trick 2
-Play:0:classic c3:END
-Play:1:classic d3:END
-Play:2:classic h3:END
-Play:3:classic s3:END
+Play|0:classic c3:END
+Play|1:classic d3:END
+Play|2:classic h3:END
+Play|3:classic s3:END
 
 # Trick 3
-Play:0:classic c4:END
-Play:1:classic s4:END
-Play:2:classic h2:END
-Play:3:classic h4:END
+Play|0:classic c4:END
+Play|1:classic s4:END
+Play|2:classic h2:END
+Play|3:classic h4:END
 
 # Trick 4
-Play:0:classic c5:END
-Play:1:classic d5:END
-Play:2:classic h5:END
-Play:3:classic s5:END
+Play|0:classic c5:END
+Play|1:classic d5:END
+Play|2:classic h5:END
+Play|3:classic s5:END
 
 # Trick 5
-Play:0:classic c6:END
-Play:1:classic d6:END
-Play:2:classic h6:END
-Play:3:classic s6:END
+Play|0:classic c6:END
+Play|1:classic d6:END
+Play|2:classic h6:END
+Play|3:classic s6:END
 
 # Trick 6
-Play:0:classic c7:END
-Play:1:classic d7:END
-Play:2:classic h7:END
-Play:3:classic s7:END
+Play|0:classic c7:END
+Play|1:classic d7:END
+Play|2:classic h7:END
+Play|3:classic s7:END
 
 # Trick 7
-Play:0:classic c8:END
-Play:1:classic d8:END
-Play:2:classic h8:END
-Play:3:classic s8:END
+Play|0:classic c8:END
+Play|1:classic d8:END
+Play|2:classic h8:END
+Play|3:classic s8:END
 
 # Trick 8
-Play:0:classic c9:END
-Play:1:classic d9:END
-Play:2:classic h9:END
-Play:3:classic s9:END
+Play|0:classic c9:END
+Play|1:classic d9:END
+Play|2:classic h9:END
+Play|3:classic s9:END
 
 # Trick 9
-Play:0:classic c1:END
-Play:1:classic d1:END
-Play:2:classic h1:END
-Play:3:classic s1:END
+Play|0:classic c1:END
+Play|1:classic d1:END
+Play|2:classic h1:END
+Play|3:classic s1:END
 
 # Trick 10
-Play:0:classic c10:END
-Play:1:classic d10:END
-Play:2:classic h10:END
-Play:3:classic s10:END
+Play|0:classic c10:END
+Play|1:classic d10:END
+Play|2:classic h10:END
+Play|3:classic s10:END
 
 # Trick 11
-Play:0:classic cj:END
-Play:1:classic dj:END
-Play:2:classic hj:END
-Play:3:classic sj:END
+Play|0:classic cj:END
+Play|1:classic dj:END
+Play|2:classic hj:END
+Play|3:classic sj:END
 
 # Trick 12
-Play:0:classic cq:END
-Play:1:classic dq:END
-Play:2:classic hq:END
-Play:3:classic sq:END
+Play|0:classic cq:END
+Play|1:classic dq:END
+Play|2:classic hq:END
+Play|3:classic sq:END
 
 # Trick 13
-Play:0:classic ck:END
-Play:1:classic dk:END
-Play:2:classic hk:END
-Play:3:classic sk:END
+Play|0:classic ck:END
+Play|1:classic dk:END
+Play|2:classic hk:END
+Play|3:classic sk:END
 
 # Score Phase (ready)
-Ready:2:END
-Ready:0:END
-Ready:3:END
-Ready:1:END
+Ready|2:END
+Ready|0:END
+Ready|3:END
+Ready|1:END
 
 # 4th round here
 
 # Deal
-Deal:0:classic c1:classic c2:classic c3:classic c4:classic c5:classic c6:classic c7:classic c8:classic c9:classic c10:classic cj:classic cq:classic ck:END
-Deal:1:classic d1:classic d2:classic d3:classic s4:classic d5:classic d6:classic d7:classic d8:classic d9:classic d10:classic dj:classic dq:classic dk:END
-Deal:2:classic h1:classic h2:classic h3:classic d4:classic h5:classic h6:classic h7:classic h8:classic h9:classic h10:classic hj:classic hq:classic hk:END
-Deal:3:classic s1:classic s2:classic s3:classic h4:classic s5:classic s6:classic s7:classic s8:classic s9:classic s10:classic sj:classic sq:classic sk:END
+Deal|0:classic c1:classic c2:classic c3:classic c4:classic c5:classic c6:classic c7:classic c8:classic c9:classic c10:classic cj:classic cq:classic ck:END
+Deal|1:classic d1:classic d2:classic d3:classic s4:classic d5:classic d6:classic d7:classic d8:classic d9:classic d10:classic dj:classic dq:classic dk:END
+Deal|2:classic h1:classic h2:classic h3:classic d4:classic h5:classic h6:classic h7:classic h8:classic h9:classic h10:classic hj:classic hq:classic hk:END
+Deal|3:classic s1:classic s2:classic s3:classic h4:classic s5:classic s6:classic s7:classic s8:classic s9:classic s10:classic sj:classic sq:classic sk:END
 
 # Trick 1
-Play:0:classic c2:END
-Play:1:classic d2:END
-Play:2:classic d4:END
-Play:3:classic s2:END
+Play|0:classic c2:END
+Play|1:classic d2:END
+Play|2:classic d4:END
+Play|3:classic s2:END
 
 # Trick 2
-Play:0:classic c3:END
-Play:1:classic d3:END
-Play:2:classic h3:END
-Play:3:classic s3:END
+Play|0:classic c3:END
+Play|1:classic d3:END
+Play|2:classic h3:END
+Play|3:classic s3:END
 
 # Trick 3
-Play:0:classic c4:END
-Play:1:classic s4:END
-Play:2:classic h2:END
-Play:3:classic h4:END
+Play|0:classic c4:END
+Play|1:classic s4:END
+Play|2:classic h2:END
+Play|3:classic h4:END
 
 # Trick 4
-Play:0:classic c5:END
-Play:1:classic d5:END
-Play:2:classic h5:END
-Play:3:classic s5:END
+Play|0:classic c5:END
+Play|1:classic d5:END
+Play|2:classic h5:END
+Play|3:classic s5:END
 
 # Trick 5
-Play:0:classic c6:END
-Play:1:classic d6:END
-Play:2:classic h6:END
-Play:3:classic s6:END
+Play|0:classic c6:END
+Play|1:classic d6:END
+Play|2:classic h6:END
+Play|3:classic s6:END
 
 # Trick 6
-Play:0:classic c7:END
-Play:1:classic d7:END
-Play:2:classic h7:END
-Play:3:classic s7:END
+Play|0:classic c7:END
+Play|1:classic d7:END
+Play|2:classic h7:END
+Play|3:classic s7:END
 
 # Trick 7
-Play:0:classic c8:END
-Play:1:classic d8:END
-Play:2:classic h8:END
-Play:3:classic s8:END
+Play|0:classic c8:END
+Play|1:classic d8:END
+Play|2:classic h8:END
+Play|3:classic s8:END
 
 # Trick 8
-Play:0:classic c9:END
-Play:1:classic d9:END
-Play:2:classic h9:END
-Play:3:classic s9:END
+Play|0:classic c9:END
+Play|1:classic d9:END
+Play|2:classic h9:END
+Play|3:classic s9:END
 
 # Trick 9
-Play:0:classic c1:END
-Play:1:classic d1:END
-Play:2:classic h1:END
-Play:3:classic s1:END
+Play|0:classic c1:END
+Play|1:classic d1:END
+Play|2:classic h1:END
+Play|3:classic s1:END
 
 # Trick 10
-Play:0:classic c10:END
-Play:1:classic d10:END
-Play:2:classic h10:END
-Play:3:classic s10:END
+Play|0:classic c10:END
+Play|1:classic d10:END
+Play|2:classic h10:END
+Play|3:classic s10:END
 
 # Trick 11
-Play:0:classic cj:END
-Play:1:classic dj:END
-Play:2:classic hj:END
-Play:3:classic sj:END
+Play|0:classic cj:END
+Play|1:classic dj:END
+Play|2:classic hj:END
+Play|3:classic sj:END
 
 # Trick 12
-Play:0:classic cq:END
-Play:1:classic dq:END
-Play:2:classic hq:END
-Play:3:classic sq:END
+Play|0:classic cq:END
+Play|1:classic dq:END
+Play|2:classic hq:END
+Play|3:classic sq:END
 
 # Trick 13
-Play:0:classic ck:END
-Play:1:classic dk:END
-Play:2:classic hk:END
-Play:3:classic sk:END
+Play|0:classic ck:END
+Play|1:classic dk:END
+Play|2:classic hk:END
+Play|3:classic sk:END
 
 # Score Phase (ready)
-Ready:2:END
-Ready:0:END
-Ready:3:END
-Ready:1:END
+Ready|2:END
+Ready|0:END
+Ready|3:END
+Ready|1:END
 
 # 5th round here
 
 # Deal
-Deal:0:classic s1:classic s2:classic s3:classic c4:classic c5:classic c6:classic c7:classic c8:classic c9:classic c10:classic cj:classic cq:classic ck:END
-Deal:1:classic c1:classic c2:classic c3:classic s4:classic d5:classic d6:classic d7:classic d8:classic d9:classic d10:classic dj:classic dq:classic dk:END
-Deal:2:classic d1:classic d2:classic d3:classic d4:classic h5:classic h6:classic h7:classic h8:classic h9:classic h10:classic hj:classic hq:classic hk:END
-Deal:3:classic h1:classic h2:classic h3:classic h4:classic s5:classic s6:classic s7:classic s8:classic s9:classic s10:classic sj:classic sq:classic sk:END
+Deal|0:classic s1:classic s2:classic s3:classic c4:classic c5:classic c6:classic c7:classic c8:classic c9:classic c10:classic cj:classic cq:classic ck:END
+Deal|1:classic c1:classic c2:classic c3:classic s4:classic d5:classic d6:classic d7:classic d8:classic d9:classic d10:classic dj:classic dq:classic dk:END
+Deal|2:classic d1:classic d2:classic d3:classic d4:classic h5:classic h6:classic h7:classic h8:classic h9:classic h10:classic hj:classic hq:classic hk:END
+Deal|3:classic h1:classic h2:classic h3:classic h4:classic s5:classic s6:classic s7:classic s8:classic s9:classic s10:classic sj:classic sq:classic sk:END
 
 # Pass
-Pass:3:classic h1:classic h2:classic h3:END
-Pass:0:classic s1:classic s2:classic s3:END
-Pass:1:classic c1:classic c2:classic c3:END
-Pass:2:classic d1:classic d2:classic d3:END
+Pass|3:classic h1:classic h2:classic h3:END
+Pass|0:classic s1:classic s2:classic s3:END
+Pass|1:classic c1:classic c2:classic c3:END
+Pass|2:classic d1:classic d2:classic d3:END
 
 # Take
-Take:1:END
-Take:2:END
-Take:0:END
-Take:3:END
+Take|1:END
+Take|2:END
+Take|0:END
+Take|3:END
 
 # Trick 1
-Play:0:classic c2:END
-Play:1:classic d2:END
-Play:2:classic d4:END
-Play:3:classic s2:END
+Play|0:classic c2:END
+Play|1:classic d2:END
+Play|2:classic d4:END
+Play|3:classic s2:END
 
 # Trick 2
-Play:0:classic c3:END
-Play:1:classic d3:END
-Play:2:classic h3:END
-Play:3:classic s3:END
+Play|0:classic c3:END
+Play|1:classic d3:END
+Play|2:classic h3:END
+Play|3:classic s3:END
 
 # Trick 3
-Play:0:classic c4:END
-Play:1:classic s4:END
-Play:2:classic h2:END
-Play:3:classic h4:END
+Play|0:classic c4:END
+Play|1:classic s4:END
+Play|2:classic h2:END
+Play|3:classic h4:END
 
 # Trick 4
-Play:0:classic c5:END
-Play:1:classic d5:END
-Play:2:classic h5:END
-Play:3:classic s5:END
+Play|0:classic c5:END
+Play|1:classic d5:END
+Play|2:classic h5:END
+Play|3:classic s5:END
 
 # Trick 5
-Play:0:classic c6:END
-Play:1:classic d6:END
-Play:2:classic h6:END
-Play:3:classic s6:END
+Play|0:classic c6:END
+Play|1:classic d6:END
+Play|2:classic h6:END
+Play|3:classic s6:END
 
 # Trick 6
-Play:0:classic c7:END
-Play:1:classic d7:END
-Play:2:classic h7:END
-Play:3:classic s7:END
+Play|0:classic c7:END
+Play|1:classic d7:END
+Play|2:classic h7:END
+Play|3:classic s7:END
 
 # Trick 7
-Play:0:classic c8:END
-Play:1:classic d8:END
-Play:2:classic h8:END
-Play:3:classic s8:END
+Play|0:classic c8:END
+Play|1:classic d8:END
+Play|2:classic h8:END
+Play|3:classic s8:END
 
 # Trick 8
-Play:0:classic c9:END
-Play:1:classic d9:END
-Play:2:classic h9:END
-Play:3:classic s9:END
+Play|0:classic c9:END
+Play|1:classic d9:END
+Play|2:classic h9:END
+Play|3:classic s9:END
 
 # Trick 9
-Play:0:classic c1:END
-Play:1:classic d1:END
-Play:2:classic h1:END
-Play:3:classic s1:END
+Play|0:classic c1:END
+Play|1:classic d1:END
+Play|2:classic h1:END
+Play|3:classic s1:END
 
 # Trick 10
-Play:0:classic c10:END
-Play:1:classic d10:END
-Play:2:classic h10:END
-Play:3:classic s10:END
+Play|0:classic c10:END
+Play|1:classic d10:END
+Play|2:classic h10:END
+Play|3:classic s10:END
 
 # Trick 11
-Play:0:classic cj:END
-Play:1:classic dj:END
-Play:2:classic hj:END
-Play:3:classic sj:END
+Play|0:classic cj:END
+Play|1:classic dj:END
+Play|2:classic hj:END
+Play|3:classic sj:END
 
 # Trick 12
-Play:0:classic cq:END
-Play:1:classic dq:END
-Play:2:classic hq:END
-Play:3:classic sq:END
+Play|0:classic cq:END
+Play|1:classic dq:END
+Play|2:classic hq:END
+Play|3:classic sq:END
 
 # Trick 13
-Play:0:classic ck:END
-Play:1:classic dk:END
-Play:2:classic hk:END
-Play:3:classic sk:END
+Play|0:classic ck:END
+Play|1:classic dk:END
+Play|2:classic hk:END
+Play|3:classic sk:END
 
 # Game is over!

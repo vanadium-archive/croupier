@@ -5,77 +5,191 @@
 part of hearts;
 
 class HeartsCommand extends GameCommand {
-  final String data; // This will be parsed.
-
   // Usually this constructor is used when reading from a log/syncbase.
-  HeartsCommand(this.data);
+  HeartsCommand(String phase, String data) :
+    super(phase, data, simultaneity: computeSimul(phase));
+
+  HeartsCommand.fromCommand(String cmd) :
+    super(cmd.split("|")[0], cmd.split("|")[1], simultaneity: computeSimul(cmd.split("|")[0]));
 
   // The following constructors are used for the player generating the HeartsCommand.
-  HeartsCommand.deal(int playerId, List<Card> cards)
-      : this.data = computeDeal(playerId, cards);
+  HeartsCommand.deal(int playerId, List<Card> cards) :
+    super("Deal", computeDeal(playerId, cards), simultaneity: SimulLevel.DEPENDENT);
 
-  HeartsCommand.pass(int senderId, List<Card> cards)
-      : this.data = computePass(senderId, cards);
+  HeartsCommand.pass(int senderId, List<Card> cards) :
+    super("Pass", computePass(senderId, cards), simultaneity: SimulLevel.INDEPENDENT);
 
-  HeartsCommand.take(int takerId) : this.data = computeTake(takerId);
+  HeartsCommand.take(int takerId) :
+    super("Take", computeTake(takerId), simultaneity: SimulLevel.INDEPENDENT);
 
-  HeartsCommand.play(int playerId, Card c)
-      : this.data = computePlay(playerId, c);
+  HeartsCommand.play(int playerId, Card c) :
+    super("Play", computePlay(playerId, c), simultaneity: SimulLevel.TURN_BASED);
 
-  HeartsCommand.ready(int playerId) : this.data = computeReady(playerId);
+  HeartsCommand.ready(int playerId) :
+    super("Ready", computeReady(playerId), simultaneity: SimulLevel.INDEPENDENT);
 
-  static computeDeal(int playerId, List<Card> cards) {
+  static SimulLevel computeSimul(String phase) {
+    switch (phase) {
+      case "Deal":
+        return SimulLevel.DEPENDENT;
+      case "Pass":
+        return SimulLevel.INDEPENDENT;
+      case "Take":
+        return SimulLevel.INDEPENDENT;
+      case "Play":
+        return SimulLevel.TURN_BASED;
+      case "Ready":
+        return SimulLevel.INDEPENDENT;
+      default:
+        print(phase);
+        assert(false); // How could this have happened?
+        return null;
+    }
+  }
+
+  static String computeDeal(int playerId, List<Card> cards) {
     StringBuffer buff = new StringBuffer();
-    buff.write("Deal:${playerId}:");
+    buff.write("${playerId}:");
     cards.forEach((card) => buff.write("${card.toString()}:"));
     buff.write("END");
     return buff.toString();
   }
 
-  static computePass(int senderId, List<Card> cards) {
+  static String computePass(int senderId, List<Card> cards) {
     StringBuffer buff = new StringBuffer();
-    buff.write("Pass:${senderId}:");
+    buff.write("${senderId}:");
     cards.forEach((card) => buff.write("${card.toString()}:"));
     buff.write("END");
     return buff.toString();
   }
 
-  static computeTake(int takerId) {
-    return "Take:${takerId}:END";
+  static String computeTake(int takerId) {
+    return "${takerId}:END";
   }
 
-  static computePlay(int playerId, Card c) {
-    return "Play:${playerId}:${c.toString()}:END";
+  static String computePlay(int playerId, Card c) {
+    return "${playerId}:${c.toString()}:END";
   }
 
-  static computeReady(int playerId) {
-    return "Ready:${playerId}:END";
+  static String computeReady(int playerId) {
+    return "${playerId}:END";
   }
 
+  @override
   bool canExecute(Game g) {
-    return true; // TODO(alexfandrianto): not really. Should do validation too.
+    // TODO(alexfandrianto): This is very similar to execute, but without the
+    // mutations. It's possible to use a shared function to simplify/combine the
+    // logic.
+    HeartsGame game = g as HeartsGame;
+
+    print("HeartsCommand is executing: ${data}");
+    List<String> parts = data.split(":");
+    switch (phase) {
+      case "Deal":
+        if (game.phase != HeartsPhase.Deal) {
+          return false;
+        }
+        // Deal appends cards to playerId's hand.
+        int playerId = int.parse(parts[0]);
+        List<Card> hand = game.cardCollections[playerId];
+        if (hand.length + parts.length - 3 > 13) {
+          return false;
+        }
+
+        // The last part is 'END', but the rest are cards.
+        for (int i = 1; i < parts.length - 1; i++) {
+          Card c = new Card.fromString(parts[i]);
+          bool canTransfer = this.transferCheck(game.deck, hand, c);
+          if (!canTransfer) {
+            return false;
+          }
+        }
+        return true;
+      case "Pass":
+        if (game.phase != HeartsPhase.Pass) {
+          return false;
+        }
+        // Pass moves a set of cards from senderId to receiverId.
+        int senderId = int.parse(parts[0]);
+        int receiverId = senderId + HeartsGame.OFFSET_PASS;
+        List<Card> handS = game.cardCollections[senderId];
+        List<Card> handR = game.cardCollections[receiverId];
+
+        int numPassing = parts.length - 2; // not senderId and not end
+        if (numPassing != 3) {
+          return false;
+        }
+
+        // The last part is 'END', but the rest are cards.
+        for (int i = 1; i < parts.length - 1; i++) {
+          Card c = new Card.fromString(parts[i]);
+          bool canTransfer = this.transferCheck(handS, handR, c);
+          if (!canTransfer) {
+            return false;
+          }
+        }
+        return true;
+      case "Take":
+        if (game.phase != HeartsPhase.Take) {
+          return false;
+        }
+        return true;
+      case "Play":
+        if (game.phase != HeartsPhase.Play) {
+          return false;
+        }
+
+        // Play the card from the player's hand to their play pile.
+        int playerId = int.parse(parts[0]);
+        int targetId = playerId + HeartsGame.OFFSET_PLAY;
+        List<Card> hand = game.cardCollections[playerId];
+        List<Card> discard = game.cardCollections[targetId];
+
+        Card c = new Card.fromString(parts[1]);
+
+        // If the card isn't valid, then we have an error.
+        String reason = game.canPlay(playerId, c);
+        if (reason != null) {
+          return false;
+        }
+        bool canTransfer = this.transferCheck(hand, discard, c);
+        return canTransfer;
+      case "Ready":
+        if (game.hasGameEnded) {
+          return false;
+        }
+        if (game.phase != HeartsPhase.Score) {
+          return false;
+        }
+        return true;
+      default:
+        print(data);
+        assert(false); // How could this have happened?
+        return false;
+    }
   }
 
+  @override
   void execute(Game g) {
     HeartsGame game = g as HeartsGame;
 
     print("HeartsCommand is executing: ${data}");
     List<String> parts = data.split(":");
-    switch (parts[0]) {
+    switch (phase) {
       case "Deal":
         if (game.phase != HeartsPhase.Deal) {
           throw new StateError(
               "Cannot process deal commands when not in Deal phase");
         }
         // Deal appends cards to playerId's hand.
-        int playerId = int.parse(parts[1]);
+        int playerId = int.parse(parts[0]);
         List<Card> hand = game.cardCollections[playerId];
         if (hand.length + parts.length - 3 > 13) {
           throw new StateError("Cannot deal more than 13 cards to a hand");
         }
 
         // The last part is 'END', but the rest are cards.
-        for (int i = 2; i < parts.length - 1; i++) {
+        for (int i = 1; i < parts.length - 1; i++) {
           Card c = new Card.fromString(parts[i]);
           this.transfer(game.deck, hand, c);
         }
@@ -86,18 +200,18 @@ class HeartsCommand extends GameCommand {
               "Cannot process pass commands when not in Pass phase");
         }
         // Pass moves a set of cards from senderId to receiverId.
-        int senderId = int.parse(parts[1]);
+        int senderId = int.parse(parts[0]);
         int receiverId = senderId + HeartsGame.OFFSET_PASS;
         List<Card> handS = game.cardCollections[senderId];
         List<Card> handR = game.cardCollections[receiverId];
 
-        int numPassing = parts.length - 3;
+        int numPassing = parts.length - 2; // not senderId and not end
         if (numPassing != 3) {
           throw new StateError("Must pass 3 cards, attempted ${numPassing}");
         }
 
         // The last part is 'END', but the rest are cards.
-        for (int i = 2; i < parts.length - 1; i++) {
+        for (int i = 1; i < parts.length - 1; i++) {
           Card c = new Card.fromString(parts[i]);
           this.transfer(handS, handR, c);
         }
@@ -107,7 +221,7 @@ class HeartsCommand extends GameCommand {
           throw new StateError(
               "Cannot process take commands when not in Take phase");
         }
-        int takerId = int.parse(parts[1]);
+        int takerId = int.parse(parts[0]);
         int senderPile = game._getTakeTarget(takerId) + HeartsGame.OFFSET_PASS;
         List<Card> handT = game.cardCollections[takerId];
         List<Card> handS = game.cardCollections[senderPile];
@@ -121,12 +235,12 @@ class HeartsCommand extends GameCommand {
         }
 
         // Play the card from the player's hand to their play pile.
-        int playerId = int.parse(parts[1]);
+        int playerId = int.parse(parts[0]);
         int targetId = playerId + HeartsGame.OFFSET_PLAY;
         List<Card> hand = game.cardCollections[playerId];
         List<Card> discard = game.cardCollections[targetId];
 
-        Card c = new Card.fromString(parts[2]);
+        Card c = new Card.fromString(parts[1]);
 
         // If the card isn't valid, then we have an error.
         String reason = game.canPlay(playerId, c);
@@ -145,7 +259,7 @@ class HeartsCommand extends GameCommand {
           throw new StateError(
               "Cannot process ready commands when not in Score phase");
         }
-        int playerId = int.parse(parts[1]);
+        int playerId = int.parse(parts[0]);
         game.setReady(playerId);
         return;
       default:
@@ -161,5 +275,9 @@ class HeartsCommand extends GameCommand {
     }
     sender.remove(c);
     receiver.add(c);
+  }
+
+  bool transferCheck(List<Card> sender, List<Card> receiver, Card c) {
+    return sender.contains(c);
   }
 }

@@ -191,7 +191,7 @@ void main() {
         // Essentially, this case allows empty lines and comments.
         runCommand();
       } else {
-        game.gamelog.add(new HeartsCommand(c));
+        game.gamelog.add(new HeartsCommand.fromCommand(c));
       }
     }
 

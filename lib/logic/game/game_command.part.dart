@@ -5,19 +5,26 @@
 part of game;
 
 abstract class GameCommand {
+  final String phase;
+  final String data;
+  final SimulLevel simultaneity;
+
+  GameCommand(this.phase, this.data, {this.simultaneity: SimulLevel.INDEPENDENT});
+
+  // UNIMPLEMENTED
   bool canExecute(Game game);
   void execute(Game game);
 
-  String get data;
+  String get command => toString();
 
   bool operator ==(Object other) {
     if (other is GameCommand) {
-      return this.data == other.data;
+      return this.command == other.command;
     }
     return false;
   }
 
   String toString() {
-    return data;
+    return "${phase}|${data}";
   }
 }

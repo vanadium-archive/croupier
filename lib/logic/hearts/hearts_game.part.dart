@@ -41,6 +41,16 @@ class HeartsGame extends Game {
     _phase = other;
   }
 
+  @override
+  void set playerNumber(int other) {
+    // The switch button requires us to change the current player.
+    // Since the log writer has a notion of the associated user, we have to
+    // change that too.
+    super.playerNumber = other;
+    HeartsLog hl = this.gamelog;
+    hl.logWriter.associatedUser = other;
+  }
+
   int roundNumber = 0;
   int lastTrickTaker;
   bool heartsBroken;
@@ -245,6 +255,7 @@ class HeartsGame extends Game {
   // Note that this can only be called in the Play Phase of your turn.
   // The UI will handle the drag-drop of the Pass Phase with its own state.
   // The UI will initiate pass separately.
+  @override
   void move(Card card, List<Card> dest) {
     assert(phase == HeartsPhase.Play);
     assert(whoseTurn == playerNumber);
@@ -276,6 +287,7 @@ class HeartsGame extends Game {
   // During Play, if all 4 players play a card, move the tricks around.
   // During Play, once all cards are gone and last trick is taken, go to Score phase (compute score and possibly end game).
   // Switch from Score to Deal phase when all 4 players indicate they are ready.
+  @override
   void triggerEvents() {
     switch (this.phase) {
       case HeartsPhase.Deal:
