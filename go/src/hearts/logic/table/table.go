@@ -10,11 +10,21 @@ import (
 	"math/rand"
 )
 
-func NewTable(p []*player.Player) *Table {
+// Returns a table instance with player set length numPlayers
+func InitializeGame(numPlayers int) *Table {
+	players := make([]*player.Player, 0)
+	for i := 0; i < numPlayers; i++ {
+		players = append(players, player.NewPlayer(i))
+	}
+	return makeTable(players)
+}
+
+// Given a group of players, returns a table instance with that group as its player set
+func makeTable(p []*player.Player) *Table {
 	return &Table{
 		players:      p,
 		trick:        make([]*card.Card, len(p)),
-		firstPlayed:  -1,
+		firstPlayer:  -1,
 		allCards:     nil,
 		heartsBroken: false,
 		firstTrick:   true,
@@ -27,8 +37,8 @@ type Table struct {
 	players []*player.Player
 	// trick contains all cards in the current trick, indexed by the playerIndex of the player who played them
 	trick []*card.Card
-	// firstPlayed is the index in trick of the card played first
-	firstPlayed int
+	// firstPlayer is the index in trick of the card played first
+	firstPlayer int
 	// allCards contains all 52 cards in the deck. GenerateCards() populates this
 	allCards []*card.Card
 	// heartsBroken returns true if a heart has been played yet in the round, otherwise false
@@ -40,17 +50,29 @@ type Table struct {
 	winCondition int
 }
 
+// Returns the player set of t
 func (t *Table) GetPlayers() []*player.Player {
 	return t.players
 }
 
-func (t *Table) SetFirstPlayed(index int) {
-	t.firstPlayed = index
+// Sets the firstplayer variable of t to index
+func (t *Table) SetFirstPlayer(index int) {
+	t.firstPlayer = index
+}
+
+// Returns the playerIndex of the player at the table who should start the round
+func (t *Table) StartingPlayer() int {
+	for i, p := range t.players {
+		if p.HasTwoOfClubs() {
+			return i
+		}
+	}
+	return -1
 }
 
 // This function generates a traditional deck of 52 cards, with 13 in each of the four suits
 // Each card has a suit (Club, Diamond, Spade, or Heart)
-// Each card also has a number from 2-14, where 11 through 14 represent Jack, Queen, King and Ace, respectively
+// Each card also has a face from Two to Ace (Aces are high in Hearts)
 func (t *Table) GenerateCards() {
 	cardsPerSuit := 13
 	t.allCards = make([]*card.Card, 0)
@@ -64,6 +86,7 @@ func (t *Table) GenerateCards() {
 	}
 }
 
+// Given a card and the index of its player, adds that card to the appropriate spot in the current trick
 func (t *Table) PlayCard(c *card.Card, playerIndex int) {
 	t.trick[playerIndex] = c
 	if c.GetSuit() == card.Heart && !t.heartsBroken {
@@ -71,9 +94,10 @@ func (t *Table) PlayCard(c *card.Card, playerIndex int) {
 	}
 }
 
+// Given a card and the index of its player, returns true if this move was valid
 func (t *Table) ValidPlay(c *card.Card, playerIndex int) bool {
 	player := t.players[playerIndex]
-	if t.firstPlayed == playerIndex {
+	if t.firstPlayer == playerIndex {
 		if !t.firstTrick {
 			if c.GetSuit() != card.Heart || t.heartsBroken {
 				return true
@@ -86,7 +110,7 @@ func (t *Table) ValidPlay(c *card.Card, playerIndex int) bool {
 			return true
 		}
 	} else {
-		firstPlayedSuit := t.trick[t.firstPlayed].GetSuit()
+		firstPlayedSuit := t.trick[t.firstPlayer].GetSuit()
 		if c.GetSuit() == firstPlayedSuit || !player.HasSuit(firstPlayedSuit) {
 			if !t.firstTrick {
 				return true
@@ -100,8 +124,9 @@ func (t *Table) ValidPlay(c *card.Card, playerIndex int) bool {
 	return false
 }
 
+// Calculates who should take the cards in the current trick and sends them
 func (t *Table) SendTrick() {
-	trickSuit := t.trick[t.firstPlayed].GetSuit()
+	trickSuit := t.trick[t.firstPlayer].GetSuit()
 	highestCardFace := card.Two
 	highestIndex := -1
 	for i := 0; i < len(t.trick); i++ {
@@ -119,6 +144,8 @@ func (t *Table) SendTrick() {
 	}
 }
 
+// Updates each player's score with the score of the current round
+// Accounts for a player possibly shooting the moon
 func (t *Table) ScoreRound() {
 	allPoints := 26
 	roundScores := make([]int, len(t.players))
@@ -146,6 +173,7 @@ func (t *Table) ScoreRound() {
 	}
 }
 
+// Randomly distributes cards evenly to all players
 func (t *Table) Deal() {
 	numPlayers := len(t.players)
 	if t.allCards == nil {
@@ -157,7 +185,7 @@ func (t *Table) Deal() {
 	}
 }
 
-// returns -1 if the game hasn't been won, playerIndex of the winner if it has
+// Returns -1 if the game hasn't been won yet, playerIndex of the winner if it has
 // to-do: return a list of players in the event of a tie
 func (t *Table) EndRound() int {
 	t.ScoreRound()
@@ -180,6 +208,7 @@ func (t *Table) EndRound() int {
 	return -1
 }
 
+// Starts a new round of the game
 func (t *Table) NewRound() {
 	t.heartsBroken = false
 	t.firstTrick = true
