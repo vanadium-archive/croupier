@@ -2,34 +2,29 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-/// The goal of log writer is to generically manage game logs.
-/// Syncbase will produce values that combine to form a List<GameCommand> while
-/// the in-memory GameLog will also hold such a list.
-///
-/// Updating the GameLog from the Store/Syncbase:
-/// GameLog will update to whatever Store data says.
-/// If it merges, the game log, then it will write that information off.
-/// Case A: Store is farther along than current state.
-/// Continue.
-/// Case B: Store is somehow behind the current state.
-/// Update with the current state of the GameLog (if not sent yet).
-/// Case C: Store's log branches off from the curernt GameLog.
-/// Depending on phase, resolve the conflict differently and write the resolution.
-///
-/// Updating the Store:
-/// When a new GameCommand is received (that doesn't contradict the existing log),
-/// it is added to a list of pending changes and written to the local store.
-
 /// Since this file includes Sky/Mojo, it will need to be mocked out for unit tests.
 /// Unfortunately, imports can't be replaced, so the best thing to do is to swap out the whole file.
+///
+/// The goal of the LogWriter is to allow clients to write to the log in a
+/// consistent, conflict-free manner. Depending on the Simultaneity level, the
+/// values written will be done immediately or enter a proposal phase.
+///
+/// In proposal mode, all other clients must agree on the proposal via a simple
+/// consensus strategy. Once all clients agree, all clients follow through with
+/// the proposal (writing into their log).
+///
+/// Watch is used to inform clients of proposal agreements and changes made
+/// by this and other clients. When a value is confirmed via watch to be written
+/// to the log, the caller is informed via callback.
+
+import 'croupier_client.dart' show CroupierClient;
+import 'util.dart' as util;
 
 import 'dart:async';
 import 'dart:convert' show UTF8, JSON;
 
-import 'package:sky/services.dart' show embedder;
-
 import 'package:ether/syncbase_client.dart'
-    show Perms, SyncbaseClient, SyncbaseTable, WatchChange, WatchChangeTypes;
+    show SyncbaseNoSqlDatabase, SyncbaseTable, WatchChange, WatchChangeTypes;
 
 enum SimulLevel{
   TURN_BASED,
@@ -39,17 +34,11 @@ enum SimulLevel{
 
 typedef void updateCallbackT(String key, String value);
 
-log(String msg) {
-  DateTime now = new DateTime.now();
-  print('$now $msg');
-}
-
-Perms emptyPerms() => new Perms()..json = '{}';
 
 class LogWriter {
-  final updateCallbackT updateCallback; // Takes in String key, String value
+  final updateCallbackT updateCallback;
   final List<int> users;
-  final SyncbaseClient _syncbaseClient;
+  final CroupierClient _cc;
 
   bool inProposalMode = false;
   Map<String, String> proposalsKnown; // Only updated via watch.
@@ -61,47 +50,34 @@ class LogWriter {
     _associatedUser = other;
   }
 
-  LogWriter(this.updateCallback, this.users)
-      : _syncbaseClient = new SyncbaseClient(embedder.connectToService,
-            'https://mojo.v.io/syncbase_server.mojo');
+  LogWriter(this.updateCallback, this.users) : _cc = new CroupierClient() {
+    _prepareLog();
+  }
 
   int seq = 0;
   SyncbaseTable tb;
   String sendMsg, recvMsg, putStr, getStr;
 
-  Future _doSyncbaseInit() async {
-    log('LogWriter.doSyncbaseInit');
+  Future _prepareLog() async {
     if (tb != null) {
-      log('syncbase already initialized');
-      return;
+      return; // Then we're already prepared.
     }
-    var app = _syncbaseClient.app('app');
-    if (!(await app.exists())) {
-      await app.create(emptyPerms());
-    }
-    var db = app.noSqlDatabase('db');
-    if (!(await db.exists())) {
-      await db.create(emptyPerms());
-    }
-    var table = db.table('table');
-    if (!(await table.exists())) {
-      await table.create(emptyPerms());
-    }
-    tb = table;
-    log('syncbase is now initialized');
+
+    SyncbaseNoSqlDatabase db = await _cc.createDatabase();
+    tb = await _cc.createTable(db, util.tableNameLog);
 
     // Start to watch the stream.
-    Stream<WatchChange> watchStream = db.watch('table', '', await db.getResumeMarker());
+    Stream<WatchChange> watchStream = db.watch(util.tableNameLog, '', await db.getResumeMarker());
     _startWatch(watchStream); // Don't wait for this future.
   }
 
   Future _startWatch(Stream<WatchChange> watchStream) async {
-    log('watching for changes...');
+    util.log('watching for changes...');
     // This stream never really ends, so I guess we'll watch forever.
     await for (WatchChange wc in watchStream) {
-      assert(wc.tableName == 'table');
-      log('Watch Key: ${wc.rowName}');
-      log('Watch Value ${UTF8.decode(wc.valueBytes)}');
+      assert(wc.tableName == util.tableNameLog);
+      util.log('Watch Key: ${wc.rowName}');
+      util.log('Watch Value ${UTF8.decode(wc.valueBytes)}');
       String key = wc.rowName;
       String value;
       switch (wc.changeType) {
@@ -127,8 +103,8 @@ class LogWriter {
   }
 
   Future write(SimulLevel s, String value) async {
-    log('LogWriter.write start');
-    await _doSyncbaseInit();
+    util.log('LogWriter.write start');
+    await _prepareLog();
 
     assert(!inProposalMode);
     String key = _logKey(associatedUser);

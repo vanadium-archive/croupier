@@ -13,7 +13,7 @@ enum SimulLevel{
 typedef void updateCallbackT(String key, String value);
 
 class LogWriter {
-  final updateCallbackT updateCallback; // Takes in String key, String value
+  final updateCallbackT updateCallback;
   final List<int> users;
 
   bool inProposalMode = false;

@@ -4,11 +4,14 @@
 
 import '../logic/croupier.dart' as logic_croupier;
 import '../logic/game/game.dart' as logic_game;
-import 'game.dart' show createGameComponent, NoArgCb;
+import 'game.dart' show createGameComponent;
+import 'croupier_settings.dart' show CroupierSettingsComponent;
 
 import 'package:sky/widgets_next.dart';
 
 import 'dart:sky' as sky;
+
+typedef void NoArgCb();
 
 class CroupierComponent extends StatefulComponent {
   final NavigatorState navigator;
@@ -55,10 +58,17 @@ class CroupierComponentState extends State<CroupierComponent> {
                   onPressed: makeSetStateCallback(
                       logic_croupier.CroupierState.ChooseGame)),
               new FlatButton(child: new Text('Join Game')),
-              new FlatButton(child: new Text('Settings'))
+              new FlatButton(
+                child: new Text('Settings'),
+                onPressed: makeSetStateCallback(
+                      logic_croupier.CroupierState.Settings))
             ], direction: FlexDirection.vertical));
       case logic_croupier.CroupierState.Settings:
-        return null; // in which we let them pick an avatar, name, and color. And return to the previous screen after (NOT IMPLEMENTED YET)
+        // in which we let them pick an avatar, name, and color. And return to the previous screen after.
+       return new Container(
+            padding: new EdgeDims.only(top: sky.view.paddingTop),
+            child: new CroupierSettingsComponent(config.croupier, makeSetStateCallback(
+                      logic_croupier.CroupierState.Welcome)));
       case logic_croupier.CroupierState.ChooseGame:
         // in which we let them pick a game out of the many possible games... There aren't that many.
         return new Container(

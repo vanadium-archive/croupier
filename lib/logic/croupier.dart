@@ -4,6 +4,8 @@
 
 import 'game/game.dart' show Game, GameType;
 import 'create_game.dart' as cg;
+import 'croupier_settings.dart' show CroupierSettings;
+import '../src/syncbase/settings_manager.dart' show SettingsManager;
 
 enum CroupierState {
   Welcome,
@@ -16,12 +18,21 @@ enum CroupierState {
 
 class Croupier {
   CroupierState state;
-  Settings settings;
+  SettingsManager settings_manager;
+  CroupierSettings settings; // null, but loaded asynchronously.
   Game game; // null until chosen
 
   Croupier() {
     state = CroupierState.Welcome;
-    // settings = new Settings.load(?); // Give it in the croupier constructor. The app itself should load this info.
+    settings_manager = new SettingsManager();
+    settings_manager.load().then((String csString) {
+      if (csString == null) {
+        settings = new CroupierSettings.random();
+        settings_manager.save(settings.userID, settings.toJSONString());
+      } else {
+        settings = new CroupierSettings.fromJSONString(csString);
+      }
+    });
   }
 
   // Sets the next part of croupier state.
@@ -59,17 +70,13 @@ class Croupier {
         assert(false);
     }
 
+    // TODO(alexfandrianto): We may want to have a splash screen or something
+    // when the user first loads the app. It takes a few seconds before the
+    // Syncbase tables are created.
+    if (settings == null && nextState == CroupierState.Settings) {
+      return; // you can't switch till the settings are present.
+    }
+
     state = nextState;
   }
-}
-
-class Settings {
-  String avatar;
-  String name;
-  String color; // in hex?
-
-  Settings(this.avatar, this.name, this.color);
-
-  // Settings.load(String data) {}
-  // String save() { return null; }
 }

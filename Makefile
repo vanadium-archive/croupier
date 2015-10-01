@@ -53,11 +53,14 @@ start: croupier.flx env-check packages
 .PHONY: mock
 mock:
 	mv lib/src/syncbase/log_writer.dart lib/src/syncbase/log_writer.dart.backup
+	mv lib/src/syncbase/settings_manager.dart lib/src/syncbase/settings_manager.dart.backup
 	cp lib/src/mocks/log_writer.dart lib/src/syncbase/
+	cp lib/src/mocks/settings_manager.dart lib/src/syncbase/
 
 .PHONY: unmock
 unmock:
 	mv lib/src/syncbase/log_writer.dart.backup lib/src/syncbase/log_writer.dart
+	mv lib/src/syncbase/settings_manager.dart.backup lib/src/syncbase/settings_manager.dart
 
 .PHONY: env-check
 env-check:
@@ -74,9 +77,12 @@ endif
 test: packages
 	# Protect src/syncbase/log_writer.dart
 	mv lib/src/syncbase/log_writer.dart lib/src/syncbase/log_writer.dart.backup
+	mv lib/src/syncbase/settings_manager.dart lib/src/syncbase/settings_manager.dart.backup
 	cp lib/src/mocks/log_writer.dart lib/src/syncbase/
+	cp lib/src/mocks/settings_manager.dart lib/src/syncbase/
 	pub run test -r expanded $(DART_TEST_FILES) || (mv lib/src/syncbase/log_writer.dart.backup lib/src/syncbase/log_writer.dart && exit 1)
 	mv lib/src/syncbase/log_writer.dart.backup lib/src/syncbase/log_writer.dart
+	mv lib/src/syncbase/settings_manager.dart.backup lib/src/syncbase/settings_manager.dart
 
 .PHONY: clean
 clean:
