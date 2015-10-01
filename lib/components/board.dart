@@ -7,7 +7,7 @@ import '../logic/card.dart' as logic_card;
 
 import 'dart:math' as math;
 
-import 'package:sky/widgets.dart' as widgets;
+import 'package:sky/widgets_next.dart' as widgets;
 import 'package:vector_math/vector_math.dart' as vector_math;
 import 'package:sky/theme/colors.dart' as colors;
 

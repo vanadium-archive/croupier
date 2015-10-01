@@ -6,24 +6,31 @@ import '../logic/croupier.dart' as logic_croupier;
 import '../logic/game/game.dart' as logic_game;
 import 'game.dart' show createGameComponent, NoArgCb;
 
-import 'package:sky/widgets.dart';
+import 'package:sky/widgets_next.dart';
 
 import 'dart:sky' as sky;
 
 class CroupierComponent extends StatefulComponent {
-  logic_croupier.Croupier croupier;
+  final NavigatorState navigator;
+  final logic_croupier.Croupier croupier;
+
+  CroupierComponent(this.navigator, this.croupier);
+
+  CroupierComponentState createState() => new CroupierComponentState();
+}
+
+class CroupierComponentState extends State<CroupierComponent> {
   sky.Size screenSize;
 
-  CroupierComponent(this.croupier) : super();
-
-  void syncConstructorArguments(CroupierComponent other) {
-    croupier = other.croupier;
+  void initState(_) {
+    super.initState(_);
+    // TODO(alexfandrianto): sky.view.width and sky.view.height?
   }
 
   NoArgCb makeSetStateCallback(logic_croupier.CroupierState s,
       [var data = null]) {
     return () => setState(() {
-          croupier.setState(s, data);
+          config.croupier.setState(s, data);
         });
   }
 
@@ -32,12 +39,12 @@ class CroupierComponent extends StatefulComponent {
     screenSize = newSize;
   }
 
-  Widget build() {
+  Widget build(BuildContext context) {
     return new SizeObserver(callback: sizeChanged, child: _buildHelper());
   }
 
   Widget _buildHelper() {
-    switch (croupier.state) {
+    switch (config.croupier.state) {
       case logic_croupier.CroupierState.Welcome:
         // in which we show them a UI to start a new game, join a game, or change some settings.
         return new Container(
@@ -77,7 +84,7 @@ class CroupierComponent extends StatefulComponent {
       case logic_croupier.CroupierState.PlayGame:
         return new Container(
             padding: new EdgeDims.only(top: sky.view.paddingTop),
-            child: createGameComponent(croupier.game,
+            child: createGameComponent(config.navigator, config.croupier.game,
                 makeSetStateCallback(logic_croupier.CroupierState.Welcome),
                 width: screenSize.width, height: screenSize.height));
       default:

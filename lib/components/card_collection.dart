@@ -4,11 +4,10 @@
 
 import '../logic/card.dart' as logic_card;
 import 'card.dart' as component_card;
-import 'draggable.dart' show Draggable;
 import 'util.dart' as util;
 
 import 'dart:math' as math;
-import 'package:sky/widgets.dart';
+import 'package:sky/widgets_next.dart';
 import 'package:sky/material.dart' as material;
 
 enum Orientation { vert, horz, fan, show1, suit }
@@ -30,22 +29,25 @@ const double WHITE_LINE_HEIGHT = 2.0; // white
 const double WHITE_LINE_MARGIN = 4.0; // each side
 
 class CardCollectionComponent extends StatefulComponent {
-  List<logic_card.Card> cards;
-  Orientation orientation;
-  bool faceUp;
-  AcceptCb acceptCallback;
-  bool dragChildren;
-  DropType acceptType;
-  Comparator<logic_card.Card> comparator;
-  double width;
-  double widthCard;
-  double heightCard;
-  var backgroundColor;
-  var altColor;
+  final NavigatorState navigator;
+  final List<logic_card.Card> cards;
+  final Orientation orientation;
+  final bool faceUp;
+  final AcceptCb acceptCallback;
+  final bool dragChildren;
+  final DropType acceptType;
+  final Comparator<logic_card.Card> comparator;
+  final double width;
+  final double widthCard;
+  final double heightCard;
+  final Color _backgroundColor;
+  final Color _altColor;
 
-  String status = 'bar';
+  Color get backgroundColor => _backgroundColor ?? material.Colors.grey[500];
+  Color get altColor => _altColor ?? material.Colors.grey[500];
 
   CardCollectionComponent(
+      this.navigator,
       this.cards, this.faceUp, this.orientation,
       {this.dragChildren: false,
       this.acceptType: DropType.none,
@@ -54,30 +56,14 @@ class CardCollectionComponent extends StatefulComponent {
       this.width: DEFAULT_WIDTH,
       this.widthCard: DEFAULT_CARD_WIDTH,
       this.heightCard: DEFAULT_CARD_HEIGHT,
-      this.backgroundColor,
-      this.altColor}) {
-    if (this.backgroundColor == null) {
-      backgroundColor = material.Colors.grey[500];
-    }
-    if (this.altColor == null) {
-      altColor = material.Colors.grey[600];
-    }
-  }
+      Color backgroundColor,
+      Color altColor}) : _backgroundColor = backgroundColor, _altColor = altColor;
 
-  void syncConstructorArguments(CardCollectionComponent other) {
-    cards = other.cards;
-    orientation = other.orientation;
-    faceUp = other.faceUp;
-    acceptCallback = other.acceptCallback;
-    dragChildren = other.dragChildren;
-    acceptType = other.acceptType;
-    comparator = other.comparator;
-    width = other.width;
-    widthCard = other.widthCard;
-    heightCard = other.heightCard;
-    backgroundColor = other.backgroundColor;
-    altColor = other.altColor;
-  }
+  CardCollectionComponentState createState() => new CardCollectionComponentState();
+}
+
+class CardCollectionComponentState extends State<CardCollectionComponent> {
+  String status = 'bar';
 
   bool _handleWillAccept(dynamic data) {
     print('will accept?');
@@ -89,7 +75,7 @@ class CardCollectionComponent extends StatefulComponent {
     print('accept');
     setState(() {
       status = 'ACCEPT ${data.card.toString()}';
-      acceptCallback(data.card, this.cards);
+      config.acceptCallback(data.card, config.cards);
     });
   }
 
@@ -97,21 +83,21 @@ class CardCollectionComponent extends StatefulComponent {
     print('acceptMulti');
     setState(() {
       status = 'ACCEPT multi: ${data.cards.toString()}';
-      acceptCallback(data.cards, this.cards);
+      config.acceptCallback(data.cards, config.cards);
     });
   }
 
   List<logic_card.Card> get _sortedCards {
-    assert(this.comparator != null);
+    assert(config.comparator != null);
     List<logic_card.Card> cs = new List<logic_card.Card>();
-    cs.addAll(this.cards);
-    cs.sort(comparator);
+    cs.addAll(config.cards);
+    cs.sort(config.comparator);
     return cs;
   }
 
   // returns null if it's up to the container (like a Flex) to figure this out.
   double get desiredHeight {
-    switch (this.orientation) {
+    switch (config.orientation) {
       case Orientation.vert:
         return null;
       case Orientation.horz:
@@ -128,33 +114,33 @@ class CardCollectionComponent extends StatefulComponent {
 
   // returns null if it's up to the container (like a Flex) to figure this out.
   double get desiredWidth {
-    switch (this.orientation) {
+    switch (config.orientation) {
       case Orientation.vert:
       case Orientation.show1:
-        return widthCard;
+        return config.widthCard;
       case Orientation.horz:
       case Orientation.fan:
       case Orientation.suit:
-        return this.width;
+        return config.width;
       default:
         assert(false);
         return null;
     }
   }
 
-  double get _produceRowHeight => heightCard + CARD_MARGIN * 2;
+  double get _produceRowHeight => config.heightCard + CARD_MARGIN * 2;
   Widget _produceRow(List<Widget> cardWidgets, {emptyBackgroundImage: ""}) {
     if (cardWidgets.length == 0) {
       // Just return a centered background image.
       return new Container(
-          decoration: new BoxDecoration(backgroundColor: this.backgroundColor),
+          decoration: new BoxDecoration(backgroundColor: config.backgroundColor),
           height: _produceRowHeight,
-          width: this.width,
+          width: config.width,
           child: new Center(
               child: new Opacity(
                   opacity: 0.45,
                   child: new Container(
-                      height: heightCard,
+                      height: config.heightCard,
                       child: emptyBackgroundImage == ""
                           ? null
                           : new NetworkImage(src: emptyBackgroundImage)))));
@@ -163,9 +149,9 @@ class CardCollectionComponent extends StatefulComponent {
     // Let's do a stack of positioned cards!
     List<Widget> kids = new List<Widget>();
 
-    double w = this.width ?? widthCard * 5;
-    double spacing = math.min(widthCard + CARD_MARGIN * 2,
-        (w - widthCard - 2 * CARD_MARGIN) / (cardWidgets.length - 1));
+    double w = config.width ?? config.widthCard * 5;
+    double spacing = math.min(config.widthCard + CARD_MARGIN * 2,
+        (w - config.widthCard - 2 * CARD_MARGIN) / (cardWidgets.length - 1));
 
     for (int i = 0; i < cardWidgets.length; i++) {
       kids.add(new Positioned(
@@ -174,16 +160,16 @@ class CardCollectionComponent extends StatefulComponent {
           child: cardWidgets[i]));
     }
     return new Container(
-        decoration: new BoxDecoration(backgroundColor: this.backgroundColor),
+        decoration: new BoxDecoration(backgroundColor: config.backgroundColor),
         height: _produceRowHeight,
-        width: this.width,
+        width: config.width,
         child: new Stack(kids));
   }
 
   double get _whiteLineHeight => WHITE_LINE_HEIGHT;
 
   Widget wrapCards(List<Widget> cardWidgets) {
-    switch (this.orientation) {
+    switch (config.orientation) {
       case Orientation.vert:
         return new Flex(util.flexChildren(cardWidgets),
             direction: FlexDirection.vertical);
@@ -201,7 +187,7 @@ class CardCollectionComponent extends StatefulComponent {
         List<Widget> ss = new List<Widget>();
 
         List<logic_card.Card> theCards =
-            this.comparator != null ? this._sortedCards : this.cards;
+            config.comparator != null ? this._sortedCards : config.cards;
         for (int i = 0; i < theCards.length; i++) {
           // Group by suit. Then sort.
           logic_card.Card c = theCards[i];
@@ -249,21 +235,21 @@ class CardCollectionComponent extends StatefulComponent {
     }
   }
 
-  Widget build() {
+  Widget build(BuildContext context) {
     return _buildCollection();
   }
 
   Widget _buildCollection() {
     List<Widget> cardComponents = new List<Widget>();
     List<logic_card.Card> cs =
-        this.comparator != null ? this._sortedCards : this.cards;
+        config.comparator != null ? this._sortedCards : config.cards;
 
     for (int i = 0; i < cs.length; i++) {
-      component_card.Card c = new component_card.Card(cs[i], faceUp,
-          width: widthCard, height: heightCard);
+      component_card.Card c = new component_card.Card(cs[i], config.faceUp,
+          width: config.widthCard, height: config.heightCard);
 
-      if (dragChildren) {
-        cardComponents.add(new Draggable<component_card.Card>(c));
+      if (config.dragChildren) {
+        cardComponents.add(new Draggable(navigator: config.navigator, child: c, data: c, feedback: c));
       } else {
         cardComponents.add(c);
       }
@@ -272,22 +258,22 @@ class CardCollectionComponent extends StatefulComponent {
     // Let's draw a stack of cards with DragTargets.
     // TODO(alexfandrianto): In many cases, card collections shouldn't have draggable cards.
     // Additionally, it may be worthwhile to restrict it to 1 at a time.
-    switch (this.acceptType) {
+    switch (config.acceptType) {
       case DropType.none:
         return new Container(
             decoration:
-                new BoxDecoration(backgroundColor: this.backgroundColor),
+                new BoxDecoration(backgroundColor: config.backgroundColor),
             height: this.desiredHeight,
             width: this.desiredWidth,
             child: wrapCards(cardComponents));
       case DropType.card:
         return new DragTarget<component_card.Card>(
             onWillAccept: _handleWillAccept, onAccept: _handleAccept,
-            builder: (List<component_card.Card> data, _) {
+            builder: (BuildContext context, List<component_card.Card> data, _) {
           return new Container(
               decoration: new BoxDecoration(
                   backgroundColor:
-                      data.isEmpty ? this.backgroundColor : this.altColor),
+                      data.isEmpty ? config.backgroundColor : config.altColor),
               height: this.desiredHeight,
               width: this.desiredWidth,
               child: wrapCards(cardComponents));
@@ -295,11 +281,11 @@ class CardCollectionComponent extends StatefulComponent {
       case DropType.card_collection:
         return new DragTarget<CardCollectionComponent>(
             onWillAccept: _handleWillAccept, onAccept: _handleAcceptMultiple,
-            builder: (List<CardCollectionComponent> data, _) {
+            builder: (BuildContext context, List<CardCollectionComponent> data, _) {
           return new Container(
               decoration: new BoxDecoration(
                   backgroundColor:
-                      data.isEmpty ? this.backgroundColor : this.altColor),
+                      data.isEmpty ? config.backgroundColor : config.altColor),
               height: this.desiredHeight,
               width: this.desiredWidth,
               child: wrapCards(cardComponents));

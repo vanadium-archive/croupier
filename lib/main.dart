@@ -2,26 +2,46 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-import 'package:sky/widgets.dart';
+import 'package:sky/widgets_next.dart';
+import 'package:sky/material.dart' show Colors;
 
 import 'logic/croupier.dart' show Croupier;
 import 'components/croupier.dart' show CroupierComponent;
 
-class CroupierApp extends App {
+class CroupierApp extends StatefulComponent {
+  final NavigatorState navigator;
+  CroupierApp(this.navigator);
+
+  CroupierAppState createState() => new CroupierAppState();
+}
+
+class CroupierAppState extends State<CroupierApp> {
   Croupier croupier;
 
-  CroupierApp() : super() {
+  void initState(_) {
+    super.initState(_);
     this.croupier = new Croupier();
   }
 
-  Widget build() {
+  Widget build(BuildContext context) {
     return new Container(
         decoration: new BoxDecoration(
             backgroundColor: const Color(0xFF6666FF), borderRadius: 5.0),
-        child: new CroupierComponent(this.croupier));
+        child: new DefaultTextStyle(
+          style: Theme.of(context).text.body1,
+          child: new CroupierComponent(config.navigator, this.croupier)));
   }
 }
 
 void main() {
-  runApp(new CroupierApp());
+  runApp(new App(
+    title: 'Croupier',
+    routes: <String, RouteBuilder>{
+      "/": (NavigatorState navigator, Route route) => new CroupierApp(navigator)
+    },
+    theme: new ThemeData(
+      brightness: ThemeBrightness.light,
+      primarySwatch: Colors.purple
+    )
+  ));
 }
