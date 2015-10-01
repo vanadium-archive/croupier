@@ -38,6 +38,8 @@ build: croupier.flx
 croupier.flx: packages
 	pub run sky_tools -v build --manifest manifest.yaml --output-file $@
 
+# TODO(alexfandrianto): Switch from --args-for to --checked once
+# sky_tools v 16 is released. (https://github.com/flutter/tools/issues/53)
 .PHONY: start
 start: croupier.flx env-check packages
 	pub run sky_tools -v --very-verbose run_mojo \
@@ -45,7 +47,8 @@ start: croupier.flx env-check packages
 	--app $< $(MOJO_ANDROID_FLAGS) \
 	-- \
 	--enable-multiprocess \
-	--map-origin=https://mojo.v.io/=$(ETHER_BUILD_DIR)
+	--map-origin=https://mojo.v.io/=$(ETHER_BUILD_DIR) \
+	--args-for="mojo:sky_viewer --enable-checked-mode"
 
 .PHONY: mock
 mock:
@@ -55,10 +58,6 @@ mock:
 .PHONY: unmock
 unmock:
 	mv lib/src/syncbase/log_writer.dart.backup lib/src/syncbase/log_writer.dart
-
-.PHONY: install
-install: packages
-	./packages/sky/sky_tool start --install --checked
 
 .PHONY: env-check
 env-check:

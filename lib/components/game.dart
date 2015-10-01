@@ -210,7 +210,6 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
       try {
         HeartsGame game = config.game as HeartsGame;
         game.passCards(_combinePassing());
-        _clearPassing();
       } catch (e) {
         print("You can't do that! ${e.toString()}");
         config.game.debugString = e.toString();
@@ -221,6 +220,11 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
   void _makeGameTakeCallback() {
     setState(() {
       try {
+        // TODO(alexfandrianto): Another way to clear these passing cards is to
+        // do so upon the transition from the pass phase to the take phase.
+        // However, since they are never seen outside of the Pass phase, it is
+        // also valid to clear them upon taking any cards.
+        _clearPassing();
         HeartsGame game = config.game as HeartsGame;
         game.takeCards();
       } catch (e) {
