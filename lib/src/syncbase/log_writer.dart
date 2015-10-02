@@ -26,14 +26,9 @@ import 'dart:convert' show UTF8, JSON;
 import 'package:ether/syncbase_client.dart'
     show SyncbaseNoSqlDatabase, SyncbaseTable, WatchChange, WatchChangeTypes;
 
-enum SimulLevel{
-  TURN_BASED,
-  INDEPENDENT,
-  DEPENDENT
-}
+enum SimulLevel { TURN_BASED, INDEPENDENT, DEPENDENT }
 
 typedef void updateCallbackT(String key, String value);
-
 
 class LogWriter {
   final updateCallbackT updateCallback;
@@ -67,7 +62,8 @@ class LogWriter {
     tb = await _cc.createTable(db, util.tableNameLog);
 
     // Start to watch the stream.
-    Stream<WatchChange> watchStream = db.watch(util.tableNameLog, '', await db.getResumeMarker());
+    Stream<WatchChange> watchStream =
+        db.watch(util.tableNameLog, '', await db.getResumeMarker());
     _startWatch(watchStream); // Don't wait for this future.
   }
 
@@ -212,6 +208,7 @@ class LogWriter {
   bool _isProposalKey(String key) {
     return key.indexOf("proposal") == 0;
   }
+
   String _proposalKey(int user) {
     return "proposal${user}";
   }

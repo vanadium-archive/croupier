@@ -26,7 +26,7 @@ class CroupierSettings {
   }
 
   String getStringValue(String key) {
-    switch(key) {
+    switch (key) {
       case "name":
         return name;
       case "avatar":
@@ -39,7 +39,7 @@ class CroupierSettings {
   }
 
   void setStringValue(String key, String data) {
-    switch(key) {
+    switch (key) {
       case "name":
         print("Setting name to ${data}");
         name = data;
@@ -52,7 +52,8 @@ class CroupierSettings {
         // https://github.com/domokit/mojo/issues/192
         // Just calling int.parse will crash SIGSEGV the Dart VM on Android.
         // Note: if the number is too big. If you do a smaller number, it's fine.
-        int newColor = 0xcf000000; // Remove once Android + Dart can handle larger numbers.
+        int newColor =
+            0xcf000000; // Remove once Android + Dart can handle larger numbers.
         try {
           newColor += int.parse(data);
         } catch (e) {
@@ -67,7 +68,8 @@ class CroupierSettings {
   }
 
   String toJSONString() {
-    return JSON.encode({"userID": userID, "avatar": avatar, "name": name, "color": color});
+    return JSON.encode(
+        {"userID": userID, "avatar": avatar, "name": name, "color": color});
   }
 
   void _randomInitialization() {
@@ -86,11 +88,29 @@ class RandomSettings {
     'images/suits/Spade.png'
   ];
   static final List names = [
-    'Anne', 'Mary', 'Jack', 'Morgan', 'Roger',
-    'Bill', 'Ragnar', 'Ed', 'John', 'Jane' ];
+    'Anne',
+    'Mary',
+    'Jack',
+    'Morgan',
+    'Roger',
+    'Bill',
+    'Ragnar',
+    'Ed',
+    'John',
+    'Jane'
+  ];
   static final List appellations = [
-    'Jackal', 'King', 'Red', 'Stalwart', 'Axe',
-    'Young', 'Brave', 'Eager', 'Wily', 'Zesty'];
+    'Jackal',
+    'King',
+    'Red',
+    'Stalwart',
+    'Axe',
+    'Young',
+    'Brave',
+    'Eager',
+    'Wily',
+    'Zesty'
+  ];
 
   // Return a random user id.
   static int get userID {

@@ -15,9 +15,9 @@ Perms emptyPerms() => new Perms()..json = '{}';
 class CroupierClient {
   final SyncbaseClient _syncbaseClient;
 
-  CroupierClient() :
-    _syncbaseClient = new SyncbaseClient(embedder.connectToService,
-      'https://mojo.v.io/syncbase_server.mojo');
+  CroupierClient()
+      : _syncbaseClient = new SyncbaseClient(embedder.connectToService,
+            'https://mojo.v.io/syncbase_server.mojo');
 
   // TODO(alexfandrianto): Try not to call this twice at the same time.
   // That would lead to very race-y behavior.
@@ -36,7 +36,8 @@ class CroupierClient {
 
   // TODO(alexfandrianto): Try not to call this twice at the same time.
   // That would lead to very race-y behavior.
-  Future<SyncbaseTable> createTable(SyncbaseNoSqlDatabase db, String tableName) async {
+  Future<SyncbaseTable> createTable(
+      SyncbaseNoSqlDatabase db, String tableName) async {
     var table = db.table(tableName);
     if (!(await table.exists())) {
       await table.create(emptyPerms());
@@ -44,5 +45,4 @@ class CroupierClient {
     util.log('CroupierClient: ${tableName} is ready');
     return table;
   }
-
 }

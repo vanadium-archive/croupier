@@ -26,7 +26,8 @@ abstract class GameComponent extends StatefulComponent {
   final double width;
   final double height;
 
-  GameComponent(this.navigator, this.game, this.gameEndCallback, {this.width, this.height});
+  GameComponent(this.navigator, this.game, this.gameEndCallback,
+      {this.width, this.height});
 }
 
 abstract class GameComponentState<T extends GameComponent> extends State<T> {
@@ -58,7 +59,8 @@ abstract class GameComponentState<T extends GameComponent> extends State<T> {
   Widget build(BuildContext context); // still UNIMPLEMENTED
 }
 
-GameComponent createGameComponent(NavigatorState navigator, Game game, NoArgCb gameEndCallback,
+GameComponent createGameComponent(
+    NavigatorState navigator, Game game, NoArgCb gameEndCallback,
     {double width, double height}) {
   switch (game.gameType) {
     case GameType.Proto:

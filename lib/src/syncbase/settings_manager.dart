@@ -43,7 +43,8 @@ class SettingsManager {
     tbUser = await _cc.createTable(db, util.tableNameSettingsUser);
 
     // Start to watch the stream for the shared settings table.
-    Stream<WatchChange> watchStream = db.watch(util.tableNameSettings, '', await db.getResumeMarker());
+    Stream<WatchChange> watchStream =
+        db.watch(util.tableNameSettings, '', await db.getResumeMarker());
     _startWatch(watchStream); // Don't wait for this future.
   }
 

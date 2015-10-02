@@ -4,11 +4,7 @@
 
 import 'dart:convert' show JSON;
 
-enum SimulLevel{
-  TURN_BASED,
-  INDEPENDENT,
-  DEPENDENT
-}
+enum SimulLevel { TURN_BASED, INDEPENDENT, DEPENDENT }
 
 typedef void updateCallbackT(String key, String value);
 

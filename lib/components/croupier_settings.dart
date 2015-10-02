@@ -10,9 +10,7 @@ import 'package:sky/widgets_next.dart';
 typedef void NoArgCb();
 typedef void OneStringCb(String data);
 
-enum DialogType {
-  Text, ColorPicker, ImagePicker
-}
+enum DialogType { Text, ColorPicker, ImagePicker }
 
 const String nameKey = "name";
 const String colorKey = "color";
@@ -37,7 +35,8 @@ class CroupierSettingsComponent extends StatefulComponent {
 
   CroupierSettingsComponent(this.navigator, this.croupier, this.backCb);
 
-  CroupierSettingsComponentState createState() => new CroupierSettingsComponentState();
+  CroupierSettingsComponentState createState() =>
+      new CroupierSettingsComponentState();
 }
 
 class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
@@ -57,21 +56,23 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
 
   Widget _makeColoredRectangle(int colorInfo, String text, NoArgCb cb) {
     return new Container(
-          decoration: new BoxDecoration(
-                backgroundColor: new Color(colorInfo)),
-          child: new FlatButton(child: new Text(""), enabled: cb != null,
-            onPressed: cb));
+        decoration: new BoxDecoration(backgroundColor: new Color(colorInfo)),
+        child: new FlatButton(
+            child: new Text(""), enabled: cb != null, onPressed: cb));
   }
 
   Widget _makeImageButton(String url, NoArgCb cb) {
-    return new FlatButton(child: new NetworkImage(src: url), enabled: cb != null, onPressed: cb);
+    return new FlatButton(
+        child: new NetworkImage(src: url), enabled: cb != null, onPressed: cb);
   }
 
   Widget build(BuildContext context) {
     List<Widget> w = new List<Widget>();
     w.add(_makeButtonRow(nameKey, new Text(config.croupier.settings.name)));
-    w.add(_makeButtonRow(colorKey, _makeColoredRectangle(config.croupier.settings.color, "", null)));
-    w.add(_makeButtonRow(avatarKey, new NetworkImage(src: config.croupier.settings.avatar)));
+    w.add(_makeButtonRow(colorKey,
+        _makeColoredRectangle(config.croupier.settings.color, "", null)));
+    w.add(_makeButtonRow(
+        avatarKey, new NetworkImage(src: config.croupier.settings.avatar)));
 
     w.add(new FlatButton(child: new Text("Return"), onPressed: config.backCb));
     return new Column(w);
@@ -80,12 +81,13 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
   Widget _makeButtonRow(String type, Widget child) {
     String capType = _capitalize(type);
     return new FlatButton(
-      onPressed: () => _handlePressed(type),
-      child: new Row([
-        new Flexible(flex: 1, child: new Text(capType, style: Theme.of(context).text.subhead)),
-        new Flexible(flex: 3, child: child)
-      ], justifyContent: FlexJustifyContent.start)
-    );
+        onPressed: () => _handlePressed(type),
+        child: new Row([
+          new Flexible(
+              flex: 1,
+              child: new Text(capType, style: Theme.of(context).text.subhead)),
+          new Flexible(flex: 3, child: child)
+        ], justifyContent: FlexJustifyContent.start));
   }
 
   void _handlePressed(String type) {
@@ -94,32 +96,22 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
       switch (dialogTypes[type]) {
         case DialogType.Text:
           return new Dialog(
-            title: new Text(capType),
-            content: new Input(
-              key: globalKeys[type],
-              placeholder: capType,
-              initialValue: config.croupier.settings.getStringValue(type),
-              keyboardType: KeyboardType.TEXT,
-              onChanged: _makeHandleChanged(type)
-            ),
-            onDismiss: () {
+              title: new Text(capType),
+              content: new Input(
+                  key: globalKeys[type],
+                  placeholder: capType,
+                  initialValue: config.croupier.settings.getStringValue(type),
+                  keyboardType: KeyboardType.TEXT,
+                  onChanged: _makeHandleChanged(type)), onDismiss: () {
+            navigator.pop();
+          }, actions: [
+            new FlatButton(child: new Text('CANCEL'), onPressed: () {
               navigator.pop();
-            },
-            actions: [
-              new FlatButton(
-                child: new Text('CANCEL'),
-                onPressed: () {
-                  navigator.pop();
-                }
-              ),
-              new FlatButton(
-                child: new Text('SAVE'),
-                onPressed: () {
-                  navigator.pop(_tempData[type]);
-                }
-              ),
-            ]
-          );
+            }),
+            new FlatButton(child: new Text('SAVE'), onPressed: () {
+              navigator.pop(_tempData[type]);
+            }),
+          ]);
         case DialogType.ColorPicker:
           List<Widget> flexColors = new List<Widget>();
           List<int> colors = <int>[
@@ -142,20 +134,15 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
           }
 
           return new Dialog(
-            title: new Text(capType),
-            content: new Grid(flexColors, maxChildExtent: 75.0),
-            onDismiss: () {
+              title: new Text(capType),
+              content: new Grid(flexColors, maxChildExtent: 75.0),
+              onDismiss: () {
+            navigator.pop();
+          }, actions: [
+            new FlatButton(child: new Text('CANCEL'), onPressed: () {
               navigator.pop();
-            },
-            actions: [
-              new FlatButton(
-                child: new Text('CANCEL'),
-                onPressed: () {
-                  navigator.pop();
-                }
-              )
-            ]
-          );
+            })
+          ]);
         case DialogType.ImagePicker:
           List<Widget> flexAvatars = new List<Widget>();
           for (int i = 0; i < RandomSettings.avatars.length; i++) {
@@ -166,25 +153,19 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
           }
 
           return new Dialog(
-            title: new Text(capType),
-            content: new Grid(flexAvatars, maxChildExtent: 75.0),
-            onDismiss: () {
+              title: new Text(capType),
+              content: new Grid(flexAvatars, maxChildExtent: 75.0),
+              onDismiss: () {
+            navigator.pop();
+          }, actions: [
+            new FlatButton(child: new Text('CANCEL'), onPressed: () {
               navigator.pop();
-            },
-            actions: [
-              new FlatButton(
-                child: new Text('CANCEL'),
-                onPressed: () {
-                  navigator.pop();
-                }
-              )
-            ]
-          );
+            })
+          ]);
         default:
           assert(false);
           return null;
       }
-
     }).then((String data) => _persist(type, data));
   }
 
@@ -194,7 +175,8 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
     }
     setState(() {
       config.croupier.settings.setStringValue(type, data);
-      config.croupier.settings_manager.save(config.croupier.settings.userID, config.croupier.settings.toJSONString());
+      config.croupier.settings_manager.save(config.croupier.settings.userID,
+          config.croupier.settings.toJSONString());
     });
   }
 

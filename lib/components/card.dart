@@ -17,8 +17,10 @@ class Card extends widgets.StatelessComponent {
   double get width => _width ?? 40.0;
   double get height => _height ?? 40.0;
 
-  Card(this.card, this.faceUp, {double width, double height, this.rotation: 0.0}) :
-    _width = width, _height = height;
+  Card(this.card, this.faceUp,
+      {double width, double height, this.rotation: 0.0})
+      : _width = width,
+        _height = height;
 
   widgets.Widget build(widgets.BuildContext context) {
     // TODO(alexfandrianto): This isn't a nice way of doing Rotation.
@@ -26,13 +28,14 @@ class Card extends widgets.StatelessComponent {
     // Feature Request: https://github.com/flutter/engine/issues/1452
     return new widgets.Listener(
         child: new widgets.Container(
-            width: width, height: height, child: new widgets.Transform(
-              child: _imageFromCard(card, faceUp),
-              transform: new vector_math.Matrix4.identity()
-                .translate(this.width / 2, this.height / 2)
-                .rotateZ(this.rotation)
-                .translate(-this.width / 2, -this.height / 2)
-              )));
+            width: width,
+            height: height,
+            child: new widgets.Transform(
+                child: _imageFromCard(card, faceUp),
+                transform: new vector_math.Matrix4.identity()
+                    .translate(this.width / 2, this.height / 2)
+                    .rotateZ(this.rotation)
+                    .translate(-this.width / 2, -this.height / 2))));
   }
 
   static widgets.Widget _imageFromCard(logic_card.Card c, bool faceUp) {

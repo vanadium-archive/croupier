@@ -61,16 +61,18 @@ class CroupierComponentState extends State<CroupierComponent> {
                       logic_croupier.CroupierState.ChooseGame)),
               new FlatButton(child: new Text('Join Game')),
               new FlatButton(
-                child: new Text('Settings'),
-                onPressed: makeSetStateCallback(
+                  child: new Text('Settings'),
+                  onPressed: makeSetStateCallback(
                       logic_croupier.CroupierState.Settings))
             ], direction: FlexDirection.vertical));
       case logic_croupier.CroupierState.Settings:
         // in which we let them pick an avatar, name, and color. And return to the previous screen after.
-       return new Container(
+        return new Container(
             padding: new EdgeDims.only(top: sky.view.paddingTop),
-            child: new CroupierSettingsComponent(config.navigator, config.croupier, makeSetStateCallback(
-                      logic_croupier.CroupierState.Welcome)));
+            child: new CroupierSettingsComponent(
+                config.navigator,
+                config.croupier,
+                makeSetStateCallback(logic_croupier.CroupierState.Welcome)));
       case logic_croupier.CroupierState.ChooseGame:
         // in which we let them pick a game out of the many possible games... There aren't that many.
         return new Container(
@@ -96,9 +98,12 @@ class CroupierComponentState extends State<CroupierComponent> {
       case logic_croupier.CroupierState.PlayGame:
         return new Container(
             padding: new EdgeDims.only(top: sky.view.paddingTop),
-            child: component_game.createGameComponent(config.navigator, config.croupier.game,
+            child: component_game.createGameComponent(
+                config.navigator,
+                config.croupier.game,
                 makeSetStateCallback(logic_croupier.CroupierState.Welcome),
-                width: screenSize.width, height: screenSize.height));
+                width: screenSize.width,
+                height: screenSize.height));
       default:
         assert(false);
         return null;

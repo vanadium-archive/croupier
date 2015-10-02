@@ -4,7 +4,6 @@
 
 import '../logic/card.dart' as logic_card;
 import 'card.dart' as component_card;
-import 'util.dart' as util;
 
 import 'dart:math' as math;
 import 'package:sky/widgets_next.dart';
@@ -50,8 +49,7 @@ class CardCollectionComponent extends StatefulComponent {
   Color get altColor => _altColor ?? material.Colors.grey[500];
 
   CardCollectionComponent(
-      this.navigator,
-      this.cards, this.faceUp, this.orientation,
+      this.navigator, this.cards, this.faceUp, this.orientation,
       {this.dragChildren: false,
       this.acceptType: DropType.none,
       this.acceptCallback: null,
@@ -62,9 +60,12 @@ class CardCollectionComponent extends StatefulComponent {
       this.heightCard: DEFAULT_CARD_HEIGHT,
       Color backgroundColor,
       Color altColor,
-      this.rotation: 0.0}) : _backgroundColor = backgroundColor, _altColor = altColor;
+      this.rotation: 0.0})
+      : _backgroundColor = backgroundColor,
+        _altColor = altColor;
 
-  CardCollectionComponentState createState() => new CardCollectionComponentState();
+  CardCollectionComponentState createState() =>
+      new CardCollectionComponentState();
 }
 
 class CardCollectionComponentState extends State<CardCollectionComponent> {
@@ -160,7 +161,8 @@ class CardCollectionComponentState extends State<CardCollectionComponent> {
     if (cardWidgets.length == 0) {
       // Just return a centered background image.
       return new Container(
-          decoration: new BoxDecoration(backgroundColor: config.backgroundColor),
+          decoration:
+              new BoxDecoration(backgroundColor: config.backgroundColor),
           height: _produceRowHeight,
           width: config.width,
           child: new Center(
@@ -198,9 +200,7 @@ class CardCollectionComponentState extends State<CardCollectionComponent> {
 
     for (int i = 0; i < cardWidgets.length; i++) {
       kids.add(new Positioned(
-          top: CARD_MARGIN,
-          left: CARD_MARGIN,
-          child: cardWidgets[i]));
+          top: CARD_MARGIN, left: CARD_MARGIN, child: cardWidgets[i]));
     }
     return new Container(
         decoration: new BoxDecoration(backgroundColor: config.backgroundColor),
@@ -288,10 +288,13 @@ class CardCollectionComponentState extends State<CardCollectionComponent> {
 
     for (int i = 0; i < cs.length; i++) {
       component_card.Card c = new component_card.Card(cs[i], config.faceUp,
-          width: config.widthCard, height: config.heightCard, rotation: config.rotation);
+          width: config.widthCard,
+          height: config.heightCard,
+          rotation: config.rotation);
 
       if (config.dragChildren) {
-        cardComponents.add(new Draggable(navigator: config.navigator, child: c, data: c, feedback: c));
+        cardComponents.add(new Draggable(
+            navigator: config.navigator, child: c, data: c, feedback: c));
       } else {
         cardComponents.add(c);
       }
@@ -322,8 +325,9 @@ class CardCollectionComponentState extends State<CardCollectionComponent> {
         });
       case DropType.card_collection:
         return new DragTarget<CardCollectionComponent>(
-            onWillAccept: _handleWillAccept, onAccept: _handleAcceptMultiple,
-            builder: (BuildContext context, List<CardCollectionComponent> data, _) {
+            onWillAccept: _handleWillAccept,
+            onAccept: _handleAcceptMultiple, builder:
+                (BuildContext context, List<CardCollectionComponent> data, _) {
           return new Container(
               decoration: new BoxDecoration(
                   backgroundColor:

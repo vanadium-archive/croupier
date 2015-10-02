@@ -4,7 +4,6 @@
 
 import 'dart:async';
 
-
 typedef void updateCallbackT(String key, String value);
 
 class SettingsManager {

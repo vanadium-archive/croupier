@@ -33,15 +33,24 @@ abstract class Board extends StatelessComponent {
   double get cardHeight => _cardHeight ?? defaultCardHeight;
   double get cardWidth => _cardWidth ?? defaultCardWidth;
 
-  Board(this.navigator, this.game, {double height, double width, double cardHeight, double cardWidth}) :
-    _height = height, _width = width, _cardHeight = cardHeight, _cardWidth = cardWidth;
+  Board(this.navigator, this.game,
+      {double height, double width, double cardHeight, double cardWidth})
+      : _height = height,
+        _width = width,
+        _cardHeight = cardHeight,
+        _cardWidth = cardWidth;
 }
 
 /// The HeartsBoard represents the Hearts table view, which shows the number of
 /// cards each player has, and the cards they are currently playing.
 class HeartsBoard extends Board {
-  HeartsBoard(NavigatorState navigator, HeartsGame game, {double height, double width, double cardHeight, double cardWidth}) :
-    super(navigator, game, height: height, width: width, cardHeight: cardHeight, cardWidth: cardWidth);
+  HeartsBoard(NavigatorState navigator, HeartsGame game,
+      {double height, double width, double cardHeight, double cardWidth})
+      : super(navigator, game,
+            height: height,
+            width: width,
+            cardHeight: cardHeight,
+            cardWidth: cardWidth);
 
   Widget build(BuildContext context) {
     List<Widget> pile = new List<Widget>();
@@ -51,10 +60,7 @@ class HeartsBoard extends Board {
     _addPlaysToPile(pile);
 
     return new Container(
-      height: this.height,
-      width: this.width,
-      child: new Stack(pile)
-    );
+        height: this.height, width: this.width, child: new Stack(pile));
   }
 
   // Show the hands of each player (facedown) around the perimeter of the board.
@@ -62,7 +68,8 @@ class HeartsBoard extends Board {
     HeartsGame game = this.game;
 
     for (int i = 0; i < 4; i++) {
-      List<logic_card.Card> cards = game.cardCollections[i + HeartsGame.OFFSET_HAND];
+      List<logic_card.Card> cards =
+          game.cardCollections[i + HeartsGame.OFFSET_HAND];
       Orientation ori = i % 2 == 0 ? Orientation.horz : Orientation.vert;
 
       bool wide = (this.width >= this.height);
@@ -70,42 +77,34 @@ class HeartsBoard extends Board {
       double sizeRatio = 0.60;
       double cccSize = sizeRatio * smallerSide;
 
-
       CardCollectionComponent ccc = new CardCollectionComponent(
-        this.navigator, cards, false, ori,
-        width: i % 2 == 0 ? cccSize : null, height: i % 2 != 0 ? cccSize : null,
-        rotation: -math.PI / 2 * i);
+          this.navigator, cards, false, ori,
+          width: i % 2 == 0 ? cccSize : null,
+          height: i % 2 != 0 ? cccSize : null,
+          rotation: -math.PI / 2 * i);
       Widget w;
-      switch(i) {
+      switch (i) {
         case 2:
           w = new Positioned(
-            top: 0.0,
-            left: (this.width - cccSize) / 2.0,
-            child: ccc
-          );
+              top: 0.0, left: (this.width - cccSize) / 2.0, child: ccc);
           break;
         case 3:
           w = new Positioned(
-            top: (this.height - cccSize) / 2.0,
-            left: 0.0,
-            child: ccc
-          );
+              top: (this.height - cccSize) / 2.0, left: 0.0, child: ccc);
           break;
         case 0:
           w = new Positioned(
-            // TODO(alexfandrianto): 1.7 is a magic number, but it just looks right somehow.
-            // This could be due to the margins from each card collection.
-            top: this.height - 1.7 * this.cardHeight,
-            left: (this.width - cccSize) / 2.0,
-            child: ccc
-          );
+              // TODO(alexfandrianto): 1.7 is a magic number, but it just looks right somehow.
+              // This could be due to the margins from each card collection.
+              top: this.height - 1.7 * this.cardHeight,
+              left: (this.width - cccSize) / 2.0,
+              child: ccc);
           break;
         case 1:
           w = new Positioned(
-            top: (this.height - cccSize) / 2.0,
-            left: this.width - 1.7 * this.cardWidth,
-            child: ccc
-          );
+              top: (this.height - cccSize) / 2.0,
+              left: this.width - 1.7 * this.cardWidth,
+              child: ccc);
           break;
         default:
           assert(false);
@@ -130,14 +129,17 @@ class HeartsBoard extends Board {
     HeartsGame game = this.game;
 
     for (int i = 0; i < 4; i++) {
-      List<logic_card.Card> cards = game.cardCollections[i + HeartsGame.OFFSET_PLAY];
+      List<logic_card.Card> cards =
+          game.cardCollections[i + HeartsGame.OFFSET_PLAY];
 
       double MARGIN = 10.0;
       CardCollectionComponent ccc = new CardCollectionComponent(
-        this.navigator, cards, true, Orientation.show1,
-        width: this.cardWidth, widthCard: this.cardWidth,
-        height: this.cardHeight, heightCard: this.cardHeight,
-        rotation: -math.PI / 2 * i);
+          this.navigator, cards, true, Orientation.show1,
+          width: this.cardWidth,
+          widthCard: this.cardWidth,
+          height: this.cardHeight,
+          heightCard: this.cardHeight,
+          rotation: -math.PI / 2 * i);
       Widget w;
 
       double left02 = (this.width - this.cardWidth) / 2;
@@ -149,67 +151,40 @@ class HeartsBoard extends Board {
       double dWidth = (this.cardWidth + MARGIN) / 2;
 
       if (this.width >= this.height) {
-        switch(i) {
+        switch (i) {
           case 2:
-            w = new Positioned(
-              top: baseTop,
-              left: left02,
-              child: ccc
-            );
+            w = new Positioned(top: baseTop, left: left02, child: ccc);
             break;
           case 3:
-            w = new Positioned(
-              top: top13,
-              left: baseLeft - dWidth,
-              child: ccc
-            );
+            w = new Positioned(top: top13, left: baseLeft - dWidth, child: ccc);
             break;
           case 0:
             w = new Positioned(
-              top: baseTop + dHeight * 2,
-              left: left02,
-              child: ccc
-            );
+                top: baseTop + dHeight * 2, left: left02, child: ccc);
             break;
           case 1:
             w = new Positioned(
-              top: top13,
-              left: baseLeft + dWidth * 3,
-              child: ccc
-            );
+                top: top13, left: baseLeft + dWidth * 3, child: ccc);
             break;
           default:
             assert(false);
         }
       } else {
-        switch(i) {
+        switch (i) {
           case 2:
             w = new Positioned(
-              top: baseTop - dHeight,
-              left: left02,
-              child: ccc
-            );
+                top: baseTop - dHeight, left: left02, child: ccc);
             break;
           case 3:
-            w = new Positioned(
-              top: top13,
-              left: baseLeft,
-              child: ccc
-            );
+            w = new Positioned(top: top13, left: baseLeft, child: ccc);
             break;
           case 0:
             w = new Positioned(
-              top: baseTop + dHeight * 3,
-              left: left02,
-              child: ccc
-            );
+                top: baseTop + dHeight * 3, left: left02, child: ccc);
             break;
           case 1:
             w = new Positioned(
-              top: top13,
-              left: baseLeft + dHeight * 2,
-              child: ccc
-            );
+                top: top13, left: baseLeft + dHeight * 2, child: ccc);
             break;
           default:
             assert(false);
