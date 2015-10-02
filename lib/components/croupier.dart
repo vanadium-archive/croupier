@@ -4,7 +4,7 @@
 
 import '../logic/croupier.dart' as logic_croupier;
 import '../logic/game/game.dart' as logic_game;
-import 'game.dart' show createGameComponent;
+import 'game.dart' as component_game;
 import 'croupier_settings.dart' show CroupierSettingsComponent;
 
 import 'package:sky/widgets_next.dart';
@@ -39,7 +39,9 @@ class CroupierComponentState extends State<CroupierComponent> {
 
   void sizeChanged(sky.Size newSize) {
     print(newSize);
-    screenSize = newSize;
+    setState(() {
+      screenSize = newSize;
+    });
   }
 
   Widget build(BuildContext context) {
@@ -94,7 +96,7 @@ class CroupierComponentState extends State<CroupierComponent> {
       case logic_croupier.CroupierState.PlayGame:
         return new Container(
             padding: new EdgeDims.only(top: sky.view.paddingTop),
-            child: createGameComponent(config.navigator, config.croupier.game,
+            child: component_game.createGameComponent(config.navigator, config.croupier.game,
                 makeSetStateCallback(logic_croupier.CroupierState.Welcome),
                 width: screenSize.width, height: screenSize.height));
       default:

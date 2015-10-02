@@ -13,3 +13,4 @@ part 'hearts_command.part.dart';
 part 'hearts_game.part.dart';
 part 'hearts_log.part.dart';
 part 'hearts_phase.part.dart';
+part 'hearts_type.part.dart';

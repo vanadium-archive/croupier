@@ -21,6 +21,7 @@ enum DropType {
 typedef void AcceptCb(dynamic data, List<logic_card.Card> cards);
 
 const double DEFAULT_WIDTH = 200.0;
+const double DEFAULT_HEIGHT = 200.0;
 const double DEFAULT_CARD_HEIGHT = 60.0;
 const double DEFAULT_CARD_WIDTH = 60.0;
 
@@ -38,10 +39,12 @@ class CardCollectionComponent extends StatefulComponent {
   final DropType acceptType;
   final Comparator<logic_card.Card> comparator;
   final double width;
+  final double height;
   final double widthCard;
   final double heightCard;
   final Color _backgroundColor;
   final Color _altColor;
+  final double rotation; // This angle is in radians.
 
   Color get backgroundColor => _backgroundColor ?? material.Colors.grey[500];
   Color get altColor => _altColor ?? material.Colors.grey[500];
@@ -54,10 +57,12 @@ class CardCollectionComponent extends StatefulComponent {
       this.acceptCallback: null,
       this.comparator: null,
       this.width: DEFAULT_WIDTH,
+      this.height: DEFAULT_HEIGHT,
       this.widthCard: DEFAULT_CARD_WIDTH,
       this.heightCard: DEFAULT_CARD_HEIGHT,
       Color backgroundColor,
-      Color altColor}) : _backgroundColor = backgroundColor, _altColor = altColor;
+      Color altColor,
+      this.rotation: 0.0}) : _backgroundColor = backgroundColor, _altColor = altColor;
 
   CardCollectionComponentState createState() => new CardCollectionComponentState();
 }
@@ -99,7 +104,7 @@ class CardCollectionComponentState extends State<CardCollectionComponent> {
   double get desiredHeight {
     switch (config.orientation) {
       case Orientation.vert:
-        return null;
+        return config.height;
       case Orientation.horz:
       case Orientation.fan:
       case Orientation.show1:
@@ -117,7 +122,7 @@ class CardCollectionComponentState extends State<CardCollectionComponent> {
     switch (config.orientation) {
       case Orientation.vert:
       case Orientation.show1:
-        return config.widthCard;
+        return _produceColumnWidth;
       case Orientation.horz:
       case Orientation.fan:
       case Orientation.suit:
@@ -126,6 +131,28 @@ class CardCollectionComponentState extends State<CardCollectionComponent> {
         assert(false);
         return null;
     }
+  }
+
+  double get _produceColumnWidth => config.widthCard + CARD_MARGIN * 2;
+  Widget _produceColumn(List<Widget> cardWidgets) {
+    // Let's do a stack of positioned cards!
+    List<Widget> kids = new List<Widget>();
+
+    double h = config.height ?? config.heightCard * 5;
+    double spacing = math.min(config.heightCard + CARD_MARGIN * 2,
+        (h - config.heightCard - 2 * CARD_MARGIN) / (cardWidgets.length - 1));
+
+    for (int i = 0; i < cardWidgets.length; i++) {
+      kids.add(new Positioned(
+          top: CARD_MARGIN + spacing * i,
+          left: CARD_MARGIN,
+          child: cardWidgets[i]));
+    }
+    return new Container(
+        decoration: new BoxDecoration(backgroundColor: config.backgroundColor),
+        height: config.height,
+        width: _produceColumnWidth,
+        child: new Stack(kids));
   }
 
   double get _produceRowHeight => config.heightCard + CARD_MARGIN * 2;
@@ -166,20 +193,35 @@ class CardCollectionComponentState extends State<CardCollectionComponent> {
         child: new Stack(kids));
   }
 
+  Widget _produceSingle(List<Widget> cardWidgets) {
+    List<Widget> kids = new List<Widget>();
+
+    for (int i = 0; i < cardWidgets.length; i++) {
+      kids.add(new Positioned(
+          top: CARD_MARGIN,
+          left: CARD_MARGIN,
+          child: cardWidgets[i]));
+    }
+    return new Container(
+        decoration: new BoxDecoration(backgroundColor: config.backgroundColor),
+        height: _produceRowHeight,
+        width: _produceColumnWidth,
+        child: new Stack(kids));
+  }
+
   double get _whiteLineHeight => WHITE_LINE_HEIGHT;
 
   Widget wrapCards(List<Widget> cardWidgets) {
     switch (config.orientation) {
       case Orientation.vert:
-        return new Flex(util.flexChildren(cardWidgets),
-            direction: FlexDirection.vertical);
+        return _produceColumn(cardWidgets);
       case Orientation.horz:
         return _produceRow(cardWidgets);
       case Orientation.fan:
       // unimplemented, so we'll fall through to show1, for now.
       // Probably a Stack + Positioned
       case Orientation.show1:
-        return new Stack(cardWidgets);
+        return _produceSingle(cardWidgets);
       case Orientation.suit:
         List<Widget> cs = new List<Widget>();
         List<Widget> ds = new List<Widget>();
@@ -246,7 +288,7 @@ class CardCollectionComponentState extends State<CardCollectionComponent> {
 
     for (int i = 0; i < cs.length; i++) {
       component_card.Card c = new component_card.Card(cs[i], config.faceUp,
-          width: config.widthCard, height: config.heightCard);
+          width: config.widthCard, height: config.heightCard, rotation: config.rotation);
 
       if (config.dragChildren) {
         cardComponents.add(new Draggable(navigator: config.navigator, child: c, data: c, feedback: c));

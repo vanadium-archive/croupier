@@ -34,6 +34,8 @@ class HeartsGame extends Game {
   final Card TWO_OF_CLUBS = new Card("classic", "c2");
   final Card QUEEN_OF_SPADES = new Card("classic", "sq");
 
+  HeartsType viewType;
+
   HeartsPhase _phase = HeartsPhase.Deal;
   HeartsPhase get phase => _phase;
   void set phase(HeartsPhase other) {
@@ -60,7 +62,7 @@ class HeartsGame extends Game {
   List<int> scores = [0, 0, 0, 0];
   List<bool> ready;
 
-  HeartsGame(int playerNumber)
+  HeartsGame(int playerNumber, [this.viewType = HeartsType.Player])
       : super.create(GameType.Hearts, new HeartsLog(), playerNumber, 16) {
     resetGame();
   }

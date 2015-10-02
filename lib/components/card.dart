@@ -3,20 +3,36 @@
 // license that can be found in the LICENSE file.
 
 import '../logic/card.dart' as logic_card;
+
 import 'package:sky/widgets_next.dart' as widgets;
+import 'package:vector_math/vector_math.dart' as vector_math;
 
 class Card extends widgets.StatelessComponent {
   final logic_card.Card card;
   final bool faceUp;
-  final double width;
-  final double height;
+  final double _width;
+  final double _height;
+  final double rotation;
 
-  Card(this.card, this.faceUp, {this.width, this.height});
+  double get width => _width ?? 40.0;
+  double get height => _height ?? 40.0;
+
+  Card(this.card, this.faceUp, {double width, double height, this.rotation: 0.0}) :
+    _width = width, _height = height;
 
   widgets.Widget build(widgets.BuildContext context) {
+    // TODO(alexfandrianto): This isn't a nice way of doing Rotation.
+    // The reason is that you must know the width and height of the image.
+    // Feature Request: https://github.com/flutter/engine/issues/1452
     return new widgets.Listener(
         child: new widgets.Container(
-            width: width, height: height, child: _imageFromCard(card, faceUp)));
+            width: width, height: height, child: new widgets.Transform(
+              child: _imageFromCard(card, faceUp),
+              transform: new vector_math.Matrix4.identity()
+                .translate(this.width / 2, this.height / 2)
+                .rotateZ(this.rotation)
+                .translate(-this.width / 2, -this.height / 2)
+              )));
   }
 
   static widgets.Widget _imageFromCard(logic_card.Card c, bool faceUp) {
