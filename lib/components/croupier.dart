@@ -67,7 +67,7 @@ class CroupierComponentState extends State<CroupierComponent> {
         // in which we let them pick an avatar, name, and color. And return to the previous screen after.
        return new Container(
             padding: new EdgeDims.only(top: sky.view.paddingTop),
-            child: new CroupierSettingsComponent(config.croupier, makeSetStateCallback(
+            child: new CroupierSettingsComponent(config.navigator, config.croupier, makeSetStateCallback(
                       logic_croupier.CroupierState.Welcome)));
       case logic_croupier.CroupierState.ChooseGame:
         // in which we let them pick a game out of the many possible games... There aren't that many.

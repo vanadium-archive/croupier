@@ -38,6 +38,34 @@ class CroupierSettings {
     }
   }
 
+  void setStringValue(String key, String data) {
+    switch(key) {
+      case "name":
+        print("Setting name to ${data}");
+        name = data;
+        break;
+      case "avatar":
+        print("Setting avatar to ${data}");
+        avatar = data;
+        break;
+      case "color":
+        // https://github.com/domokit/mojo/issues/192
+        // Just calling int.parse will crash SIGSEGV the Dart VM on Android.
+        // Note: if the number is too big. If you do a smaller number, it's fine.
+        int newColor = 0xcf000000; // Remove once Android + Dart can handle larger numbers.
+        try {
+          newColor += int.parse(data);
+        } catch (e) {
+          print(e);
+        }
+        print("WARNING: Would have set the color to ${newColor} but not yet.");
+        color = newColor;
+        break;
+      default:
+        return null;
+    }
+  }
+
   String toJSONString() {
     return JSON.encode({"userID": userID, "avatar": avatar, "name": name, "color": color});
   }
