@@ -8,10 +8,10 @@ import (
 	"golang.org/x/mobile/exp/f32"
 	"golang.org/x/mobile/exp/sprite"
 	"golang.org/x/mobile/exp/sprite/glsprite"
-	"hearts/img/newImg"
-	"hearts/img/repositionImg"
-	"hearts/img/screenResize"
-	"hearts/img/staticImg"
+	"hearts/img/reposition"
+	"hearts/img/resize"
+	"hearts/img/staticimg"
+	"hearts/img/texture"
 	"hearts/logic/card"
 	"testing"
 )
@@ -31,59 +31,55 @@ var (
 
 // Testing AdjustScaleDimensions
 func TestOne(test *testing.T) {
-	imgX := float32(5)
-	imgY := float32(20)
-	imgWidth := float32(10)
-	imgHeight := float32(10)
+	imgXY := card.MakeVec(5, 20)
+	imgDimensions := card.MakeVec(10, 10)
 	oldWindowWidth := float32(30)
 	oldWindowHeight := float32(60)
 	windowSize := []float32{90, 90}
-	pos := card.MakePosition(imgX, imgY, imgX, imgY, imgWidth, imgHeight)
-	newX, newY, _, _, newWidth, newHeight := resize.AdjustScaleDimensions(pos, oldWindowWidth, oldWindowHeight, windowSize)
-	widthExpect := imgWidth * 3
-	heightExpect := imgHeight * 3 / 2
+	pos := card.MakePosition(imgXY, imgXY, imgDimensions)
+	newXY, _, newDimensions := resize.AdjustScaleDimensions(pos, oldWindowWidth, oldWindowHeight, windowSize)
+	widthExpect := imgDimensions.X * 3
+	heightExpect := imgDimensions.Y * 3 / 2
 	xExpect := float32(15)
 	yExpect := float32(30)
-	if newWidth != widthExpect {
-		test.Errorf("Expected width %d, got %d", widthExpect, newWidth)
+	if newDimensions.X != widthExpect {
+		test.Errorf("Expected width %d, got %d", widthExpect, newDimensions.X)
 	}
-	if newHeight != heightExpect {
-		test.Errorf("Expected height %d, got %d", heightExpect, newHeight)
+	if newDimensions.Y != heightExpect {
+		test.Errorf("Expected height %d, got %d", heightExpect, newDimensions.Y)
 	}
-	if newX != xExpect {
-		test.Errorf("Expected x %d, got %d", xExpect, newX)
+	if newXY.X != xExpect {
+		test.Errorf("Expected x %d, got %d", xExpect, newXY.X)
 	}
-	if newY != yExpect {
-		test.Errorf("Expected y %d, got %d", yExpect, newY)
+	if newXY.Y != yExpect {
+		test.Errorf("Expected y %d, got %d", yExpect, newXY.Y)
 	}
 }
 
 // Testing AdjustKeepDimensions
 func TestTwo(test *testing.T) {
-	imgX := float32(5)
-	imgY := float32(20)
-	imgWidth := float32(10)
-	imgHeight := float32(10)
+	imgXY := card.MakeVec(5, 20)
+	imgDimensions := card.MakeVec(10, 10)
 	oldWindowWidth := float32(30)
 	oldWindowHeight := float32(60)
 	windowSize := []float32{90, 90}
-	pos := card.MakePosition(imgX, imgY, imgX, imgY, imgWidth, imgHeight)
-	newX, newY, _, _, newWidth, newHeight := resize.AdjustKeepDimensions(pos, oldWindowWidth, oldWindowHeight, windowSize)
-	widthExpect := imgWidth
-	heightExpect := imgHeight
+	pos := card.MakePosition(imgXY, imgXY, imgDimensions)
+	newXY, _, newDimensions := resize.AdjustKeepDimensions(pos, oldWindowWidth, oldWindowHeight, windowSize)
+	widthExpect := imgDimensions.X
+	heightExpect := imgDimensions.Y
 	xExpect := float32(25)
 	yExpect := float32(32.5)
-	if newWidth != widthExpect {
-		test.Errorf("Expected width %d, got %d", widthExpect, newWidth)
+	if newDimensions.X != widthExpect {
+		test.Errorf("Expected width %d, got %d", widthExpect, newDimensions.X)
 	}
-	if newHeight != heightExpect {
-		test.Errorf("Expected height %d, got %d", heightExpect, newHeight)
+	if newDimensions.Y != heightExpect {
+		test.Errorf("Expected height %d, got %d", heightExpect, newDimensions.Y)
 	}
-	if newX != xExpect {
-		test.Errorf("Expected x %d, got %d", xExpect, newX)
+	if newXY.X != xExpect {
+		test.Errorf("Expected x %d, got %d", xExpect, newXY.X)
 	}
-	if newY != yExpect {
-		test.Errorf("Expected y %d, got %d", yExpect, newY)
+	if newXY.Y != yExpect {
+		test.Errorf("Expected y %d, got %d", yExpect, newXY.Y)
 	}
 }
 
@@ -97,11 +93,9 @@ func TestThree(test *testing.T) {
 	cards := make([]*card.Card, 0)
 	dropTargets := make([]*staticimg.StaticImg, 0)
 	buttons := make([]*staticimg.StaticImg, 0)
-	buttonX := float32(5)
-	buttonY := float32(20)
-	buttonWidth := float32(10)
-	buttonHeight := float32(10)
-	buttonPos := card.MakePosition(buttonX, buttonY, buttonX, buttonY, buttonWidth, buttonHeight)
+	imgXY := card.MakeVec(5, 20)
+	imgDimensions := card.MakeVec(10, 10)
+	buttonPos := card.MakePosition(imgXY, imgXY, imgDimensions)
 	newButton := texture.MakeImgWithoutAlt(subtex, buttonPos, eng, scene)
 	buttons = append(buttons, newButton)
 	backgroundImgs := make([]*staticimg.StaticImg, 0)
@@ -109,81 +103,75 @@ func TestThree(test *testing.T) {
 	oldWidth := windowSize[0] / 2
 	oldHeight := windowSize[1] / 2
 	resize.AdjustImgs(oldWidth, oldHeight, cards, dropTargets, backgroundImgs, buttons, emptySuitImgs, windowSize, eng)
-	newX := buttons[0].GetX()
-	newY := buttons[0].GetY()
-	newWidth := buttons[0].GetWidth()
-	newHeight := buttons[0].GetHeight()
-	widthExpect := buttonWidth * 2
-	heightExpect := buttonHeight * 2
-	xExpect := buttonX * 2
-	yExpect := buttonY * 2
-	if newWidth != widthExpect {
-		test.Errorf("Expected width %d, got %d", widthExpect, newWidth)
+	newXY := buttons[0].GetCurrent()
+	newDimensions := buttons[0].GetDimensions()
+	widthExpect := imgDimensions.X * 2
+	heightExpect := imgDimensions.Y * 2
+	xExpect := imgXY.X * 2
+	yExpect := imgXY.Y * 2
+	if newDimensions.X != widthExpect {
+		test.Errorf("Expected width %d, got %d", widthExpect, newDimensions.X)
 	}
-	if newHeight != heightExpect {
-		test.Errorf("Expected height %d, got %d", heightExpect, newHeight)
+	if newDimensions.Y != heightExpect {
+		test.Errorf("Expected height %d, got %d", heightExpect, newDimensions.Y)
 	}
-	if newX != xExpect {
-		test.Errorf("Expected x %d, got %d", xExpect, newX)
+	if newXY.X != xExpect {
+		test.Errorf("Expected x %d, got %d", xExpect, newXY.X)
 	}
-	if newY != yExpect {
-		test.Errorf("Expected y %d, got %d", yExpect, newY)
+	if newXY.Y != yExpect {
+		test.Errorf("Expected y %d, got %d", yExpect, newXY.Y)
 	}
 }
 
 // Testing NewImgWithoutAlt
 func TestFour(test *testing.T) {
-	x := float32(5)
-	y := float32(10)
-	width := float32(20)
-	height := float32(10)
-	pos := card.MakePosition(x, y, x, y, width, height)
+	xy := card.MakeVec(5, 10)
+	dimensions := card.MakeVec(20, 10)
+	pos := card.MakePosition(xy, xy, dimensions)
 	i := texture.MakeImgWithoutAlt(subtex, pos, eng, scene)
-	if i.GetX() != x {
-		test.Errorf("Expected x %d, got %d", x, i.GetX())
+	if i.GetCurrent().X != xy.X {
+		test.Errorf("Expected x %d, got %d", xy.X, i.GetCurrent().X)
 	}
-	if i.GetY() != y {
-		test.Errorf("Expected y %d, got %d", y, i.GetY())
+	if i.GetCurrent().Y != xy.Y {
+		test.Errorf("Expected y %d, got %d", xy.Y, i.GetCurrent().Y)
 	}
-	if i.GetInitialX() != x {
-		test.Errorf("Expected inital x %d, got %d", x, i.GetInitialX())
+	if i.GetInitial().X != xy.X {
+		test.Errorf("Expected inital x %d, got %d", xy.X, i.GetInitial().X)
 	}
-	if i.GetInitialY() != y {
-		test.Errorf("Expected initial y %d, got %d", y, i.GetInitialY())
+	if i.GetInitial().Y != xy.Y {
+		test.Errorf("Expected initial y %d, got %d", xy.Y, i.GetInitial().Y)
 	}
-	if i.GetWidth() != width {
-		test.Errorf("Expected width %d, got %d", width, i.GetWidth())
+	if i.GetDimensions().X != dimensions.X {
+		test.Errorf("Expected width %d, got %d", dimensions.X, i.GetDimensions().X)
 	}
-	if i.GetHeight() != height {
-		test.Errorf("Expected height %d, got %d", height, i.GetHeight())
+	if i.GetDimensions().Y != dimensions.Y {
+		test.Errorf("Expected height %d, got %d", dimensions.Y, i.GetDimensions().Y)
 	}
 }
 
 // Testing NewImgWithAlt
 func TestFive(test *testing.T) {
-	x := float32(5)
-	y := float32(10)
-	width := float32(20)
-	height := float32(10)
-	pos := card.MakePosition(x, y, x, y, width, height)
+	xy := card.MakeVec(5, 10)
+	dimensions := card.MakeVec(20, 10)
+	pos := card.MakePosition(xy, xy, dimensions)
 	i := texture.MakeImgWithAlt(subtex, subtex, pos, true, eng, scene)
-	if i.GetX() != x {
-		test.Errorf("Expected x %d, got %d", x, i.GetX())
+	if i.GetCurrent().X != xy.X {
+		test.Errorf("Expected x %d, got %d", xy.X, i.GetCurrent().X)
 	}
-	if i.GetY() != y {
-		test.Errorf("Expected y %d, got %d", y, i.GetY())
+	if i.GetCurrent().Y != xy.Y {
+		test.Errorf("Expected y %d, got %d", xy.Y, i.GetCurrent().Y)
 	}
-	if i.GetInitialX() != x {
-		test.Errorf("Expected inital x %d, got %d", x, i.GetInitialX())
+	if i.GetInitial().X != xy.X {
+		test.Errorf("Expected inital x %d, got %d", xy.X, i.GetInitial().X)
 	}
-	if i.GetInitialY() != y {
-		test.Errorf("Expected initial y %d, got %d", y, i.GetInitialY())
+	if i.GetInitial().Y != xy.Y {
+		test.Errorf("Expected initial y %d, got %d", xy.Y, i.GetInitial().Y)
 	}
-	if i.GetWidth() != width {
-		test.Errorf("Expected width %d, got %d", width, i.GetWidth())
+	if i.GetDimensions().X != dimensions.X {
+		test.Errorf("Expected width %d, got %d", dimensions.X, i.GetDimensions().X)
 	}
-	if i.GetHeight() != height {
-		test.Errorf("Expected height %d, got %d", height, i.GetHeight())
+	if i.GetDimensions().Y != dimensions.Y {
+		test.Errorf("Expected height %d, got %d", dimensions.Y, i.GetDimensions().Y)
 	}
 }
 
@@ -201,38 +189,36 @@ func TestSix(test *testing.T) {
 	c2 := card.NewCard(card.Four, card.Heart)
 	n = texture.MakeNode(eng, scene)
 	n2 := texture.MakeNode(eng, scene)
-	initialX := float32(10)
-	initialY := float32(10)
-	curX := float32(100)
-	curY := float32(30)
-	width := float32(5)
-	height := float32(5)
+	initialXY := card.MakeVec(10, 10)
+	curXY := card.MakeVec(100, 30)
+	dimensions := card.MakeVec(5, 5)
 	c.SetNode(n)
 	c2.SetNode(n2)
-	c.SetInitialPos(initialX, initialY)
-	c2.SetInitialPos(initialX, initialY)
-	c.Move(curX, curY, width, height, eng)
-	c2.Move(curX, curY, width, height, eng)
+	c.SetInitialPos(initialXY)
+	c2.SetInitialPos(initialXY)
+	c.Move(curXY, dimensions, eng)
+	c2.Move(curXY, dimensions, eng)
 	cards = append(cards, c)
 	cards = append(cards, c2)
-	if c.GetX() != curX {
-		test.Errorf("Expected x %d, got %d", curX, c.GetX())
+	if c.GetCurrent().X != curXY.X {
+		test.Errorf("Expected x %d, got %d", curXY.X, c.GetCurrent().X)
 	}
-	if c.GetY() != curY {
-		test.Errorf("Expected y %d, got %d", curY, c.GetY())
+	if c.GetCurrent().Y != curXY.Y {
+		test.Errorf("Expected y %d, got %d", curXY.Y, c.GetCurrent().Y)
 	}
-	reposition.ResetCardPosition(c, cards, emptySuitImgs, padding, windowSize, eng)
-	reposition.ResetCardPosition(c2, cards, emptySuitImgs, padding, windowSize, eng)
-	if c.GetX() != padding {
-		test.Errorf("Expected x %d, got %d", initialX, c.GetX())
+	reposition.ResetCardPosition(c, eng)
+	reposition.ResetCardPosition(c2, eng)
+	reposition.RealignSuit(c.GetSuit(), c.GetInitial().Y, cards, emptySuitImgs, padding, windowSize, eng)
+	if c.GetCurrent().X != padding {
+		test.Errorf("Expected x %d, got %d", initialXY.X, c.GetCurrent().X)
 	}
-	if c.GetY() != initialY {
-		test.Errorf("Expected y %d, got %d", initialY, c.GetY())
+	if c.GetCurrent().Y != initialXY.Y {
+		test.Errorf("Expected y %d, got %d", initialXY.Y, c.GetCurrent().Y)
 	}
-	if c2.GetX() != padding+width+padding {
-		test.Errorf("Expected x %d, got %d", padding+width+padding, c2.GetX())
+	if c2.GetCurrent().X != padding+dimensions.X+padding {
+		test.Errorf("Expected x %d, got %d", padding+dimensions.X+padding, c2.GetCurrent().X)
 	}
-	if c2.GetY() != initialY {
-		test.Errorf("Expected y %d, got %d", initialY, c2.GetY())
+	if c2.GetCurrent().Y != initialXY.Y {
+		test.Errorf("Expected y %d, got %d", initialXY.Y, c2.GetCurrent().Y)
 	}
 }

@@ -43,34 +43,19 @@ func (s *StaticImg) GetAlt() sprite.SubTex {
 	return s.alt
 }
 
-// Returns the x-coordinate of the upper left corner of s
-func (s *StaticImg) GetX() float32 {
-	return s.pos.GetCurrent().X
+// Returns a vector containing the current x- and y-coordinate of the upper left corner of s
+func (s *StaticImg) GetCurrent() card.Vec {
+	return s.pos.GetCurrent()
 }
 
-// Returns the y-coordinate of the upper left corner of s
-func (s *StaticImg) GetY() float32 {
-	return s.pos.GetCurrent().Y
+// Returns a vector containing the initial x- and y-coordinate of the upper left corner of s
+func (s *StaticImg) GetInitial() card.Vec {
+	return s.pos.GetInitial()
 }
 
-// Returns the x-coordinate of the upper left corner of s in its initial placement
-func (s *StaticImg) GetInitialX() float32 {
-	return s.pos.GetInitial().X
-}
-
-// Returns the y-coordinate of the upper left corner of s in its initial placement
-func (s *StaticImg) GetInitialY() float32 {
-	return s.pos.GetInitial().Y
-}
-
-// Returns the width of s
-func (s *StaticImg) GetWidth() float32 {
-	return s.pos.GetDimensions().X
-}
-
-// Returns the height of s
-func (s *StaticImg) GetHeight() float32 {
-	return s.pos.GetDimensions().Y
+// Returns a vector containing the width and height of s
+func (s *StaticImg) GetDimensions() card.Vec {
+	return s.pos.GetDimensions()
 }
 
 // Returns the card currently pinned to s
@@ -94,18 +79,18 @@ func (s *StaticImg) SetAlt(t sprite.SubTex) {
 }
 
 // Moves s to a new position and size
-func (s *StaticImg) Move(newX float32, newY float32, newWidth float32, newHeight float32, eng sprite.Engine) {
+func (s *StaticImg) Move(newXY, newDimensions card.Vec, eng sprite.Engine) {
 	eng.SetTransform(s.node, f32.Affine{
-		{newWidth, 0, newX},
-		{0, newHeight, newY},
+		{newDimensions.X, 0, newXY.X},
+		{0, newDimensions.Y, newXY.Y},
 	})
-	s.pos.SetCurrent(newX, newY)
-	s.pos.SetDimensions(newWidth, newHeight)
+	s.pos.SetCurrent(newXY)
+	s.pos.SetDimensions(newDimensions)
 }
 
 // Sets the initial x and y coordinates of the upper left corner of s
-func (s *StaticImg) SetInitialPos(newX float32, newY float32) {
-	s.pos.SetInitial(newX, newY)
+func (s *StaticImg) SetInitialPos(newXY card.Vec) {
+	s.pos.SetInitial(newXY)
 }
 
 // Pins card c to s

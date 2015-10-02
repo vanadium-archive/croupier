@@ -50,6 +50,18 @@ func MakeVec(x, y float32) Vec {
 	}
 }
 
+func (v *Vec) SetVec(x, y float32) {
+	v.X = x
+	v.Y = y
+}
+
+func (v Vec) Rescale(oldWindow, newWindow Vec) Vec {
+	newX := v.X/oldWindow.X*newWindow.X
+	newY := v.Y/oldWindow.Y*newWindow.Y
+	newXY := MakeVec(newX, newY)
+	return newXY
+}
+
 type Position struct {
 	initial    Vec
 	current    Vec
@@ -57,10 +69,7 @@ type Position struct {
 }
 
 // Returns a new position
-func MakePosition(initialX, initialY, currentX, currentY, width, height float32) *Position {
-	i := MakeVec(initialX, initialY)
-	c := MakeVec(currentX, currentY)
-	d := MakeVec(width, height)
+func MakePosition(i, c, d Vec) *Position {
 	return &Position{
 		initial:    i,
 		current:    c,
@@ -84,21 +93,25 @@ func (p *Position) GetDimensions() Vec {
 }
 
 // Updates the initial Vec of p
-func (p *Position) SetInitial(x float32, y float32) {
-	p.initial.X = x
-	p.initial.Y = y
+func (p *Position) SetInitial(v Vec) {
+	p.initial = v
 }
 
 // Updates the current Vec of p
-func (p *Position) SetCurrent(x float32, y float32) {
-	p.current.X = x
-	p.current.Y = y
+func (p *Position) SetCurrent(v Vec) {
+	p.current = v
 }
 
 // Updates the dimensions Vec of p
-func (p *Position) SetDimensions(width float32, height float32) {
-	p.dimensions.X = width
-	p.dimensions.Y = height
+func (p *Position) SetDimensions(v Vec) {
+	p.dimensions = v
+}
+
+func (p *Position) Rescale(oldWindow, newWindow Vec) (Vec, Vec, Vec){
+	i := p.initial.Rescale(oldWindow, newWindow)
+	c := p.current.Rescale(oldWindow, newWindow)
+	d := p.dimensions.Rescale(oldWindow, newWindow)
+	return i, c, d
 }
 
 // Returns a new card with suit and face variables set
@@ -115,6 +128,7 @@ type Card struct {
 	f     Face
 	node  *sprite.Node
 	image sprite.SubTex
+	back  sprite.SubTex
 	pos   Position
 }
 
@@ -138,34 +152,24 @@ func (c *Card) GetImage() sprite.SubTex {
 	return c.image
 }
 
-// Returns the x-coordinate of the upper left corner of c
-func (c *Card) GetX() float32 {
-	return c.pos.GetCurrent().X
+// Returns the image of the back of c
+func (c *Card) GetBack() sprite.SubTex {
+	return c.back
 }
 
-// Returns the y-coordinate of the upper left corner of c
-func (c *Card) GetY() float32 {
-	return c.pos.GetCurrent().Y
+// Returns a vector containing the current x- and y-coordinate of the upper left corner of c
+func (c *Card) GetCurrent() Vec {
+	return c.pos.GetCurrent()
 }
 
-// Returns the x-coordinate of the upper left corner of c in its initial placement
-func (c *Card) GetInitialX() float32 {
-	return c.pos.GetInitial().X
+// Returns a vector containing the initial x- and y-coordinate of the upper left corner of c
+func (c *Card) GetInitial() Vec {
+	return c.pos.GetInitial()
 }
 
-// Returns the y-coordinate of the upper left corner of c in its initial placement
-func (c *Card) GetInitialY() float32 {
-	return c.pos.GetInitial().Y
-}
-
-// Returns the width of c
-func (c *Card) GetWidth() float32 {
-	return c.pos.GetDimensions().X
-}
-
-// Returns the height of c
-func (c *Card) GetHeight() float32 {
-	return c.pos.GetDimensions().Y
+// Returns a vector containing the width and height of c
+func (c *Card) GetDimensions() Vec {
+	return c.pos.GetDimensions()
 }
 
 // Sets the node of c to n
@@ -178,24 +182,28 @@ func (c *Card) SetImage(s sprite.SubTex) {
 	c.image = s
 }
 
+func (c *Card) SetBack(s sprite.SubTex) {
+	c.back = s
+}
+
 // Moves c to a new position and size
-func (c *Card) Move(newX float32, newY float32, newWidth float32, newHeight float32, eng sprite.Engine) {
+func (c *Card) Move(newXY, newDimensions Vec, eng sprite.Engine) {
 	eng.SetTransform(c.node, f32.Affine{
-		{newWidth, 0, newX},
-		{0, newHeight, newY},
+		{newDimensions.X, 0, newXY.X},
+		{0, newDimensions.Y, newXY.Y},
 	})
-	c.SetPos(newX, newY, newWidth, newHeight)
+	c.SetPos(newXY, newDimensions)
 }
 
 // Sets the variables of c to a new position and size, but does not actually update the image on-screen
-func (c *Card) SetPos(newX float32, newY float32, newWidth float32, newHeight float32) {
-	c.pos.SetCurrent(newX, newY)
-	c.pos.SetDimensions(newWidth, newHeight)
+func (c *Card) SetPos(newXY, newDimensions Vec) {
+	c.pos.SetCurrent(newXY)
+	c.pos.SetDimensions(newDimensions)
 }
 
 // Sets the initial x and y coordinates of c
-func (c *Card) SetInitialPos(newX float32, newY float32) {
-	c.pos.SetInitial(newX, newY)
+func (c *Card) SetInitialPos(newInitialXY Vec) {
+	c.pos.SetInitial(newInitialXY)
 }
 
 // Returns true if c is worth any points (all Hearts cards, and the Queen of Spades)
