@@ -20,12 +20,13 @@ endif
 packages: pubspec.yaml
 	pub upgrade
 
-DART_LIB_FILES := $(shell find lib -name *.dart ! -name *.part.dart)
+DART_LIB_FILES_ALL := $(shell find lib -name *.dart)
+DART_TEST_FILES_ALL := $(shell find test -name *.dart)
 DART_TEST_FILES := $(shell find test -name *.dart ! -name *.part.dart)
 
 .PHONY: dartfmt
 dartfmt:
-	dartfmt -w $(DART_LIB_FILES) $(DART_TEST_FILES)
+	dartfmt -w $(DART_LIB_FILES_ALL) $(DART_TEST_FILES_ALL)
 
 .PHONY: lint
 lint: packages

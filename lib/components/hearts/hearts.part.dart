@@ -5,7 +5,8 @@
 part of game_component;
 
 class HeartsGameComponent extends GameComponent {
-  HeartsGameComponent(NavigatorState navigator, Game game, NoArgCb cb, {double width, double height})
+  HeartsGameComponent(NavigatorState navigator, Game game, NoArgCb cb,
+      {double width, double height})
       : super(navigator, game, cb, width: width, height: height);
 
   HeartsGameComponentState createState() => new HeartsGameComponentState();
@@ -55,6 +56,8 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
         passingCards2.add(card);
       } else if (dest == passingCards3 && passingCards3.length == 0) {
         passingCards3.add(card);
+      } else {
+        assert("Unknown destination pile dest" == true);
       }
     });
   }
@@ -128,7 +131,6 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
       } else {
         print("You can't do that! ${reason}");
         game.debugString = reason;
-
       }
     });
   }
@@ -145,10 +147,10 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
       child: new Flex([
         new Flexible(flex: 1, child: new Text('P${config.game.playerNumber}')),
         new Flexible(
-            flex: 5, child: _makeButton('Switch Player', _switchPlayersCallback)),
-        new Flexible(
             flex: 5,
-            child: _makeButton('Switch View', _switchViewCallback)),
+            child: _makeButton('Switch Player', _switchPlayersCallback)),
+        new Flexible(
+            flex: 5, child: _makeButton('Switch View', _switchViewCallback)),
         new Flexible(
             flex: 5, child: _makeButton('End Round', _endRoundDebugCallback)),
         new Flexible(flex: 4, child: _makeButton('Quit', _quitGameCallback))
@@ -227,7 +229,8 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
 
   Widget showBoard() {
     HeartsGame game = config.game;
-    return new HeartsBoard(config.navigator, game, width: config.width, height: 0.80 * config.height);
+    return new HeartsBoard(config.navigator, game,
+        width: config.width, height: 0.80 * config.height);
   }
 
   Widget showPlay() {
@@ -276,8 +279,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
 
     List<logic_card.Card> cards = game.cardCollections[p];
     CardCollectionComponent c = new CardCollectionComponent(
-        config.navigator,
-        cards, game.playerNumber == p, Orientation.suit,
+        config.navigator, cards, game.playerNumber == p, Orientation.suit,
         dragChildren: game.whoseTurn == p,
         comparator: _compareCards,
         width: config.width);
@@ -331,9 +333,70 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
             justifyContent: FlexJustifyContent.spaceBetween));
   }
 
-  // the pass phase screen consists of 2 parts:
-  // The cards being passed + Pass button.
-  // The cards in your hand.
+  Widget _helpPassTake(
+      String name,
+      List<logic_card.Card> c1,
+      List<logic_card.Card> c2,
+      List<logic_card.Card> c3,
+      List<logic_card.Card> hand,
+      AcceptCb cb,
+      NoArgCb buttoncb) {
+    HeartsGame game = config.game as HeartsGame;
+
+    bool draggable = (cb != null);
+    bool completed = (buttoncb == null);
+
+    List<Widget> topCardWidgets = new List<Widget>();
+    topCardWidgets.add(_topCardWidget(c1, cb));
+    topCardWidgets.add(_topCardWidget(c2, cb));
+    topCardWidgets.add(_topCardWidget(c3, cb));
+    topCardWidgets.add(_makeButton(name, buttoncb, inactive: completed));
+
+    Color bgColor =
+        completed ? material.Colors.teal[600] : material.Colors.teal[500];
+
+    Widget topArea = new Container(
+        decoration: new BoxDecoration(backgroundColor: bgColor),
+        padding: new EdgeDims.all(10.0),
+        width: config.width,
+        child: new Flex(topCardWidgets,
+            justifyContent: FlexJustifyContent.spaceBetween));
+
+    Widget handArea = new CardCollectionComponent(
+        config.navigator, hand, true, Orientation.suit,
+        acceptCallback: cb,
+        dragChildren: draggable,
+        acceptType: draggable ? DropType.card : null,
+        comparator: _compareCards,
+        width: config.width,
+        backgroundColor: material.Colors.grey[500],
+        altColor: material.Colors.grey[700]);
+
+    return new Column(<Widget>[
+      topArea,
+      handArea,
+      new Text(game.debugString),
+      _makeDebugButtons()
+    ], justifyContent: FlexJustifyContent.spaceBetween);
+  }
+
+  Widget _topCardWidget(List<logic_card.Card> cards, AcceptCb cb) {
+    Widget ccc = new CardCollectionComponent(
+        config.navigator, cards, true, Orientation.show1,
+        acceptCallback: cb,
+        dragChildren: cb != null,
+        acceptType: cb != null ? DropType.card : null,
+        backgroundColor: material.Colors.white,
+        altColor: material.Colors.grey[200]);
+
+    if (cb == null) {
+      ccc = new Container(child: ccc);
+    }
+
+    return ccc;
+  }
+
+  // Pass Phase Screen: Show the cards being passed and the player's remaining cards.
   Widget showPass() {
     HeartsGame game = config.game as HeartsGame;
 
@@ -351,81 +414,18 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     });
 
     bool hasPassed = passCards.length != 0;
-    // TODO(alexfandrianto): You can pass as many times as you want... which is silly.
-    // Luckily, later passes shouldn't do anything.
 
-    List<Widget> passingCardWidgets = <Widget>[
-      new Container(
-          margin: new EdgeDims.all(10.0),
-          child: new CardCollectionComponent(
-              config.navigator,
-              passingCards1, true, Orientation.show1,
-              acceptCallback: _uiPassCardCallback,
-              dragChildren: !hasPassed,
-              acceptType: DropType.card,
-              backgroundColor: material.Colors.white,
-              altColor: material.Colors.grey[200])),
-      new Container(
-          margin: new EdgeDims.all(10.0),
-          child: new CardCollectionComponent(
-              config.navigator,
-              passingCards2, true, Orientation.show1,
-              acceptCallback: _uiPassCardCallback,
-              dragChildren: !hasPassed,
-              acceptType: DropType.card,
-              backgroundColor: material.Colors.white,
-              altColor: material.Colors.grey[200])),
-      new Container(
-          margin: new EdgeDims.all(10.0),
-          child: new CardCollectionComponent(
-              config.navigator,
-              passingCards3, true, Orientation.show1,
-              acceptCallback: _uiPassCardCallback,
-              dragChildren: !hasPassed,
-              acceptType: DropType.card,
-              backgroundColor: material.Colors.white,
-              altColor: material.Colors.grey[200]))
-    ];
-    Widget passArea;
-    if (hasPassed) {
-      passArea = new Container(
-          decoration:
-              new BoxDecoration(backgroundColor: material.Colors.teal[600]),
-          width: config.width,
-          child: new Flex(
-              passingCardWidgets
-                ..add(_makeButton("Pass", null, inactive: true)),
-              justifyContent: FlexJustifyContent.spaceBetween));
-    } else {
-      passArea = new Container(
-          decoration:
-              new BoxDecoration(backgroundColor: material.Colors.teal[500]),
-          width: config.width,
-          child: new Flex(
-              passingCardWidgets
-                ..add(_makeButton("Pass", _makeGamePassCallback)),
-              justifyContent: FlexJustifyContent.spaceBetween));
-    }
-
-    // Return the pass cards and the player's remaining hand.
-    // (Also includes debug info)
-    return new Column(<Widget>[
-      passArea,
-      new CardCollectionComponent(
-              config.navigator,
-          remainingCards, true, Orientation.suit,
-          acceptCallback: _uiPassCardCallback,
-          dragChildren: !hasPassed,
-          acceptType: DropType.card,
-          comparator: _compareCards,
-          width: config.width,
-          backgroundColor: material.Colors.grey[500],
-          altColor: material.Colors.grey[700]),
-      new Text(game.debugString),
-      _makeDebugButtons()
-    ], justifyContent: FlexJustifyContent.spaceBetween);
+    return _helpPassTake(
+        "Pass",
+        passingCards1,
+        passingCards2,
+        passingCards3,
+        remainingCards,
+        _uiPassCardCallback,
+        hasPassed ? null : _makeGamePassCallback);
   }
 
+  // Take Phase Screen: Show the cards the player has received and the player's hand.
   Widget showTake() {
     HeartsGame game = config.game as HeartsGame;
 
@@ -442,60 +442,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     List<logic_card.Card> take3 =
         takeCards.length != 0 ? takeCards.sublist(2, 3) : [];
 
-    List<Widget> takeCardWidgets = <Widget>[
-      new Container(
-          margin: new EdgeDims.all(10.0),
-          child: new CardCollectionComponent(
-              config.navigator,
-              take1, true, Orientation.show1,
-              backgroundColor: material.Colors.white,
-              altColor: material.Colors.grey[200])),
-      new Container(
-          margin: new EdgeDims.all(10.0),
-          child: new CardCollectionComponent(
-              config.navigator,
-              take2, true, Orientation.show1,
-              backgroundColor: material.Colors.white,
-              altColor: material.Colors.grey[200])),
-      new Container(
-          margin: new EdgeDims.all(10.0),
-          child: new CardCollectionComponent(
-              config.navigator,
-              take3, true, Orientation.show1,
-              backgroundColor: material.Colors.white,
-              altColor: material.Colors.grey[200]))
-    ];
-    Widget takeArea;
-    if (hasTaken) {
-      takeArea = new Container(
-          decoration:
-              new BoxDecoration(backgroundColor: material.Colors.teal[600]),
-          width: config.width,
-          child: new Flex(
-              takeCardWidgets..add(_makeButton("Take", null, inactive: true)),
-              justifyContent: FlexJustifyContent.spaceBetween));
-    } else {
-      takeArea = new Container(
-          decoration:
-              new BoxDecoration(backgroundColor: material.Colors.teal[500]),
-          width: config.width,
-          child: new Flex(
-              takeCardWidgets..add(_makeButton("Take", _makeGameTakeCallback)),
-              justifyContent: FlexJustifyContent.spaceBetween));
-    }
-
-    // Return the passsed cards and the player's hand.
-    // (Also includes debug info)
-    return new Column(<Widget>[
-      takeArea,
-      new CardCollectionComponent(
-              config.navigator, playerCards, true, Orientation.suit,
-          comparator: _compareCards,
-          width: config.width,
-          backgroundColor: material.Colors.grey[500],
-          altColor: material.Colors.grey[700]),
-      new Text(game.debugString),
-      _makeDebugButtons()
-    ], justifyContent: FlexJustifyContent.spaceBetween);
+    return _helpPassTake("Take", take1, take2, take3, playerCards, null,
+        hasTaken ? null : _makeGameTakeCallback);
   }
 }

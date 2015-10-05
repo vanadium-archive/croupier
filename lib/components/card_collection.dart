@@ -35,7 +35,7 @@ class CardCollectionComponent extends StatefulComponent {
   final bool faceUp;
   final AcceptCb acceptCallback;
   final bool dragChildren;
-  final DropType acceptType;
+  final DropType _acceptType;
   final Comparator<logic_card.Card> comparator;
   final double width;
   final double height;
@@ -45,13 +45,14 @@ class CardCollectionComponent extends StatefulComponent {
   final Color _altColor;
   final double rotation; // This angle is in radians.
 
+  DropType get acceptType => _acceptType ?? DropType.none;
   Color get backgroundColor => _backgroundColor ?? material.Colors.grey[500];
   Color get altColor => _altColor ?? material.Colors.grey[500];
 
   CardCollectionComponent(
       this.navigator, this.cards, this.faceUp, this.orientation,
       {this.dragChildren: false,
-      this.acceptType: DropType.none,
+      DropType acceptType,
       this.acceptCallback: null,
       this.comparator: null,
       this.width: DEFAULT_WIDTH,
@@ -61,7 +62,8 @@ class CardCollectionComponent extends StatefulComponent {
       Color backgroundColor,
       Color altColor,
       this.rotation: 0.0})
-      : _backgroundColor = backgroundColor,
+      : _acceptType = acceptType,
+        _backgroundColor = backgroundColor,
         _altColor = altColor;
 
   CardCollectionComponentState createState() =>
@@ -336,6 +338,9 @@ class CardCollectionComponentState extends State<CardCollectionComponent> {
               width: this.desiredWidth,
               child: wrapCards(cardComponents));
         });
+      default:
+        assert(false);
+        return null;
     }
   }
 }

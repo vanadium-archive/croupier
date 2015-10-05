@@ -6,27 +6,33 @@ part of hearts;
 
 class HeartsCommand extends GameCommand {
   // Usually this constructor is used when reading from a log/syncbase.
-  HeartsCommand(String phase, String data) :
-    super(phase, data, simultaneity: computeSimul(phase));
+  HeartsCommand(String phase, String data)
+      : super(phase, data, simultaneity: computeSimul(phase));
 
-  HeartsCommand.fromCommand(String cmd) :
-    super(cmd.split("|")[0], cmd.split("|")[1], simultaneity: computeSimul(cmd.split("|")[0]));
+  HeartsCommand.fromCommand(String cmd)
+      : super(cmd.split("|")[0], cmd.split("|")[1],
+            simultaneity: computeSimul(cmd.split("|")[0]));
 
   // The following constructors are used for the player generating the HeartsCommand.
-  HeartsCommand.deal(int playerId, List<Card> cards) :
-    super("Deal", computeDeal(playerId, cards), simultaneity: SimulLevel.DEPENDENT);
+  HeartsCommand.deal(int playerId, List<Card> cards)
+      : super("Deal", computeDeal(playerId, cards),
+            simultaneity: SimulLevel.DEPENDENT);
 
-  HeartsCommand.pass(int senderId, List<Card> cards) :
-    super("Pass", computePass(senderId, cards), simultaneity: SimulLevel.INDEPENDENT);
+  HeartsCommand.pass(int senderId, List<Card> cards)
+      : super("Pass", computePass(senderId, cards),
+            simultaneity: SimulLevel.INDEPENDENT);
 
-  HeartsCommand.take(int takerId) :
-    super("Take", computeTake(takerId), simultaneity: SimulLevel.INDEPENDENT);
+  HeartsCommand.take(int takerId)
+      : super("Take", computeTake(takerId),
+            simultaneity: SimulLevel.INDEPENDENT);
 
-  HeartsCommand.play(int playerId, Card c) :
-    super("Play", computePlay(playerId, c), simultaneity: SimulLevel.TURN_BASED);
+  HeartsCommand.play(int playerId, Card c)
+      : super("Play", computePlay(playerId, c),
+            simultaneity: SimulLevel.TURN_BASED);
 
-  HeartsCommand.ready(int playerId) :
-    super("Ready", computeReady(playerId), simultaneity: SimulLevel.INDEPENDENT);
+  HeartsCommand.ready(int playerId)
+      : super("Ready", computeReady(playerId),
+            simultaneity: SimulLevel.INDEPENDENT);
 
   static SimulLevel computeSimul(String phase) {
     switch (phase) {

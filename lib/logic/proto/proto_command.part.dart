@@ -9,15 +9,15 @@ class ProtoCommand extends GameCommand {
   ProtoCommand(String phase, String data) : super(phase, data);
 
   // The following constructors are used for the player generating the ProtoCommand.
-  ProtoCommand.deal(int playerId, List<Card> cards) :
-    super("Deal", computeDeal(playerId, cards));
+  ProtoCommand.deal(int playerId, List<Card> cards)
+      : super("Deal", computeDeal(playerId, cards));
 
   // TODO: receiverId is actually implied by the game round. So it may end up being removable.
-  ProtoCommand.pass(int senderId, int receiverId, List<Card> cards) :
-    super("Pass", computePass(senderId, receiverId, cards));
+  ProtoCommand.pass(int senderId, int receiverId, List<Card> cards)
+      : super("Pass", computePass(senderId, receiverId, cards));
 
-  ProtoCommand.play(int playerId, Card c) :
-    super("Play", computePlay(playerId, c));
+  ProtoCommand.play(int playerId, Card c)
+      : super("Play", computePlay(playerId, c));
 
   static String computeDeal(int playerId, List<Card> cards) {
     StringBuffer buff = new StringBuffer();

@@ -9,7 +9,7 @@ import '../logic/game/game.dart' show Game, GameType;
 import '../logic/hearts/hearts.dart' show HeartsGame, HeartsPhase, HeartsType;
 import 'board.dart' show HeartsBoard;
 import 'card_collection.dart'
-    show CardCollectionComponent, DropType, Orientation;
+    show CardCollectionComponent, DropType, Orientation, AcceptCb;
 
 import 'package:sky/widgets_next.dart';
 import 'package:sky/material.dart' as material;

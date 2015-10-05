@@ -5,7 +5,8 @@
 part of game_component;
 
 class ProtoGameComponent extends GameComponent {
-  ProtoGameComponent(NavigatorState navigator, Game game, NoArgCb cb, {double width, double height})
+  ProtoGameComponent(NavigatorState navigator, Game game, NoArgCb cb,
+      {double width, double height})
       : super(navigator, game, cb, width: width, height: height);
 
   ProtoGameComponentState createState() => new ProtoGameComponentState();
@@ -20,18 +21,24 @@ class ProtoGameComponentState extends GameComponentState<ProtoGameComponent> {
 
     for (int i = 0; i < 4; i++) {
       List<logic_card.Card> cards = config.game.cardCollections[i];
-      CardCollectionComponent c = new CardCollectionComponent(config.navigator, cards,
-          config.game.playerNumber == i, Orientation.horz,
-          dragChildren: true, acceptType: DropType.card, acceptCallback: _makeGameMoveCallback, width: config.width);
+      CardCollectionComponent c = new CardCollectionComponent(config.navigator,
+          cards, config.game.playerNumber == i, Orientation.horz,
+          dragChildren: true,
+          acceptType: DropType.card,
+          acceptCallback: _makeGameMoveCallback,
+          width: config.width);
       cardCollections.add(c); // flex
     }
 
     cardCollections.add(new Container(
         decoration: new BoxDecoration(
             backgroundColor: material.Colors.green[500], borderRadius: 5.0),
-        child: new CardCollectionComponent(config.navigator, config.game.cardCollections[4], true,
-            Orientation.show1,
-            dragChildren: true, acceptType: DropType.card, acceptCallback: _makeGameMoveCallback, width: config.width)));
+        child: new CardCollectionComponent(config.navigator,
+            config.game.cardCollections[4], true, Orientation.show1,
+            dragChildren: true,
+            acceptType: DropType.card,
+            acceptCallback: _makeGameMoveCallback,
+            width: config.width)));
 
     cardCollections.add(_makeDebugButtons());
 
