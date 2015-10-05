@@ -4,7 +4,7 @@
 
 import '../logic/card.dart' as logic_card;
 
-import 'package:sky/widgets_next.dart' as widgets;
+import 'package:sky/widgets.dart' as widgets;
 import 'package:vector_math/vector_math.dart' as vector_math;
 
 class Card extends widgets.StatelessComponent {

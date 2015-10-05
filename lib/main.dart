@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-import 'package:sky/widgets_next.dart';
+import 'package:sky/widgets.dart';
 import 'package:sky/material.dart' show Colors;
 
 import 'logic/croupier.dart' show Croupier;
@@ -18,8 +18,8 @@ class CroupierApp extends StatefulComponent {
 class CroupierAppState extends State<CroupierApp> {
   Croupier croupier;
 
-  void initState(_) {
-    super.initState(_);
+  void initState() {
+    super.initState();
     this.croupier = new Croupier();
   }
 

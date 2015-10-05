@@ -11,7 +11,7 @@ import 'board.dart' show HeartsBoard;
 import 'card_collection.dart'
     show CardCollectionComponent, DropType, Orientation, AcceptCb;
 
-import 'package:sky/widgets_next.dart';
+import 'package:sky/widgets.dart';
 import 'package:sky/material.dart' as material;
 
 part 'hearts/hearts.part.dart';
@@ -31,8 +31,8 @@ abstract class GameComponent extends StatefulComponent {
 }
 
 abstract class GameComponentState<T extends GameComponent> extends State<T> {
-  void initState(_) {
-    super.initState(_);
+  void initState() {
+    super.initState();
 
     config.game.updateCallback = update;
   }

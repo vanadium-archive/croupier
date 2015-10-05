@@ -5,7 +5,7 @@
 import '../logic/croupier.dart' as logic_croupier;
 import '../logic/croupier_settings.dart' show CroupierSettings, RandomSettings;
 
-import 'package:sky/widgets_next.dart';
+import 'package:sky/widgets.dart';
 
 typedef void NoArgCb();
 typedef void OneStringCb(String data);
@@ -42,8 +42,8 @@ class CroupierSettingsComponent extends StatefulComponent {
 class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
   Map<String, String> _tempData = new Map<String, String>();
 
-  void initState(_) {
-    super.initState(_);
+  void initState() {
+    super.initState();
 
     _initializeTemp();
   }

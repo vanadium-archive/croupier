@@ -1,4 +1,4 @@
-name: your_app_name
+name: croupier
 dependencies:
   sky: any
   sky_tools: any

@@ -7,7 +7,7 @@ import '../logic/game/game.dart' as logic_game;
 import 'game.dart' as component_game;
 import 'croupier_settings.dart' show CroupierSettingsComponent;
 
-import 'package:sky/widgets_next.dart';
+import 'package:sky/widgets.dart';
 
 import 'dart:sky' as sky;
 
@@ -25,8 +25,8 @@ class CroupierComponent extends StatefulComponent {
 class CroupierComponentState extends State<CroupierComponent> {
   sky.Size screenSize;
 
-  void initState(_) {
-    super.initState(_);
+  void initState() {
+    super.initState();
     // TODO(alexfandrianto): sky.view.width and sky.view.height?
   }
 

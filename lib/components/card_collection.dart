@@ -6,7 +6,7 @@ import '../logic/card.dart' as logic_card;
 import 'card.dart' as component_card;
 
 import 'dart:math' as math;
-import 'package:sky/widgets_next.dart';
+import 'package:sky/widgets.dart';
 import 'package:sky/material.dart' as material;
 
 enum Orientation { vert, horz, fan, show1, suit }
