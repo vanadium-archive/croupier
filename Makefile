@@ -3,13 +3,20 @@ ETHER_DIR := $(JIRI_ROOT)/release/mojo/syncbase
 CROUPIER_DIR := $(shell pwd)
 SHELL := /bin/bash -euo pipefail
 
+# Flags for Syncbase service running as Mojo service.
+ETHER_FLAGS := --v=0
+
 ifdef ANDROID
 	MOJO_ANDROID_FLAGS := --android
 	ETHER_BUILD_DIR := $(ETHER_DIR)/gen/mojo/android
-	SYNCBASE_DATA_DIR := /data/data/org.chromium.mojo.shell/app_home/syncbase_data
+
+	APP_HOME_DIR = /data/data/org.chromium.mojo.shell/app_home
+	ANDROID_CREDS_DIR := /sdcard/v23creds
+	ETHER_FLAGS += --logtostderr=true --root-dir=$(APP_HOME_DIR)/syncbase_data --v23.credentials=$(ANDROID_CREDS_DIR)
 else
 	ETHER_BUILD_DIR := $(ETHER_DIR)/gen/mojo/linux_amd64
-	SYNCBASE_DATA_DIR := /tmp/syncbase_data
+
+	ETHER_FLAGS += --root-dir=$(PWD)/tmp/syncbase_data --v23.credentials=$(PWD)/creds
 endif
 
 .DELETE_ON_ERROR:
@@ -49,7 +56,8 @@ start: croupier.flx env-check packages
 	-- \
 	--enable-multiprocess \
 	--map-origin=https://mojo.v.io/=$(ETHER_BUILD_DIR) \
-	--args-for="mojo:sky_viewer --enable-checked-mode"
+	--args-for="mojo:sky_viewer --enable-checked-mode" \
+	--args-for="https://mojo.v.io/syncbase_server.mojo $(ETHER_FLAGS)"
 
 .PHONY: mock
 mock:
