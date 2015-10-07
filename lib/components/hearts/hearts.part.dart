@@ -59,8 +59,6 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
       } else if (dest == passingCards3) {
         passingCards3.clear();
         passingCards3.add(card);
-      } else {
-        assert("Unknown destination pile dest" == true);
       }
     });
   }
