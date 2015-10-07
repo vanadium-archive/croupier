@@ -37,8 +37,7 @@ void main() {
   runApp(new App(
       title: 'Croupier',
       routes: <String, RouteBuilder>{
-        "/": (NavigatorState navigator, Route route) =>
-            new CroupierApp(navigator)
+        "/": (RouteArguments args) => new CroupierApp(args.navigator)
       },
       theme: new ThemeData(
           brightness: ThemeBrightness.light, primarySwatch: Colors.purple)));

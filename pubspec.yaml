@@ -1,9 +1,16 @@
 name: croupier
 dependencies:
+  ether: any
   sky: any
   sky_tools: any
   test: any
-  ether: any
 dependency_overrides:
   ether:
     path: ../../mojo/syncbase/dart
+# TODO(nlacasse,alexfandrianto): Remove this override once
+# https://github.com/flutter/tools/pull/73 is merged and a new version of
+# sky_tools is published.
+  sky_tools:
+    git:
+      url: git@github.com:afandria/tools.git
+      ref: patch-1

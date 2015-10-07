@@ -1,4 +1,8 @@
-# This beginning section is used to setup the environment for running with mojo_shell.
+DART_LIB_FILES_ALL := $(shell find lib -name *.dart)
+DART_TEST_FILES_ALL := $(shell find test -name *.dart)
+DART_TEST_FILES := $(shell find test -name *.dart ! -name *.part.dart)
+
+# This section is used to setup the environment for running with mojo_shell.
 ETHER_DIR := $(JIRI_ROOT)/release/mojo/syncbase
 CROUPIER_DIR := $(shell pwd)
 SHELL := /bin/bash -euo pipefail
@@ -9,15 +13,35 @@ ETHER_FLAGS := --v=0
 ifdef ANDROID
 	MOJO_ANDROID_FLAGS := --android
 	ETHER_BUILD_DIR := $(ETHER_DIR)/gen/mojo/android
+	export SYNCBASE_SERVER_URL := "https://mojo.v.io/syncbase_server.mojo"
 
 	APP_HOME_DIR = /data/data/org.chromium.mojo.shell/app_home
 	ANDROID_CREDS_DIR := /sdcard/v23creds
 	ETHER_FLAGS += --logtostderr=true --root-dir=$(APP_HOME_DIR)/syncbase_data --v23.credentials=$(ANDROID_CREDS_DIR)
 else
 	ETHER_BUILD_DIR := $(ETHER_DIR)/gen/mojo/linux_amd64
+	export SYNCBASE_SERVER_URL := file://$(ETHER_BUILD_DIR)/syncbase_server.mojo
 
 	ETHER_FLAGS += --root-dir=$(PWD)/tmp/syncbase_data --v23.credentials=$(PWD)/creds
 endif
+
+MOJO_SHELL_FLAGS := --enable-multiprocess --args-for="$(SYNCBASE_SERVER_URL) $(ETHER_FLAGS)"
+
+ifdef ANDROID
+	MOJO_SHELL_FLAGS += --map-origin="https://mojo.v.io/=$(ETHER_BUILD_DIR)"
+endif
+
+# Runs a sky app.
+# $1 is location of flx file.
+define RUN_SKY_APP
+	pub run sky_tools -v --very-verbose run_mojo \
+	--app $1 \
+	$(MOJO_ANDROID_FLAGS) \
+	--mojo-path $(MOJO_DIR)/src \
+	--checked \
+	--mojo-debug \
+	-- $(MOJO_SHELL_FLAGS)
+endef
 
 .DELETE_ON_ERROR:
 
@@ -27,9 +51,16 @@ endif
 packages: pubspec.yaml
 	pub upgrade
 
-DART_LIB_FILES_ALL := $(shell find lib -name *.dart)
-DART_TEST_FILES_ALL := $(shell find test -name *.dart)
-DART_TEST_FILES := $(shell find test -name *.dart ! -name *.part.dart)
+# Builds mounttabled and principal.
+bin: | env-check
+	jiri go build -a -o $@/mounttabled v.io/x/ref/services/mounttable/mounttabled
+	jiri go build -a -o $@/principal v.io/x/ref/cmd/principal
+	touch $@
+
+.PHONY: creds
+creds: | bin
+	./bin/principal seekblessings --v23.credentials creds
+	touch $@
 
 .PHONY: dartfmt
 dartfmt:
@@ -43,21 +74,17 @@ lint: packages
 .PHONY: build
 build: croupier.flx
 
-croupier.flx: packages
+croupier.flx: packages $(DART_LIB_FILES_ALL)
 	pub run sky_tools -v build --manifest manifest.yaml --output-file $@
 
-# TODO(alexfandrianto): Switch from --args-for to --checked once
-# sky_tools v 16 is released. (https://github.com/flutter/tools/issues/53)
 .PHONY: start
 start: croupier.flx env-check packages
-	pub run sky_tools -v --very-verbose run_mojo \
-	--mojo-path $(MOJO_DIR)/src \
-	--app $< $(MOJO_ANDROID_FLAGS) \
-	-- \
-	--enable-multiprocess \
-	--map-origin=https://mojo.v.io/=$(ETHER_BUILD_DIR) \
-	--args-for="mojo:sky_viewer --enable-checked-mode" \
-	--args-for="https://mojo.v.io/syncbase_server.mojo $(ETHER_FLAGS)"
+ifdef ANDROID
+	# Make creds dir if it does not exist.
+	mkdir -p creds
+	adb push -p $(PWD)/creds $(ANDROID_CREDS_DIR)
+endif
+	$(call RUN_SKY_APP,$<)
 
 .PHONY: mock
 mock:
@@ -96,6 +123,7 @@ test: packages
 .PHONY: clean
 clean:
 	rm -f croupier.flx snapshot_blob.bin
+	rm -rf bin creds tmp
 
 .PHONY: veryclean
 veryclean: clean

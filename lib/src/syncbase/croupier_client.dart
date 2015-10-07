@@ -5,6 +5,7 @@
 import 'util.dart' as util;
 
 import 'dart:async';
+import 'dart:io' show Platform;
 
 import 'package:sky/services.dart' show embedder;
 import 'package:ether/syncbase_client.dart'
@@ -14,10 +15,15 @@ Perms emptyPerms() => new Perms()..json = '{}';
 
 class CroupierClient {
   final SyncbaseClient _syncbaseClient;
+  static final String syncbaseServerUrl = Platform.environment[
+          'SYNCBASE_SERVER_URL'] ??
+      'https://mojo.v.io/syncbase_server.mojo';
 
   CroupierClient()
-      : _syncbaseClient = new SyncbaseClient(embedder.connectToService,
-            'https://mojo.v.io/syncbase_server.mojo');
+      : _syncbaseClient =
+            new SyncbaseClient(embedder.connectToService, syncbaseServerUrl) {
+    print('Fetching syncbase_server.mojo from $syncbaseServerUrl');
+  }
 
   // TODO(alexfandrianto): Try not to call this twice at the same time.
   // That would lead to very race-y behavior.
