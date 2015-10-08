@@ -72,9 +72,9 @@ class LogWriter {
     // This stream never really ends, so I guess we'll watch forever.
     await for (WatchChange wc in watchStream) {
       assert(wc.tableName == util.tableNameLog);
-      util.log('Watch Key: ${wc.rowName}');
+      util.log('Watch Key: ${wc.rowKey}');
       util.log('Watch Value ${UTF8.decode(wc.valueBytes)}');
-      String key = wc.rowName;
+      String key = wc.rowKey;
       String value;
       switch (wc.changeType) {
         case WatchChangeTypes.put:
