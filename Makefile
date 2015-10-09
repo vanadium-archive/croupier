@@ -8,16 +8,26 @@ CROUPIER_DIR := $(shell pwd)
 SHELL := /bin/bash -euo pipefail
 
 # Flags for Syncbase service running as Mojo service.
-ETHER_FLAGS := --v=0
+ETHER_FLAGS := --v=1
 
 ifdef ANDROID
 	MOJO_ANDROID_FLAGS := --android
 	ETHER_BUILD_DIR := $(ETHER_DIR)/gen/mojo/android
 	export SYNCBASE_SERVER_URL := "https://mojo.v.io/syncbase_server.mojo"
 
+	# Location of mounttable on syncslides-alpha network.
+	MOUNTTABLE := /192.168.86.254:8101
+	# Name to mount under.
+	NAME := croupier/sb1
+
 	APP_HOME_DIR = /data/data/org.chromium.mojo.shell/app_home
 	ANDROID_CREDS_DIR := /sdcard/v23creds
-	ETHER_FLAGS += --logtostderr=true --root-dir=$(APP_HOME_DIR)/syncbase_data --v23.credentials=$(ANDROID_CREDS_DIR)
+
+	ETHER_FLAGS += --logtostderr=true \
+		--name=$(NAME) \
+		--root-dir=$(APP_HOME_DIR)/syncbase_data \
+		--v23.credentials=$(ANDROID_CREDS_DIR) \
+		--v23.namespace.root=$(MOUNTTABLE)
 else
 	ETHER_BUILD_DIR := $(ETHER_DIR)/gen/mojo/linux_amd64
 	export SYNCBASE_SERVER_URL := file://$(ETHER_BUILD_DIR)/syncbase_server.mojo
@@ -122,6 +132,10 @@ test: packages
 
 .PHONY: clean
 clean:
+ifdef ANDROID
+	# Clean syncbase creds and data dir.
+	adb shell rm -rf $(ANDROID_CREDS_DIR) $(APP_HOME_DIR)/syncbase_data
+endif
 	rm -f croupier.flx snapshot_blob.bin
 	rm -rf bin creds tmp
 
