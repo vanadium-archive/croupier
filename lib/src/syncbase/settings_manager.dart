@@ -2,15 +2,17 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-/// Since this file includes Sky/Mojo, it will need to be mocked out for unit tests.
-/// Unfortunately, imports can't be replaced, so the best thing to do is to swap out the whole file.
+/// Since this file includes Sky/Mojo, it will need to be mocked out for unit
+/// tests.
+/// Unfortunately, imports can't be replaced, so the best thing to do is to swap
+/// out the whole file.
 ///
 /// The goal of the SettingsManager is to handle viewing and editing of the
 /// Croupier Settings.
 /// loadSettings: Get the settings of the current player or specified userID.
 /// saveSettings: For the current player and their userID, save settings.
 /// In the background, these values will be synced.
-/// When setting up a sync group, the userIDs are very important.
+/// When setting up a syncgroup, the userIDs are very important.
 
 import '../../logic/croupier_settings.dart' as util;
 import 'croupier_client.dart' show CroupierClient;
