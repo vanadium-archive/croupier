@@ -2,13 +2,13 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-import '../logic/croupier.dart' as logic_croupier;
 import '../logic/croupier_settings.dart' show CroupierSettings, RandomSettings;
 
 import 'package:sky/widgets.dart';
 
 typedef void NoArgCb();
 typedef void OneStringCb(String data);
+typedef void SaveDataCb(int userID, String jsonData);
 
 enum DialogType { Text, ColorPicker, ImagePicker }
 
@@ -30,10 +30,11 @@ Map<String, DialogType> dialogTypes = {
 
 class CroupierSettingsComponent extends StatefulComponent {
   final NavigatorState navigator;
-  final logic_croupier.Croupier croupier;
+  final CroupierSettings settings;
+  final SaveDataCb saveDataCb;
   final NoArgCb backCb;
 
-  CroupierSettingsComponent(this.navigator, this.croupier, this.backCb);
+  CroupierSettingsComponent(this.navigator, this.settings, this.saveDataCb, this.backCb);
 
   CroupierSettingsComponentState createState() =>
       new CroupierSettingsComponentState();
@@ -49,9 +50,9 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
   }
 
   void _initializeTemp() {
-    _tempData[nameKey] = config.croupier.settings.name;
-    _tempData[colorKey] = "${config.croupier.settings.color}";
-    _tempData[avatarKey] = config.croupier.settings.avatar;
+    _tempData[nameKey] = config.settings.name;
+    _tempData[colorKey] = "${config.settings.color}";
+    _tempData[avatarKey] = config.settings.avatar;
   }
 
   Widget _makeColoredRectangle(int colorInfo, String text, NoArgCb cb) {
@@ -68,11 +69,11 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
 
   Widget build(BuildContext context) {
     List<Widget> w = new List<Widget>();
-    w.add(_makeButtonRow(nameKey, new Text(config.croupier.settings.name)));
+    w.add(_makeButtonRow(nameKey, new Text(config.settings.name)));
     w.add(_makeButtonRow(colorKey,
-        _makeColoredRectangle(config.croupier.settings.color, "", null)));
+        _makeColoredRectangle(config.settings.color, "", null)));
     w.add(_makeButtonRow(
-        avatarKey, new NetworkImage(src: config.croupier.settings.avatar)));
+        avatarKey, new NetworkImage(src: config.settings.avatar)));
 
     w.add(new FlatButton(child: new Text("Return"), onPressed: config.backCb));
     return new Column(w);
@@ -100,7 +101,7 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
               content: new Input(
                   key: globalKeys[type],
                   placeholder: capType,
-                  initialValue: config.croupier.settings.getStringValue(type),
+                  initialValue: config.settings.getStringValue(type),
                   keyboardType: KeyboardType.TEXT,
                   onChanged: _makeHandleChanged(type)), onDismiss: () {
             navigator.pop();
@@ -174,9 +175,9 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
       return;
     }
     setState(() {
-      config.croupier.settings.setStringValue(type, data);
-      config.croupier.settings_manager.save(config.croupier.settings.userID,
-          config.croupier.settings.toJSONString());
+      config.settings.setStringValue(type, data);
+      config.saveDataCb(config.settings.userID,
+          config.settings.toJSONString());
     });
   }
 

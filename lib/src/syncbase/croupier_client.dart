@@ -11,8 +11,6 @@ import 'package:sky/services.dart' show embedder;
 import 'package:ether/syncbase_client.dart'
     show Perms, SyncbaseClient, SyncbaseNoSqlDatabase, SyncbaseTable;
 
-Perms emptyPerms() => new Perms()..json = '{}';
-
 class CroupierClient {
   final SyncbaseClient _syncbaseClient;
   static final String syncbaseServerUrl = Platform.environment[
@@ -31,11 +29,11 @@ class CroupierClient {
     util.log('CroupierClient.createDatabase');
     var app = _syncbaseClient.app(util.appName);
     if (!(await app.exists())) {
-      await app.create(emptyPerms());
+      await app.create(util.openPerms);
     }
     var db = app.noSqlDatabase(util.dbName);
     if (!(await db.exists())) {
-      await db.create(emptyPerms());
+      await db.create(util.openPerms);
     }
     return db;
   }
@@ -46,7 +44,7 @@ class CroupierClient {
       SyncbaseNoSqlDatabase db, String tableName) async {
     var table = db.table(tableName);
     if (!(await table.exists())) {
-      await table.create(emptyPerms());
+      await table.create(util.openPerms);
     }
     util.log('CroupierClient: ${tableName} is ready');
     return table;

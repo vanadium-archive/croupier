@@ -59,7 +59,7 @@ class CroupierSettings {
         } catch (e) {
           print(e);
         }
-        print("WARNING: Would have set the color to ${newColor} but not yet.");
+        print("Setting color to 0x${newColor}.");
         color = newColor;
         break;
       default:

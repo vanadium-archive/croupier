@@ -16,15 +16,21 @@ enum CroupierState {
   PlayGame
 }
 
+typedef void NoArgCb();
+
 class Croupier {
   CroupierState state;
   SettingsManager settings_manager;
   CroupierSettings settings; // null, but loaded asynchronously.
+  Map<String, CroupierSettings> settings_everyone; // empty, but loaded asynchronously
   Game game; // null until chosen
+  NoArgCb informUICb;
 
   Croupier() {
     state = CroupierState.Welcome;
-    settings_manager = new SettingsManager();
+    settings_everyone = new Map<String, CroupierSettings>();
+    settings_manager = new SettingsManager(_updateSettingsEveryoneCb);
+
     settings_manager.load().then((String csString) {
       if (csString == null) {
         settings = new CroupierSettings.random();
@@ -33,6 +39,15 @@ class Croupier {
         settings = new CroupierSettings.fromJSONString(csString);
       }
     });
+  }
+
+  // Updates the settings_everyone map as people join the main Croupier syncgroup
+  // and change their settings.
+  void _updateSettingsEveryoneCb(String key, String json) {
+    settings_everyone[key] = new CroupierSettings.fromJSONString(json);
+    if (this.informUICb != null) {
+      this.informUICb();
+    }
   }
 
   // Sets the next part of croupier state.

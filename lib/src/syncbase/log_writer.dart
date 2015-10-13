@@ -28,10 +28,8 @@ import 'package:ether/syncbase_client.dart'
 
 enum SimulLevel { TURN_BASED, INDEPENDENT, DEPENDENT }
 
-typedef void updateCallbackT(String key, String value);
-
 class LogWriter {
-  final updateCallbackT updateCallback;
+  final util.updateCallbackT updateCallback;
   final List<int> users;
   final CroupierClient _cc;
 

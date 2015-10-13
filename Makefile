@@ -8,7 +8,15 @@ CROUPIER_DIR := $(shell pwd)
 SHELL := /bin/bash -euo pipefail
 
 # Flags for Syncbase service running as Mojo service.
-ETHER_FLAGS := --v=1
+ETHER_FLAGS := --v=5
+
+ifdef ANDROID
+	# Parse the adb devices output to obtain the correct device id.
+	# sed takes out the ANDROID_PLUS_ONE'th row of the output
+	# awk takes just the first bit of the line (before whitespace).
+	ANDROID_PLUS_ONE := $(shell echo $(ANDROID) \+ 1 | bc)
+	DEVICE_ID := $(shell adb devices | sed -n $(ANDROID_PLUS_ONE)p | awk '{ print $$1; }')
+endif
 
 ifdef ANDROID
 	MOJO_ANDROID_FLAGS := --android
@@ -18,16 +26,33 @@ ifdef ANDROID
 	# Location of mounttable on syncslides-alpha network.
 	MOUNTTABLE := /192.168.86.254:8101
 	# Name to mount under.
-	NAME := croupier/sb1
+	NAME := croupier
 
 	APP_HOME_DIR = /data/data/org.chromium.mojo.shell/app_home
 	ANDROID_CREDS_DIR := /sdcard/v23creds
 
 	ETHER_FLAGS += --logtostderr=true \
-		--name=$(NAME) \
 		--root-dir=$(APP_HOME_DIR)/syncbase_data \
 		--v23.credentials=$(ANDROID_CREDS_DIR) \
 		--v23.namespace.root=$(MOUNTTABLE)
+
+	# Setup the ports. These match the original default ports when ANDROID=1.
+	# ANDROID must be an integer for this to work well.
+	# This helps mojo_run setup the proper ports for HTTP server setup.
+	ENV_LOCAL_ORIGIN_PORT := $(shell echo 31840 \- 10 \+ 10 \* $(ANDROID) | bc)
+	ENV_MAPPINGS_BASE_PORT := $(shell echo 31841 \- 10 \+ 10 \* $(ANDROID) | bc)
+
+ifeq ($(ANDROID), 1)
+	# If ANDROID is set to 1 exactly, then treat it like the first device.
+	# TODO(alexfandrianto): If we can do a better job of this, we won't have to
+	# special-case the first device.
+	ETHER_FLAGS += --name=$(NAME)
+else
+	# It turns out that the other syncbases need to be mounted too.
+	# If not, it looks like they won't sync values to each other.
+	ETHER_FLAGS += --name=foo$(ANDROID)
+endif
+
 else
 	ETHER_BUILD_DIR := $(ETHER_DIR)/gen/mojo/linux_amd64
 	export SYNCBASE_SERVER_URL := file://$(ETHER_BUILD_DIR)/syncbase_server.mojo
@@ -38,19 +63,22 @@ endif
 MOJO_SHELL_FLAGS := --enable-multiprocess --args-for="$(SYNCBASE_SERVER_URL) $(ETHER_FLAGS)"
 
 ifdef ANDROID
-	MOJO_SHELL_FLAGS += --map-origin="https://mojo.v.io/=$(ETHER_BUILD_DIR)"
+	MOJO_SHELL_FLAGS += --map-origin="https://mojo.v.io/=$(ETHER_BUILD_DIR)" --target-device $(DEVICE_ID)
 endif
 
 # Runs a sky app.
 # $1 is location of flx file.
 define RUN_SKY_APP
+	ENV_LOCAL_ORIGIN_PORT=$(ENV_LOCAL_ORIGIN_PORT) \
+	ENV_MAPPINGS_BASE_PORT=$(ENV_MAPPINGS_BASE_PORT) \
 	pub run sky_tools -v --very-verbose run_mojo \
 	--app $1 \
 	$(MOJO_ANDROID_FLAGS) \
 	--mojo-path $(MOJO_DIR)/src \
 	--checked \
 	--mojo-debug \
-	-- $(MOJO_SHELL_FLAGS)
+	-- $(MOJO_SHELL_FLAGS) \
+	--no-config-file
 endef
 
 .DELETE_ON_ERROR:
@@ -92,7 +120,7 @@ start: croupier.flx env-check packages
 ifdef ANDROID
 	# Make creds dir if it does not exist.
 	mkdir -p creds
-	adb push -p $(PWD)/creds $(ANDROID_CREDS_DIR)
+	adb -s $(DEVICE_ID) push -p $(PWD)/creds $(ANDROID_CREDS_DIR)
 endif
 	$(call RUN_SKY_APP,$<)
 
@@ -133,12 +161,20 @@ test: packages
 .PHONY: clean
 clean:
 ifdef ANDROID
-	# Clean syncbase creds and data dir.
-	adb shell rm -rf $(ANDROID_CREDS_DIR) $(APP_HOME_DIR)/syncbase_data
+	# Clean syncbase data dir.
+	adb -s $(DEVICE_ID) shell rm -rf $(APP_HOME_DIR)/syncbase_data
 endif
 	rm -f croupier.flx snapshot_blob.bin
-	rm -rf bin creds tmp
+	rm -rf bin tmp
+
+.PHONY: clean-creds
+clean-creds:
+ifdef ANDROID
+	# Clean syncbase creds dir.
+	adb -s $(DEVICE_ID) shell rm -rf $(ANDROID_CREDS_DIR)
+endif
+	rm -rf creds
 
 .PHONY: veryclean
-veryclean: clean
+veryclean: clean clean-creds
 	rm -rf .packages .pub packages pubspec.lock
