@@ -7,7 +7,7 @@ import 'util.dart' as util;
 import 'dart:async';
 import 'dart:io' show Platform;
 
-import 'package:sky/services.dart' show embedder;
+import 'package:flutter/services.dart' show embedder;
 import 'package:ether/syncbase_client.dart'
     show Perms, SyncbaseClient, SyncbaseNoSqlDatabase, SyncbaseTable;
 

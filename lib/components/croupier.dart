@@ -9,9 +9,9 @@ import 'game.dart' as component_game;
 import 'croupier_settings.dart' show CroupierSettingsComponent;
 import 'croupier_profile.dart' show CroupierProfileComponent;
 
-import 'package:sky/widgets.dart';
+import 'package:flutter/material.dart';
 
-import 'dart:sky' as sky;
+import 'dart:ui' as ui;
 
 typedef void NoArgCb();
 
@@ -25,11 +25,11 @@ class CroupierComponent extends StatefulComponent {
 }
 
 class CroupierComponentState extends State<CroupierComponent> {
-  sky.Size screenSize;
+  ui.Size screenSize;
 
   void initState() {
     super.initState();
-    // TODO(alexfandrianto): sky.view.width and sky.view.height?
+    // TODO(alexfandrianto): ui.view.width and ui.view.height?
 
     // Croupier (logic) needs this in case of syncbase watch updates.
     config.croupier.informUICb = _informUICb;
@@ -46,7 +46,7 @@ class CroupierComponentState extends State<CroupierComponent> {
         });
   }
 
-  void sizeChanged(sky.Size newSize) {
+  void sizeChanged(ui.Size newSize) {
     print(newSize);
     setState(() {
       screenSize = newSize;
@@ -69,7 +69,7 @@ class CroupierComponentState extends State<CroupierComponent> {
         });
 
         return new Container(
-            padding: new EdgeDims.only(top: sky.view.paddingTop),
+            padding: new EdgeDims.only(top: ui.view.paddingTop),
             child: new Column([
               new FlatButton(
                   child: new Text('Create Game'),
@@ -84,7 +84,7 @@ class CroupierComponentState extends State<CroupierComponent> {
       case logic_croupier.CroupierState.Settings:
         // in which we let them pick an avatar, name, and color. And return to the previous screen after.
         return new Container(
-            padding: new EdgeDims.only(top: sky.view.paddingTop),
+            padding: new EdgeDims.only(top: ui.view.paddingTop),
             child: new CroupierSettingsComponent(
                 config.navigator,
                 config.croupier.settings,
@@ -93,7 +93,7 @@ class CroupierComponentState extends State<CroupierComponent> {
       case logic_croupier.CroupierState.ChooseGame:
         // in which we let them pick a game out of the many possible games... There aren't that many.
         return new Container(
-            padding: new EdgeDims.only(top: sky.view.paddingTop),
+            padding: new EdgeDims.only(top: ui.view.paddingTop),
             child: new Flex([
               new FlatButton(
                   child: new Text('Proto'),
@@ -114,7 +114,7 @@ class CroupierComponentState extends State<CroupierComponent> {
         return null; // If needed, lists the players around and what devices they'd like to use.
       case logic_croupier.CroupierState.PlayGame:
         return new Container(
-            padding: new EdgeDims.only(top: sky.view.paddingTop),
+            padding: new EdgeDims.only(top: ui.view.paddingTop),
             child: component_game.createGameComponent(
                 config.navigator,
                 config.croupier.game,

@@ -11,8 +11,8 @@ import 'board.dart' show HeartsBoard;
 import 'card_collection.dart'
     show CardCollectionComponent, DropType, Orientation, AcceptCb;
 
-import 'package:sky/widgets.dart';
-import 'package:sky/material.dart' as material;
+import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' as material;
 
 part 'hearts/hearts.part.dart';
 part 'proto/proto.part.dart';

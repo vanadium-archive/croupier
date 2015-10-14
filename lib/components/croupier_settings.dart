@@ -4,7 +4,7 @@
 
 import '../logic/croupier_settings.dart' show CroupierSettings, RandomSettings;
 
-import 'package:sky/widgets.dart';
+import 'package:flutter/material.dart';
 
 typedef void NoArgCb();
 typedef void OneStringCb(String data);

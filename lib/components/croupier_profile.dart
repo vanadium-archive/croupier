@@ -4,7 +4,7 @@
 
 import '../logic/croupier_settings.dart' show CroupierSettings;
 
-import 'package:sky/widgets.dart';
+import 'package:flutter/material.dart';
 
 class CroupierProfileComponent extends StatelessComponent {
   final CroupierSettings settings;

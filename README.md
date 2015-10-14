@@ -56,7 +56,7 @@ You may need to manually download a specific version of Dart. If so, visit their
 ## Vanadium
 
 A Vanadium installation is expected, since Croupier also depends on the
-`release/projects/mojo/syncbase` project.
+https://github.com/vanadium/mojo.syncbase project.
 
 # Running Croupier
 

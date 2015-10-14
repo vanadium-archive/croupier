@@ -9,7 +9,7 @@ import '../logic/hearts/hearts.dart' show HeartsGame;
 
 import 'dart:math' as math;
 
-import 'package:sky/widgets.dart';
+import 'package:flutter/material.dart';
 
 const double defaultBoardHeight = 400.0;
 const double defaultBoardWidth = 400.0;
