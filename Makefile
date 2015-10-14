@@ -36,12 +36,6 @@ ifdef ANDROID
 		--v23.credentials=$(ANDROID_CREDS_DIR) \
 		--v23.namespace.root=$(MOUNTTABLE)
 
-	# Setup the ports. These match the original default ports when ANDROID=1.
-	# ANDROID must be an integer for this to work well.
-	# This helps mojo_run setup the proper ports for HTTP server setup.
-	ENV_LOCAL_ORIGIN_PORT := $(shell echo 31840 \- 10 \+ 10 \* $(ANDROID) | bc)
-	ENV_MAPPINGS_BASE_PORT := $(shell echo 31841 \- 10 \+ 10 \* $(ANDROID) | bc)
-
 ifeq ($(ANDROID), 1)
 	# If ANDROID is set to 1 exactly, then treat it like the first device.
 	# TODO(alexfandrianto): If we can do a better job of this, we won't have to
@@ -69,8 +63,6 @@ endif
 # Runs a sky app.
 # $1 is location of flx file.
 define RUN_SKY_APP
-	ENV_LOCAL_ORIGIN_PORT=$(ENV_LOCAL_ORIGIN_PORT) \
-	ENV_MAPPINGS_BASE_PORT=$(ENV_MAPPINGS_BASE_PORT) \
 	pub run sky_tools -v --very-verbose run_mojo \
 	--app $1 \
 	$(MOJO_ANDROID_FLAGS) \
@@ -78,7 +70,8 @@ define RUN_SKY_APP
 	--checked \
 	--mojo-debug \
 	-- $(MOJO_SHELL_FLAGS) \
-	--no-config-file
+	--no-config-file \
+	--free-host-ports
 endef
 
 .DELETE_ON_ERROR:
@@ -115,6 +108,8 @@ build: croupier.flx
 croupier.flx: packages $(DART_LIB_FILES_ALL)
 	pub run sky_tools -v build --manifest manifest.yaml --output-file $@
 
+# Starts the app on the specified ANDROID device.
+# Don't forget to make creds first if they are not present.
 .PHONY: start
 start: croupier.flx env-check packages
 ifdef ANDROID

@@ -18,27 +18,6 @@ Currently, development is heavily tied to an existing installation of Mojo.
 Please ensure that your Mojo checkout is located at $MOJO_DIR and has built
 out/android_Debug. Instructions are available [here](https://github.com/domokit/mojo).
 
-__Note__: Currently, in order to run on multiple devices at once, we modified a file
-in Mojo: `mojo/devtools/common/devtoolslib/shell_arguments.py`
-Related issue for multiple Android support: https://github.com/domokit/mojo/issues/470
-
-Use the os library to read environment variables and use defaults otherwise.
-
-```
-+import os
- import os.path
- import sys
- import urlparse
-@@ -18,8 +19,8 @@ from devtoolslib.shell_config import ShellConfigurationException
-
- # When spinning up servers for local origins, we want to use predictable ports
- # so that caching works between subsequent runs with the same command line.
--_LOCAL_ORIGIN_PORT = 31840
--_MAPPINGS_BASE_PORT = 31841
-+_LOCAL_ORIGIN_PORT = int(os.getenv('ENV_LOCAL_ORIGIN_PORT', 31840))
-+_MAPPINGS_BASE_PORT = int(os.getenv('ENV_MAPPINGS_BASE_PORT', 31841))
- ```
-
 ## Dart
 
 Flutter depends on a relatively new version of the Dart SDK. Therefore, please
@@ -103,23 +82,25 @@ it is recommended that you wait a short duration before starting up any other de
 ## Deleting Mojo Shell
 
 On your Android device, go to the Apps that you downloaded and Uninstall Mojo
-Shell from there. This cleanup step is important for when Syncbase is in a bad
-state.
+Shell from there. This cleanup step is important for when Mojo is in a bad state.
 
-__Note__: Due to issues with Syncgroup creation, an app that creates a syncgroup
-will not be able to start a second time, so you __must__ delete the mojo shell
-after each run. Fixing this is a high priority.
+__Note__: Syncgroup data and some Syncbase data is not cleaned up between runs.
+This means that deleting Mojo Shell can often be helpful in cases where clearing
+Mojo Shell's data is insufficient.
 
 ## Cleaning Up
 
 Due to some issues with mojo_shell, you may occasionally fail to start the
 program due to a used port. Follow the error's instructions and try again.
 
-Between builds of Mojo and Syncbase, you may wish to clean the app up.
+Between builds of Mojo and Syncbase, you may wish to clean the app and database
+info (for rooted devices only) up.
 
 ```
 ANDROID=1 make clean
 ```
+
+For non-rooted devices, you can manually clear the data of the Mojo Shell app.
 
 You can also clean credentials instead:
 
