@@ -1,9 +1,6 @@
 name: croupier
 dependencies:
-  ether: any
+  syncbase: ">=0.0.0 <0.1.0"
   flutter: ">=0.0.3 <0.1.0"
   sky_tools: any
   test: any
-dependency_overrides:
-  ether:
-    path: ../../mojo/syncbase/dart

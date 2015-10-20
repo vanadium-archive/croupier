@@ -3,12 +3,11 @@ DART_TEST_FILES_ALL := $(shell find test -name *.dart)
 DART_TEST_FILES := $(shell find test -name *.dart ! -name *.part.dart)
 
 # This section is used to setup the environment for running with mojo_shell.
-ETHER_DIR := $(JIRI_ROOT)/release/mojo/syncbase
 CROUPIER_DIR := $(shell pwd)
 SHELL := /bin/bash -euo pipefail
 
 # Flags for Syncbase service running as Mojo service.
-ETHER_FLAGS := --v=1
+SYNCBASE_FLAGS := --v=1
 
 ifdef ANDROID
 	# Parse the adb devices output to obtain the correct device id.
@@ -20,8 +19,7 @@ endif
 
 ifdef ANDROID
 	MOJO_ANDROID_FLAGS := --android
-	ETHER_BUILD_DIR := $(ETHER_DIR)/gen/mojo/android
-	export SYNCBASE_SERVER_URL := "https://mojo.v.io/syncbase_server.mojo"
+	SYNCBASE_MOJO_BIN_DIR := packages/syncbase/mojo_services/android
 
 	# Location of mounttable on syncslides-alpha network.
 	MOUNTTABLE := /192.168.86.254:8101
@@ -31,7 +29,7 @@ ifdef ANDROID
 	APP_HOME_DIR = /data/data/org.chromium.mojo.shell/app_home
 	ANDROID_CREDS_DIR := /sdcard/v23creds
 
-	ETHER_FLAGS += --logtostderr=true \
+	SYNCBASE_FLAGS += --logtostderr=true \
 		--root-dir=$(APP_HOME_DIR)/syncbase_data \
 		--v23.credentials=$(ANDROID_CREDS_DIR) \
 		--v23.namespace.root=$(MOUNTTABLE)
@@ -40,24 +38,23 @@ ifeq ($(ANDROID), 1)
 	# If ANDROID is set to 1 exactly, then treat it like the first device.
 	# TODO(alexfandrianto): If we can do a better job of this, we won't have to
 	# special-case the first device.
-	ETHER_FLAGS += --name=$(NAME)
+	SYNCBASE_FLAGS += --name=$(NAME)
 else
 	# It turns out that the other syncbases need to be mounted too.
 	# If not, it looks like they won't sync values to each other.
-	ETHER_FLAGS += --name=foo$(ANDROID)
+	SYNCBASE_FLAGS += --name=foo$(ANDROID)
 endif
 
 else
-	ETHER_BUILD_DIR := $(ETHER_DIR)/gen/mojo/linux_amd64
-	export SYNCBASE_SERVER_URL := file://$(ETHER_BUILD_DIR)/syncbase_server.mojo
-
-	ETHER_FLAGS += --root-dir=$(PWD)/tmp/syncbase_data --v23.credentials=$(PWD)/creds
+	SYNCBASE_MOJO_BIN_DIR := packages/syncbase/mojo_services/linux_amd64
+	SYNCBASE_FLAGS += --root-dir=$(PWD)/tmp/syncbase_data --v23.credentials=$(PWD)/creds
 endif
 
-MOJO_SHELL_FLAGS := --enable-multiprocess --args-for="$(SYNCBASE_SERVER_URL) $(ETHER_FLAGS)"
+export SYNCBASE_SERVER_URL := https://mojo.v.io/syncbase_server.mojo
+MOJO_SHELL_FLAGS := --enable-multiprocess --map-origin="https://mojo.v.io=$(SYNCBASE_MOJO_BIN_DIR)" --args-for="$(SYNCBASE_SERVER_URL) $(SYNCBASE_FLAGS)"
 
 ifdef ANDROID
-	MOJO_SHELL_FLAGS += --map-origin="https://mojo.v.io/=$(ETHER_BUILD_DIR)" --target-device $(DEVICE_ID)
+	MOJO_SHELL_FLAGS +=  --target-device $(DEVICE_ID)
 endif
 
 # Runs a sky app.

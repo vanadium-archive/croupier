@@ -23,7 +23,7 @@ import 'util.dart' as util;
 import 'dart:async';
 import 'dart:convert' show UTF8, JSON;
 
-import 'package:ether/syncbase_client.dart'
+import 'package:syncbase/syncbase_client.dart'
     show SyncbaseNoSqlDatabase, SyncbaseTable, WatchChange, WatchChangeTypes;
 
 enum SimulLevel { TURN_BASED, INDEPENDENT, DEPENDENT }

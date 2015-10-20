@@ -21,8 +21,8 @@ import 'util.dart' as util;
 import 'dart:async';
 import 'dart:convert' show UTF8, JSON;
 
-import 'package:ether/syncbase_client.dart' as sc;
-import 'package:ether/src/naming/util.dart' as naming;
+import 'package:syncbase/syncbase_client.dart' as sc;
+import 'package:syncbase/src/naming/util.dart' as naming;
 
 class SettingsManager {
   final util.updateCallbackT updateCallback;
