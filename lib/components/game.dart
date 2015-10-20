@@ -7,6 +7,7 @@ library game_component;
 import '../logic/card.dart' as logic_card;
 import '../logic/game/game.dart' show Game, GameType;
 import '../logic/hearts/hearts.dart' show HeartsGame, HeartsPhase, HeartsType;
+import '../logic/solitaire/solitaire.dart' show SolitaireGame, SolitairePhase;
 import 'board.dart' show HeartsBoard;
 import 'card_collection.dart'
     show CardCollectionComponent, DropType, Orientation, AcceptCb;
@@ -16,6 +17,7 @@ import 'package:flutter/material.dart' as material;
 
 part 'hearts/hearts.part.dart';
 part 'proto/proto.part.dart';
+part 'solitaire/solitaire.part.dart';
 
 typedef void NoArgCb();
 
@@ -68,6 +70,9 @@ GameComponent createGameComponent(
           width: width, height: height);
     case GameType.Hearts:
       return new HeartsGameComponent(navigator, game, gameEndCallback,
+          width: width, height: height);
+    case GameType.Solitaire:
+      return new SolitaireGameComponent(navigator, game, gameEndCallback,
           width: width, height: height);
     default:
       // We're probably not ready to serve the other games yet.

@@ -8,7 +8,7 @@ CROUPIER_DIR := $(shell pwd)
 SHELL := /bin/bash -euo pipefail
 
 # Flags for Syncbase service running as Mojo service.
-ETHER_FLAGS := --v=5
+ETHER_FLAGS := --v=1
 
 ifdef ANDROID
 	# Parse the adb devices output to obtain the correct device id.

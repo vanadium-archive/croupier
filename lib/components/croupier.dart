@@ -106,7 +106,11 @@ class CroupierComponentState extends State<CroupierComponent> {
                       logic_croupier.CroupierState.PlayGame,
                       logic_game.GameType.Hearts)),
               new FlatButton(child: new Text('Poker')),
-              new FlatButton(child: new Text('Solitaire'))
+              new FlatButton(
+                  child: new Text('Solitaire'),
+                  onPressed: makeSetStateCallback(
+                      logic_croupier.CroupierState.PlayGame,
+                      logic_game.GameType.Solitaire)),
             ], direction: FlexDirection.vertical));
       case logic_croupier.CroupierState.AwaitGame:
         return null; // in which players wait for game invitations to arrive.

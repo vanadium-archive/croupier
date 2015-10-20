@@ -88,7 +88,7 @@ class HeartsCommand extends GameCommand {
     // logic.
     HeartsGame game = g as HeartsGame;
 
-    print("HeartsCommand is executing: ${data}");
+    print("HeartsCommand is checking: ${data}");
     List<String> parts = data.split(":");
     switch (phase) {
       case "Deal":
