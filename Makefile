@@ -141,14 +141,10 @@ endif
 # would not run in a stand-alone VM. We will need to add mojo_test eventually.
 .PHONY: test
 test: packages
-	# Protect src/syncbase/log_writer.dart
-	mv lib/src/syncbase/log_writer.dart lib/src/syncbase/log_writer.dart.backup
-	mv lib/src/syncbase/settings_manager.dart lib/src/syncbase/settings_manager.dart.backup
-	cp lib/src/mocks/log_writer.dart lib/src/syncbase/
-	cp lib/src/mocks/settings_manager.dart lib/src/syncbase/
-	pub run test -r expanded $(DART_TEST_FILES) || (mv lib/src/syncbase/log_writer.dart.backup lib/src/syncbase/log_writer.dart && exit 1)
-	mv lib/src/syncbase/log_writer.dart.backup lib/src/syncbase/log_writer.dart
-	mv lib/src/syncbase/settings_manager.dart.backup lib/src/syncbase/settings_manager.dart
+	# Mock the syncbase implementations and unmock regardless of the test outcome.
+	$(MAKE) mock
+	pub run test -r expanded $(DART_TEST_FILES) || ($(MAKE) unmock && exit 1)
+	$(MAKE) unmock
 
 .PHONY: clean
 clean:

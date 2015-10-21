@@ -54,7 +54,7 @@ class CroupierComponentState extends State<CroupierComponent> {
   }
 
   Widget build(BuildContext context) {
-    return new SizeObserver(callback: sizeChanged, child: _buildHelper());
+    return new SizeObserver(onSizeChanged: sizeChanged, child: _buildHelper());
   }
 
   Widget _buildHelper() {

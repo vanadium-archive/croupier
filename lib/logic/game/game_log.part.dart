@@ -9,8 +9,7 @@ abstract class GameLog {
   List<GameCommand> log = new List<GameCommand>();
   // This list is normally empty, but may grow if multiple commands arrive.
   List<GameCommand> pendingCommands = new List<GameCommand>();
-  bool hasFired = false;
-  //int position = 0;
+  bool hasFired = false; // if true, halts processing of later pendingCommands
 
   void setGame(Game g) {
     this.game = g;
@@ -44,7 +43,7 @@ abstract class GameLog {
 
   void _updateAndRun(GameCommand newCmd) {
     log.add(newCmd);
-    if (pendingCommands[0] == newCmd) {
+    if (pendingCommands.length > 0 && pendingCommands[0] == newCmd) {
       pendingCommands.removeAt(0);
       hasFired = false;
     }

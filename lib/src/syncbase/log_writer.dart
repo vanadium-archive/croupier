@@ -161,7 +161,9 @@ class LogWriter {
 
   // Helper that handles a proposal update for the associatedUser.
   Future _receiveProposal(String key, String proposalData) async {
-    assert(inProposalMode);
+    // If this is a separate device, it may not be in proposal mode yet.
+    // Set to be in proposal mode now.
+    inProposalMode = true;
 
     // Let us update our proposal map.
     proposalsKnown[key] = proposalData;
