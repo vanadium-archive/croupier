@@ -1,0 +1,127 @@
+Deal|classic d9:classic cj:classic hj:classic s2:classic hq:classic c10:classic h2:classic d5:classic sq:classic c5:classic s6:classic d1:classic dj:classic c8:classic s10:classic sj:classic h10:classic d10:classic h3:classic d2:classic h1:classic s1:classic c3:classic s9:classic ck:classic hk:classic s8:classic sk:classic cq:classic d4:classic c6:classic d3:classic s4:classic c2:classic h4:classic s7:classic c7:classic d8:classic s3:classic d6:classic h9:classic h8:classic h6:classic s5:classic dq:classic c4:classic dk:classic c1:classic h5:classic c9:classic h7:classic d7:END
+Move|classic h1:0:END
+Flip|5:END
+Draw|END
+Move|classic c10:14:END
+Move|classic d9:14:END
+Flip|2:END
+Move|classic sk:13:END
+Move|classic hq:13:END
+Flip|2:END
+Flip|6:END
+Move|classic s8:14:END
+Flip|6:END
+Move|classic cq:19:END
+Move|classic hj:19:END
+Flip|1:END
+Move|classic cj:13:END
+Move|classic hk:14:END
+Flip|6:END
+Draw|END
+Move|classic d4:16:END
+Draw|END
+Draw|END
+Draw|END
+Draw|END
+Draw|END
+Draw|END
+Draw|END
+Draw|END
+Draw|END
+Move|classic s3:16:END
+Move|classic d2:16:END
+Flip|5:END
+Move|classic s2:18:END
+Move|classic ck:15:END
+Flip|6:END
+Move|classic d8:19:END
+Move|classic c7:19:END
+Draw|END
+Move|classic d6:19:END
+Move|classic c5:19:END
+Flip|3:END
+Draw|END
+Move|classic h9:17:END
+Draw|END
+Draw|END
+Draw|END
+Draw|END
+Move|classic dq:15:END
+Draw|END
+Draw|END
+Draw|END
+Move|classic c1:1:END
+Draw|END
+Draw|END
+Draw|END
+Move|classic h7:14:END
+Draw|END
+Draw|END
+Draw|END
+Move|classic c6:14:END
+Draw|END
+Draw|END
+Draw|END
+Move|classic c2:1:END
+Draw|END
+Draw|END
+Draw|END
+Draw|END
+Draw|END
+Draw|END
+Draw|END
+Draw|END
+Move|classic h5:14:END
+Draw|END
+Draw|END
+Draw|END
+Draw|END
+Draw|END
+Move|classic s4:14:END
+Move|classic h3:14:END
+Flip|5:END
+Move|classic s9:18:END
+Flip|6:END
+Move|classic c3:1:END
+Flip|6:END
+Move|classic s1:3:END
+Draw|END
+Draw|END
+Draw|END
+Draw|END
+Draw|END
+Draw|END
+Draw|END
+Move|classic dk:19:END
+Move|classic sq:19:END
+Flip|3:END
+Move|classic c4:1:END
+Move|classic c4:16:END
+Draw|END
+Move|classic d10:13:END
+Flip|5:END
+Move|classic c9:18:END
+Draw|END
+Draw|END
+Draw|END
+Move|classic s2:3:END
+Move|classic h3:16:END
+Move|classic h3:14:END
+Draw|END
+Draw|END
+Draw|END
+Move|classic h8:18:END
+Move|classic s7:18:END
+Draw|END
+Move|classic h6:18:END
+Draw|END
+Move|classic s5:18:END
+Draw|END
+Draw|END
+Draw|END
+Move|classic d4:18:END
+Move|classic c4:1:END
+Move|classic c5:1:END
+Move|classic s5:13:END
+Draw|END
+Draw|END

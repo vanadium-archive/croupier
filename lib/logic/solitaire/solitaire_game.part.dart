@@ -23,17 +23,6 @@ class SolitaireGame extends Game {
     _phase = other;
   }
 
-  @override
-  void set playerNumber(int other) {
-    // TODO(alexfandrianto): Do we still need this?
-    // The switch button requires us to change the current player.
-    // Since the log writer has a notion of the associated user, we have to
-    // change that too.
-    super.playerNumber = other;
-    SolitaireLog hl = this.gamelog;
-    hl.logWriter.associatedUser = other;
-  }
-
   SolitaireGame(int playerNumber)
       : super.create(GameType.Solitaire, new SolitaireLog(), playerNumber, NUM_PILES) {
     resetGame();
@@ -110,6 +99,79 @@ class SolitaireGame extends Game {
   // UI Callback: Flip
   void flipCardUI(int index) {
     gamelog.add(new SolitaireCommand.flip(index));
+  }
+
+  // UI Callback: Cheat UI
+  void cheatUI() {
+    if (this.isGameWon) {
+      return;
+    }
+
+    // First, determine the suits present on the ACES pile.
+    // Try to preserve this order.
+    // Further, we need to know the next index (minLen) we're cheating with.
+    List<String> suits = new List<String>(4);
+    Set<String> remainingSuits = new Set<String>.from(<String>['c', 'd', 'h', 's']);
+    int minLen = null;
+    for (int i = 0; i < 4; i++) {
+      int len = cardCollections[OFFSET_ACES + i].length;
+
+      if (minLen == null || len < minLen) {
+        minLen = len;
+      }
+
+      if (len > 0) {
+        suits[i] = getCardSuit(cardCollections[OFFSET_ACES + i][0]);
+        remainingSuits.remove(suits[i]);
+      }
+    }
+
+    if (remainingSuits.length != 0) {
+      for (int i = 0; i < 4; i++) {
+        if (suits[i] == null) {
+          suits[i] = remainingSuits.first;
+          remainingSuits.remove(suits[i]);
+        }
+      }
+    }
+
+    // With all suits assigned, and the minLen known, we know which cards to pull.
+    for (int i = 0; i < 4; i++) {
+      List<Card> cards = cardCollections[OFFSET_ACES + i];
+
+      if (cards.length == minLen) {
+        // Let us pull a card from either the down cards, up cards, or deck.
+        // Note: If we pull from up cards, the game may not be in a valid state,
+        // but this is okay since we are cheating.
+
+        int index_offset;
+        switch(suits[i]) {
+          case 'c':
+            index_offset = 0;
+            break;
+          case 'd':
+            index_offset = 13;
+            break;
+          case 'h':
+            index_offset = 26;
+            break;
+          case 's':
+            index_offset = 39;
+            break;
+          default:
+            print('the suit was ${suits[i]}');
+            assert(false);
+        }
+        Card c = Card.All[index_offset + minLen];
+        int pileIndex = findCard(c);
+
+        cardCollections[pileIndex].remove(c);
+        cards.add(c);
+      }
+    }
+
+    // After cheating, trigger events.
+    triggerEvents();
   }
 
   // Overridden from Game for Solitaire-specific logic:

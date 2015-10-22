@@ -1,0 +1,157 @@
+Deal|classic d7:classic c7:classic h5:classic s7:classic d2:classic c9:classic h10:classic sj:classic s1:classic c2:classic c4:classic ck:classic s4:classic s5:classic h3:classic dj:classic hq:classic h2:classic h7:classic s2:classic c6:classic h9:classic d5:classic c1:classic c10:classic c3:classic h6:classic s6:classic cq:classic sk:classic d1:classic dk:classic d8:classic sq:classic d6:classic c5:classic hk:classic d4:classic d3:classic h4:classic h8:classic c8:classic d9:classic s9:classic cj:classic dq:classic s3:classic hj:classic s8:classic s10:classic d10:classic h1:END
+Move|classic c6:13:END
+Flip|5:END
+Move|classic c2:17:END
+Flip|3:END
+Move|classic s1:0:END
+Move|classic s2:0:END
+Flip|5:END
+Flip|3:END
+Move|classic s6:18:END
+Flip|6:END
+Move|classic h5:13:END
+Flip|1:END
+Move|classic h6:14:END
+Flip|6:END
+Draw|END
+Draw|END
+Draw|END
+Move|classic d1:1:END
+Draw|END
+Draw|END
+Move|classic d8:15:END
+Move|classic c7:15:END
+Draw|END
+Draw|END
+Draw|END
+Move|classic c5:15:END
+Draw|END
+Draw|END
+Move|classic d4:15:END
+Move|classic c3:15:END
+Flip|6:END
+Draw|END
+Draw|END
+Draw|END
+Draw|END
+Draw|END
+Move|classic d9:19:END
+Move|classic c8:19:END
+Move|classic h7:19:END
+Flip|5:END
+Move|classic h2:15:END
+Flip|5:END
+Move|classic sj:18:END
+Flip|3:END
+Move|classic c9:16:END
+Flip|2:END
+Move|classic d2:1:END
+Flip|2:END
+Move|classic h10:18:END
+Draw|END
+Draw|END
+Draw|END
+Draw|END
+Move|classic s3:0:END
+Draw|END
+Draw|END
+Draw|END
+Draw|END
+Draw|END
+Move|classic h1:2:END
+Move|classic h2:2:END
+Draw|END
+Draw|END
+Draw|END
+Move|classic sk:14:END
+Move|classic hq:14:END
+Flip|5:END
+Move|classic c10:18:END
+Flip|6:END
+Move|classic c1:3:END
+Flip|6:END
+Move|classic d5:18:END
+Flip|6:END
+Draw|END
+Move|classic dk:16:END
+Move|classic cq:16:END
+Move|classic dj:16:END
+Move|classic c2:3:END
+Move|classic h3:2:END
+Flip|4:END
+Move|classic c3:3:END
+Draw|END
+Draw|END
+Move|classic d6:15:END
+Move|classic s5:15:END
+Flip|4:END
+Move|classic s4:0:END
+Flip|4:END
+Move|classic ck:18:END
+Flip|4:END
+Move|classic c4:3:END
+Move|classic ck:17:END
+Move|classic dk:18:END
+Move|classic hq:17:END
+Draw|END
+Move|classic hk:16:END
+Move|classic sq:16:END
+Draw|END
+Move|classic d3:1:END
+Draw|END
+Move|classic h4:15:END
+Move|classic h4:2:END
+Draw|END
+Draw|END
+Draw|END
+Draw|END
+Move|classic dq:14:END
+Move|classic cj:14:END
+Move|classic h4:15:END
+Move|classic c4:13:END
+Move|classic h4:2:END
+Move|classic c4:3:END
+Draw|END
+Move|classic hj:16:END
+Draw|END
+Move|classic s8:19:END
+Draw|END
+Move|classic s10:16:END
+Move|classic s5:0:END
+Move|classic d4:1:END
+Move|classic h5:2:END
+Move|classic c5:3:END
+Move|classic d5:1:END
+Move|classic c6:3:END
+Move|classic d6:1:END
+Move|classic h6:2:END
+Move|classic s6:0:END
+Move|classic d7:1:END
+Move|classic s7:0:END
+Move|classic c7:3:END
+Move|classic h7:2:END
+Move|classic d8:1:END
+Move|classic c8:3:END
+Move|classic s8:0:END
+Move|classic s9:0:END
+Move|classic h8:2:END
+Draw|END
+Move|classic d9:1:END
+Move|classic d10:1:END
+Move|classic h9:2:END
+Move|classic c9:3:END
+Move|classic c10:3:END
+Move|classic s10:0:END
+Move|classic h10:2:END
+Move|classic hj:2:END
+Move|classic dj:1:END
+Move|classic cj:3:END
+Move|classic sj:0:END
+Move|classic dq:1:END
+Move|classic hq:2:END
+Move|classic sq:0:END
+Move|classic sk:0:END
+Move|classic cq:3:END
+Move|classic ck:3:END
+Move|classic hk:2:END
+Move|classic dk:1:END

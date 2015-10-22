@@ -56,7 +56,7 @@ class SolitaireCommand extends GameCommand {
     // logic.
     SolitaireGame game = g as SolitaireGame;
 
-    print("SolitaireCommand is checking: ${data}");
+    print("SolitaireCommand is checking: ${command}");
     List<String> parts = data.split(":");
     switch (phase) {
       case "Deal":
@@ -71,6 +71,9 @@ class SolitaireCommand extends GameCommand {
         int targetId = int.parse(parts[1]);
         int sourceId = game.findCard(c);
         if (sourceId == -1) {
+          return false;
+        }
+        if (targetId < 0 || targetId >= game.cardCollections.length) {
           return false;
         }
         List<Card> source = game.cardCollections[sourceId];
@@ -91,32 +94,21 @@ class SolitaireCommand extends GameCommand {
         List<Card> drawPile = game.cardCollections[SolitaireGame.OFFSET_DRAW];
         List<Card> discardPile = game.cardCollections[SolitaireGame.OFFSET_DISCARD];
 
-        if (drawPile.length != 0) {
-          return this.transferCheck(drawPile, discardPile, drawPile[0]);
-        } else if (discardPile.length != 0) {
-          return this.transferCheck(discardPile, drawPile, discardPile[0]);
-        }
-        return false;
+        return drawPile.length > 0 || discardPile.length > 0;
       case "Flip":
         if (game.phase != SolitairePhase.Play) {
           return false;
         }
 
         int flipId = int.parse(parts[0]);
-        if (flipId < 0 || flipId > 7) {
+        if (flipId < 0 || flipId >= 7) {
           return false;
         }
 
         List<Card> flipSource = game.cardCollections[SolitaireGame.OFFSET_DOWN + flipId];
         List<Card> flipDest = game.cardCollections[SolitaireGame.OFFSET_UP + flipId];
 
-        if (flipDest.length != 0) {
-          return false;
-        }
-        if (flipSource.length == 0) {
-          return false;
-        }
-        return this.transferCheck(flipSource, flipDest, flipSource[flipSource.length - 1]);
+        return flipDest.length == 0 && flipSource.length > 0;
       default:
         print(data);
         assert(false); // How could this have happened?
@@ -128,7 +120,7 @@ class SolitaireCommand extends GameCommand {
   void execute(Game g) {
     SolitaireGame game = g as SolitaireGame;
 
-    print("SolitaireCommand is executing: ${data}");
+    print("SolitaireCommand is executing: ${command}");
     List<String> parts = data.split(":");
     switch (phase) {
       case "Deal":
@@ -171,6 +163,10 @@ class SolitaireCommand extends GameCommand {
           throw new StateError(
             "Cannot move unknown card ${c.toString()}");
         }
+        if (targetId < 0 || targetId >= game.cardCollections.length) {
+          throw new StateError(
+            "Cannot move to unknown pile ${targetId}");
+        }
         List<Card> source = game.cardCollections[sourceId];
         List<Card> dest = game.cardCollections[targetId];
 
@@ -206,7 +202,7 @@ class SolitaireCommand extends GameCommand {
         }
 
         int flipId = int.parse(parts[0]);
-        if (flipId < 0 || flipId > 7) {
+        if (flipId < 0 || flipId >= 7) {
           throw new StateError(
             "Cannot process flip command for index ${flipId}");
         }

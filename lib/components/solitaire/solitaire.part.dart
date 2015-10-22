@@ -21,6 +21,13 @@ class SolitaireGameComponentState extends GameComponentState<SolitaireGameCompon
         child: buildSolitaire());
   }
 
+  void _cheatCallback() {
+    setState(() {
+      SolitaireGame game = config.game as SolitaireGame;
+      game.cheatUI();
+    });
+  }
+
   void _endRoundDebugCallback() {
     setState(() {
       SolitaireGame game = config.game as SolitaireGame;
@@ -32,6 +39,8 @@ class SolitaireGameComponentState extends GameComponentState<SolitaireGameCompon
       width: config.width,
       child: new Flex([
         new Flexible(flex: 1, child: new Text('P${config.game.playerNumber}')),
+        new Flexible(
+            flex: 5, child: _makeButton('Cheat', _cheatCallback)),
         new Flexible(
             flex: 5, child: _makeButton('End Round', _endRoundDebugCallback)),
         new Flexible(flex: 4, child: _makeButton('Quit', _quitGameCallback))
