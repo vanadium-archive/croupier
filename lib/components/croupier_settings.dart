@@ -93,81 +93,88 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
 
   void _handlePressed(String type) {
     var capType = _capitalize(type);
-    showDialog(config.navigator, (NavigatorState navigator) {
-      switch (dialogTypes[type]) {
-        case DialogType.Text:
-          return new Dialog(
-              title: new Text(capType),
-              content: new Input(
-                  key: globalKeys[type],
-                  placeholder: capType,
-                  initialValue: config.settings.getStringValue(type),
-                  keyboardType: KeyboardType.TEXT,
-                  onChanged: _makeHandleChanged(type)), onDismiss: () {
-            navigator.pop();
-          }, actions: [
-            new FlatButton(child: new Text('CANCEL'), onPressed: () {
-              navigator.pop();
-            }),
-            new FlatButton(child: new Text('SAVE'), onPressed: () {
-              navigator.pop(_tempData[type]);
-            }),
-          ]);
-        case DialogType.ColorPicker:
-          List<Widget> flexColors = new List<Widget>();
-          List<int> colors = <int>[
-            0xcfefefef,
-            0xcfff3333,
-            0xcf33ff33,
-            0xcf3333ff,
-            0xcf101010,
-            0xcf33ffff,
-            0xcfff33ff,
-            0xcfffff33,
-          ];
-          for (int i = 0; i < colors.length; i++) {
-            int c = colors[i];
-            flexColors.add(_makeColoredRectangle(c, "", () {
-              // TODO(alexfandrianto): Remove this hack-y subtraction once the
-              // Dart + Android issue with int.parse is fixed.
-              navigator.pop("${c - 0xcf000000}");
-            }));
-          }
 
-          return new Dialog(
-              title: new Text(capType),
-              content: new Grid(flexColors, maxChildExtent: 75.0),
-              onDismiss: () {
-            navigator.pop();
-          }, actions: [
-            new FlatButton(child: new Text('CANCEL'), onPressed: () {
-              navigator.pop();
-            })
-          ]);
-        case DialogType.ImagePicker:
-          List<Widget> flexAvatars = new List<Widget>();
-          for (int i = 0; i < RandomSettings.avatars.length; i++) {
-            String avatar = RandomSettings.avatars[i];
-            flexAvatars.add(_makeImageButton(avatar, () {
-              navigator.pop(avatar);
-            }));
-          }
+    Dialog dialog;
+    NavigatorState navigator = Navigator.of(context);
 
-          return new Dialog(
-              title: new Text(capType),
-              content: new Grid(flexAvatars, maxChildExtent: 75.0),
-              onDismiss: () {
+    switch (dialogTypes[type]) {
+      case DialogType.Text:
+        dialog = new Dialog(
+            title: new Text(capType),
+            content: new Input(
+                key: globalKeys[type],
+                placeholder: capType,
+                initialValue: config.settings.getStringValue(type),
+                keyboardType: KeyboardType.TEXT,
+                onChanged: _makeHandleChanged(type)), onDismiss: () {
+          navigator.pop();
+        }, actions: [
+          new FlatButton(child: new Text('CANCEL'), onPressed: () {
             navigator.pop();
-          }, actions: [
-            new FlatButton(child: new Text('CANCEL'), onPressed: () {
-              navigator.pop();
-            })
-          ]);
-        default:
-          assert(false);
-          return null;
-      }
-    }).then((String data) => _persist(type, data));
+          }),
+          new FlatButton(child: new Text('SAVE'), onPressed: () {
+            navigator.pop(_tempData[type]);
+          }),
+        ]);
+        break;
+      case DialogType.ColorPicker:
+        List<Widget> flexColors = new List<Widget>();
+        List<int> colors = <int>[
+          0xcfefefef,
+          0xcfff3333,
+          0xcf33ff33,
+          0xcf3333ff,
+          0xcf101010,
+          0xcf33ffff,
+          0xcfff33ff,
+          0xcfffff33,
+        ];
+        for (int i = 0; i < colors.length; i++) {
+          int c = colors[i];
+          flexColors.add(_makeColoredRectangle(c, "", () {
+            // TODO(alexfandrianto): Remove this hack-y subtraction once the
+            // Dart + Android issue with int.parse is fixed.
+            navigator.pop("${c - 0xcf000000}");
+          }));
+        }
+
+        dialog = new Dialog(
+            title: new Text(capType),
+            content: new Grid(flexColors, maxChildExtent: 75.0),
+            onDismiss: () {
+          navigator.pop();
+        }, actions: [
+          new FlatButton(child: new Text('CANCEL'), onPressed: () {
+            navigator.pop();
+          })
+        ]);
+        break;
+      case DialogType.ImagePicker:
+        List<Widget> flexAvatars = new List<Widget>();
+        for (int i = 0; i < RandomSettings.avatars.length; i++) {
+          String avatar = RandomSettings.avatars[i];
+          flexAvatars.add(_makeImageButton(avatar, () {
+            navigator.pop(avatar);
+          }));
+        }
+
+        dialog = new Dialog(
+            title: new Text(capType),
+            content: new Grid(flexAvatars, maxChildExtent: 75.0),
+            onDismiss: () {
+          navigator.pop();
+        }, actions: [
+          new FlatButton(child: new Text('CANCEL'), onPressed: () {
+            navigator.pop();
+          })
+        ]);
+        break;
+      default:
+        assert(false);
+        return null;
+    }
+
+    showDialog(context: context, child: dialog).then((String data) => _persist(type, data));
   }
 
   void _persist(String type, String data) {
