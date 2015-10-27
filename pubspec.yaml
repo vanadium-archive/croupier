@@ -1,6 +1,11 @@
 name: croupier
 dependencies:
+  discovery: ">=0.0.0 <0.1.0"
   syncbase: ">=0.0.0 <0.1.0"
   flutter: ">=0.0.3 <0.1.0"
   sky_tools: any
   test: any
+
+dependency_overrides:
+  discovery:
+    path: ../../mojo/discovery

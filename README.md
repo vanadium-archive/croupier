@@ -35,7 +35,7 @@ You may need to manually download a specific version of Dart. If so, visit their
 ## Vanadium
 
 A Vanadium installation is expected, since Croupier also depends on the
-https://github.com/vanadium/mojo.syncbase project.
+https://github.com/vanadium/mojo.discovery project.
 
 # Running Croupier
 
@@ -78,6 +78,12 @@ ANDROID=1 make start
 
 Alternatively, use a different integer. Since the first device creates a syncgroup,
 it is recommended that you wait a short duration before starting up any other devices.
+
+Note: Some devices may limit the number of characters the `adb connect` command
+accepts. If this is the case, the app will not launch under `make start`. One
+workaround is to delete some non-critical lines in the Makefile, such as
+`--checked` and `--free-host-ports`.
+See https://github.com/vanadium/issues/issues/831
 
 ## Deleting Mojo Shell
 

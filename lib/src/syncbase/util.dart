@@ -16,7 +16,7 @@ const tableNameSettingsUser = 'table_settings_personal';
 // https://github.com/vanadium/issues/issues/782
 const mtAddr = '/192.168.86.254:8101';
 const sgPrefix = 'croupier/%%sync';
-const sgName = 'discovery';
+const sgSuffix = 'discovery';
 
 typedef void updateCallbackT(String key, String value);
 

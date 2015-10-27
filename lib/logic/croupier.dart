@@ -32,12 +32,8 @@ class Croupier {
     settings_manager = new SettingsManager(_updateSettingsEveryoneCb);
 
     settings_manager.load().then((String csString) {
-      if (csString == null) {
-        settings = new CroupierSettings.random();
-        settings_manager.save(settings.userID, settings.toJSONString());
-      } else {
-        settings = new CroupierSettings.fromJSONString(csString);
-      }
+      settings = new CroupierSettings.fromJSONString(csString);
+      settings_manager.createSyncgroup(); // don't wait for this future.
     });
   }
 
@@ -64,16 +60,31 @@ class Croupier {
         assert(data == null);
         break;
       case CroupierState.ChooseGame:
+        if (data == null) {
+          // Back button pressed.
+          break;
+        }
         // data should be the game id here.
         GameType gt = data as GameType;
         game = cg.createGame(gt, 0); // Start as player 0 of whatever game type.
         break;
       case CroupierState.AwaitGame:
+        // Note that if we were in await game, we must have been advertising.
+        settings_manager.stopAdvertiseSettings();
+
+        if (data == null) {
+          // Back button pressed.
+          break;
+        }
+
         // data would probably be the game id again.
         GameType gt = data as GameType;
         game = cg.createGame(gt, 0); // Start as player 0 of whatever game type.
         break;
       case CroupierState.ArrangePlayers:
+        // Note that if we were arranging players, we must have been scanning.
+        settings_manager.stopScanSettings();
+
         // data should be empty.
         // All rearrangements affect the Game's player number without changing app state.
         break;
@@ -88,8 +99,20 @@ class Croupier {
     // TODO(alexfandrianto): We may want to have a splash screen or something
     // when the user first loads the app. It takes a few seconds before the
     // Syncbase tables are created.
-    if (settings == null && nextState == CroupierState.Settings) {
+    if (settings == null) {
       return; // you can't switch till the settings are present.
+    }
+
+    // The nextState you are switching to may require some behind-the-scenes
+    // work.
+    switch (nextState) {
+      case CroupierState.ArrangePlayers:
+        settings_manager.scanSettings(); // don't wait for this future.
+        break;
+      case CroupierState.AwaitGame:
+        settings_manager.advertiseSettings(); // don't wait for this future.
+        break;
+      default:
     }
 
     state = nextState;

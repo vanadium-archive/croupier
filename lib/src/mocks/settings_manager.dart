@@ -25,4 +25,18 @@ class SettingsManager {
     _data["${userID}"] = data;
     return new Future(() => null);
   }
+
+  Future createSyncgroup() {
+    return new Future(() => null);
+  }
+
+  Future scanSettings () {
+    return new Future(() => null);
+  }
+  void stopScanSettings() {}
+
+  Future advertiseSettings () {
+    return new Future(() => null);
+  }
+  void stopAdvertiseSettings() {}
 }

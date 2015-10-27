@@ -4,10 +4,11 @@ DART_TEST_FILES := $(shell find test -name *.dart ! -name *.part.dart)
 
 # This section is used to setup the environment for running with mojo_shell.
 CROUPIER_DIR := $(shell pwd)
+DISCOVERY_DIR := $(JIRI_ROOT)/release/mojo/discovery
 SHELL := /bin/bash -euo pipefail
 
 # Flags for Syncbase service running as Mojo service.
-SYNCBASE_FLAGS := --v=1
+SYNCBASE_FLAGS := --v=0
 
 ifdef ANDROID
 	# Parse the adb devices output to obtain the correct device id.
@@ -20,6 +21,7 @@ endif
 ifdef ANDROID
 	MOJO_ANDROID_FLAGS := --android
 	SYNCBASE_MOJO_BIN_DIR := packages/syncbase/mojo_services/android
+	DISCOVERY_MOJO_BIN_DIR := $(DISCOVERY_DIR)/gen/mojo/android
 
 	# Location of mounttable on syncslides-alpha network.
 	MOUNTTABLE := /192.168.86.254:8101
@@ -47,11 +49,17 @@ endif
 
 else
 	SYNCBASE_MOJO_BIN_DIR := packages/syncbase/mojo_services/linux_amd64
+	DISCOVERY_MOJO_BIN_DIR := $(DISCOVERY_DIR)/gen/mojo/linux_amd64
 	SYNCBASE_FLAGS += --root-dir=$(PWD)/tmp/syncbase_data --v23.credentials=$(PWD)/creds
 endif
 
+# We should consider combining these URLs and hosting our *.mojo files.
+# https://github.com/vanadium/issues/issues/834
 export SYNCBASE_SERVER_URL := https://mojo.v.io/syncbase_server.mojo
-MOJO_SHELL_FLAGS := --enable-multiprocess --map-origin="https://mojo.v.io=$(SYNCBASE_MOJO_BIN_DIR)" --args-for="$(SYNCBASE_SERVER_URL) $(SYNCBASE_FLAGS)"
+export DISCOVERY_SERVER_URL := https://mojo2.v.io/discovery.mojo
+MOJO_SHELL_FLAGS := --enable-multiprocess \
+	--map-origin="https://mojo2.v.io=$(DISCOVERY_MOJO_BIN_DIR)" --args-for="$(DISCOVERY_SERVER_URL) host$(ANDROID) mdns" \
+	--map-origin="https://mojo.v.io=$(SYNCBASE_MOJO_BIN_DIR)" --args-for="$(SYNCBASE_SERVER_URL) $(SYNCBASE_FLAGS)"
 
 ifdef ANDROID
 	MOJO_SHELL_FLAGS +=  --target-device $(DEVICE_ID)

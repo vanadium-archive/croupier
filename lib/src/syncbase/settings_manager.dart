@@ -14,19 +14,23 @@
 /// In the background, these values will be synced.
 /// When setting up a syncgroup, the userIDs are very important.
 
-import '../../logic/croupier_settings.dart' as util;
+import '../../logic/croupier_settings.dart' show CroupierSettings;
 import 'croupier_client.dart' show CroupierClient;
+import 'discovery_client.dart' show DiscoveryClient;
 import 'util.dart' as util;
 
 import 'dart:async';
 import 'dart:convert' show UTF8, JSON;
 
+import 'package:discovery/discovery.dart' as discovery;
 import 'package:syncbase/syncbase_client.dart' as sc;
-import 'package:syncbase/src/naming/util.dart' as naming;
+//import 'package:syncbase/src/naming/util.dart' as naming;
 
 class SettingsManager {
   final util.updateCallbackT updateCallback;
   final CroupierClient _cc;
+
+  static final String discoverySettingsKey = "settings";
 
   sc.SyncbaseTable tb;
   sc.SyncbaseTable tbUser;
@@ -47,28 +51,28 @@ class SettingsManager {
         db.watch(util.tableNameSettings, '', await db.getResumeMarker());
     _startWatch(watchStream); // Don't wait for this future.
     _loadSettings(tb); // Don't wait for this future.
-
-    // Don't wait for this future either.
-    // TODO(alexfandrianto): This is a way to debug who is present in the syncgroup.
-    // This should be removed in the near future, once we are more certain about
-    // the syncgroups we have formed.
-    _joinOrCreateSyncgroup().then((var sg) {
-      new Timer.periodic(const Duration(seconds: 3), (Timer _) async {
-        Map<String, sc.SyncgroupMemberInfo> members = await sg.getMembers();
-        print("There are ${members.length} members.");
-        print(members);
-      });
-    });
   }
 
+  // Guaranteed to be called when the program starts.
+  // If no Croupier Settings exist, then random ones are created.
   Future<String> load([int userID]) async {
     util.log('SettingsManager.load');
     await _prepareSettingsTable();
 
+    String result;
     if (userID == null) {
-      return _tryReadData(tbUser, "settings");
+      result = await _tryReadData(tbUser, "settings");
+    } else {
+      result = await _tryReadData(tb, "${userID}");
     }
-    return _tryReadData(tb, "${userID}");
+    if (result == null) {
+      CroupierSettings settings = new CroupierSettings.random();
+      String jsonStr = settings.toJSONString();
+      await this.save(settings.userID, jsonStr);
+      return jsonStr;
+    }
+
+    return result;
   }
 
   Future<String> _tryReadData(sc.SyncbaseTable st, String rowkey) async {
@@ -119,6 +123,13 @@ class SettingsManager {
     }
   }
 
+  // Best called after load(), to ensure that there are settings in the table.
+  Future createSyncgroup() async {
+    CroupierSettings cs = await _getSettings();
+
+    _cc.createSyncgroup(_cc.makeSyncgroupName(await _syncSuffix()), util.tableNameSettings, prefix: "${cs.userID}");
+  }
+
   // When starting the settings manager, there may be settings already in the
   // store. Make sure to load those.
   Future _loadSettings(sc.SyncbaseTable tb) async {
@@ -127,44 +138,61 @@ class SettingsManager {
     });
   }
 
+  // TODO(alexfandrianto): It is possible that the more efficient way of
+  // scanning is to do it for only short bursts. In that case, we should call
+  // stopScanSettings a few seconds after starting it.
 
-  Future<sc.SyncbaseSyncgroup> _joinOrCreateSyncgroup() async {
-
-    sc.SyncbaseNoSqlDatabase db = await _cc.createDatabase();
-    String mtAddr = util.mtAddr;
-    String tableName = util.tableNameSettings;
-
-    var mtName = mtAddr;
-    var sgPrefix = naming.join(mtName, util.sgPrefix);
-    var sgName = naming.join(sgPrefix, util.sgName);
-    var sg = db.syncgroup(sgName);
-
-    print('SGNAME = $sgName');
-
-    var myInfo = sc.SyncbaseClient.syncgroupMemberInfo(syncPriority: 3);
-
-    try {
-      print('trying to join syncgroup');
-      await sg.join(myInfo);
-      print('syncgroup join success');
-    } catch (e) {
-      // Syncgroup does not exist.
-      print('syncgroup does not exist, creating it');
-
-      var sgSpec = sc.SyncbaseClient.syncgroupSpec(
-          // Sync the entire table.
-          [sc.SyncbaseClient.syncgroupPrefix(tableName, '')],
-          description: 'test syncgroup',
-          perms: util.openPerms,
-          mountTables: [mtName]);
-
-      print('SGSPEC = $sgSpec');
-
-      await sg.create(sgSpec, myInfo);
-      print('syncgroup create success');
-    }
-
-    return sg;
+  // Someone who is creating a game should scan for players who wish to join.
+  Future scanSettings() async {
+    SettingsScanHandler ssh = new SettingsScanHandler(_cc);
+    _cc.discoveryClient.scan(discoverySettingsKey, "CroupierSettings", ssh);
+  }
+  void stopScanSettings() {
+    _cc.discoveryClient.stopScan(discoverySettingsKey);
   }
 
+  // Someone who wants to join a game should advertise their presence.
+  Future advertiseSettings() async {
+    String suffix = await _syncSuffix();
+    _cc.discoveryClient.advertise(discoverySettingsKey, DiscoveryClient.serviceMaker(
+      interfaceName: "CroupierSettings",
+      addrs: <String>[_cc.makeSyncgroupName(suffix)]
+    ));
+  }
+
+  void stopAdvertiseSettings() {
+    _cc.discoveryClient.stopAdvertise(discoverySettingsKey);
+  }
+
+  Future<CroupierSettings> _getSettings() async {
+    String jsonSettings = await load();
+    return new CroupierSettings.fromJSONString(jsonSettings);
+  }
+
+  Future<String> _syncSuffix() async {
+    CroupierSettings cs = await _getSettings();
+
+    return "${util.sgSuffix}${cs.userID}";
+  }
+}
+
+// Implementation of the ScanHandler for Settings information.
+// Upon finding a settings advertiser, you want to join the syncgroup that
+// they're advertising.
+class SettingsScanHandler extends discovery.ScanHandler {
+  CroupierClient _cc;
+
+  SettingsScanHandler(this._cc);
+
+  void found(discovery.Service s) {
+    util.log("SettingsScanHandler Found ${s.instanceUuid} ${s.instanceName} ${s.addrs}");
+
+    _cc.joinSyncgroup(s.addrs[0]);
+  }
+  void lost(List<int> instanceId) {
+    util.log("SettingsScanHandler Lost ${instanceId}");
+
+    // TODO(alexfandrianto): Leave the syncgroup?
+    // Looks like leave isn't actually implemented, so we can't do this.
+  }
 }
