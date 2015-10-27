@@ -16,4 +16,7 @@ class ProtoLog extends GameLog {
     assert(false); // This game can't have conflicts.
     return current;
   }
+
+  @override
+  void close() {}
 }

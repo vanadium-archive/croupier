@@ -37,4 +37,9 @@ class HeartsLog extends GameLog {
     assert(false);
     return current;
   }
+
+  @override
+  void close() {
+    logWriter.close();
+  }
 }

@@ -101,4 +101,5 @@ abstract class GameLog {
   void addToLogCb(List<GameCommand> log, GameCommand newCommand);
   List<GameCommand> updateLogCb(
       List<GameCommand> current, List<GameCommand> other, int mismatchIndex);
+  void close();
 }

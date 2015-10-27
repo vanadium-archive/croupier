@@ -33,6 +33,8 @@ class LogWriter {
   final List<int> users;
   final CroupierClient _cc;
 
+  bool _watching = false;
+
   bool inProposalMode = false;
   Map<String, String> proposalsKnown; // Only updated via watch.
   int _associatedUser;
@@ -67,8 +69,18 @@ class LogWriter {
 
   Future _startWatch(Stream<WatchChange> watchStream) async {
     util.log('watching for changes...');
-    // This stream never really ends, so I guess we'll watch forever.
+    _watching = true;
+
+    // This stream never really ends, so it will watch forever.
+    // https://github.com/vanadium/issues/issues/833
+    // To break out of the watch handler, we can use the _watching flag.
+    // However, the for loop will only break on the watch update after _watching
+    // is set to false.
     await for (WatchChange wc in watchStream) {
+      if (!this._watching) {
+        break;
+      }
+
       assert(wc.tableName == util.tableNameLog);
       util.log('Watch Key: ${wc.rowKey}');
       util.log('Watch Value ${UTF8.decode(wc.valueBytes)}');
@@ -94,6 +106,10 @@ class LogWriter {
         this.updateCallback(key, value);
       }
     }
+  }
+
+  void close() {
+    this._watching = false;
   }
 
   Future write(SimulLevel s, String value) async {

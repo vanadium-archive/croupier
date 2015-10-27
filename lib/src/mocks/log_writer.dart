@@ -113,4 +113,6 @@ class LogWriter {
     }
     return true;
   }
+
+  void close() {}
 }

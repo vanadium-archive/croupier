@@ -122,7 +122,10 @@ class CroupierComponentState extends State<CroupierComponent> {
             child: component_game.createGameComponent(
                 config.navigator,
                 config.croupier.game,
-                makeSetStateCallback(logic_croupier.CroupierState.Welcome),
+                () {
+                  config.croupier.game.quit();
+                  makeSetStateCallback(logic_croupier.CroupierState.Welcome)();
+                },
                 width: screenSize.width,
                 height: screenSize.height));
       default:
