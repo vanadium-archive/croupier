@@ -9,10 +9,12 @@ class SolitaireGameComponent extends GameComponent {
       {double width, double height})
       : super(navigator, game, cb, width: width, height: height);
 
-  SolitaireGameComponentState createState() => new SolitaireGameComponentState();
+  SolitaireGameComponentState createState() =>
+      new SolitaireGameComponentState();
 }
 
-class SolitaireGameComponentState extends GameComponentState<SolitaireGameComponent> {
+class SolitaireGameComponentState
+    extends GameComponentState<SolitaireGameComponent> {
   @override
   Widget build(BuildContext context) {
     return new Container(
@@ -39,8 +41,7 @@ class SolitaireGameComponentState extends GameComponentState<SolitaireGameCompon
       width: config.width,
       child: new Flex([
         new Flexible(flex: 1, child: new Text('P${config.game.playerNumber}')),
-        new Flexible(
-            flex: 5, child: _makeButton('Cheat', _cheatCallback)),
+        new Flexible(flex: 5, child: _makeButton('Cheat', _cheatCallback)),
         new Flexible(
             flex: 5, child: _makeButton('End Round', _endRoundDebugCallback)),
         new Flexible(flex: 4, child: _makeButton('Quit', _quitGameCallback))
@@ -105,57 +106,95 @@ class SolitaireGameComponentState extends GameComponentState<SolitaireGameCompon
 
     List<Widget> row1 = new List<Widget>();
     row1.add(new Row([
-      new CardCollectionComponent(config.navigator, game.cardCollections[SolitaireGame.OFFSET_ACES + 0], true, Orientation.show1,
-        widthCard: cardSize, heightCard: cardSize,
+      new CardCollectionComponent(
+          config.navigator,
+          game.cardCollections[SolitaireGame.OFFSET_ACES + 0],
+          true,
+          Orientation.show1,
+          widthCard: cardSize,
+          heightCard: cardSize,
           acceptCallback: _moveCallback,
           dragChildren: true,
           acceptType: DropType.card),
-      new CardCollectionComponent(config.navigator, game.cardCollections[SolitaireGame.OFFSET_ACES + 1], true, Orientation.show1,
-        widthCard: cardSize, heightCard: cardSize,
+      new CardCollectionComponent(
+          config.navigator,
+          game.cardCollections[SolitaireGame.OFFSET_ACES + 1],
+          true,
+          Orientation.show1,
+          widthCard: cardSize,
+          heightCard: cardSize,
           acceptCallback: _moveCallback,
           dragChildren: true,
           acceptType: DropType.card),
-      new CardCollectionComponent(config.navigator, game.cardCollections[SolitaireGame.OFFSET_ACES + 2], true, Orientation.show1,
-        widthCard: cardSize, heightCard: cardSize,
+      new CardCollectionComponent(
+          config.navigator,
+          game.cardCollections[SolitaireGame.OFFSET_ACES + 2],
+          true,
+          Orientation.show1,
+          widthCard: cardSize,
+          heightCard: cardSize,
           acceptCallback: _moveCallback,
           dragChildren: true,
           acceptType: DropType.card),
-      new CardCollectionComponent(config.navigator, game.cardCollections[SolitaireGame.OFFSET_ACES + 3], true, Orientation.show1,
-        widthCard: cardSize, heightCard: cardSize,
+      new CardCollectionComponent(
+          config.navigator,
+          game.cardCollections[SolitaireGame.OFFSET_ACES + 3],
+          true,
+          Orientation.show1,
+          widthCard: cardSize,
+          heightCard: cardSize,
           acceptCallback: _moveCallback,
           dragChildren: true,
           acceptType: DropType.card),
     ]));
 
     row1.add(new Row([
-      new CardCollectionComponent(config.navigator, game.cardCollections[SolitaireGame.OFFSET_DISCARD], true, Orientation.show1,
-        widthCard: cardSize, heightCard: cardSize,
+      new CardCollectionComponent(
+          config.navigator,
+          game.cardCollections[SolitaireGame.OFFSET_DISCARD],
+          true,
+          Orientation.show1,
+          widthCard: cardSize,
+          heightCard: cardSize,
           dragChildren: true),
       new InkWell(
-        child: new CardCollectionComponent(config.navigator, game.cardCollections[SolitaireGame.OFFSET_DRAW], false, Orientation.show1,
-        widthCard: cardSize, heightCard: cardSize),
-        onTap: game.canDrawCard ? game.drawCardUI : null
-      ),
+          child: new CardCollectionComponent(
+              config.navigator,
+              game.cardCollections[SolitaireGame.OFFSET_DRAW],
+              false,
+              Orientation.show1,
+              widthCard: cardSize,
+              heightCard: cardSize),
+          onTap: game.canDrawCard ? game.drawCardUI : null),
     ]));
 
     List<Widget> row2 = new List<Widget>();
     for (int i = 0; i < 7; i++) {
-      row2.add(
-        new InkWell(
-          child: new CardCollectionComponent(config.navigator, game.cardCollections[SolitaireGame.OFFSET_DOWN + i], false, Orientation.show1, widthCard: cardSize, heightCard: cardSize),
-          onTap: game.cardCollections[SolitaireGame.OFFSET_UP + i].length == 0 ? _makeFlipCallback(i) : null
-        )
-      );
+      row2.add(new InkWell(
+          child: new CardCollectionComponent(
+              config.navigator,
+              game.cardCollections[SolitaireGame.OFFSET_DOWN + i],
+              false,
+              Orientation.show1,
+              widthCard: cardSize,
+              heightCard: cardSize),
+          onTap: game.cardCollections[SolitaireGame.OFFSET_UP + i].length == 0
+              ? _makeFlipCallback(i)
+              : null));
     }
     List<Widget> row3 = new List<Widget>();
     for (int i = 0; i < 7; i++) {
-      row3.add(
-        new CardCollectionComponent(config.navigator, game.cardCollections[SolitaireGame.OFFSET_UP + i], true, Orientation.vert,
-          widthCard: cardSize, heightCard: cardSize, height: config.height * 0.6,
+      row3.add(new CardCollectionComponent(
+          config.navigator,
+          game.cardCollections[SolitaireGame.OFFSET_UP + i],
+          true,
+          Orientation.vert,
+          widthCard: cardSize,
+          heightCard: cardSize,
+          height: config.height * 0.6,
           acceptCallback: _moveCallback,
           dragChildren: true,
-          acceptType: DropType.card)
-      );
+          acceptType: DropType.card));
     }
 
     return new Column([

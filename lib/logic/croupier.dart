@@ -22,7 +22,8 @@ class Croupier {
   CroupierState state;
   SettingsManager settings_manager;
   CroupierSettings settings; // null, but loaded asynchronously.
-  Map<String, CroupierSettings> settings_everyone; // empty, but loaded asynchronously
+  Map<String,
+      CroupierSettings> settings_everyone; // empty, but loaded asynchronously
   Game game; // null until chosen
   NoArgCb informUICb;
 

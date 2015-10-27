@@ -12,12 +12,9 @@ class CroupierProfileComponent extends StatelessComponent {
 
   Widget build(BuildContext context) {
     return new Container(
-      decoration: new BoxDecoration(
-        backgroundColor: new Color(settings.color)),
-        child: new Column([
-          new NetworkImage(src: settings.avatar),
-          new Text(settings.name)
-      ])
-    );
+        decoration:
+            new BoxDecoration(backgroundColor: new Color(settings.color)),
+        child: new Column(
+            [new NetworkImage(src: settings.avatar), new Text(settings.name)]));
   }
 }

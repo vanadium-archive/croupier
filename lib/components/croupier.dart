@@ -68,7 +68,8 @@ class CroupierComponentState extends State<CroupierComponent> {
                   child: new Text('Create Game'),
                   onPressed: makeSetStateCallback(
                       logic_croupier.CroupierState.ChooseGame)),
-              new FlatButton(child: new Text('Await Game'),
+              new FlatButton(
+                  child: new Text('Await Game'),
                   onPressed: makeSetStateCallback(
                       logic_croupier.CroupierState.AwaitGame)),
               new FlatButton(
@@ -107,8 +108,9 @@ class CroupierComponentState extends State<CroupierComponent> {
                       logic_croupier.CroupierState.ArrangePlayers,
                       logic_game.GameType.Solitaire)),
               new FlatButton(
-                child: new Text('Back'),
-                onPressed: makeSetStateCallback(logic_croupier.CroupierState.Welcome))
+                  child: new Text('Back'),
+                  onPressed: makeSetStateCallback(
+                      logic_croupier.CroupierState.Welcome))
             ], direction: FlexDirection.vertical));
       case logic_croupier.CroupierState.AwaitGame:
         // in which players wait for game invitations to arrive.
@@ -117,8 +119,9 @@ class CroupierComponentState extends State<CroupierComponent> {
             child: new Column([
               new Text("Waiting for invitations..."),
               new FlatButton(
-                child: new Text('Back'),
-                onPressed: makeSetStateCallback(logic_croupier.CroupierState.Welcome))
+                  child: new Text('Back'),
+                  onPressed: makeSetStateCallback(
+                      logic_croupier.CroupierState.Welcome))
             ]));
       case logic_croupier.CroupierState.ArrangePlayers:
         // A stateful view, first showing the players that can be invited.
@@ -134,23 +137,21 @@ class CroupierComponentState extends State<CroupierComponent> {
               new Grid(profileWidgets, maxChildExtent: 150.0),
               new FlatButton(
                   child: new Text('Start Game'),
-                  onPressed: makeSetStateCallback(logic_croupier.CroupierState.PlayGame)),
+                  onPressed: makeSetStateCallback(
+                      logic_croupier.CroupierState.PlayGame)),
               new FlatButton(
-                child: new Text('Back'),
-                onPressed: makeSetStateCallback(logic_croupier.CroupierState.ChooseGame))
-              ]));
+                  child: new Text('Back'),
+                  onPressed: makeSetStateCallback(
+                      logic_croupier.CroupierState.ChooseGame))
+            ]));
       case logic_croupier.CroupierState.PlayGame:
         return new Container(
             padding: new EdgeDims.only(top: ui.view.paddingTop),
             child: component_game.createGameComponent(
-                config.navigator,
-                config.croupier.game,
-                () {
-                  config.croupier.game.quit();
-                  makeSetStateCallback(logic_croupier.CroupierState.Welcome)();
-                },
-                width: screenSize.width,
-                height: screenSize.height));
+                config.navigator, config.croupier.game, () {
+              config.croupier.game.quit();
+              makeSetStateCallback(logic_croupier.CroupierState.Welcome)();
+            }, width: screenSize.width, height: screenSize.height));
       default:
         assert(false);
         return null;

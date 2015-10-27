@@ -34,7 +34,8 @@ class CroupierSettingsComponent extends StatefulComponent {
   final SaveDataCb saveDataCb;
   final NoArgCb backCb;
 
-  CroupierSettingsComponent(this.navigator, this.settings, this.saveDataCb, this.backCb);
+  CroupierSettingsComponent(
+      this.navigator, this.settings, this.saveDataCb, this.backCb);
 
   CroupierSettingsComponentState createState() =>
       new CroupierSettingsComponentState();
@@ -70,8 +71,8 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
   Widget build(BuildContext context) {
     List<Widget> w = new List<Widget>();
     w.add(_makeButtonRow(nameKey, new Text(config.settings.name)));
-    w.add(_makeButtonRow(colorKey,
-        _makeColoredRectangle(config.settings.color, "", null)));
+    w.add(_makeButtonRow(
+        colorKey, _makeColoredRectangle(config.settings.color, "", null)));
     w.add(_makeButtonRow(
         avatarKey, new NetworkImage(src: config.settings.avatar)));
 
@@ -140,8 +141,7 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
 
         dialog = new Dialog(
             title: new Text(capType),
-            content: new Grid(flexColors, maxChildExtent: 75.0),
-            onDismiss: () {
+            content: new Grid(flexColors, maxChildExtent: 75.0), onDismiss: () {
           navigator.pop();
         }, actions: [
           new FlatButton(child: new Text('CANCEL'), onPressed: () {
@@ -174,7 +174,8 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
         return null;
     }
 
-    showDialog(context: context, child: dialog).then((String data) => _persist(type, data));
+    showDialog(context: context, child: dialog)
+        .then((String data) => _persist(type, data));
   }
 
   void _persist(String type, String data) {
@@ -183,8 +184,7 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
     }
     setState(() {
       config.settings.setStringValue(type, data);
-      config.saveDataCb(config.settings.userID,
-          config.settings.toJSONString());
+      config.saveDataCb(config.settings.userID, config.settings.toJSONString());
     });
   }
 

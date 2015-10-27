@@ -30,13 +30,15 @@ class SettingsManager {
     return new Future(() => null);
   }
 
-  Future scanSettings () {
+  Future scanSettings() {
     return new Future(() => null);
   }
+
   void stopScanSettings() {}
 
-  Future advertiseSettings () {
+  Future advertiseSettings() {
     return new Future(() => null);
   }
+
   void stopAdvertiseSettings() {}
 }

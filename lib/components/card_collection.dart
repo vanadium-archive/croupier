@@ -296,10 +296,10 @@ class CardCollectionComponentState extends State<CardCollectionComponent> {
 
       if (config.dragChildren) {
         cardComponents.add(new Draggable(
-            navigator: config.navigator, child: c, data: c, feedback: new Opacity(
-              child: c,
-              opacity: 0.5
-            )));
+            navigator: config.navigator,
+            child: c,
+            data: c,
+            feedback: new Opacity(child: c, opacity: 0.5)));
       } else {
         cardComponents.add(c);
       }

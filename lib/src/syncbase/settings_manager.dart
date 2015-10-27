@@ -127,7 +127,9 @@ class SettingsManager {
   Future createSyncgroup() async {
     CroupierSettings cs = await _getSettings();
 
-    _cc.createSyncgroup(_cc.makeSyncgroupName(await _syncSuffix()), util.tableNameSettings, prefix: "${cs.userID}");
+    _cc.createSyncgroup(
+        _cc.makeSyncgroupName(await _syncSuffix()), util.tableNameSettings,
+        prefix: "${cs.userID}");
   }
 
   // When starting the settings manager, there may be settings already in the
@@ -147,6 +149,7 @@ class SettingsManager {
     SettingsScanHandler ssh = new SettingsScanHandler(_cc);
     _cc.discoveryClient.scan(discoverySettingsKey, "CroupierSettings", ssh);
   }
+
   void stopScanSettings() {
     _cc.discoveryClient.stopScan(discoverySettingsKey);
   }
@@ -154,10 +157,11 @@ class SettingsManager {
   // Someone who wants to join a game should advertise their presence.
   Future advertiseSettings() async {
     String suffix = await _syncSuffix();
-    _cc.discoveryClient.advertise(discoverySettingsKey, DiscoveryClient.serviceMaker(
-      interfaceName: "CroupierSettings",
-      addrs: <String>[_cc.makeSyncgroupName(suffix)]
-    ));
+    _cc.discoveryClient.advertise(
+        discoverySettingsKey,
+        DiscoveryClient.serviceMaker(
+            interfaceName: "CroupierSettings",
+            addrs: <String>[_cc.makeSyncgroupName(suffix)]));
   }
 
   void stopAdvertiseSettings() {
@@ -185,10 +189,12 @@ class SettingsScanHandler extends discovery.ScanHandler {
   SettingsScanHandler(this._cc);
 
   void found(discovery.Service s) {
-    util.log("SettingsScanHandler Found ${s.instanceUuid} ${s.instanceName} ${s.addrs}");
+    util.log(
+        "SettingsScanHandler Found ${s.instanceUuid} ${s.instanceName} ${s.addrs}");
 
     _cc.joinSyncgroup(s.addrs[0]);
   }
+
   void lost(List<int> instanceId) {
     util.log("SettingsScanHandler Lost ${instanceId}");
 

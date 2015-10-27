@@ -47,29 +47,23 @@ void main() {
       // 0 to 6 in each down pile
       // 1 in each up pile
       for (int i = 0; i < 4; i++) {
-        expect(
-          game.cardCollections[SolitaireGame.OFFSET_ACES + i].length,
-          equals(0),
-          reason: "Ace piles start empty");
+        expect(game.cardCollections[SolitaireGame.OFFSET_ACES + i].length,
+            equals(0),
+            reason: "Ace piles start empty");
       }
       expect(
-        game.cardCollections[SolitaireGame.OFFSET_DISCARD].length,
-        equals(0),
-        reason: "Discard pile starts empty");
-      expect(
-        game.cardCollections[SolitaireGame.OFFSET_DRAW].length,
-        equals(24),
-        reason: "Draw pile gets the remaining 24 cards");
+          game.cardCollections[SolitaireGame.OFFSET_DISCARD].length, equals(0),
+          reason: "Discard pile starts empty");
+      expect(game.cardCollections[SolitaireGame.OFFSET_DRAW].length, equals(24),
+          reason: "Draw pile gets the remaining 24 cards");
 
       for (int i = 0; i < 7; i++) {
+        expect(game.cardCollections[SolitaireGame.OFFSET_DOWN + i].length,
+            equals(i),
+            reason: "Down pile ${i} starts with ${i} cards");
         expect(
-          game.cardCollections[SolitaireGame.OFFSET_DOWN + i].length,
-          equals(i),
-          reason: "Down pile ${i} starts with ${i} cards");
-        expect(
-          game.cardCollections[SolitaireGame.OFFSET_UP + i].length,
-          equals(1),
-          reason: "Up piles start with 1 card");
+            game.cardCollections[SolitaireGame.OFFSET_UP + i].length, equals(1),
+            reason: "Up piles start with 1 card");
       }
     });
   });
@@ -84,7 +78,8 @@ void main() {
       for (int cheatNum = 0; cheatNum < 13; cheatNum++) {
         game.cheatUI();
         for (int i = 0; i < 4; i++) {
-          expect(game.cardCollections[SolitaireGame.OFFSET_ACES + i].length, equals(cheatNum + 1));
+          expect(game.cardCollections[SolitaireGame.OFFSET_ACES + i].length,
+              equals(cheatNum + 1));
         }
       }
 
@@ -117,8 +112,10 @@ void main() {
       expect(game.isGameWon, isTrue);
 
       // Now check an alternative suit order.
-      List<Card> aces0 = new List<Card>.from(game.cardCollections[SolitaireGame.OFFSET_ACES]);
-      List<Card> aces1 = new List<Card>.from(game.cardCollections[SolitaireGame.OFFSET_ACES + 1]);
+      List<Card> aces0 =
+          new List<Card>.from(game.cardCollections[SolitaireGame.OFFSET_ACES]);
+      List<Card> aces1 = new List<Card>.from(
+          game.cardCollections[SolitaireGame.OFFSET_ACES + 1]);
 
       game.cardCollections[SolitaireGame.OFFSET_ACES].clear();
       game.cardCollections[SolitaireGame.OFFSET_ACES + 1].clear();
@@ -134,7 +131,6 @@ void main() {
 
       expect(game.isGameWon, isTrue);
     });
-
   });
 
   // Run through a canonical game of Solitaire where the player doesn't win.
@@ -142,7 +138,8 @@ void main() {
     SolitaireGame game = new SolitaireGame(0);
 
     // Note: This could have been a non-file (in-memory), but it's fine to use a file too.
-    KeepGoingCb runCommand = makeCommandReader(game, "test/game_log_solitaire_test_loss.txt");
+    KeepGoingCb runCommand =
+        makeCommandReader(game, "test/game_log_solitaire_test_loss.txt");
 
     test("Solitaire Commands", () {
       bool keepGoing = true;
@@ -172,7 +169,8 @@ void main() {
     SolitaireGame game = new SolitaireGame(0);
 
     // Note: This could have been a non-file (in-memory), but it's fine to use a file too.
-    KeepGoingCb runCommand = makeCommandReader(game, "test/game_log_solitaire_test_win.txt");
+    KeepGoingCb runCommand =
+        makeCommandReader(game, "test/game_log_solitaire_test_win.txt");
 
     test("Solitaire Commands", () {
       bool keepGoing = true;
@@ -202,8 +200,8 @@ void main() {
       expect(() {
         SolitaireGame game = new SolitaireGame(0);
         game.phase = SolitairePhase.Score;
-        game.gamelog.add(new SolitaireCommand.deal(
-            new List<Card>.from(Card.All)));
+        game.gamelog
+            .add(new SolitaireCommand.deal(new List<Card>.from(Card.All)));
       }, throwsA(new isInstanceOf<StateError>()));
     });
     test("Dealing - fake cards", () {
@@ -272,7 +270,8 @@ void main() {
       expect(() {
         SolitaireGame game = _makeArbitrarySolitaireGame();
         game.phase = SolitairePhase.Deal;
-        game.gamelog.add(new SolitaireCommand.move(d1, SolitaireGame.OFFSET_ACES + 1));
+        game.gamelog
+            .add(new SolitaireCommand.move(d1, SolitaireGame.OFFSET_ACES + 1));
       }, throwsA(new isInstanceOf<StateError>()));
 
       // Cannot move d1 to nonexistent slot.
@@ -284,7 +283,8 @@ void main() {
       // Cannot move d1 to ACES slot that is used.
       expect(() {
         SolitaireGame game = _makeArbitrarySolitaireGame();
-        game.gamelog.add(new SolitaireCommand.move(d1, SolitaireGame.OFFSET_ACES + 2));
+        game.gamelog
+            .add(new SolitaireCommand.move(d1, SolitaireGame.OFFSET_ACES + 2));
       }, throwsA(new isInstanceOf<StateError>()));
 
       // However, we can move d1 to the unused ACES slot in the Play phase.
@@ -293,32 +293,37 @@ void main() {
       // We cannot move c11 to d12 because it's in the DRAW pile still.
       expect(() {
         SolitaireGame game = _makeArbitrarySolitaireGame();
-        game.gamelog.add(new SolitaireCommand.move(c11, SolitaireGame.OFFSET_UP + 6));
+        game.gamelog
+            .add(new SolitaireCommand.move(c11, SolitaireGame.OFFSET_UP + 6));
       }, throwsA(new isInstanceOf<StateError>()));
 
       // We cannot move d2 (discard) to the DRAW pile.
       expect(() {
         SolitaireGame game = _makeArbitrarySolitaireGame();
-        game.gamelog.add(new SolitaireCommand.move(d2, SolitaireGame.OFFSET_DRAW));
+        game.gamelog
+            .add(new SolitaireCommand.move(d2, SolitaireGame.OFFSET_DRAW));
       }, throwsA(new isInstanceOf<StateError>()));
 
       // We cannot move d1 (up) to the DISCARD pile either.
       expect(() {
         SolitaireGame game = _makeArbitrarySolitaireGame();
-        game.gamelog.add(new SolitaireCommand.move(d1, SolitaireGame.OFFSET_DISCARD));
+        game.gamelog
+            .add(new SolitaireCommand.move(d1, SolitaireGame.OFFSET_DISCARD));
       }, throwsA(new isInstanceOf<StateError>()));
 
       // There are restrictions on what can be played on ACES piles.
       // First, suit mismatch: (h3 to spade ACE)
       expect(() {
         SolitaireGame game = _makeArbitrarySolitaireGame();
-        game.gamelog.add(new SolitaireCommand.move(h3, SolitaireGame.OFFSET_ACES));
+        game.gamelog
+            .add(new SolitaireCommand.move(h3, SolitaireGame.OFFSET_ACES));
       }, throwsA(new isInstanceOf<StateError>()));
 
       // Next, non-ace on empty ACES slot. (c3 to empty ACE)
       expect(() {
         SolitaireGame game = _makeArbitrarySolitaireGame();
-        game.gamelog.add(new SolitaireCommand.move(c3, SolitaireGame.OFFSET_ACES + 3));
+        game.gamelog
+            .add(new SolitaireCommand.move(c3, SolitaireGame.OFFSET_ACES + 3));
       }, throwsA(new isInstanceOf<StateError>()));
 
       // Below, we'll show that moving to ACES works for various cases.
@@ -327,19 +332,22 @@ void main() {
       // First, color that matches. (h2 to d3)
       expect(() {
         SolitaireGame game = _makeArbitrarySolitaireGame();
-        game.gamelog.add(new SolitaireCommand.move(h2, SolitaireGame.OFFSET_ACES + 5));
+        game.gamelog
+            .add(new SolitaireCommand.move(h2, SolitaireGame.OFFSET_ACES + 5));
       }, throwsA(new isInstanceOf<StateError>()));
 
       // Next, number that isn't 1 lower. (c3 to h3)
       expect(() {
         SolitaireGame game = _makeArbitrarySolitaireGame();
-        game.gamelog.add(new SolitaireCommand.move(c3, SolitaireGame.OFFSET_ACES + 2));
+        game.gamelog
+            .add(new SolitaireCommand.move(c3, SolitaireGame.OFFSET_ACES + 2));
       }, throwsA(new isInstanceOf<StateError>()));
 
       // Last, an empty that doesn't receive a king. (c3 to empty UP)
       expect(() {
         SolitaireGame game = _makeArbitrarySolitaireGame();
-        game.gamelog.add(new SolitaireCommand.move(c3, SolitaireGame.OFFSET_ACES));
+        game.gamelog
+            .add(new SolitaireCommand.move(c3, SolitaireGame.OFFSET_ACES));
       }, throwsA(new isInstanceOf<StateError>()));
 
       // Below, we'll show that moving to UP works for various cases.
@@ -350,13 +358,20 @@ void main() {
       // Going to UP with the color mismatch + 1 number lower. (d12 to s13, s2 to d3, d2 to c3)
       // Going to UP (empty) with a king. (s13 to empty)
       SolitaireGame game = _makeArbitrarySolitaireGame();
-      game.gamelog.add(new SolitaireCommand.move(d1, SolitaireGame.OFFSET_ACES + 1));
-      game.gamelog.add(new SolitaireCommand.move(h3, SolitaireGame.OFFSET_ACES + 2));
-      game.gamelog.add(new SolitaireCommand.move(d2, SolitaireGame.OFFSET_ACES + 1));
-      game.gamelog.add(new SolitaireCommand.move(d12, SolitaireGame.OFFSET_UP + 4));
-      game.gamelog.add(new SolitaireCommand.move(s2, SolitaireGame.OFFSET_UP + 5));
-      game.gamelog.add(new SolitaireCommand.move(d2, SolitaireGame.OFFSET_UP + 1));
-      game.gamelog.add(new SolitaireCommand.move(s13, SolitaireGame.OFFSET_UP + 0));
+      game.gamelog
+          .add(new SolitaireCommand.move(d1, SolitaireGame.OFFSET_ACES + 1));
+      game.gamelog
+          .add(new SolitaireCommand.move(h3, SolitaireGame.OFFSET_ACES + 2));
+      game.gamelog
+          .add(new SolitaireCommand.move(d2, SolitaireGame.OFFSET_ACES + 1));
+      game.gamelog
+          .add(new SolitaireCommand.move(d12, SolitaireGame.OFFSET_UP + 4));
+      game.gamelog
+          .add(new SolitaireCommand.move(s2, SolitaireGame.OFFSET_UP + 5));
+      game.gamelog
+          .add(new SolitaireCommand.move(d2, SolitaireGame.OFFSET_UP + 1));
+      game.gamelog
+          .add(new SolitaireCommand.move(s13, SolitaireGame.OFFSET_UP + 0));
     });
 
     // Consider various situations in which you cannot flip.
@@ -429,7 +444,6 @@ void main() {
       game.dealCardsUI();
       game.cardCollections[SolitaireGame.OFFSET_UP + 1].clear();
       game.gamelog.add(new SolitaireCommand.flip(1));
-
     });
 
     // Consider various situations in which you cannot draw.
@@ -457,7 +471,6 @@ void main() {
       // Deal first.
       game.dealCardsUI();
       game.gamelog.add(new SolitaireCommand.draw());
-
     });
   });
 }

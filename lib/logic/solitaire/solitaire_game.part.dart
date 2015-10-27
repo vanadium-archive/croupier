@@ -24,7 +24,8 @@ class SolitaireGame extends Game {
   }
 
   SolitaireGame(int playerNumber)
-      : super.create(GameType.Solitaire, new SolitaireLog(), playerNumber, NUM_PILES) {
+      : super.create(
+            GameType.Solitaire, new SolitaireLog(), playerNumber, NUM_PILES) {
     resetGame();
   }
 
@@ -66,7 +67,9 @@ class SolitaireGame extends Game {
     return getCardSuit(c) == 's' || getCardSuit(c) == 'c';
   }
 
-  bool get canDrawCard => cardCollections[OFFSET_DISCARD].length + cardCollections[OFFSET_DRAW].length > 0;
+  bool get canDrawCard => cardCollections[OFFSET_DISCARD].length +
+          cardCollections[OFFSET_DRAW].length >
+      0;
 
   bool get isGameWon {
     for (int i = 0; i < 4; i++) {
@@ -111,7 +114,8 @@ class SolitaireGame extends Game {
     // Try to preserve this order.
     // Further, we need to know the next index (minLen) we're cheating with.
     List<String> suits = new List<String>(4);
-    Set<String> remainingSuits = new Set<String>.from(<String>['c', 'd', 'h', 's']);
+    Set<String> remainingSuits =
+        new Set<String>.from(<String>['c', 'd', 'h', 's']);
     int minLen = null;
     for (int i = 0; i < 4; i++) {
       int len = cardCollections[OFFSET_ACES + i].length;
@@ -145,7 +149,7 @@ class SolitaireGame extends Game {
         // but this is okay since we are cheating.
 
         int index_offset;
-        switch(suits[i]) {
+        switch (suits[i]) {
           case 'c':
             index_offset = 0;
             break;
@@ -226,7 +230,8 @@ class SolitaireGame extends Game {
   }
 
   bool _cardCompatibleAces(Card top, Card bot) {
-    return getCardSuit(top) == getCardSuit(bot) && getCardValue(top) + 1 == getCardValue(bot);
+    return getCardSuit(top) == getCardSuit(bot) &&
+        getCardValue(top) + 1 == getCardValue(bot);
   }
 
   bool _isTopCard(Card c, int source) {
@@ -234,11 +239,11 @@ class SolitaireGame extends Game {
     return sourcePile[sourcePile.length - 1] == c;
   }
 
-
   // The card in question must be the top card of the source (if it is from the aces or discard pile).
   // If the destination has no cards, you can play any king.
   // Otherwise, you have to be an opposite color AND 1 lower in value.
-  String _checkUpDestination(Card c, int source, int destination, bool isAcesOrDiscard) {
+  String _checkUpDestination(
+      Card c, int source, int destination, bool isAcesOrDiscard) {
     if (isAcesOrDiscard && !_isTopCard(c, source)) {
       return "Tried to move ${c.toString()}, but it is not the top card.";
     }
@@ -299,7 +304,7 @@ class SolitaireGame extends Game {
     }
     SolitairePileType sType = pileType(source);
     SolitairePileType dType = pileType(destination);
-    switch(sType) {
+    switch (sType) {
       case SolitairePileType.ACES:
         if (dType != SolitairePileType.UP) {
           return "Destination Pile for ACES pile should be an UP pile.";
@@ -331,6 +336,5 @@ class SolitaireGame extends Game {
   }
 
   // TODO(alexfandrianto): Maybe wanted for debug; if not, remove.
-  void jumpToScorePhaseDebug() {
-  }
+  void jumpToScorePhaseDebug() {}
 }

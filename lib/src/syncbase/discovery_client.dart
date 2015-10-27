@@ -18,21 +18,20 @@ class ProxyHandlePair<T> {
 /// https://github.com/vanadium/issues/issues/835
 class DiscoveryClient {
   final Map<String, ProxyHandlePair<discovery.AdvertiserProxy>> advertisers =
-    new Map<String, ProxyHandlePair<discovery.AdvertiserProxy>>();
+      new Map<String, ProxyHandlePair<discovery.AdvertiserProxy>>();
   final Map<String, ProxyHandlePair<discovery.ScannerProxy>> scanners =
-    new Map<String, ProxyHandlePair<discovery.ScannerProxy>>();
+      new Map<String, ProxyHandlePair<discovery.ScannerProxy>>();
 
   static final String discoveryUrl = 'https://mojo2.v.io/discovery.mojo';
 
   DiscoveryClient() {}
 
-  static discovery.Service serviceMaker({
-    List<int> instanceUuid,
-    String instanceName,
-    String interfaceName,
-    Map<String, String> attrs,
-    List<String> addrs
-  }) {
+  static discovery.Service serviceMaker(
+      {List<int> instanceUuid,
+      String instanceName,
+      String interfaceName,
+      Map<String, String> attrs,
+      List<String> addrs}) {
     // None of these are nullable, so it's nice to have a helper to create them.
     return new discovery.Service()
       ..instanceUuid = instanceUuid ?? new List<int>()
@@ -61,9 +60,13 @@ class DiscoveryClient {
     shs.impl = handler;
 
     print('Scanning begins!');
-    return s.ptr.scan(query, shs).then((discovery.ScannerScanResponseParams response) {
-      print("${key} scanning started. The cancel handle is ${response.handle}.");
-      scanners[key] = new ProxyHandlePair<discovery.ScannerProxy>(s, response.handle);
+    return s.ptr
+        .scan(query, shs)
+        .then((discovery.ScannerScanResponseParams response) {
+      print(
+          "${key} scanning started. The cancel handle is ${response.handle}.");
+      scanners[key] =
+          new ProxyHandlePair<discovery.ScannerProxy>(s, response.handle);
     });
   }
 
@@ -79,8 +82,7 @@ class DiscoveryClient {
   // Advertises the given service information. Keeps track of the advertiser
   // handle via the key.
   Future advertise(String key, discovery.Service serviceInfo,
-    { List<String> visibility }) async {
-
+      {List<String> visibility}) async {
     // Cancel the advertisement if one is already going for this key.
     if (advertisers.containsKey(key)) {
       stopAdvertise(key);
@@ -88,15 +90,21 @@ class DiscoveryClient {
 
     discovery.AdvertiserProxy a = new discovery.AdvertiserProxy.unbound();
 
-    print('Starting up discovery advertiser ${key}. Broadcasting for ${serviceInfo.instanceName}');
+    print(
+        'Starting up discovery advertiser ${key}. Broadcasting for ${serviceInfo.instanceName}');
 
     embedder.connectToService(discoveryUrl, a);
 
-    return a.ptr.advertise(serviceInfo, visibility ?? <String>[]).then((discovery.AdvertiserAdvertiseResponseParams response) {
-      print("${key} advertising started. The cancel handle is ${response.handle}.");
-      advertisers[key] = new ProxyHandlePair<discovery.AdvertiserProxy>(a, response.handle);
+    return a.ptr
+        .advertise(serviceInfo, visibility ?? <String>[])
+        .then((discovery.AdvertiserAdvertiseResponseParams response) {
+      print(
+          "${key} advertising started. The cancel handle is ${response.handle}.");
+      advertisers[key] =
+          new ProxyHandlePair<discovery.AdvertiserProxy>(a, response.handle);
     });
   }
+
   // This sends a stop signal to the advertiser. Since it is non-blocking, the
   // advertise handle may not stop instantaneously.
   void stopAdvertise(String key) {

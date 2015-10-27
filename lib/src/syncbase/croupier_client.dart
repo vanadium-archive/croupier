@@ -38,7 +38,8 @@ class CroupierClient {
     // TODO(alexfandrianto): Remove this test advertisement once we are more
     // comfortable with Discovery.
     _discoveryClient.scan(discoveryTestKey, "HelloWorld!", new MyScanHandler());
-    _discoveryClient.advertise(discoveryTestKey, DiscoveryClient.serviceMaker(interfaceName: "HelloWorld!"));
+    _discoveryClient.advertise(discoveryTestKey,
+        DiscoveryClient.serviceMaker(interfaceName: "HelloWorld!"));
   }
 
   DiscoveryClient get discoveryClient => _discoveryClient;
@@ -72,8 +73,7 @@ class CroupierClient {
 
   // Creates (or joins) a syncgroup with the associated parameters.
   Future<sc.SyncbaseSyncgroup> createSyncgroup(String sgName, String tableName,
-    { String prefix, String description, sc.Perms permissions }) async {
-
+      {String prefix, String description, sc.Perms permissions}) async {
     util.log("CroupierClient: Creating syncgroup ${sgName}");
 
     // TODO(alexfandrianto): destroy is still unimplemented. Thus, we must do a
@@ -84,7 +84,8 @@ class CroupierClient {
       util.log("CroupierClient: Successfully joined ${sgName}");
       return sg;
     } catch (e) {
-      util.log("CroupierClient: ${sgName} doesn't exist, so actually creating it.");
+      util.log(
+          "CroupierClient: ${sgName} doesn't exist, so actually creating it.");
     }
 
     var myInfo = sc.SyncbaseClient.syncgroupMemberInfo(syncPriority: 3);
@@ -135,6 +136,7 @@ class MyScanHandler extends discovery.ScanHandler {
   void found(discovery.Service s) {
     util.log("MYSCANHANDLER Found ${s.instanceUuid} ${s.instanceName}");
   }
+
   void lost(List<int> instanceId) {
     util.log("MYSCANHANDLER Lost ${instanceId}");
   }

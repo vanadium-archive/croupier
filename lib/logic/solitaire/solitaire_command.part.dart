@@ -19,13 +19,15 @@ class SolitaireCommand extends GameCommand {
             simultaneity: SimulLevel.TURN_BASED);
 
   SolitaireCommand.move(Card target, int targetPile)
-  : super("Move", computeMove(target, targetPile), simultaneity: SimulLevel.TURN_BASED);
+      : super("Move", computeMove(target, targetPile),
+            simultaneity: SimulLevel.TURN_BASED);
 
   SolitaireCommand.draw()
-  : super("Draw", computeDraw(), simultaneity: SimulLevel.TURN_BASED);
+      : super("Draw", computeDraw(), simultaneity: SimulLevel.TURN_BASED);
 
   SolitaireCommand.flip(int targetPile)
-  : super("Flip", computeFlip(targetPile), simultaneity: SimulLevel.TURN_BASED);
+      : super("Flip", computeFlip(targetPile),
+            simultaneity: SimulLevel.TURN_BASED);
 
   static String computeDeal(List<Card> allCards) {
     StringBuffer buff = new StringBuffer();
@@ -92,7 +94,8 @@ class SolitaireCommand extends GameCommand {
         }
 
         List<Card> drawPile = game.cardCollections[SolitaireGame.OFFSET_DRAW];
-        List<Card> discardPile = game.cardCollections[SolitaireGame.OFFSET_DISCARD];
+        List<Card> discardPile =
+            game.cardCollections[SolitaireGame.OFFSET_DISCARD];
 
         return drawPile.length > 0 || discardPile.length > 0;
       case "Flip":
@@ -105,8 +108,10 @@ class SolitaireCommand extends GameCommand {
           return false;
         }
 
-        List<Card> flipSource = game.cardCollections[SolitaireGame.OFFSET_DOWN + flipId];
-        List<Card> flipDest = game.cardCollections[SolitaireGame.OFFSET_UP + flipId];
+        List<Card> flipSource =
+            game.cardCollections[SolitaireGame.OFFSET_DOWN + flipId];
+        List<Card> flipDest =
+            game.cardCollections[SolitaireGame.OFFSET_UP + flipId];
 
         return flipDest.length == 0 && flipSource.length > 0;
       default:
@@ -130,23 +135,32 @@ class SolitaireCommand extends GameCommand {
         }
         if (parts.length - 1 != 52) {
           throw new StateError(
-            "Not enough cards dealt. Need 52, got ${parts.length - 1}");
+              "Not enough cards dealt. Need 52, got ${parts.length - 1}");
         }
 
         // Deal fills out each of the down cards with one of each up card.
         int index = 0;
         for (int i = 0; i < 7; i++) {
           for (int j = 0; j < i; j++) {
-            this.transfer(game.deck, game.cardCollections[SolitaireGame.OFFSET_DOWN + i], new Card.fromString(parts[index]));
+            this.transfer(
+                game.deck,
+                game.cardCollections[SolitaireGame.OFFSET_DOWN + i],
+                new Card.fromString(parts[index]));
             index++;
           }
-          this.transfer(game.deck, game.cardCollections[SolitaireGame.OFFSET_UP + i], new Card.fromString(parts[index]));
+          this.transfer(
+              game.deck,
+              game.cardCollections[SolitaireGame.OFFSET_UP + i],
+              new Card.fromString(parts[index]));
           index++;
         }
 
         // The remaining cards are for the draw pile.
         for (; index < 52; index++) {
-          this.transfer(game.deck, game.cardCollections[SolitaireGame.OFFSET_DRAW], new Card.fromString(parts[index]));
+          this.transfer(
+              game.deck,
+              game.cardCollections[SolitaireGame.OFFSET_DRAW],
+              new Card.fromString(parts[index]));
         }
         return;
       case "Move":
@@ -160,12 +174,10 @@ class SolitaireCommand extends GameCommand {
         int targetId = int.parse(parts[1]);
         int sourceId = game.findCard(c);
         if (sourceId == -1) {
-          throw new StateError(
-            "Cannot move unknown card ${c.toString()}");
+          throw new StateError("Cannot move unknown card ${c.toString()}");
         }
         if (targetId < 0 || targetId >= game.cardCollections.length) {
-          throw new StateError(
-            "Cannot move to unknown pile ${targetId}");
+          throw new StateError("Cannot move to unknown pile ${targetId}");
         }
         List<Card> source = game.cardCollections[sourceId];
         List<Card> dest = game.cardCollections[targetId];
@@ -185,7 +197,8 @@ class SolitaireCommand extends GameCommand {
         }
 
         List<Card> drawPile = game.cardCollections[SolitaireGame.OFFSET_DRAW];
-        List<Card> discardPile = game.cardCollections[SolitaireGame.OFFSET_DISCARD];
+        List<Card> discardPile =
+            game.cardCollections[SolitaireGame.OFFSET_DISCARD];
 
         if (drawPile.length != 0) {
           this.transfer(drawPile, discardPile, drawPile[0]);
@@ -204,19 +217,21 @@ class SolitaireCommand extends GameCommand {
         int flipId = int.parse(parts[0]);
         if (flipId < 0 || flipId >= 7) {
           throw new StateError(
-            "Cannot process flip command for index ${flipId}");
+              "Cannot process flip command for index ${flipId}");
         }
 
-        List<Card> flipSource = game.cardCollections[SolitaireGame.OFFSET_DOWN + flipId];
-        List<Card> flipDest = game.cardCollections[SolitaireGame.OFFSET_UP + flipId];
+        List<Card> flipSource =
+            game.cardCollections[SolitaireGame.OFFSET_DOWN + flipId];
+        List<Card> flipDest =
+            game.cardCollections[SolitaireGame.OFFSET_UP + flipId];
 
         if (flipDest.length != 0) {
           throw new StateError(
-            "Cannot flip ${flipId} because destination has cards");
+              "Cannot flip ${flipId} because destination has cards");
         }
         if (flipSource.length == 0) {
           throw new StateError(
-            "Cannot flip ${flipId} because source has no cards");
+              "Cannot flip ${flipId} because source has no cards");
         }
         this.transfer(flipSource, flipDest, flipSource[flipSource.length - 1]);
         return;
@@ -242,7 +257,8 @@ class SolitaireCommand extends GameCommand {
       throw new StateError(
           "Sender ${sender.toString()} lacks Card ${c.toString()}");
     }
-    List<Card> lost = new List<Card>.from(sender.getRange(index, sender.length));
+    List<Card> lost =
+        new List<Card>.from(sender.getRange(index, sender.length));
     sender.removeRange(index, sender.length);
     receiver.addAll(lost);
   }
