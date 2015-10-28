@@ -29,14 +29,28 @@ import 'package:syncbase/syncbase_client.dart'
 enum SimulLevel { TURN_BASED, INDEPENDENT, DEPENDENT }
 
 class LogWriter {
+  // This callback is called on each watch update, passing the key and value.
   final util.updateCallbackT updateCallback;
+
+  // The users that we should look for when coming to a proposal consensus.
   final List<int> users;
+
+  // The CroupierClient manages the creation of tables/dbs/syncgroups.
   final CroupierClient _cc;
 
+  // Affects read/write/watch locations of the log writer.
+  final String logPrefix;
+
+  // An internal boolean that should be set to true when watching and reset to
+  // false once watch should be turned off.
   bool _watching = false;
 
+  // When a proposal is made (or received), this flag is set to true.
+  // Once a consensus has been reached, this is set to false again.
   bool inProposalMode = false;
   Map<String, String> proposalsKnown; // Only updated via watch.
+
+  // The associated user helps in the production of unique keys.
   int _associatedUser;
   int get associatedUser => _associatedUser;
   void set associatedUser(int other) {
@@ -45,13 +59,16 @@ class LogWriter {
     _associatedUser = other;
   }
 
-  LogWriter(this.updateCallback, this.users) : _cc = new CroupierClient() {
+  // This holds a reference to the syncbase table we're writing to.
+  SyncbaseTable tb;
+  static final String tbName = util.tableNameGames;
+
+  // The LogWriter takes a callback for watch updates, the list of users, and
+  // the logPrefix to write at on table.
+  LogWriter(this.updateCallback, this.users, this.logPrefix)
+      : _cc = new CroupierClient() {
     _prepareLog();
   }
-
-  int seq = 0;
-  SyncbaseTable tb;
-  String sendMsg, recvMsg, putStr, getStr;
 
   Future _prepareLog() async {
     if (tb != null) {
@@ -59,11 +76,11 @@ class LogWriter {
     }
 
     SyncbaseNoSqlDatabase db = await _cc.createDatabase();
-    tb = await _cc.createTable(db, util.tableNameLog);
+    tb = await _cc.createTable(db, tbName);
 
     // Start to watch the stream.
     Stream<WatchChange> watchStream =
-        db.watch(util.tableNameLog, '', await db.getResumeMarker());
+        db.watch(tbName, this.logPrefix, await db.getResumeMarker());
     _startWatch(watchStream); // Don't wait for this future.
   }
 
@@ -81,10 +98,10 @@ class LogWriter {
         break;
       }
 
-      assert(wc.tableName == util.tableNameLog);
+      assert(wc.tableName == tbName);
       util.log('Watch Key: ${wc.rowKey}');
       util.log('Watch Value ${UTF8.decode(wc.valueBytes)}');
-      String key = wc.rowKey;
+      String key = wc.rowKey.replaceFirst("${this.logPrefix}/", "");
       String value;
       switch (wc.changeType) {
         case WatchChangeTypes.put:
@@ -145,14 +162,14 @@ class LogWriter {
 
   // Helper that writes data to the "store" and calls the update callback.
   Future _writeData(String key, String value) async {
-    var row = tb.row(key);
+    var row = tb.row("${this.logPrefix}/${key}");
     await row.put(UTF8.encode(value));
   }
 
   /*
   // _readData could be helpful eventually, but it's not needed yet.
   Future<String> _readData(String key) async {
-    var row = tb.row(key);
+    var row = tb.row("${this.logPrefix}/${key}");
     if (!(await row.exists())) {
       print("${key} did not exist");
       return null;
@@ -226,7 +243,7 @@ class LogWriter {
   }
 
   String _proposalKey(int user) {
-    return "proposal${user}";
+    return "proposal/${user}";
   }
 
   Future<bool> _checkIsProposalDone() async {

@@ -24,55 +24,52 @@ import 'dart:convert' show UTF8, JSON;
 
 import 'package:discovery/discovery.dart' as discovery;
 import 'package:syncbase/syncbase_client.dart' as sc;
-//import 'package:syncbase/src/naming/util.dart' as naming;
 
 class SettingsManager {
   final util.updateCallbackT updateCallback;
   final CroupierClient _cc;
-
-  static final String discoverySettingsKey = "settings";
-
   sc.SyncbaseTable tb;
-  sc.SyncbaseTable tbUser;
+
+  static const String _discoverySettingsKey = "settings";
+  static const String _personalKey = "personal";
+  static const String _settingsWatchSyncPrefix = "users";
 
   SettingsManager([this.updateCallback]) : _cc = new CroupierClient();
 
+  String _settingsDataKey(int userID) {
+    return "${_settingsWatchSyncPrefix}/${userID}/settings";
+  }
+
   Future _prepareSettingsTable() async {
-    if (tb != null && tbUser != null) {
+    if (tb != null) {
       return; // Then we're already prepared.
     }
 
     sc.SyncbaseNoSqlDatabase db = await _cc.createDatabase();
     tb = await _cc.createTable(db, util.tableNameSettings);
-    tbUser = await _cc.createTable(db, util.tableNameSettingsUser);
 
     // Start to watch the stream for the shared settings table.
-    Stream<sc.WatchChange> watchStream =
-        db.watch(util.tableNameSettings, '', await db.getResumeMarker());
+    Stream<sc.WatchChange> watchStream = db.watch(util.tableNameSettings,
+        _settingsWatchSyncPrefix, await db.getResumeMarker());
     _startWatch(watchStream); // Don't wait for this future.
     _loadSettings(tb); // Don't wait for this future.
   }
 
   // Guaranteed to be called when the program starts.
   // If no Croupier Settings exist, then random ones are created.
-  Future<String> load([int userID]) async {
+  Future<String> load() async {
     util.log('SettingsManager.load');
     await _prepareSettingsTable();
 
-    String result;
+    int userID = await _getUserID();
     if (userID == null) {
-      result = await _tryReadData(tbUser, "settings");
-    } else {
-      result = await _tryReadData(tb, "${userID}");
-    }
-    if (result == null) {
       CroupierSettings settings = new CroupierSettings.random();
       String jsonStr = settings.toJSONString();
       await this.save(settings.userID, jsonStr);
       return jsonStr;
+    } else {
+      return await _tryReadData(tb, this._settingsDataKey(userID));
     }
-
-    return result;
   }
 
   Future<String> _tryReadData(sc.SyncbaseTable st, String rowkey) async {
@@ -84,14 +81,15 @@ class SettingsManager {
     return UTF8.decode(await row.get());
   }
 
-  // Since only the current user is allowed to save, we should also save to the
-  // user's personal settings as well.
+  // Note: only the current user is allowed to save settings.
+  // This means we can also save their user id.
+  // All other settings will be synced instead.
   Future save(int userID, String jsonString) async {
     util.log('SettingsManager.save');
     await _prepareSettingsTable();
 
-    await tbUser.row("settings").put(UTF8.encode(jsonString));
-    await tb.row("${userID}").put(UTF8.encode(jsonString));
+    await tb.row(_personalKey).put(UTF8.encode("${userID}"));
+    await tb.row(this._settingsDataKey(userID)).put(UTF8.encode(jsonString));
   }
 
   // This watch method ensures that any changes are propagated to the caller.
@@ -125,18 +123,23 @@ class SettingsManager {
 
   // Best called after load(), to ensure that there are settings in the table.
   Future createSyncgroup() async {
-    CroupierSettings cs = await _getSettings();
+    int id = await _getUserID();
 
     _cc.createSyncgroup(
         _cc.makeSyncgroupName(await _syncSuffix()), util.tableNameSettings,
-        prefix: "${cs.userID}");
+        prefix: this._settingsDataKey(id));
   }
 
   // When starting the settings manager, there may be settings already in the
   // store. Make sure to load those.
   Future _loadSettings(sc.SyncbaseTable tb) async {
-    tb.scan(new sc.RowRange.prefix('')).forEach((sc.KeyValue kv) {
-      this.updateCallback(kv.key, UTF8.decode(kv.value));
+    tb
+        .scan(new sc.RowRange.prefix(_settingsWatchSyncPrefix))
+        .forEach((sc.KeyValue kv) {
+      if (kv.key.endsWith("/settings")) {
+        // Then we can process the value as if it were settings data.
+        this.updateCallback(kv.key, UTF8.decode(kv.value));
+      }
     });
   }
 
@@ -147,36 +150,39 @@ class SettingsManager {
   // Someone who is creating a game should scan for players who wish to join.
   Future scanSettings() async {
     SettingsScanHandler ssh = new SettingsScanHandler(_cc);
-    _cc.discoveryClient.scan(discoverySettingsKey, "CroupierSettings", ssh);
+    _cc.discoveryClient.scan(_discoverySettingsKey, "CroupierSettings", ssh);
   }
 
   void stopScanSettings() {
-    _cc.discoveryClient.stopScan(discoverySettingsKey);
+    _cc.discoveryClient.stopScan(_discoverySettingsKey);
   }
 
   // Someone who wants to join a game should advertise their presence.
   Future advertiseSettings() async {
     String suffix = await _syncSuffix();
     _cc.discoveryClient.advertise(
-        discoverySettingsKey,
+        _discoverySettingsKey,
         DiscoveryClient.serviceMaker(
             interfaceName: "CroupierSettings",
             addrs: <String>[_cc.makeSyncgroupName(suffix)]));
   }
 
   void stopAdvertiseSettings() {
-    _cc.discoveryClient.stopAdvertise(discoverySettingsKey);
+    _cc.discoveryClient.stopAdvertise(_discoverySettingsKey);
   }
 
-  Future<CroupierSettings> _getSettings() async {
-    String jsonSettings = await load();
-    return new CroupierSettings.fromJSONString(jsonSettings);
+  Future<int> _getUserID() async {
+    String result = await _tryReadData(tb, _personalKey);
+    if (result == null) {
+      return null;
+    }
+    return int.parse(result);
   }
 
   Future<String> _syncSuffix() async {
-    CroupierSettings cs = await _getSettings();
+    int id = await _getUserID();
 
-    return "${util.sgSuffix}${cs.userID}";
+    return "${util.sgSuffix}${id}";
   }
 }
 

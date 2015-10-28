@@ -11,11 +11,12 @@ typedef void updateCallbackT(String key, String value);
 class LogWriter {
   final updateCallbackT updateCallback;
   final List<int> users;
+  final String logPrefix; // This can be completely ignored.
 
   bool inProposalMode = false;
   int associatedUser;
 
-  LogWriter(this.updateCallback, this.users);
+  LogWriter(this.updateCallback, this.users, this.logPrefix);
 
   Map<String, String> _data = new Map<String, String>();
 

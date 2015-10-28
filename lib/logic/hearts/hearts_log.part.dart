@@ -8,7 +8,8 @@ class HeartsLog extends GameLog {
   LogWriter logWriter;
 
   HeartsLog() {
-    logWriter = new LogWriter(handleSyncUpdate, [0, 1, 2, 3]);
+    // TODO(alexfandrianto): The Game ID needs to be part of this constructor.
+    logWriter = new LogWriter(handleSyncUpdate, [0, 1, 2, 3], "<game_id>/log");
   }
 
   @override

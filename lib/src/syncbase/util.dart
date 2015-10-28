@@ -6,9 +6,8 @@ import 'package:syncbase/syncbase_client.dart' show Perms, SyncbaseClient;
 
 const appName = 'app';
 const dbName = 'db';
-const tableNameLog = 'table';
+const tableNameGames = 'games';
 const tableNameSettings = 'table_settings';
-const tableNameSettingsUser = 'table_settings_personal';
 
 // TODO(alexfandrianto): This may need to be the global mount table with a
 // proxy. Otherwise, it will be difficult for other users to run.

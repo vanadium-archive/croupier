@@ -8,7 +8,8 @@ class SolitaireLog extends GameLog {
   LogWriter logWriter;
 
   SolitaireLog() {
-    logWriter = new LogWriter(handleSyncUpdate, [0]);
+    // TODO(alexfandrianto): The Game ID needs to be part of this constructor.
+    logWriter = new LogWriter(handleSyncUpdate, [0], "<game_id>/log");
   }
 
   @override
