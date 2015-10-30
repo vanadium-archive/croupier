@@ -5,9 +5,9 @@
 part of game_component;
 
 class HeartsGameComponent extends GameComponent {
-  HeartsGameComponent(NavigatorState navigator, Game game, NoArgCb cb,
+  HeartsGameComponent(Game game, NoArgCb cb,
       {double width, double height})
-      : super(navigator, game, cb, width: width, height: height);
+      : super(game, cb, width: width, height: height);
 
   HeartsGameComponentState createState() => new HeartsGameComponentState();
 }
@@ -169,7 +169,6 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
                 backgroundColor: backgroundColor),
             padding: new EdgeDims.all(10.0),
             child: new Text(text)),
-        enabled: !inactive,
         onPressed: inactive ? null : callback);
   }
 
@@ -230,7 +229,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
 
   Widget showBoard() {
     HeartsGame game = config.game;
-    return new HeartsBoard(config.navigator, game,
+    return new HeartsBoard(game,
         width: config.width, height: 0.80 * config.height);
   }
 
@@ -242,7 +241,6 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     List<Widget> plays = new List<Widget>();
     for (int i = 0; i < 4; i++) {
       plays.add(new CardCollectionComponent(
-          config.navigator,
           game.cardCollections[i + HeartsGame.OFFSET_PLAY],
           true,
           Orientation.show1,
@@ -263,7 +261,6 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
         width: config.width,
         child: new Center(
             child: new CardCollectionComponent(
-                config.navigator,
                 game.cardCollections[p + HeartsGame.OFFSET_PLAY],
                 true,
                 Orientation.show1,
@@ -280,7 +277,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
 
     List<logic_card.Card> cards = game.cardCollections[p];
     CardCollectionComponent c = new CardCollectionComponent(
-        config.navigator, cards, game.playerNumber == p, Orientation.suit,
+        cards, game.playerNumber == p, Orientation.suit,
         dragChildren: game.whoseTurn == p,
         comparator: _compareCards,
         width: config.width);
@@ -364,7 +361,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
             justifyContent: FlexJustifyContent.spaceBetween));
 
     Widget handArea = new CardCollectionComponent(
-        config.navigator, hand, true, Orientation.suit,
+        hand, true, Orientation.suit,
         acceptCallback: cb,
         dragChildren: draggable,
         acceptType: draggable ? DropType.card : null,
@@ -383,7 +380,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
 
   Widget _topCardWidget(List<logic_card.Card> cards, AcceptCb cb) {
     Widget ccc = new CardCollectionComponent(
-        config.navigator, cards, true, Orientation.show1,
+        cards, true, Orientation.show1,
         acceptCallback: cb,
         dragChildren: cb != null,
         acceptType: cb != null ? DropType.card : null,

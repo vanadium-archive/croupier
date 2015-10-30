@@ -5,9 +5,9 @@
 part of game_component;
 
 class SolitaireGameComponent extends GameComponent {
-  SolitaireGameComponent(NavigatorState navigator, Game game, NoArgCb cb,
+  SolitaireGameComponent(Game game, NoArgCb cb,
       {double width, double height})
-      : super(navigator, game, cb, width: width, height: height);
+      : super(game, cb, width: width, height: height);
 
   SolitaireGameComponentState createState() =>
       new SolitaireGameComponentState();
@@ -59,7 +59,6 @@ class SolitaireGameComponentState
                 backgroundColor: backgroundColor),
             padding: new EdgeDims.all(10.0),
             child: new Text(text)),
-        enabled: !inactive,
         onPressed: inactive ? null : callback);
   }
 
@@ -107,7 +106,6 @@ class SolitaireGameComponentState
     List<Widget> row1 = new List<Widget>();
     row1.add(new Row([
       new CardCollectionComponent(
-          config.navigator,
           game.cardCollections[SolitaireGame.OFFSET_ACES + 0],
           true,
           Orientation.show1,
@@ -117,7 +115,6 @@ class SolitaireGameComponentState
           dragChildren: true,
           acceptType: DropType.card),
       new CardCollectionComponent(
-          config.navigator,
           game.cardCollections[SolitaireGame.OFFSET_ACES + 1],
           true,
           Orientation.show1,
@@ -127,7 +124,6 @@ class SolitaireGameComponentState
           dragChildren: true,
           acceptType: DropType.card),
       new CardCollectionComponent(
-          config.navigator,
           game.cardCollections[SolitaireGame.OFFSET_ACES + 2],
           true,
           Orientation.show1,
@@ -137,7 +133,6 @@ class SolitaireGameComponentState
           dragChildren: true,
           acceptType: DropType.card),
       new CardCollectionComponent(
-          config.navigator,
           game.cardCollections[SolitaireGame.OFFSET_ACES + 3],
           true,
           Orientation.show1,
@@ -150,7 +145,6 @@ class SolitaireGameComponentState
 
     row1.add(new Row([
       new CardCollectionComponent(
-          config.navigator,
           game.cardCollections[SolitaireGame.OFFSET_DISCARD],
           true,
           Orientation.show1,
@@ -159,7 +153,6 @@ class SolitaireGameComponentState
           dragChildren: true),
       new InkWell(
           child: new CardCollectionComponent(
-              config.navigator,
               game.cardCollections[SolitaireGame.OFFSET_DRAW],
               false,
               Orientation.show1,
@@ -172,7 +165,6 @@ class SolitaireGameComponentState
     for (int i = 0; i < 7; i++) {
       row2.add(new InkWell(
           child: new CardCollectionComponent(
-              config.navigator,
               game.cardCollections[SolitaireGame.OFFSET_DOWN + i],
               false,
               Orientation.show1,
@@ -185,7 +177,6 @@ class SolitaireGameComponentState
     List<Widget> row3 = new List<Widget>();
     for (int i = 0; i < 7; i++) {
       row3.add(new CardCollectionComponent(
-          config.navigator,
           game.cardCollections[SolitaireGame.OFFSET_UP + i],
           true,
           Orientation.vert,

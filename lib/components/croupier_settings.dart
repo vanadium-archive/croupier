@@ -29,13 +29,12 @@ Map<String, DialogType> dialogTypes = {
 };
 
 class CroupierSettingsComponent extends StatefulComponent {
-  final NavigatorState navigator;
   final CroupierSettings settings;
   final SaveDataCb saveDataCb;
   final NoArgCb backCb;
 
   CroupierSettingsComponent(
-      this.navigator, this.settings, this.saveDataCb, this.backCb);
+      this.settings, this.saveDataCb, this.backCb);
 
   CroupierSettingsComponentState createState() =>
       new CroupierSettingsComponentState();
@@ -60,12 +59,12 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
     return new Container(
         decoration: new BoxDecoration(backgroundColor: new Color(colorInfo)),
         child: new FlatButton(
-            child: new Text(""), enabled: cb != null, onPressed: cb));
+            child: new Text(""), onPressed: cb));
   }
 
   Widget _makeImageButton(String url, NoArgCb cb) {
     return new FlatButton(
-        child: new NetworkImage(src: url), enabled: cb != null, onPressed: cb);
+        child: new NetworkImage(src: url), onPressed: cb);
   }
 
   Widget build(BuildContext context) {

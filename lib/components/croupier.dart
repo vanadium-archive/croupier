@@ -16,10 +16,9 @@ import 'dart:ui' as ui;
 typedef void NoArgCb();
 
 class CroupierComponent extends StatefulComponent {
-  final NavigatorState navigator;
   final logic_croupier.Croupier croupier;
 
-  CroupierComponent(this.navigator, this.croupier);
+  CroupierComponent(this.croupier);
 
   CroupierComponentState createState() => new CroupierComponentState();
 }
@@ -82,7 +81,6 @@ class CroupierComponentState extends State<CroupierComponent> {
         return new Container(
             padding: new EdgeDims.only(top: ui.view.paddingTop),
             child: new CroupierSettingsComponent(
-                config.navigator,
                 config.croupier.settings,
                 config.croupier.settings_manager.save,
                 makeSetStateCallback(logic_croupier.CroupierState.Welcome)));
@@ -148,7 +146,7 @@ class CroupierComponentState extends State<CroupierComponent> {
         return new Container(
             padding: new EdgeDims.only(top: ui.view.paddingTop),
             child: component_game.createGameComponent(
-                config.navigator, config.croupier.game, () {
+                config.croupier.game, () {
               config.croupier.game.quit();
               makeSetStateCallback(logic_croupier.CroupierState.Welcome)();
             }, width: screenSize.width, height: screenSize.height));

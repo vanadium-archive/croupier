@@ -22,13 +22,12 @@ part 'solitaire/solitaire.part.dart';
 typedef void NoArgCb();
 
 abstract class GameComponent extends StatefulComponent {
-  final NavigatorState navigator;
   final Game game;
   final NoArgCb gameEndCallback;
   final double width;
   final double height;
 
-  GameComponent(this.navigator, this.game, this.gameEndCallback,
+  GameComponent(this.game, this.gameEndCallback,
       {this.width, this.height});
 }
 
@@ -62,17 +61,17 @@ abstract class GameComponentState<T extends GameComponent> extends State<T> {
 }
 
 GameComponent createGameComponent(
-    NavigatorState navigator, Game game, NoArgCb gameEndCallback,
+    Game game, NoArgCb gameEndCallback,
     {double width, double height}) {
   switch (game.gameType) {
     case GameType.Proto:
-      return new ProtoGameComponent(navigator, game, gameEndCallback,
+      return new ProtoGameComponent(game, gameEndCallback,
           width: width, height: height);
     case GameType.Hearts:
-      return new HeartsGameComponent(navigator, game, gameEndCallback,
+      return new HeartsGameComponent(game, gameEndCallback,
           width: width, height: height);
     case GameType.Solitaire:
-      return new SolitaireGameComponent(navigator, game, gameEndCallback,
+      return new SolitaireGameComponent(game, gameEndCallback,
           width: width, height: height);
     default:
       // We're probably not ready to serve the other games yet.

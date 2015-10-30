@@ -21,7 +21,6 @@ const double defaultCardWidth = 40.0;
 /// consume a specific amount of space on the screen, which allows for more
 /// control when positioning elements within the Board's area.
 abstract class Board extends StatelessComponent {
-  final NavigatorState navigator;
   final Game game;
   final double _height;
   final double _width;
@@ -33,7 +32,7 @@ abstract class Board extends StatelessComponent {
   double get cardHeight => _cardHeight ?? defaultCardHeight;
   double get cardWidth => _cardWidth ?? defaultCardWidth;
 
-  Board(this.navigator, this.game,
+  Board(this.game,
       {double height, double width, double cardHeight, double cardWidth})
       : _height = height,
         _width = width,
@@ -44,9 +43,9 @@ abstract class Board extends StatelessComponent {
 /// The HeartsBoard represents the Hearts table view, which shows the number of
 /// cards each player has, and the cards they are currently playing.
 class HeartsBoard extends Board {
-  HeartsBoard(NavigatorState navigator, HeartsGame game,
+  HeartsBoard(HeartsGame game,
       {double height, double width, double cardHeight, double cardWidth})
-      : super(navigator, game,
+      : super(game,
             height: height,
             width: width,
             cardHeight: cardHeight,
@@ -78,7 +77,7 @@ class HeartsBoard extends Board {
       double cccSize = sizeRatio * smallerSide;
 
       CardCollectionComponent ccc = new CardCollectionComponent(
-          this.navigator, cards, false, ori,
+          cards, false, ori,
           width: i % 2 == 0 ? cccSize : null,
           height: i % 2 != 0 ? cccSize : null,
           rotation: -math.PI / 2 * i);
@@ -134,7 +133,7 @@ class HeartsBoard extends Board {
 
       double MARGIN = 10.0;
       CardCollectionComponent ccc = new CardCollectionComponent(
-          this.navigator, cards, true, Orientation.show1,
+          cards, true, Orientation.show1,
           width: this.cardWidth,
           widthCard: this.cardWidth,
           height: this.cardHeight,

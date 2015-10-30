@@ -29,7 +29,6 @@ const double WHITE_LINE_HEIGHT = 2.0; // white
 const double WHITE_LINE_MARGIN = 4.0; // each side
 
 class CardCollectionComponent extends StatefulComponent {
-  final NavigatorState navigator;
   final List<logic_card.Card> cards;
   final Orientation orientation;
   final bool faceUp;
@@ -50,7 +49,7 @@ class CardCollectionComponent extends StatefulComponent {
   Color get altColor => _altColor ?? material.Colors.grey[500];
 
   CardCollectionComponent(
-      this.navigator, this.cards, this.faceUp, this.orientation,
+      this.cards, this.faceUp, this.orientation,
       {this.dragChildren: false,
       DropType acceptType,
       this.acceptCallback: null,
@@ -296,7 +295,6 @@ class CardCollectionComponentState extends State<CardCollectionComponent> {
 
       if (config.dragChildren) {
         cardComponents.add(new Draggable(
-            navigator: config.navigator,
             child: c,
             data: c,
             feedback: new Opacity(child: c, opacity: 0.5)));

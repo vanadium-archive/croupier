@@ -9,8 +9,7 @@ import 'logic/croupier.dart' show Croupier;
 import 'components/croupier.dart' show CroupierComponent;
 
 class CroupierApp extends StatefulComponent {
-  final NavigatorState navigator;
-  CroupierApp(this.navigator);
+  CroupierApp();
 
   CroupierAppState createState() => new CroupierAppState();
 }
@@ -29,7 +28,7 @@ class CroupierAppState extends State<CroupierApp> {
             backgroundColor: const Color(0xFF6666FF), borderRadius: 5.0),
         child: new DefaultTextStyle(
             style: Theme.of(context).text.body1,
-            child: new CroupierComponent(config.navigator, this.croupier)));
+            child: new CroupierComponent(this.croupier)));
   }
 }
 
@@ -37,7 +36,7 @@ void main() {
   runApp(new MaterialApp(
       title: 'Croupier',
       routes: <String, RouteBuilder>{
-        "/": (RouteArguments args) => new CroupierApp(args.navigator)
+        "/": (RouteArguments args) => new CroupierApp()
       },
       theme: new ThemeData(
           brightness: ThemeBrightness.light, primarySwatch: Colors.purple)));
