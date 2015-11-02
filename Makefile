@@ -41,10 +41,6 @@ ifeq ($(ANDROID), 1)
 	# TODO(alexfandrianto): If we can do a better job of this, we won't have to
 	# special-case the first device.
 	SYNCBASE_FLAGS += --name=$(NAME)
-else
-	# It turns out that the other syncbases need to be mounted too.
-	# If not, it looks like they won't sync values to each other.
-	SYNCBASE_FLAGS += --name=foo$(ANDROID)
 endif
 
 else
@@ -71,7 +67,7 @@ define RUN_SKY_APP
 	pub run sky_tools -v --very-verbose run_mojo \
 	--app $1 \
 	$(MOJO_ANDROID_FLAGS) \
-	--mojo-path $(MOJO_DIR)/src \
+	--mojo-path $(MOJO_DIR)/src/mojo/devtools/common/mojo_run \
 	--checked \
 	--mojo-debug \
 	-- $(MOJO_SHELL_FLAGS) \

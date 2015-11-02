@@ -10,7 +10,7 @@ import '../logic/hearts/hearts.dart' show HeartsGame, HeartsPhase, HeartsType;
 import '../logic/solitaire/solitaire.dart' show SolitaireGame, SolitairePhase;
 import 'board.dart' show HeartsBoard;
 import 'card_collection.dart'
-    show CardCollectionComponent, DropType, Orientation, AcceptCb;
+    show CardCollectionComponent, DropType, CardCollectionOrientation, AcceptCb;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/material.dart' as material;

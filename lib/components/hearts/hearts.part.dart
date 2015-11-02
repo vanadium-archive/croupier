@@ -243,7 +243,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
       plays.add(new CardCollectionComponent(
           game.cardCollections[i + HeartsGame.OFFSET_PLAY],
           true,
-          Orientation.show1,
+          CardCollectionOrientation.show1,
           width: config.width));
     }
     cardCollections.add(new Container(
@@ -263,7 +263,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
             child: new CardCollectionComponent(
                 game.cardCollections[p + HeartsGame.OFFSET_PLAY],
                 true,
-                Orientation.show1,
+                CardCollectionOrientation.show1,
                 acceptCallback: _makeGameMoveCallback,
                 acceptType: p == game.whoseTurn ? DropType.card : DropType.none,
                 width: config.width,
@@ -277,7 +277,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
 
     List<logic_card.Card> cards = game.cardCollections[p];
     CardCollectionComponent c = new CardCollectionComponent(
-        cards, game.playerNumber == p, Orientation.suit,
+        cards, game.playerNumber == p, CardCollectionOrientation.suit,
         dragChildren: game.whoseTurn == p,
         comparator: _compareCards,
         width: config.width);
@@ -361,7 +361,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
             justifyContent: FlexJustifyContent.spaceBetween));
 
     Widget handArea = new CardCollectionComponent(
-        hand, true, Orientation.suit,
+        hand, true, CardCollectionOrientation.suit,
         acceptCallback: cb,
         dragChildren: draggable,
         acceptType: draggable ? DropType.card : null,
@@ -380,7 +380,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
 
   Widget _topCardWidget(List<logic_card.Card> cards, AcceptCb cb) {
     Widget ccc = new CardCollectionComponent(
-        cards, true, Orientation.show1,
+        cards, true, CardCollectionOrientation.show1,
         acceptCallback: cb,
         dragChildren: cb != null,
         acceptType: cb != null ? DropType.card : null,

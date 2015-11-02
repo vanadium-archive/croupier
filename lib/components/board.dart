@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-import 'card_collection.dart' show CardCollectionComponent, Orientation;
+import 'card_collection.dart' show CardCollectionComponent, CardCollectionOrientation;
 import '../logic/card.dart' as logic_card;
 import '../logic/game/game.dart' show Game, GameType;
 import '../logic/hearts/hearts.dart' show HeartsGame;
@@ -69,7 +69,7 @@ class HeartsBoard extends Board {
     for (int i = 0; i < 4; i++) {
       List<logic_card.Card> cards =
           game.cardCollections[i + HeartsGame.OFFSET_HAND];
-      Orientation ori = i % 2 == 0 ? Orientation.horz : Orientation.vert;
+      CardCollectionOrientation ori = i % 2 == 0 ? CardCollectionOrientation.horz : CardCollectionOrientation.vert;
 
       bool wide = (this.width >= this.height);
       double smallerSide = wide ? this.height : this.width;
@@ -133,7 +133,7 @@ class HeartsBoard extends Board {
 
       double MARGIN = 10.0;
       CardCollectionComponent ccc = new CardCollectionComponent(
-          cards, true, Orientation.show1,
+          cards, true, CardCollectionOrientation.show1,
           width: this.cardWidth,
           widthCard: this.cardWidth,
           height: this.cardHeight,

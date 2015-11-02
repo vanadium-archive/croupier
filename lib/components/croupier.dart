@@ -28,7 +28,7 @@ class CroupierComponentState extends State<CroupierComponent> {
 
   void initState() {
     super.initState();
-    // TODO(alexfandrianto): ui.view.width and ui.view.height?
+    // TODO(alexfandrianto): ui.window.size.width and ui.window.size.height?
 
     // Croupier (logic) needs this in case of syncbase watch updates.
     config.croupier.informUICb = _informUICb;
@@ -61,7 +61,7 @@ class CroupierComponentState extends State<CroupierComponent> {
       case logic_croupier.CroupierState.Welcome:
         // in which we show them a UI to start a new game, join a game, or change some settings.
         return new Container(
-            padding: new EdgeDims.only(top: ui.view.paddingTop),
+            padding: new EdgeDims.only(top: ui.window.padding.top),
             child: new Column([
               new FlatButton(
                   child: new Text('Create Game'),
@@ -79,7 +79,7 @@ class CroupierComponentState extends State<CroupierComponent> {
       case logic_croupier.CroupierState.Settings:
         // in which we let them pick an avatar, name, and color. And return to the previous screen after.
         return new Container(
-            padding: new EdgeDims.only(top: ui.view.paddingTop),
+            padding: new EdgeDims.only(top: ui.window.padding.top),
             child: new CroupierSettingsComponent(
                 config.croupier.settings,
                 config.croupier.settings_manager.save,
@@ -87,7 +87,7 @@ class CroupierComponentState extends State<CroupierComponent> {
       case logic_croupier.CroupierState.ChooseGame:
         // in which we let them pick a game out of the many possible games... There aren't that many.
         return new Container(
-            padding: new EdgeDims.only(top: ui.view.paddingTop),
+            padding: new EdgeDims.only(top: ui.window.padding.top),
             child: new Flex([
               new FlatButton(
                   child: new Text('Proto'),
@@ -113,7 +113,7 @@ class CroupierComponentState extends State<CroupierComponent> {
       case logic_croupier.CroupierState.AwaitGame:
         // in which players wait for game invitations to arrive.
         return new Container(
-            padding: new EdgeDims.only(top: ui.view.paddingTop),
+            padding: new EdgeDims.only(top: ui.window.padding.top),
             child: new Column([
               new Text("Waiting for invitations..."),
               new FlatButton(
@@ -130,7 +130,7 @@ class CroupierComponentState extends State<CroupierComponent> {
 
         // TODO(alexfandrianto): You can only start the game once there are enough players.
         return new Container(
-            padding: new EdgeDims.only(top: ui.view.paddingTop),
+            padding: new EdgeDims.only(top: ui.window.padding.top),
             child: new Column([
               new Grid(profileWidgets, maxChildExtent: 150.0),
               new FlatButton(
@@ -144,7 +144,7 @@ class CroupierComponentState extends State<CroupierComponent> {
             ]));
       case logic_croupier.CroupierState.PlayGame:
         return new Container(
-            padding: new EdgeDims.only(top: ui.view.paddingTop),
+            padding: new EdgeDims.only(top: ui.window.padding.top),
             child: component_game.createGameComponent(
                 config.croupier.game, () {
               config.croupier.game.quit();

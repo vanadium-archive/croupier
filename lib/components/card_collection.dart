@@ -9,7 +9,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/material.dart' as material;
 
-enum Orientation { vert, horz, fan, show1, suit }
+enum CardCollectionOrientation { vert, horz, fan, show1, suit }
 enum DropType {
   none,
   card,
@@ -30,7 +30,7 @@ const double WHITE_LINE_MARGIN = 4.0; // each side
 
 class CardCollectionComponent extends StatefulComponent {
   final List<logic_card.Card> cards;
-  final Orientation orientation;
+  final CardCollectionOrientation orientation;
   final bool faceUp;
   final AcceptCb acceptCallback;
   final bool dragChildren;
@@ -105,13 +105,13 @@ class CardCollectionComponentState extends State<CardCollectionComponent> {
   // returns null if it's up to the container (like a Flex) to figure this out.
   double get desiredHeight {
     switch (config.orientation) {
-      case Orientation.vert:
+      case CardCollectionOrientation.vert:
         return config.height;
-      case Orientation.horz:
-      case Orientation.fan:
-      case Orientation.show1:
+      case CardCollectionOrientation.horz:
+      case CardCollectionOrientation.fan:
+      case CardCollectionOrientation.show1:
         return _produceRowHeight;
-      case Orientation.suit:
+      case CardCollectionOrientation.suit:
         return _produceRowHeight * 4 + _whiteLineHeight * 3;
       default:
         assert(false);
@@ -122,12 +122,12 @@ class CardCollectionComponentState extends State<CardCollectionComponent> {
   // returns null if it's up to the container (like a Flex) to figure this out.
   double get desiredWidth {
     switch (config.orientation) {
-      case Orientation.vert:
-      case Orientation.show1:
+      case CardCollectionOrientation.vert:
+      case CardCollectionOrientation.show1:
         return _produceColumnWidth;
-      case Orientation.horz:
-      case Orientation.fan:
-      case Orientation.suit:
+      case CardCollectionOrientation.horz:
+      case CardCollectionOrientation.fan:
+      case CardCollectionOrientation.suit:
         return config.width;
       default:
         assert(false);
@@ -214,16 +214,16 @@ class CardCollectionComponentState extends State<CardCollectionComponent> {
 
   Widget wrapCards(List<Widget> cardWidgets) {
     switch (config.orientation) {
-      case Orientation.vert:
+      case CardCollectionOrientation.vert:
         return _produceColumn(cardWidgets);
-      case Orientation.horz:
+      case CardCollectionOrientation.horz:
         return _produceRow(cardWidgets);
-      case Orientation.fan:
+      case CardCollectionOrientation.fan:
       // unimplemented, so we'll fall through to show1, for now.
       // Probably a Stack + Positioned
-      case Orientation.show1:
+      case CardCollectionOrientation.show1:
         return _produceSingle(cardWidgets);
-      case Orientation.suit:
+      case CardCollectionOrientation.suit:
         List<Widget> cs = new List<Widget>();
         List<Widget> ds = new List<Widget>();
         List<Widget> hs = new List<Widget>();

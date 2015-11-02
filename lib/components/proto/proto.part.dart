@@ -22,7 +22,7 @@ class ProtoGameComponentState extends GameComponentState<ProtoGameComponent> {
     for (int i = 0; i < 4; i++) {
       List<logic_card.Card> cards = config.game.cardCollections[i];
       CardCollectionComponent c = new CardCollectionComponent(
-          cards, config.game.playerNumber == i, Orientation.horz,
+          cards, config.game.playerNumber == i, CardCollectionOrientation.horz,
           dragChildren: true,
           acceptType: DropType.card,
           acceptCallback: _makeGameMoveCallback,
@@ -34,7 +34,7 @@ class ProtoGameComponentState extends GameComponentState<ProtoGameComponent> {
         decoration: new BoxDecoration(
             backgroundColor: material.Colors.green[500], borderRadius: 5.0),
         child: new CardCollectionComponent(
-            config.game.cardCollections[4], true, Orientation.show1,
+            config.game.cardCollections[4], true, CardCollectionOrientation.show1,
             dragChildren: true,
             acceptType: DropType.card,
             acceptCallback: _makeGameMoveCallback,

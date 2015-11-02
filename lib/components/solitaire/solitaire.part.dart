@@ -108,7 +108,7 @@ class SolitaireGameComponentState
       new CardCollectionComponent(
           game.cardCollections[SolitaireGame.OFFSET_ACES + 0],
           true,
-          Orientation.show1,
+          CardCollectionOrientation.show1,
           widthCard: cardSize,
           heightCard: cardSize,
           acceptCallback: _moveCallback,
@@ -117,7 +117,7 @@ class SolitaireGameComponentState
       new CardCollectionComponent(
           game.cardCollections[SolitaireGame.OFFSET_ACES + 1],
           true,
-          Orientation.show1,
+          CardCollectionOrientation.show1,
           widthCard: cardSize,
           heightCard: cardSize,
           acceptCallback: _moveCallback,
@@ -126,7 +126,7 @@ class SolitaireGameComponentState
       new CardCollectionComponent(
           game.cardCollections[SolitaireGame.OFFSET_ACES + 2],
           true,
-          Orientation.show1,
+          CardCollectionOrientation.show1,
           widthCard: cardSize,
           heightCard: cardSize,
           acceptCallback: _moveCallback,
@@ -135,7 +135,7 @@ class SolitaireGameComponentState
       new CardCollectionComponent(
           game.cardCollections[SolitaireGame.OFFSET_ACES + 3],
           true,
-          Orientation.show1,
+          CardCollectionOrientation.show1,
           widthCard: cardSize,
           heightCard: cardSize,
           acceptCallback: _moveCallback,
@@ -147,7 +147,7 @@ class SolitaireGameComponentState
       new CardCollectionComponent(
           game.cardCollections[SolitaireGame.OFFSET_DISCARD],
           true,
-          Orientation.show1,
+          CardCollectionOrientation.show1,
           widthCard: cardSize,
           heightCard: cardSize,
           dragChildren: true),
@@ -155,7 +155,7 @@ class SolitaireGameComponentState
           child: new CardCollectionComponent(
               game.cardCollections[SolitaireGame.OFFSET_DRAW],
               false,
-              Orientation.show1,
+              CardCollectionOrientation.show1,
               widthCard: cardSize,
               heightCard: cardSize),
           onTap: game.canDrawCard ? game.drawCardUI : null),
@@ -167,7 +167,7 @@ class SolitaireGameComponentState
           child: new CardCollectionComponent(
               game.cardCollections[SolitaireGame.OFFSET_DOWN + i],
               false,
-              Orientation.show1,
+              CardCollectionOrientation.show1,
               widthCard: cardSize,
               heightCard: cardSize),
           onTap: game.cardCollections[SolitaireGame.OFFSET_UP + i].length == 0
@@ -179,7 +179,7 @@ class SolitaireGameComponentState
       row3.add(new CardCollectionComponent(
           game.cardCollections[SolitaireGame.OFFSET_UP + i],
           true,
-          Orientation.vert,
+          CardCollectionOrientation.vert,
           widthCard: cardSize,
           heightCard: cardSize,
           height: config.height * 0.6,
