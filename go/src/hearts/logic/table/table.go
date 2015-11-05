@@ -2,21 +2,32 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+// table contains and manages the logic half of the game state
+
 package table
 
 import (
+	"golang.org/x/mobile/exp/sprite"
+	"hearts/img/direction"
 	"hearts/logic/card"
 	"hearts/logic/player"
+	"log"
 	"math/rand"
+	"sort"
 )
 
 // Returns a table instance with player set length numPlayers
-func InitializeGame(numPlayers int) *Table {
+func InitializeGame(numPlayers int, texs map[string]sprite.SubTex) *Table {
 	players := make([]*player.Player, 0)
+	names := []string{"YoungSeok", "Dan", "Emily", "Ross"}
+	images := []sprite.SubTex{texs["player0.jpeg"], texs["player1.jpeg"], texs["player2.jpeg"], texs["player3.jpeg"]}
 	for i := 0; i < numPlayers; i++ {
-		players = append(players, player.NewPlayer(i))
+		players = append(players, player.NewPlayer(i, names[i], images[i]))
 	}
-	return makeTable(players)
+	t := makeTable(players)
+	t.GenerateClassicCards()
+	t.NewRound()
+	return t
 }
 
 // Given a group of players, returns a table instance with that group as its player set
@@ -29,6 +40,7 @@ func makeTable(p []*player.Player) *Table {
 		heartsBroken: false,
 		firstTrick:   true,
 		winCondition: 100,
+		dir:          direction.Right,
 	}
 }
 
@@ -48,6 +60,8 @@ type Table struct {
 	// winCondition is the number of points needed to win the game
 	// traditionally 100, could set higher or lower for longer or shorter game
 	winCondition int
+	// dir is the current round's passing direction
+	dir direction.Direction
 }
 
 // Returns the player set of t
@@ -55,25 +69,35 @@ func (t *Table) GetPlayers() []*player.Player {
 	return t.players
 }
 
-// Sets the firstplayer variable of t to index
-func (t *Table) SetFirstPlayer(index int) {
-	t.firstPlayer = index
+// Returns the current trick of t
+func (t *Table) GetTrick() []*card.Card {
+	return t.trick
 }
 
-// Returns the playerIndex of the player at the table who should start the round
-func (t *Table) StartingPlayer() int {
-	for i, p := range t.players {
-		if p.HasTwoOfClubs() {
-			return i
-		}
-	}
-	return -1
+// Returns the index in t.players and t.trick of the designated first player in the current round
+func (t *Table) GetFirstPlayer() int {
+	return t.firstPlayer
+}
+
+// Returns the deck of all cards stored in t
+func (t *Table) GetAllCards() []*card.Card {
+	return t.allCards
+}
+
+func (t *Table) GetDir() direction.Direction {
+	return t.dir
+}
+
+// Sets the firstplayer variable of t to index
+func (t *Table) SetFirstPlayer(index int) {
+	log.Println("Setting first player to", index)
+	t.firstPlayer = index
 }
 
 // This function generates a traditional deck of 52 cards, with 13 in each of the four suits
 // Each card has a suit (Club, Diamond, Spade, or Heart)
 // Each card also has a face from Two to Ace (Aces are high in Hearts)
-func (t *Table) GenerateCards() {
+func (t *Table) GenerateClassicCards() {
 	cardsPerSuit := 13
 	t.allCards = make([]*card.Card, 0)
 	cardFaces := []card.Face{card.Two, card.Three, card.Four, card.Five, card.Six, card.Seven, card.Eight, card.Nine,
@@ -84,18 +108,39 @@ func (t *Table) GenerateCards() {
 		t.allCards = append(t.allCards, card.NewCard(cardFaces[i], card.Spade))
 		t.allCards = append(t.allCards, card.NewCard(cardFaces[i], card.Heart))
 	}
+	sort.Sort(card.CardSorter(t.allCards))
 }
 
 // Given a card and the index of its player, adds that card to the appropriate spot in the current trick
-func (t *Table) PlayCard(c *card.Card, playerIndex int) {
+func (t *Table) SetPlayedCard(c *card.Card, playerIndex int) {
 	t.trick[playerIndex] = c
 	if c.GetSuit() == card.Heart && !t.heartsBroken {
 		t.heartsBroken = true
 	}
 }
 
-// Given a card and the index of its player, returns true if this move was valid
-func (t *Table) ValidPlay(c *card.Card, playerIndex int) bool {
+// Returns true if there are exactly three cards being passed (specified by Hearts logic)
+func (t *Table) ValidPass(cardsPassed []*card.Card) bool {
+	return len(cardsPassed) == 3
+}
+
+// Returns whether it is valid for the player at playerIndex to play a card
+func (t *Table) ValidPlayOrder(playerIndex int) bool {
+	if t.firstPlayer == playerIndex {
+		return true
+	}
+	playerBeforeMe := playerIndex - 1
+	if playerBeforeMe < 0 {
+		playerBeforeMe += len(t.players)
+	}
+	if t.trick[playerBeforeMe] == nil {
+		return false
+	}
+	return true
+}
+
+// Given a card and the index of its player, returns true if this move was valid based on game logic
+func (t *Table) ValidPlayLogic(c *card.Card, playerIndex int) bool {
 	player := t.players[playerIndex]
 	if t.firstPlayer == playerIndex {
 		if !t.firstTrick {
@@ -124,8 +169,49 @@ func (t *Table) ValidPlay(c *card.Card, playerIndex int) bool {
 	return false
 }
 
-// Calculates who should take the cards in the current trick and sends them
-func (t *Table) SendTrick() {
+// Returns true if all players have their initial dealt hands
+func (t *Table) AllDoneDealing() bool {
+	for _, p := range t.players {
+		if len(p.GetHand()) == 0 {
+			return false
+		}
+	}
+	return true
+}
+
+// Returns true if all players have taken the cards passed to them
+func (t *Table) AllDonePassing() bool {
+	for _, p := range t.players {
+		if !p.GetDonePassing() {
+			log.Println(p.GetPlayerIndex())
+			return false
+		}
+	}
+	return true
+}
+
+// Returns true if all players have finished looking at their scores
+func (t *Table) AllReadyForNewRound() bool {
+	for _, p := range t.players {
+		if !p.GetDoneScoring() {
+			return false
+		}
+	}
+	return true
+}
+
+// Returns true if all players are out of cards, indicating the end of a round
+func (t *Table) RoundOver() bool {
+	for _, p := range t.players {
+		if len(p.GetHand()) > 0 {
+			return false
+		}
+	}
+	return true
+}
+
+// Calculates who should take the cards in the current trick and sends them. Sets next first player accordingly. Returns true if the round is over
+func (t *Table) SendTrick() (bool, int) {
 	trickSuit := t.trick[t.firstPlayer].GetSuit()
 	highestCardFace := card.Two
 	highestIndex := -1
@@ -136,12 +222,22 @@ func (t *Table) SendTrick() {
 			highestIndex = i
 		}
 	}
+	// resets all players' donePlaying bools
+	for _, p := range t.players {
+		p.SetDonePlaying(false)
+	}
 	// clear trick
 	t.players[highestIndex].TakeTrick(t.trick)
 	t.trick = make([]*card.Card, len(t.players))
 	if t.firstTrick {
 		t.firstTrick = false
 	}
+	if t.RoundOver() {
+		return true, highestIndex
+	}
+	// set first player for next trick to whoever received the current trick
+	t.SetFirstPlayer(highestIndex)
+	return false, highestIndex
 }
 
 // Updates each player's score with the score of the current round
@@ -173,25 +269,24 @@ func (t *Table) ScoreRound() {
 	}
 }
 
-// Randomly distributes cards evenly to all players
-func (t *Table) Deal() {
+// Returns set of hands with random, even card distribution
+func (t *Table) Deal() [][]*card.Card {
 	numPlayers := len(t.players)
-	if t.allCards == nil {
-		t.GenerateCards()
-	}
+	allHands := make([][]*card.Card, numPlayers)
 	shuffle := rand.Perm(len(t.allCards))
 	for i := 0; i < len(t.allCards); i++ {
-		t.players[i%numPlayers].AddToHand(t.allCards[shuffle[i]])
+		allHands[i%numPlayers] = append(allHands[i%numPlayers], t.allCards[shuffle[i]])
 	}
+	return allHands
 }
 
-// Returns -1 if the game hasn't been won yet, playerIndex of the winner if it has
-// to-do: return a list of players in the event of a tie
-func (t *Table) EndRound() int {
+// Returns empty array if the game hasn't been won yet, array containing all playerIndices of the winners if it has
+func (t *Table) EndRound() []int {
 	t.ScoreRound()
 	lowestScore := -1
-	winningPlayer := -1
+	winningPlayers := make([]int, 0)
 	winTriggered := false
+	t.dir = (t.dir + 1) % 4
 	for _, p := range t.players {
 		p.ResetTricks()
 		if p.GetScore() >= t.winCondition {
@@ -199,18 +294,46 @@ func (t *Table) EndRound() int {
 		}
 		if p.GetScore() < lowestScore || lowestScore == -1 {
 			lowestScore = p.GetScore()
-			winningPlayer = p.GetPlayerIndex()
 		}
 	}
 	if winTriggered {
-		return winningPlayer
+		for _, p := range t.players {
+			if p.GetScore() == lowestScore {
+				winningPlayers = append(winningPlayers, p.GetPlayerIndex())
+			}
+		}
 	}
-	return -1
+	return winningPlayers
 }
 
-// Starts a new round of the game
+// Resets stats for a new round of the game
 func (t *Table) NewRound() {
 	t.heartsBroken = false
 	t.firstTrick = true
-	t.Deal()
+	players := t.GetPlayers()
+	for _, p := range players {
+		if t.dir != direction.None {
+			p.SetDonePassing(false)
+			p.SetDoneTaking(false)
+		} else {
+			p.SetDonePassing(true)
+			p.SetDoneTaking(true)
+			if p.HasTwoOfClubs() {
+				t.SetFirstPlayer(p.GetPlayerIndex())
+			}
+		}
+		p.SetDoneScoring(false)
+	}
+}
+
+// Resets table for start of new game
+func (t *Table) NewGame() {
+	for _, p := range t.players {
+		p.ResetPassedTo()
+		p.ResetPassedFrom()
+		p.ResetTricks()
+		p.ResetScore()
+	}
+	t.NewRound()
+	t.dir = direction.Right
 }

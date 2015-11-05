@@ -2,11 +2,16 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+// card.go contains the Suit and Face types, as well as the Card struct.
+// Card contains basic card variables, including both logic and UI information.
+
 package card
 
 import (
 	"golang.org/x/mobile/exp/f32"
 	"golang.org/x/mobile/exp/sprite"
+
+	"hearts/img/coords"
 )
 
 type Suit int
@@ -16,7 +21,40 @@ const (
 	Diamond
 	Spade
 	Heart
+	UnknownSuit
 )
+
+// Converts a Suit type to string type
+func (s Suit) String() string {
+	switch s {
+	case Heart:
+		return "h"
+	case Diamond:
+		return "d"
+	case Spade:
+		return "s"
+	case Club:
+		return "c"
+	default:
+		return "?"
+	}
+}
+
+// Converts a string type to Suit type
+func ConvertToSuit(s string) Suit {
+	switch s {
+	case "h":
+		return Heart
+	case "d":
+		return Diamond
+	case "s":
+		return Spade
+	case "c":
+		return Club
+	default:
+		return UnknownSuit
+	}
+}
 
 type Face int
 
@@ -35,83 +73,75 @@ const (
 	King
 	// note: in Hearts, Aces are high
 	Ace
+	UnknownFace
 )
 
-type Vec struct {
-	X float32
-	Y float32
-}
-
-// Returns a new vec
-func MakeVec(x, y float32) Vec {
-	return Vec{
-		X: x,
-		Y: y,
+// Converts a Face type to string type
+func (f Face) String() string {
+	switch f {
+	case Ace:
+		return "1"
+	case Two:
+		return "2"
+	case Three:
+		return "3"
+	case Four:
+		return "4"
+	case Five:
+		return "5"
+	case Six:
+		return "6"
+	case Seven:
+		return "7"
+	case Eight:
+		return "8"
+	case Nine:
+		return "9"
+	case Ten:
+		return "10"
+	case Jack:
+		return "j"
+	case Queen:
+		return "q"
+	case King:
+		return "k"
+	default:
+		return "?"
 	}
 }
 
-func (v *Vec) SetVec(x, y float32) {
-	v.X = x
-	v.Y = y
-}
-
-func (v Vec) Rescale(oldWindow, newWindow Vec) Vec {
-	newX := v.X/oldWindow.X*newWindow.X
-	newY := v.Y/oldWindow.Y*newWindow.Y
-	newXY := MakeVec(newX, newY)
-	return newXY
-}
-
-type Position struct {
-	initial    Vec
-	current    Vec
-	dimensions Vec
-}
-
-// Returns a new position
-func MakePosition(i, c, d Vec) *Position {
-	return &Position{
-		initial:    i,
-		current:    c,
-		dimensions: d,
+// Converts a string type to Face type
+func ConvertToFace(s string) Face {
+	switch s {
+	case "1":
+		return Ace
+	case "2":
+		return Two
+	case "3":
+		return Three
+	case "4":
+		return Four
+	case "5":
+		return Five
+	case "6":
+		return Six
+	case "7":
+		return Seven
+	case "8":
+		return Eight
+	case "9":
+		return Nine
+	case "10":
+		return Ten
+	case "j":
+		return Jack
+	case "q":
+		return Queen
+	case "k":
+		return King
+	default:
+		return UnknownFace
 	}
-}
-
-// Returns the initial Vec of p
-func (p *Position) GetInitial() Vec {
-	return p.initial
-}
-
-// Returns the current Vec of p
-func (p *Position) GetCurrent() Vec {
-	return p.current
-}
-
-// Returns the dimensions Vec of p
-func (p *Position) GetDimensions() Vec {
-	return p.dimensions
-}
-
-// Updates the initial Vec of p
-func (p *Position) SetInitial(v Vec) {
-	p.initial = v
-}
-
-// Updates the current Vec of p
-func (p *Position) SetCurrent(v Vec) {
-	p.current = v
-}
-
-// Updates the dimensions Vec of p
-func (p *Position) SetDimensions(v Vec) {
-	p.dimensions = v
-}
-
-func (p *Position) Rescale(oldWindow, newWindow Vec) (Vec, Vec, Vec){
-	i := p.initial.Rescale(oldWindow, newWindow)
-	c := p.current.Rescale(oldWindow, newWindow)
-	d := p.dimensions.Rescale(oldWindow, newWindow)
-	return i, c, d
 }
 
 // Returns a new card with suit and face variables set
@@ -129,7 +159,7 @@ type Card struct {
 	node  *sprite.Node
 	image sprite.SubTex
 	back  sprite.SubTex
-	pos   Position
+	pos   *coords.Position
 }
 
 // Returns the suit of c
@@ -157,18 +187,22 @@ func (c *Card) GetBack() sprite.SubTex {
 	return c.back
 }
 
+func (c *Card) GetPosition() *coords.Position {
+	return c.pos
+}
+
 // Returns a vector containing the current x- and y-coordinate of the upper left corner of c
-func (c *Card) GetCurrent() Vec {
+func (c *Card) GetCurrent() *coords.Vec {
 	return c.pos.GetCurrent()
 }
 
 // Returns a vector containing the initial x- and y-coordinate of the upper left corner of c
-func (c *Card) GetInitial() Vec {
+func (c *Card) GetInitial() *coords.Vec {
 	return c.pos.GetInitial()
 }
 
 // Returns a vector containing the width and height of c
-func (c *Card) GetDimensions() Vec {
+func (c *Card) GetDimensions() *coords.Vec {
 	return c.pos.GetDimensions()
 }
 
@@ -182,28 +216,45 @@ func (c *Card) SetImage(s sprite.SubTex) {
 	c.image = s
 }
 
+// Sets the card back of c to s
 func (c *Card) SetBack(s sprite.SubTex) {
 	c.back = s
 }
 
+// Shows the front of c
+func (c *Card) SetFrontDisplay(eng sprite.Engine) {
+	eng.SetSubTex(c.node, c.image)
+}
+
+// Shows the back of c
+func (c *Card) SetBackDisplay(eng sprite.Engine) {
+	eng.SetSubTex(c.node, c.back)
+}
+
 // Moves c to a new position and size
-func (c *Card) Move(newXY, newDimensions Vec, eng sprite.Engine) {
+func (c *Card) Move(newXY, newDimensions *coords.Vec, eng sprite.Engine) {
 	eng.SetTransform(c.node, f32.Affine{
 		{newDimensions.X, 0, newXY.X},
 		{0, newDimensions.Y, newXY.Y},
 	})
-	c.SetPos(newXY, newDimensions)
+	pos := coords.MakePosition(c.GetInitial(), newXY, newDimensions)
+	c.SetPos(pos)
 }
 
 // Sets the variables of c to a new position and size, but does not actually update the image on-screen
-func (c *Card) SetPos(newXY, newDimensions Vec) {
-	c.pos.SetCurrent(newXY)
-	c.pos.SetDimensions(newDimensions)
+func (c *Card) SetPos(pos *coords.Position) {
+	c.pos = pos
 }
 
 // Sets the initial x and y coordinates of c
-func (c *Card) SetInitialPos(newInitialXY Vec) {
-	c.pos.SetInitial(newInitialXY)
+func (c *Card) SetInitial(newInitial *coords.Vec) {
+	c.pos.SetInitial(newInitial)
+}
+
+func (c *Card) InitializePosition() {
+	zero := coords.MakeVec(0, 0)
+	pos := coords.MakePosition(zero, zero, zero)
+	c.SetPos(pos)
 }
 
 // Returns true if c is worth any points (all Hearts cards, and the Queen of Spades)

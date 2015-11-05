@@ -2,11 +2,15 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+// staticimg is where the StaticImg struct is defined.
+// This struct contains image information for all images other than cards.
+
 package staticimg
 
 import (
 	"golang.org/x/mobile/exp/f32"
 	"golang.org/x/mobile/exp/sprite"
+	"hearts/img/coords"
 	"hearts/logic/card"
 )
 
@@ -19,11 +23,13 @@ func MakeStaticImg() *StaticImg {
 type StaticImg struct {
 	node  *sprite.Node
 	image sprite.SubTex
-	// alt may or may not be used
+	// alt may or may not be set. It is a second SubTex in case the staticImg may alternate between two displays
 	// can be used as the 'pressed' image if the StaticImg instance is a button
 	// also can be used as a 'blank' image if the StaticImg instance may disappear
 	alt sprite.SubTex
-	pos card.Position
+	// displayingImage is true is image is currently being displayed, and false if alt is currently being displayed
+	displayingImage bool
+	pos             *coords.Position
 	// cardHere is used if the StaticImg instance is a drop target
 	cardHere *card.Card
 }
@@ -43,18 +49,26 @@ func (s *StaticImg) GetAlt() sprite.SubTex {
 	return s.alt
 }
 
+func (s *StaticImg) GetDisplayingImage() bool {
+	return s.displayingImage
+}
+
+func (s *StaticImg) GetPosition() *coords.Position {
+	return s.pos
+}
+
 // Returns a vector containing the current x- and y-coordinate of the upper left corner of s
-func (s *StaticImg) GetCurrent() card.Vec {
+func (s *StaticImg) GetCurrent() *coords.Vec {
 	return s.pos.GetCurrent()
 }
 
 // Returns a vector containing the initial x- and y-coordinate of the upper left corner of s
-func (s *StaticImg) GetInitial() card.Vec {
+func (s *StaticImg) GetInitial() *coords.Vec {
 	return s.pos.GetInitial()
 }
 
 // Returns a vector containing the width and height of s
-func (s *StaticImg) GetDimensions() card.Vec {
+func (s *StaticImg) GetDimensions() *coords.Vec {
 	return s.pos.GetDimensions()
 }
 
@@ -78,8 +92,12 @@ func (s *StaticImg) SetAlt(t sprite.SubTex) {
 	s.alt = t
 }
 
+func (s *StaticImg) SetDisplayingImage(disp bool) {
+	s.displayingImage = disp
+}
+
 // Moves s to a new position and size
-func (s *StaticImg) Move(newXY, newDimensions card.Vec, eng sprite.Engine) {
+func (s *StaticImg) Move(newXY, newDimensions *coords.Vec, eng sprite.Engine) {
 	eng.SetTransform(s.node, f32.Affine{
 		{newDimensions.X, 0, newXY.X},
 		{0, newDimensions.Y, newXY.Y},
@@ -89,8 +107,12 @@ func (s *StaticImg) Move(newXY, newDimensions card.Vec, eng sprite.Engine) {
 }
 
 // Sets the initial x and y coordinates of the upper left corner of s
-func (s *StaticImg) SetInitialPos(newXY card.Vec) {
-	s.pos.SetInitial(newXY)
+func (s *StaticImg) SetPos(newPos *coords.Position) {
+	s.pos = newPos
+}
+
+func (s *StaticImg) SetInitial(initial *coords.Vec) {
+	s.pos.SetInitial(initial)
 }
 
 // Pins card c to s

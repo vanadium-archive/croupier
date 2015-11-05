@@ -2,257 +2,140 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+// main.go is the master file for Croupier Hearts. It runs the app.
+
 package main
 
 import (
 	"time"
 
-	"hearts/direction"
-	"hearts/img/reposition"
+	"v.io/v23"
+	"v.io/v23/context"
+	"v.io/v23/security"
+	"v.io/v23/security/access"
+	"v.io/v23/syncbase"
+	"v.io/x/ref/lib/signals"
+
 	"hearts/img/resize"
-	"hearts/img/staticimg"
-	"hearts/logic/card"
+	"hearts/img/texture"
+	"hearts/img/uistate"
+	"hearts/img/view"
 	"hearts/logic/table"
+	"hearts/syncbase/client"
+	"hearts/syncbase/server"
+	"hearts/syncbase/watch"
+	"hearts/touchhandler"
 
 	"golang.org/x/mobile/app"
+	"golang.org/x/mobile/event/lifecycle"
 	"golang.org/x/mobile/event/paint"
 	"golang.org/x/mobile/event/size"
 	"golang.org/x/mobile/event/touch"
 
-	"golang.org/x/mobile/exp/sprite"
+	"golang.org/x/mobile/exp/gl/glutil"
 	"golang.org/x/mobile/exp/sprite/clock"
 	"golang.org/x/mobile/exp/sprite/glsprite"
 	"golang.org/x/mobile/gl"
 )
 
-const (
-	numPlayers      = 4
-	cardSize        = 35
-	cardScaler      = float32(.5)
-	topPadding      = float32(15)
-	bottomPadding   = float32(5)
-)
-
-var (
-	startTime      = time.Now()
-	eng            = glsprite.Engine()
-	scene          *sprite.Node
-	cards          = make([]*card.Card, 0)
-	backgroundImgs = make([]*staticimg.StaticImg, 0)
-	emptySuitImgs  = make([]*staticimg.StaticImg, 0)
-	dropTargets    = make([]*staticimg.StaticImg, 0)
-	buttons        = make([]*staticimg.StaticImg, 0)
-	curCard        *card.Card
-	// lastMouseXY is in Px: divide by pixelsPerPt to get Pt
-	lastMouseXY = card.MakeVec(-1, -1)
-	// windowSize is in Pt
-	windowSize  = card.MakeVec(-1, -1)
-	cardDim = card.MakeVec(cardSize, cardSize)
-	tableCardDim = card.MakeVec(cardDim.X*cardScaler, cardDim.Y*cardScaler)
-	pixelsPerPt float32
-	padding     = float32(5)
-	dir         direction.Direction
-	view        View
-	curTable    = table.InitializeGame(numPlayers)
-)
-
-type View string
-
-const (
-	Opening View = "O"
-	Pass    View = "P"
-	Table   View = "T"
-)
-
 func main() {
 	app.Main(func(a app.App) {
+		var glctx gl.Context
 		var sz size.Event
-		dir = direction.Right
+		u := uistate.MakeUIState()
 		for e := range a.Events() {
-			switch e := app.Filter(e).(type) {
+			switch e := a.Filter(e).(type) {
+			case lifecycle.Event:
+				switch e.Crosses(lifecycle.StageVisible) {
+				case lifecycle.CrossOn:
+					glctx, _ = e.DrawContext.(gl.Context)
+					onStart(glctx, u)
+					a.Send(paint.Event{})
+				case lifecycle.CrossOff:
+					glctx = nil
+					onStop(u)
+				}
 			case size.Event:
-				// rearrange images on screen based on new size
-				sz = e
-				oldPos := windowSize
-				updateWindowSize(sz)
-				updateImgPositions(oldPos)
+				if !u.Done {
+					// rearrange images on screen based on new size
+					sz = e
+					resize.UpdateImgPositions(sz, u)
+				}
 			case touch.Event:
-				onTouch(e)
+				touchhandler.OnTouch(e, u)
 			case paint.Event:
-				onPaint(sz)
-				a.EndPaint(e)
+				if !u.Done {
+					if glctx == nil || e.External {
+						continue
+					}
+					onPaint(glctx, sz, u)
+					a.Publish()
+					a.Send(paint.Event{}) // keep animating
+				}
 			}
 		}
 	})
 }
 
-func updateWindowSize(sz size.Event) {
-	wsPointer := &windowSize
-	wsPointer.SetVec(float32(sz.WidthPt), float32(sz.HeightPt))
-	pixelsPerPt = float32(sz.WidthPx) / windowSize.X
-}
-
-func updateImgPositions(oldWindow card.Vec) {
-	if windowExists(oldWindow) {
-		padding = resize.ScaleVar(padding, oldWindow, windowSize)
-		cardDim = resize.ScaleVec(cardDim, oldWindow, windowSize)
-		tableCardDim = resize.ScaleVec(tableCardDim, oldWindow, windowSize)
-		resize.AdjustImgs(oldWindow, cards, dropTargets, backgroundImgs, buttons, emptySuitImgs, windowSize, eng)
+func onStart(glctx gl.Context, u *uistate.UIState) {
+	sgName := "users/emshack@google.com/croupier/syncbase/%%sync/croupiersync"
+	contextChan := make(chan *context.T)
+	serviceChan := make(chan syncbase.Service)
+	go makeServerClient(contextChan, serviceChan)
+	// wait for server to generate ctx, client to generate service
+	u.Ctx = <-contextChan
+	u.Service = <-serviceChan
+	namespace := v23.GetNamespace(u.Ctx)
+	allAccess := access.AccessList{In: []security.BlessingPattern{"..."}}
+	permissions := access.Permissions{
+		"Admin":   allAccess,
+		"Write":   allAccess,
+		"Read":    allAccess,
+		"Resolve": allAccess,
+		"Debug":   allAccess,
 	}
+	namespace.SetPermissions(u.Ctx, "users/emshack@google.com/croupier", permissions, "")
+	u.Service.SetPermissions(u.Ctx, permissions, "")
+	u.Images = glutil.NewImages(glctx)
+	u.Eng = glsprite.Engine(u.Images)
+	u.Texs = texture.LoadTextures(u.Eng)
+	u.CurTable = table.InitializeGame(u.NumPlayers, u.Texs)
+	server.CreateTable(u)
+	server.CreateOrJoinSyncgroup(u, sgName)
+	// Create watch stream to update game state based on Syncbase updates
+	go watch.Update(u)
 }
 
-func windowExists(window card.Vec) bool {
-	return !(window.X < 0 || window.Y < 0)
+func onStop(u *uistate.UIState) {
+	u.Eng.Release()
+	u.Images.Release()
+	u.Done = true
 }
 
-// returns a card object if a card was clicked, or nil if no card was clicked
-func findClickedCard(t touch.Event) *card.Card {
-	// i goes from the end backwards so that it checks cards displayed on top of other cards first
-	for i := len(cards) - 1; i >= 0; i-- {
-		c := cards[i]
-		if touchingCard(t, c) {
-			return c
-		}
+func onPaint(glctx gl.Context, sz size.Event, u *uistate.UIState) {
+	if u.CurView == uistate.None {
+		view.LoadOpeningView(u)
 	}
-	return nil
+	glctx.ClearColor(1, 1, 1, 1)
+	glctx.Clear(gl.COLOR_BUFFER_BIT)
+	now := clock.Time(time.Since(u.StartTime) * 60 / time.Second)
+	u.Eng.Render(u.Scene, now, sz)
 }
 
-func touchingCard(t touch.Event, c *card.Card) bool {
-	withinXBounds := t.X/pixelsPerPt >= c.GetCurrent().X && t.X/pixelsPerPt <= c.GetDimensions().X+c.GetCurrent().X
-	withinYBounds := t.Y/pixelsPerPt >= c.GetCurrent().Y && t.Y/pixelsPerPt <= c.GetDimensions().Y+c.GetCurrent().Y
-	return withinXBounds && withinYBounds
-}
+func makeServerClient(contextChan chan *context.T, serviceChan chan syncbase.Service) {
+	context, shutdown := v23.Init()
+	contextChan <- context
+	serviceChan <- client.GetService()
+	defer shutdown()
 
-func touchingStaticImg(t touch.Event, s *staticimg.StaticImg) bool {
-	withinXBounds := t.X/pixelsPerPt >= s.GetCurrent().X && t.X/pixelsPerPt <= s.GetDimensions().X+s.GetCurrent().X
-	withinYBounds := t.Y/pixelsPerPt >= s.GetCurrent().Y && t.Y/pixelsPerPt <= s.GetDimensions().Y+s.GetCurrent().Y
-	return withinXBounds && withinYBounds
-}
+	stop := server.Advertise(context)
+	<-signals.ShutdownOnSignals(context)
+	stop()
 
-// returns a button object if a button was clicked, or nil if no button was clicked
-func findClickedButton(t touch.Event) *staticimg.StaticImg {
-	for _, b := range buttons {
-		if touchingStaticImg(t, b) {
-			return b
-		}
-	}
-	return nil
-}
-
-func passCards(t touch.Event) {
-	for _, d := range dropTargets {
-		passCard := d.GetCardHere()
-		if passCard != nil {
-			reposition.SpinAway(passCard, dir, t)
-			d.SetCardHere(nil)
-		}
-	}
-}
-
-func dropCardOnTarget(c *card.Card, t touch.Event) bool {
-	for _, d := range dropTargets {
-		// checking to see if card was dropped onto a drop target
-		if touchingStaticImg(t, d) {
-			lastDroppedCard := d.GetCardHere()
-			if lastDroppedCard != nil {
-				reposition.ResetCardPosition(lastDroppedCard, eng)
-				if view == Pass {
-					reposition.RealignSuit(lastDroppedCard.GetSuit(), lastDroppedCard.GetInitial().Y, cards, emptySuitImgs, padding, windowSize, eng)
-				} else if view == Table {
-					eng.SetSubTex(lastDroppedCard.GetNode(), lastDroppedCard.GetBack())
-					lastDroppedCard.Move(lastDroppedCard.GetCurrent(), tableCardDim, eng)
-				}
-			}
-			oldY := c.GetInitial().Y
-			suit := c.GetSuit()
-			curCard.Move(d.GetCurrent(), c.GetDimensions(), eng)
-			d.SetCardHere(curCard)
-			// realign suit the card just left
-			if view == Pass {
-				reposition.RealignSuit(suit, oldY, cards, emptySuitImgs, padding, windowSize, eng)
-			}
-			return true
-		}
-	}
-	return false
-}
-
-func removeCardFromTarget(c *card.Card) bool {
-	for _, d := range dropTargets {
-		if d.GetCardHere() == c {
-			d.SetCardHere(nil)
-			return true
-		}
-	}
-	return false
-}
-
-func unpressButtons() {
-	for _, b := range buttons {
-		eng.SetSubTex(b.GetNode(), b.GetImage())
-	}
-}
-
-func pressButton(b *staticimg.StaticImg) {
-	eng.SetSubTex(b.GetNode(), b.GetAlt())
-}
-
-func onTouch(t touch.Event) {
-	switch t.Type.String() {
-	case "begin":
-		curCard = findClickedCard(t)
-		b := findClickedButton(t)
-		if b != nil {
-			pressButton(b)
-			if view == Pass {
-				// specific to pass screen scenario: if any button is clicked, all cards on drop targets get passed
-				passCards(t)
-			} else if view == Opening {
-				if buttons[0] == b {
-					loadTableView(curTable)
-				} else {
-					loadPassView(curTable)
-				}
-			}
-		}
-	case "move":
-		// only do anything if the user has clicked on a card: then, drag it
-		if curCard != nil {
-			reposition.DragCard(curCard, pixelsPerPt, lastMouseXY, eng, t)
-		}
-	case "end":
-		if curCard != nil {
-			if !dropCardOnTarget(curCard, t) {
-				// check to see if card was removed from a drop target
-				removeCardFromTarget(curCard)
-				// add card back to hand
-				reposition.ResetCardPosition(curCard, eng)
-				if view == Pass {
-					reposition.RealignSuit(curCard.GetSuit(), curCard.GetInitial().Y, cards, emptySuitImgs, padding, windowSize, eng)
-				} else if view == Table {
-					eng.SetSubTex(curCard.GetNode(), curCard.GetBack())
-					curCard.Move(curCard.GetCurrent(), tableCardDim, eng)
-				}
-			} else if view == Table {
-				eng.SetSubTex(curCard.GetNode(), curCard.GetImage())
-				curCard.Move(curCard.GetCurrent(), cardDim, eng)
-			}
-		}
-		// reset all buttons to 'unpressed' image, in case any had been clicked
-		unpressButtons()
-		curCard = nil
-	}
-	lastMouseXY.X = t.X
-	lastMouseXY.Y = t.Y
-}
-
-func onPaint(sz size.Event) {
-	if scene == nil {
-		curTable.Deal()
-		loadOpeningView(curTable)
-	}
-	gl.ClearColor(1, 1, 1, 1)
-	gl.Clear(gl.COLOR_BUFFER_BIT)
-	now := clock.Time(time.Since(startTime) * 60 / time.Second)
-	eng.Render(scene, now, sz)
+	// Time for stopping advertisements gracefully like advertising
+	// goodbye through mDNS before the program exits.
+	//
+	// This is not required and the advertised services will be garbage
+	// collected by TTL anyway.
+	time.Sleep(1 * time.Second)
 }
