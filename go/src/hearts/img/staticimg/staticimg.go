@@ -29,7 +29,12 @@ type StaticImg struct {
 	alt sprite.SubTex
 	// displayingImage is true is image is currently being displayed, and false if alt is currently being displayed
 	displayingImage bool
-	pos             *coords.Position
+	// XY coordinates of the initial placement of the image
+	initial *coords.Vec
+	// current XY coordinates of the image
+	current *coords.Vec
+	// current width and height of the image
+	dimensions *coords.Vec
 	// cardHere is used if the StaticImg instance is a drop target
 	cardHere *card.Card
 }
@@ -53,23 +58,19 @@ func (s *StaticImg) GetDisplayingImage() bool {
 	return s.displayingImage
 }
 
-func (s *StaticImg) GetPosition() *coords.Position {
-	return s.pos
-}
-
 // Returns a vector containing the current x- and y-coordinate of the upper left corner of s
 func (s *StaticImg) GetCurrent() *coords.Vec {
-	return s.pos.GetCurrent()
+	return s.current
 }
 
 // Returns a vector containing the initial x- and y-coordinate of the upper left corner of s
 func (s *StaticImg) GetInitial() *coords.Vec {
-	return s.pos.GetInitial()
+	return s.initial
 }
 
 // Returns a vector containing the width and height of s
 func (s *StaticImg) GetDimensions() *coords.Vec {
-	return s.pos.GetDimensions()
+	return s.dimensions
 }
 
 // Returns the card currently pinned to s
@@ -102,17 +103,12 @@ func (s *StaticImg) Move(newXY, newDimensions *coords.Vec, eng sprite.Engine) {
 		{newDimensions.X, 0, newXY.X},
 		{0, newDimensions.Y, newXY.Y},
 	})
-	s.pos.SetCurrent(newXY)
-	s.pos.SetDimensions(newDimensions)
-}
-
-// Sets the initial x and y coordinates of the upper left corner of s
-func (s *StaticImg) SetPos(newPos *coords.Position) {
-	s.pos = newPos
+	s.current = newXY
+	s.dimensions = newDimensions
 }
 
 func (s *StaticImg) SetInitial(initial *coords.Vec) {
-	s.pos.SetInitial(initial)
+	s.initial = initial
 }
 
 // Pins card c to s

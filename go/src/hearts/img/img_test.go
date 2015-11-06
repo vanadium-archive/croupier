@@ -26,11 +26,10 @@ var (
 
 // Testing AdjustScaleDimensions
 func TestOne(test *testing.T) {
-	imgXY := coords.MakeVec(5, 20)
+	imgPos := coords.MakeVec(5, 20)
 	imgDimensions := coords.MakeVec(10, 10)
 	oldWindow := coords.MakeVec(30, 60)
-	pos := coords.MakePosition(imgXY, imgXY, imgDimensions)
-	newXY, _, newDimensions := resize.AdjustScaleDimensions(pos, oldWindow, windowSize)
+	newPos, _, newDimensions := resize.AdjustScaleDimensions(imgPos, imgPos, imgDimensions, oldWindow, windowSize)
 	widthExpect := imgDimensions.X * 3
 	heightExpect := imgDimensions.Y * 3 / 2
 	xExpect := float32(15)
@@ -41,21 +40,20 @@ func TestOne(test *testing.T) {
 	if newDimensions.Y != heightExpect {
 		test.Errorf("Expected height %f, got %f", heightExpect, newDimensions.Y)
 	}
-	if newXY.X != xExpect {
-		test.Errorf("Expected x %f, got %f", xExpect, newXY.X)
+	if newPos.X != xExpect {
+		test.Errorf("Expected x %f, got %f", xExpect, newPos.X)
 	}
-	if newXY.Y != yExpect {
-		test.Errorf("Expected y %f, got %f", yExpect, newXY.Y)
+	if newPos.Y != yExpect {
+		test.Errorf("Expected y %f, got %f", yExpect, newPos.Y)
 	}
 }
 
 // Testing AdjustKeepDimensions
 func TestTwo(test *testing.T) {
-	imgXY := coords.MakeVec(5, 20)
+	imgPos := coords.MakeVec(5, 20)
 	imgDimensions := coords.MakeVec(10, 10)
 	oldWindow := coords.MakeVec(30, 60)
-	pos := coords.MakePosition(imgXY, imgXY, imgDimensions)
-	newXY, _, newDimensions := resize.AdjustKeepDimensions(pos, oldWindow, windowSize)
+	newPos, _, newDimensions := resize.AdjustKeepDimensions(imgPos, imgPos, imgDimensions, oldWindow, windowSize)
 	widthExpect := imgDimensions.X
 	heightExpect := imgDimensions.Y
 	xExpect := float32(25)
@@ -66,11 +64,11 @@ func TestTwo(test *testing.T) {
 	if newDimensions.Y != heightExpect {
 		test.Errorf("Expected height %f, got %f", heightExpect, newDimensions.Y)
 	}
-	if newXY.X != xExpect {
-		test.Errorf("Expected x %f, got %f", xExpect, newXY.X)
+	if newPos.X != xExpect {
+		test.Errorf("Expected x %f, got %f", xExpect, newPos.X)
 	}
-	if newXY.Y != yExpect {
-		test.Errorf("Expected y %f, got %f", yExpect, newXY.Y)
+	if newPos.Y != yExpect {
+		test.Errorf("Expected y %f, got %f", yExpect, newPos.Y)
 	}
 }
 
@@ -84,30 +82,27 @@ func TestThree(test *testing.T) {
 		{1, 0, 0},
 		{0, 1, 0},
 	})
-	imgXY := coords.MakeVec(5, 20)
+	imgPos := coords.MakeVec(5, 20)
 	imgDimensions := coords.MakeVec(10, 10)
-	buttonPos := coords.MakePosition(imgXY, imgXY, imgDimensions)
-	newButton := texture.MakeImgWithoutAlt(subtex, buttonPos, u.Eng, u.Scene)
+	newButton := texture.MakeImgWithoutAlt(subtex, imgPos, imgDimensions, u.Eng, u.Scene)
 	u.Buttons = append(u.Buttons, newButton)
-	oldWindow := coords.MakeVec(u.WindowSize.X/2, u.WindowSize.Y/2)
+	oldWindow := u.WindowSize.DividedBy(2)
 	resize.AdjustImgs(oldWindow, u)
-	newXY := u.Buttons[0].GetCurrent()
+	newPos := u.Buttons[0].GetCurrent()
 	newDimensions := u.Buttons[0].GetDimensions()
-	widthExpect := imgDimensions.X * 2
-	heightExpect := imgDimensions.Y * 2
-	xExpect := imgXY.X * 2
-	yExpect := imgXY.Y * 2
-	if newDimensions.X != widthExpect {
-		test.Errorf("Expected width %f, got %f", widthExpect, newDimensions.X)
+	dimExpect := imgDimensions.Times(2)
+	posExpect := imgPos.Times(2)
+	if newDimensions.X != dimExpect.X {
+		test.Errorf("Expected width %f, got %f", dimExpect.X, newDimensions.X)
 	}
-	if newDimensions.Y != heightExpect {
-		test.Errorf("Expected height %f, got %f", heightExpect, newDimensions.Y)
+	if newDimensions.Y != dimExpect.Y {
+		test.Errorf("Expected height %f, got %f", dimExpect.Y, newDimensions.Y)
 	}
-	if newXY.X != xExpect {
-		test.Errorf("Expected x %f, got %f", xExpect, newXY.X)
+	if newPos.X != posExpect.X {
+		test.Errorf("Expected x %f, got %f", posExpect.X, newPos.X)
 	}
-	if newXY.Y != yExpect {
-		test.Errorf("Expected y %f, got %f", yExpect, newXY.Y)
+	if newPos.Y != posExpect.Y {
+		test.Errorf("Expected y %f, got %f", posExpect.Y, newPos.Y)
 	}
 }
 
@@ -115,21 +110,20 @@ func TestThree(test *testing.T) {
 func TestFour(test *testing.T) {
 	scene := &sprite.Node{}
 	eng := glsprite.Engine(nil)
-	xy := coords.MakeVec(5, 10)
+	pos := coords.MakeVec(5, 10)
 	dimensions := coords.MakeVec(20, 10)
-	pos := coords.MakePosition(xy, xy, dimensions)
-	i := texture.MakeImgWithoutAlt(subtex, pos, eng, scene)
-	if i.GetCurrent().X != xy.X {
-		test.Errorf("Expected x %f, got %f", xy.X, i.GetCurrent().X)
+	i := texture.MakeImgWithoutAlt(subtex, pos, dimensions, eng, scene)
+	if i.GetCurrent().X != pos.X {
+		test.Errorf("Expected x %f, got %f", pos.X, i.GetCurrent().X)
 	}
-	if i.GetCurrent().Y != xy.Y {
-		test.Errorf("Expected y %f, got %f", xy.Y, i.GetCurrent().Y)
+	if i.GetCurrent().Y != pos.Y {
+		test.Errorf("Expected y %f, got %f", pos.Y, i.GetCurrent().Y)
 	}
-	if i.GetInitial().X != xy.X {
-		test.Errorf("Expected inital x %f, got %f", xy.X, i.GetInitial().X)
+	if i.GetInitial().X != pos.X {
+		test.Errorf("Expected inital x %f, got %f", pos.X, i.GetInitial().X)
 	}
-	if i.GetInitial().Y != xy.Y {
-		test.Errorf("Expected initial y %f, got %f", xy.Y, i.GetInitial().Y)
+	if i.GetInitial().Y != pos.Y {
+		test.Errorf("Expected initial y %f, got %f", pos.Y, i.GetInitial().Y)
 	}
 	if i.GetDimensions().X != dimensions.X {
 		test.Errorf("Expected width %f, got %f", dimensions.X, i.GetDimensions().X)
@@ -143,21 +137,20 @@ func TestFour(test *testing.T) {
 func TestFive(test *testing.T) {
 	scene := &sprite.Node{}
 	eng := glsprite.Engine(nil)
-	xy := coords.MakeVec(5, 10)
+	pos := coords.MakeVec(5, 10)
 	dimensions := coords.MakeVec(20, 10)
-	pos := coords.MakePosition(xy, xy, dimensions)
-	i := texture.MakeImgWithAlt(subtex, subtex, pos, true, eng, scene)
-	if i.GetCurrent().X != xy.X {
-		test.Errorf("Expected x %f, got %f", xy.X, i.GetCurrent().X)
+	i := texture.MakeImgWithAlt(subtex, subtex, pos, dimensions, true, eng, scene)
+	if i.GetCurrent().X != pos.X {
+		test.Errorf("Expected x %f, got %f", pos.X, i.GetCurrent().X)
 	}
-	if i.GetCurrent().Y != xy.Y {
-		test.Errorf("Expected y %f, got %f", xy.Y, i.GetCurrent().Y)
+	if i.GetCurrent().Y != pos.Y {
+		test.Errorf("Expected y %f, got %f", pos.Y, i.GetCurrent().Y)
 	}
-	if i.GetInitial().X != xy.X {
-		test.Errorf("Expected inital x %f, got %f", xy.X, i.GetInitial().X)
+	if i.GetInitial().X != pos.X {
+		test.Errorf("Expected inital x %f, got %f", pos.X, i.GetInitial().X)
 	}
-	if i.GetInitial().Y != xy.Y {
-		test.Errorf("Expected initial y %f, got %f", xy.Y, i.GetInitial().Y)
+	if i.GetInitial().Y != pos.Y {
+		test.Errorf("Expected initial y %f, got %f", pos.Y, i.GetInitial().Y)
 	}
 	if i.GetDimensions().X != dimensions.X {
 		test.Errorf("Expected width %f, got %f", dimensions.X, i.GetDimensions().X)
@@ -194,8 +187,6 @@ func TestSix(test *testing.T) {
 	dimensions := coords.MakeVec(5, 5)
 	c.SetNode(n)
 	c2.SetNode(n2)
-	c.InitializePosition()
-	c2.InitializePosition()
 	c.SetInitial(initialXY)
 	c2.SetInitial(initialXY)
 	c.Move(curXY, dimensions, u.Eng)

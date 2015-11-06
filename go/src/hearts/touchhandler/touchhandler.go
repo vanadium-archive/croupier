@@ -119,12 +119,10 @@ func beginClickPass(t touch.Event, u *uistate.UIState) {
 					}
 					blueBanner := u.Other[0]
 					if blueBanner.GetNode().Arranger == nil {
-						startingPosition := coords.MakePosition(blueBanner.GetInitial(), blueBanner.GetInitial(), blueBanner.GetDimensions())
 						finalX := blueBanner.GetInitial().X
 						finalY := pullTab.GetInitial().Y + pullTab.GetDimensions().Y - blueBanner.GetDimensions().Y
-						finalVec := coords.MakeVec(finalX, finalY)
-						finalPosition := coords.MakePosition(finalVec, finalVec, blueBanner.GetDimensions())
-						reposition.AnimateImageMovement(blueBanner, startingPosition, finalPosition)
+						finalPos := coords.MakeVec(finalX, finalY)
+						reposition.AnimateImageMovement(blueBanner, finalPos, blueBanner.GetDimensions())
 					}
 				}
 			} else if u.Buttons[1] == buttonList[0] {

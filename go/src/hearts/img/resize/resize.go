@@ -18,13 +18,13 @@ import (
 
 func UpdateImgPositions(sz size.Event, u *uistate.UIState) {
 	// must copy u.WindowSize instead of creating a pointer to it
-	oldWindow := coords.MakeVec(u.WindowSize.X, u.WindowSize.Y)
+	oldWindowSize := coords.MakeVec(u.WindowSize.X, u.WindowSize.Y)
 	updateWindowSize(sz, u)
-	if windowExists(oldWindow) && windowExists(u.WindowSize) {
-		u.Padding = scaleVar(u.Padding, oldWindow, u.WindowSize)
-		u.CardDim = scaleVec(u.CardDim, oldWindow, u.WindowSize)
-		u.TableCardDim = scaleVec(u.TableCardDim, oldWindow, u.WindowSize)
-		AdjustImgs(oldWindow, u)
+	if windowExists(oldWindowSize) && windowExists(u.WindowSize) {
+		u.Padding = scaleVar(u.Padding, oldWindowSize, u.WindowSize)
+		u.CardDim = scaleVec(u.CardDim, oldWindowSize, u.WindowSize)
+		u.TableCardDim = scaleVec(u.TableCardDim, oldWindowSize, u.WindowSize)
+		AdjustImgs(oldWindowSize, u)
 	}
 }
 
@@ -35,55 +35,46 @@ func updateWindowSize(sz size.Event, u *uistate.UIState) {
 
 // Adjusts all images to accommodate a screen size change
 // Public for testing, but could be made private
-func AdjustImgs(oldWindow *coords.Vec, u *uistate.UIState) {
-	adjustCardArray(u.Cards, oldWindow, u.WindowSize, u.Eng)
-	adjustCardArray(u.TableCards, oldWindow, u.WindowSize, u.Eng)
-	adjustImgArray(u.DropTargets, oldWindow, u.WindowSize, u.Eng)
-	adjustImgArray(u.BackgroundImgs, oldWindow, u.WindowSize, u.Eng)
-	adjustImgArray(u.Buttons, oldWindow, u.WindowSize, u.Eng)
-	adjustImgArray(u.EmptySuitImgs, oldWindow, u.WindowSize, u.Eng)
-	adjustImgArray(u.Other, oldWindow, u.WindowSize, u.Eng)
+func AdjustImgs(oldWindowSize *coords.Vec, u *uistate.UIState) {
+	adjustCardArray(u.Cards, oldWindowSize, u.WindowSize, u.Eng)
+	adjustCardArray(u.TableCards, oldWindowSize, u.WindowSize, u.Eng)
+	adjustImgArray(u.DropTargets, oldWindowSize, u.WindowSize, u.Eng)
+	adjustImgArray(u.BackgroundImgs, oldWindowSize, u.WindowSize, u.Eng)
+	adjustImgArray(u.Buttons, oldWindowSize, u.WindowSize, u.Eng)
+	adjustImgArray(u.EmptySuitImgs, oldWindowSize, u.WindowSize, u.Eng)
+	adjustImgArray(u.Other, oldWindowSize, u.WindowSize, u.Eng)
 }
 
 // Returns coordinates for images with same width and height but in new positions proportional to the screen
 // Public for testing, but could be made private
-func AdjustKeepDimensions(oldPos *coords.Position, oldWindow, windowSize *coords.Vec) (*coords.Vec, *coords.Vec, *coords.Vec) {
-	oldXY := oldPos.GetCurrent()
-	oldInitialXY := oldPos.GetInitial()
-	oldDimensions := oldPos.GetDimensions()
-	newXY := oldXY.PlusVec(oldDimensions.DividedBy(2)).DividedByVec(oldWindow).TimesVec(windowSize).MinusVec(oldDimensions.DividedBy(2))
-	newInitialXY := oldInitialXY.PlusVec(oldDimensions.DividedBy(2)).DividedByVec(oldWindow).TimesVec(windowSize).MinusVec(oldDimensions.DividedBy(2))
-	return newXY, newInitialXY, oldDimensions
+func AdjustKeepDimensions(oldInitial, oldPos, oldDimensions, oldWindowSize, newWindowSize *coords.Vec) (*coords.Vec, *coords.Vec, *coords.Vec) {
+	newPos := oldPos.PlusVec(oldDimensions.DividedBy(2)).DividedByVec(oldWindowSize).TimesVec(newWindowSize).MinusVec(oldDimensions.DividedBy(2))
+	newInitial := oldInitial.PlusVec(oldDimensions.DividedBy(2)).DividedByVec(oldWindowSize).TimesVec(newWindowSize).MinusVec(oldDimensions.DividedBy(2))
+	return newInitial, newPos, oldDimensions
 }
 
 // Returns coordinates for images with position, width and height scaled proportional to the screen
 // Public for testing, but could be made private
-func AdjustScaleDimensions(oldPos *coords.Position, oldWindow, windowSize *coords.Vec) (*coords.Vec, *coords.Vec, *coords.Vec) {
-	return oldPos.Rescale(oldWindow, windowSize)
+func AdjustScaleDimensions(oldInitial, oldPos, oldDimensions, oldWindowSize, newWindowSize *coords.Vec) (*coords.Vec, *coords.Vec, *coords.Vec) {
+	return oldInitial.Rescale(oldWindowSize, newWindowSize),
+		oldPos.Rescale(oldWindowSize, newWindowSize),
+		oldDimensions.Rescale(oldWindowSize, newWindowSize)
 }
 
 // Adjusts the positioning of an individual array of images
-func adjustImgArray(imgs []*staticimg.StaticImg, oldWindow, windowSize *coords.Vec, eng sprite.Engine) {
+func adjustImgArray(imgs []*staticimg.StaticImg, oldWindowSize, newWindowSize *coords.Vec, eng sprite.Engine) {
 	for _, s := range imgs {
-		oldDimensions := s.GetDimensions()
-		oldXY := s.GetCurrent()
-		oldInitial := s.GetInitial()
-		oldPos := coords.MakePosition(oldInitial, oldXY, oldDimensions)
-		newInitialXY, newXY, newDimensions := AdjustScaleDimensions(oldPos, oldWindow, windowSize)
-		s.Move(newXY, newDimensions, eng)
-		s.SetInitial(newInitialXY)
+		newInitial, newPos, newDimensions := AdjustScaleDimensions(s.GetInitial(), s.GetCurrent(), s.GetDimensions(), oldWindowSize, newWindowSize)
+		s.Move(newPos, newDimensions, eng)
+		s.SetInitial(newInitial)
 	}
 }
 
 // Adjusts the positioning of an individual array of cards
-func adjustCardArray(cards []*card.Card, oldWindow, windowSize *coords.Vec, eng sprite.Engine) {
+func adjustCardArray(cards []*card.Card, oldWindowSize, newWindowSize *coords.Vec, eng sprite.Engine) {
 	for _, c := range cards {
-		oldDimensions := c.GetDimensions()
-		oldLocation := c.GetCurrent()
-		oldInitial := c.GetInitial()
-		oldPos := coords.MakePosition(oldInitial, oldLocation, oldDimensions)
-		newInitial, newLocation, newDimensions := AdjustScaleDimensions(oldPos, oldWindow, windowSize)
-		c.Move(newLocation, newDimensions, eng)
+		newInitial, newPos, newDimensions := AdjustScaleDimensions(c.GetInitial(), c.GetCurrent(), c.GetDimensions(), oldWindowSize, newWindowSize)
+		c.Move(newPos, newDimensions, eng)
 		c.SetInitial(newInitial)
 	}
 }

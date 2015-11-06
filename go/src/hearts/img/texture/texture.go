@@ -91,8 +91,11 @@ func getStringImgs(input, color string, texs map[string]sprite.SubTex) []sprite.
 	return imgs
 }
 
-func MakeStringImgLeftAlign(
-	input, color, altColor string, displayColor bool, start *coords.Vec, scaler, maxWidth float32, u *uistate.UIState) []*staticimg.StaticImg {
+func MakeStringImgLeftAlign(input, color, altColor string,
+	displayColor bool,
+	start *coords.Vec,
+	scaler, maxWidth float32,
+	u *uistate.UIState) []*staticimg.StaticImg {
 	textures := getStringImgs(input, color, u.Texs)
 	var altTexs []sprite.SubTex
 	if color != altColor {
@@ -106,26 +109,27 @@ func MakeStringImgLeftAlign(
 	if totalWidth > maxWidth {
 		scaler = totalWidth * scaler / maxWidth
 	}
-	XY := start
 	allImgs := make([]*staticimg.StaticImg, 0)
 	for i, img := range textures {
 		subTexDims := coords.MakeVec(float32(img.R.Max.X), float32(img.R.Max.Y))
 		dims := subTexDims.DividedBy(scaler)
-		pos := coords.MakePosition(XY, XY, dims)
 		var textImg *staticimg.StaticImg
 		if len(altTexs) == 0 {
-			textImg = MakeImgWithoutAlt(img, pos, u.Eng, u.Scene)
+			textImg = MakeImgWithoutAlt(img, start, dims, u.Eng, u.Scene)
 		} else {
-			textImg = MakeImgWithAlt(img, altTexs[i], pos, displayColor, u.Eng, u.Scene)
+			textImg = MakeImgWithAlt(img, altTexs[i], start, dims, displayColor, u.Eng, u.Scene)
 		}
 		allImgs = append(allImgs, textImg)
-		XY = coords.MakeVec(XY.X+dims.X, XY.Y)
+		start = coords.MakeVec(start.X+dims.X, start.Y)
 	}
 	return allImgs
 }
 
-func MakeStringImgRightAlign(
-	input, color, altColor string, displayColor bool, end *coords.Vec, scaler, maxWidth float32, u *uistate.UIState) []*staticimg.StaticImg {
+func MakeStringImgRightAlign(input, color, altColor string,
+	displayColor bool,
+	end *coords.Vec,
+	scaler, maxWidth float32,
+	u *uistate.UIState) []*staticimg.StaticImg {
 	textures := getStringImgs(input, color, u.Texs)
 	var altTexs []sprite.SubTex
 	if color != altColor {
@@ -143,27 +147,27 @@ func MakeStringImgRightAlign(
 	for i, j := 0, len(textures)-1; i < j; i, j = i+1, j-1 {
 		textures[i], textures[j] = textures[j], textures[i]
 	}
-	XY := end
 	allImgs := make([]*staticimg.StaticImg, 0)
 	for i, img := range textures {
-		width := float32(img.R.Max.X) / scaler
-		height := float32(img.R.Max.Y) / scaler
-		dims := coords.MakeVec(width, height)
-		XY = coords.MakeVec(XY.X-width, XY.Y)
-		pos := coords.MakePosition(XY, XY, dims)
+		subTexDims := coords.MakeVec(float32(img.R.Max.X), float32(img.R.Max.Y))
+		dims := subTexDims.DividedBy(scaler)
+		end = coords.MakeVec(end.X-dims.X, end.Y)
 		var textImg *staticimg.StaticImg
 		if len(altTexs) == 0 {
-			textImg = MakeImgWithoutAlt(img, pos, u.Eng, u.Scene)
+			textImg = MakeImgWithoutAlt(img, end, dims, u.Eng, u.Scene)
 		} else {
-			textImg = MakeImgWithAlt(img, altTexs[i], pos, displayColor, u.Eng, u.Scene)
+			textImg = MakeImgWithAlt(img, altTexs[i], end, dims, displayColor, u.Eng, u.Scene)
 		}
 		allImgs = append(allImgs, textImg)
 	}
 	return allImgs
 }
 
-func MakeStringImgCenterAlign(
-	input, color, altColor string, displayColor bool, center *coords.Vec, scaler, maxWidth float32, u *uistate.UIState) []*staticimg.StaticImg {
+func MakeStringImgCenterAlign(input, color, altColor string,
+	displayColor bool,
+	center *coords.Vec,
+	scaler, maxWidth float32,
+	u *uistate.UIState) []*staticimg.StaticImg {
 	textures := getStringImgs(input, color, u.Texs)
 	totalWidth := float32(0)
 	for _, img := range textures {
@@ -179,23 +183,28 @@ func MakeStringImgCenterAlign(
 }
 
 // Returns a new StaticImg instance with desired image and dimensions
-func MakeImgWithoutAlt(t sprite.SubTex, pos *coords.Position, eng sprite.Engine, scene *sprite.Node) *staticimg.StaticImg {
-	currentVec := pos.GetCurrent()
-	dimVec := pos.GetDimensions()
+func MakeImgWithoutAlt(t sprite.SubTex,
+	current, dim *coords.Vec,
+	eng sprite.Engine,
+	scene *sprite.Node) *staticimg.StaticImg {
 	n := MakeNode(eng, scene)
 	eng.SetSubTex(n, t)
 	s := staticimg.MakeStaticImg()
 	s.SetNode(n)
 	s.SetImage(t)
-	s.SetPos(pos)
-	s.Move(currentVec, dimVec, eng)
+	s.SetInitial(current)
+	s.Move(current, dim, eng)
 	return s
 }
 
 // Returns a new StaticImg instance with desired image and dimensions
 // Also includes an alternate image. If displayImage is true, image will be displayed. Else, alt will be displayed.
-func MakeImgWithAlt(t sprite.SubTex, alt sprite.SubTex, pos *coords.Position, displayImage bool, eng sprite.Engine, scene *sprite.Node) *staticimg.StaticImg {
-	s := MakeImgWithoutAlt(t, pos, eng, scene)
+func MakeImgWithAlt(t, alt sprite.SubTex,
+	current, dim *coords.Vec,
+	displayImage bool,
+	eng sprite.Engine,
+	scene *sprite.Node) *staticimg.StaticImg {
+	s := MakeImgWithoutAlt(t, current, dim, eng, scene)
 	s.SetAlt(alt)
 	if !displayImage {
 		eng.SetSubTex(s.GetNode(), alt)
