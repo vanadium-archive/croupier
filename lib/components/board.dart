@@ -80,7 +80,8 @@ class HeartsBoard extends Board {
           cards, false, ori,
           width: i % 2 == 0 ? cccSize : null,
           height: i % 2 != 0 ? cccSize : null,
-          rotation: -math.PI / 2 * i);
+          rotation: -math.PI / 2 * i,
+          useKeys: true);
       Widget w;
       switch (i) {
         case 2:
@@ -138,7 +139,8 @@ class HeartsBoard extends Board {
           widthCard: this.cardWidth,
           height: this.cardHeight,
           heightCard: this.cardHeight,
-          rotation: -math.PI / 2 * i);
+          rotation: -math.PI / 2 * i,
+          useKeys: true);
       Widget w;
 
       double left02 = (this.width - this.cardWidth) / 2;

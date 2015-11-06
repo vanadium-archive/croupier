@@ -52,10 +52,12 @@ class CroupierClient {
     if (!(await app.exists())) {
       await app.create(util.openPerms);
     }
+    util.log('CroupierClient.got app');
     var db = app.noSqlDatabase(util.dbName);
     if (!(await db.exists())) {
       await db.create(util.openPerms);
     }
+    util.log('CroupierClient.got db');
     return db;
   }
 

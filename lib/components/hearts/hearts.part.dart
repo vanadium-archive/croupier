@@ -17,12 +17,79 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
   List<logic_card.Card> passingCards2 = new List<logic_card.Card>();
   List<logic_card.Card> passingCards3 = new List<logic_card.Card>();
 
+  HeartsType _lastViewType;
+
+  @override
+  void initState() {
+    super.initState();
+    _reset();
+  }
+
+  @override
+  void _reset() {
+    super._reset();
+    HeartsGame game = config.game as HeartsGame;
+    _lastViewType = game.viewType;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return new Container(
+    HeartsGame game = config.game as HeartsGame;
+
+    // check if we need to swap out our 's map.
+    if (_lastViewType != game.viewType) {
+      _reset();
+    }
+
+    // Hearts Widget
+    Widget heartsWidget = new Container(
         decoration:
-            new BoxDecoration(backgroundColor: material.Colors.grey[300]),
+            new BoxDecoration(backgroundColor: Colors.grey[300]),
         child: buildHearts());
+
+    List<Widget> children = new List<Widget>();
+    children.add(new Container(
+          decoration:
+              new BoxDecoration(backgroundColor: Colors.grey[300]),
+          width: config.width,
+          height: config.height,
+          child: heartsWidget));
+    if (game.phase == HeartsPhase.Deal || game.phase != HeartsPhase.Score) {
+      List<int> visibleCardCollections = new List<int>();
+      int playerNum = game.playerNumber;
+      if (game.viewType == HeartsType.Player) {
+        switch(game.phase) {
+          case HeartsPhase.Pass:
+            visibleCardCollections.add(HeartsGame.OFFSET_PASS + playerNum);
+            visibleCardCollections.add(HeartsGame.OFFSET_HAND + playerNum);
+            break;
+          case HeartsPhase.Take:
+            visibleCardCollections.add(HeartsGame.OFFSET_PASS + game.takeTarget);
+            visibleCardCollections.add(HeartsGame.OFFSET_HAND + playerNum);
+            break;
+          case HeartsPhase.Play:
+            visibleCardCollections.add(HeartsGame.OFFSET_HAND + playerNum);
+            visibleCardCollections.add(HeartsGame.OFFSET_PLAY + playerNum);
+            break;
+          default:
+            break;
+        }
+      } else {
+        // A board will need to see these things.
+        for (int i = 0; i < 4; i++) {
+          visibleCardCollections.add(HeartsGame.OFFSET_PLAY + i);
+          visibleCardCollections.add(HeartsGame.OFFSET_PASS + i);
+          visibleCardCollections.add(HeartsGame.OFFSET_HAND + i);
+        }
+      }
+      children.add(this.buildCardAnimationLayer(visibleCardCollections));
+    }
+
+    return new Container(
+      width: config.width,
+      height: config.height,
+      child: new Stack(children)
+    );
   }
 
   void _switchViewCallback() {
@@ -160,8 +227,8 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
   @override
   Widget _makeButton(String text, NoArgCb callback, {bool inactive: false}) {
     var borderColor =
-        inactive ? material.Colors.grey[500] : material.Colors.white;
-    var backgroundColor = inactive ? material.Colors.grey[500] : null;
+        inactive ? Colors.grey[500] : Colors.white;
+    var backgroundColor = inactive ? Colors.grey[500] : null;
     return new FlatButton(
         child: new Container(
             decoration: new BoxDecoration(
@@ -238,6 +305,8 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
 
     List<Widget> cardCollections = new List<Widget>();
 
+    // Note that this shouldn't normally be shown.
+    // Since this is a duplicate card collection, it will not have keyed cards.
     List<Widget> plays = new List<Widget>();
     for (int i = 0; i < 4; i++) {
       plays.add(new CardCollectionComponent(
@@ -248,7 +317,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     }
     cardCollections.add(new Container(
         decoration:
-            new BoxDecoration(backgroundColor: material.Colors.teal[600]),
+            new BoxDecoration(backgroundColor: Colors.teal[600]),
         width: config.width,
         child:
             new Flex(plays, justifyContent: FlexJustifyContent.spaceAround)));
@@ -257,22 +326,23 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
 
     Widget playArea = new Container(
         decoration:
-            new BoxDecoration(backgroundColor: material.Colors.teal[500]),
+            new BoxDecoration(backgroundColor: Colors.teal[500]),
         width: config.width,
         child: new Center(
             child: new CardCollectionComponent(
                 game.cardCollections[p + HeartsGame.OFFSET_PLAY],
                 true,
                 CardCollectionOrientation.show1,
+                useKeys: true,
                 acceptCallback: _makeGameMoveCallback,
                 acceptType: p == game.whoseTurn ? DropType.card : DropType.none,
                 width: config.width,
                 backgroundColor: p == game.whoseTurn
-                    ? material.Colors.white
-                    : material.Colors.grey[500],
+                    ? Colors.white
+                    : Colors.grey[500],
                 altColor: p == game.whoseTurn
-                    ? material.Colors.grey[200]
-                    : material.Colors.grey[600])));
+                    ? Colors.grey[200]
+                    : Colors.grey[600])));
     cardCollections.add(playArea);
 
     List<logic_card.Card> cards = game.cardCollections[p];
@@ -280,7 +350,8 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
         cards, game.playerNumber == p, CardCollectionOrientation.suit,
         dragChildren: game.whoseTurn == p,
         comparator: _compareCards,
-        width: config.width);
+        width: config.width,
+        useKeys: true);
     cardCollections.add(c); // flex
 
     cardCollections.add(new Text("Player ${game.whoseTurn}'s turn"));
@@ -305,7 +376,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
 
     return new Container(
         decoration:
-            new BoxDecoration(backgroundColor: material.Colors.pink[500]),
+            new BoxDecoration(backgroundColor: Colors.pink[500]),
         child: new Flex([
           new Text('Player ${game.playerNumber}'),
           // TODO(alexfandrianto): we want to show round by round, deltas too, don't we?
@@ -321,7 +392,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
 
     return new Container(
         decoration:
-            new BoxDecoration(backgroundColor: material.Colors.pink[500]),
+            new BoxDecoration(backgroundColor: Colors.pink[500]),
         child: new Flex([
           new Text('Player ${game.playerNumber}'),
           _makeButton('Deal', game.dealCards),
@@ -351,7 +422,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     topCardWidgets.add(_makeButton(name, buttoncb, inactive: completed));
 
     Color bgColor =
-        completed ? material.Colors.teal[600] : material.Colors.teal[500];
+        completed ? Colors.teal[600] : Colors.teal[500];
 
     Widget topArea = new Container(
         decoration: new BoxDecoration(backgroundColor: bgColor),
@@ -367,8 +438,9 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
         acceptType: draggable ? DropType.card : null,
         comparator: _compareCards,
         width: config.width,
-        backgroundColor: material.Colors.grey[500],
-        altColor: material.Colors.grey[700]);
+        backgroundColor: Colors.grey[500],
+        altColor: Colors.grey[700],
+        useKeys: true);
 
     return new Column(<Widget>[
       topArea,
@@ -384,8 +456,9 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
         acceptCallback: cb,
         dragChildren: cb != null,
         acceptType: cb != null ? DropType.card : null,
-        backgroundColor: material.Colors.white,
-        altColor: material.Colors.grey[200]);
+        backgroundColor: Colors.white,
+        altColor: Colors.grey[200],
+        useKeys: true);
 
     if (cb == null) {
       ccc = new Container(child: ccc);

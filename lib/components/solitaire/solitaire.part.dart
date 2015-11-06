@@ -15,12 +15,37 @@ class SolitaireGameComponent extends GameComponent {
 
 class SolitaireGameComponentState
     extends GameComponentState<SolitaireGameComponent> {
+
   @override
   Widget build(BuildContext context) {
+    SolitaireGame game = config.game as SolitaireGame;
+
+    print("Building Solitaire!");
+
+    // Build Solitaire and have it fill up the card level map.
+    // Unfortunately, this is required so that we can know which card components
+    // to collect.
+    Widget solitaireWidget = buildSolitaire();
+
+    List<Widget> children = new List<Widget>();
+    children.add(new Container(
+          decoration:
+              new BoxDecoration(backgroundColor: Colors.grey[300]),
+          width: config.width,
+          height: config.height,
+          child: solitaireWidget));
+    if (game.phase == SolitairePhase.Play) {
+      // All cards are visible.
+      List<int> visibleCardCollections = game.cardCollections.asMap().keys.toList();
+
+      children.add(this.buildCardAnimationLayer(visibleCardCollections));
+    }
+
     return new Container(
-        decoration:
-            new BoxDecoration(backgroundColor: material.Colors.grey[300]),
-        child: buildSolitaire());
+      width: config.width,
+      height: config.height,
+      child: new Stack(children)
+    );
   }
 
   void _cheatCallback() {
@@ -50,8 +75,8 @@ class SolitaireGameComponentState
   @override
   Widget _makeButton(String text, NoArgCb callback, {bool inactive: false}) {
     var borderColor =
-        inactive ? material.Colors.grey[500] : material.Colors.white;
-    var backgroundColor = inactive ? material.Colors.grey[500] : null;
+        inactive ? Colors.grey[500] : Colors.white;
+    var backgroundColor = inactive ? Colors.grey[500] : null;
     return new FlatButton(
         child: new Container(
             decoration: new BoxDecoration(
@@ -104,44 +129,19 @@ class SolitaireGameComponentState
     double cardSize = config.width / 8.0;
 
     List<Widget> row1 = new List<Widget>();
-    row1.add(new Row([
-      new CardCollectionComponent(
-          game.cardCollections[SolitaireGame.OFFSET_ACES + 0],
+    List<CardCollectionComponent> aces = [0, 1, 2, 3].map((int i) {
+      return new CardCollectionComponent(
+          game.cardCollections[SolitaireGame.OFFSET_ACES + i],
           true,
           CardCollectionOrientation.show1,
           widthCard: cardSize,
           heightCard: cardSize,
           acceptCallback: _moveCallback,
           dragChildren: true,
-          acceptType: DropType.card),
-      new CardCollectionComponent(
-          game.cardCollections[SolitaireGame.OFFSET_ACES + 1],
-          true,
-          CardCollectionOrientation.show1,
-          widthCard: cardSize,
-          heightCard: cardSize,
-          acceptCallback: _moveCallback,
-          dragChildren: true,
-          acceptType: DropType.card),
-      new CardCollectionComponent(
-          game.cardCollections[SolitaireGame.OFFSET_ACES + 2],
-          true,
-          CardCollectionOrientation.show1,
-          widthCard: cardSize,
-          heightCard: cardSize,
-          acceptCallback: _moveCallback,
-          dragChildren: true,
-          acceptType: DropType.card),
-      new CardCollectionComponent(
-          game.cardCollections[SolitaireGame.OFFSET_ACES + 3],
-          true,
-          CardCollectionOrientation.show1,
-          widthCard: cardSize,
-          heightCard: cardSize,
-          acceptCallback: _moveCallback,
-          dragChildren: true,
-          acceptType: DropType.card),
-    ]));
+          acceptType: DropType.card,
+          useKeys: true);
+    }).toList();
+    row1.add(new Row(aces));
 
     row1.add(new Row([
       new CardCollectionComponent(
@@ -150,14 +150,16 @@ class SolitaireGameComponentState
           CardCollectionOrientation.show1,
           widthCard: cardSize,
           heightCard: cardSize,
-          dragChildren: true),
+          dragChildren: true,
+          useKeys: true),
       new InkWell(
           child: new CardCollectionComponent(
               game.cardCollections[SolitaireGame.OFFSET_DRAW],
               false,
               CardCollectionOrientation.show1,
               widthCard: cardSize,
-              heightCard: cardSize),
+              heightCard: cardSize,
+              useKeys: true),
           onTap: game.canDrawCard ? game.drawCardUI : null),
     ]));
 
@@ -169,7 +171,8 @@ class SolitaireGameComponentState
               false,
               CardCollectionOrientation.show1,
               widthCard: cardSize,
-              heightCard: cardSize),
+              heightCard: cardSize,
+              useKeys: true),
           onTap: game.cardCollections[SolitaireGame.OFFSET_UP + i].length == 0
               ? _makeFlipCallback(i)
               : null));
@@ -185,7 +188,8 @@ class SolitaireGameComponentState
           height: config.height * 0.6,
           acceptCallback: _moveCallback,
           dragChildren: true,
-          acceptType: DropType.card));
+          acceptType: DropType.card,
+          useKeys: true));
     }
 
     return new Column([
@@ -201,7 +205,7 @@ class SolitaireGameComponentState
 
     return new Container(
         decoration:
-            new BoxDecoration(backgroundColor: material.Colors.pink[500]),
+            new BoxDecoration(backgroundColor: Colors.pink[500]),
         child: new Flex([
           new Text('Player ${game.playerNumber}'),
           _makeButton("Return to Lobby", _quitGameCallback),
@@ -214,7 +218,7 @@ class SolitaireGameComponentState
 
     return new Container(
         decoration:
-            new BoxDecoration(backgroundColor: material.Colors.pink[500]),
+            new BoxDecoration(backgroundColor: Colors.pink[500]),
         child: new Flex([
           new Text('Player ${game.playerNumber}'),
           _makeButton('Deal', game.dealCardsUI),

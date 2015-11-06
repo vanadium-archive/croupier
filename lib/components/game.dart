@@ -9,11 +9,13 @@ import '../logic/game/game.dart' show Game, GameType;
 import '../logic/hearts/hearts.dart' show HeartsGame, HeartsPhase, HeartsType;
 import '../logic/solitaire/solitaire.dart' show SolitaireGame, SolitairePhase;
 import 'board.dart' show HeartsBoard;
+import 'card.dart' as component_card;
 import 'card_collection.dart'
     show CardCollectionComponent, DropType, CardCollectionOrientation, AcceptCb;
 
+import 'package:flutter/animation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/material.dart' as material;
+import 'package:flutter/rendering.dart';
 
 part 'hearts/hearts.part.dart';
 part 'proto/proto.part.dart';
@@ -32,10 +34,17 @@ abstract class GameComponent extends StatefulComponent {
 }
 
 abstract class GameComponentState<T extends GameComponent> extends State<T> {
+  Map<logic_card.Card, CardAnimationData> cardLevelMap;
+
   void initState() {
     super.initState();
 
+    cardLevelMap = new Map<logic_card.Card, CardAnimationData>();
     config.game.updateCallback = update;
+  }
+
+  void _reset() {
+    cardLevelMap.clear();
   }
 
   // This callback is used to force the UI to draw when state changes occur
@@ -58,6 +67,84 @@ abstract class GameComponentState<T extends GameComponent> extends State<T> {
 
   @override
   Widget build(BuildContext context); // still UNIMPLEMENTED
+
+
+  void _cardLevelMapProcessAllVisible(List<int> visibleCardCollections) {
+    Game game = config.game;
+
+    for (int i = 0; i < visibleCardCollections.length; i++) {
+      int index = visibleCardCollections[i];
+      for (int j = 0; j < game.cardCollections[index].length; j++) {
+        _cardLevelMapProcess(game.cardCollections[index][j]);
+      }
+    }
+  }
+
+  void _cardLevelMapProcess(logic_card.Card logicCard) {
+    component_card.GlobalCardKey key = new component_card.GlobalCardKey(logicCard, component_card.CardUIType.CARD);
+    component_card.CardState cardState = key.currentState;
+    if (cardState == null) {
+      return; // There's nothing we can really do about this card since it hasn't drawn yet.
+    }
+    Point p = cardState.getGlobalPosition();
+    double z = cardState.config.z;
+    component_card.Card c = key.currentWidget;
+
+    assert(c == cardState.config);
+
+    CardAnimationData cad = cardLevelMap[logicCard];
+    if (cad == null || cad.newPoint != p || cad.z != z) {
+      setState(() {
+        cardLevelMap[logicCard] = new CardAnimationData(c, cad?.newPoint, p, z);
+      });
+    }
+  }
+
+  // Helper to build the card animation layer.
+  // Note: This isn't a component because of its dependence on Widgets.
+  Widget buildCardAnimationLayer(List<int> visibleCardCollections) {
+    // It's possible that some cards need to be moved after this build.
+    // If so, we can catch it in the next frame.
+    scheduler.requestPostFrameCallback((Duration d) {
+      _cardLevelMapProcessAllVisible(visibleCardCollections);
+    });
+
+    List<Widget> positionedCards = new List<Widget>();
+
+    // Sort the cards by z-index.
+    List<logic_card.Card> orderedKeys = cardLevelMap.keys.toList()..sort((logic_card.Card a, logic_card.Card b) {
+      double diff = cardLevelMap[a].z - cardLevelMap[b].z;
+      return diff.sign.toInt();
+    });
+
+    orderedKeys.forEach((logic_card.Card c) {
+      // Don't show a card if it isn't part of a visible collection.
+      if (!visibleCardCollections.contains(config.game.findCard(c))) {
+        cardLevelMap.remove(c); // It is an old card, which we can clean up.
+        return;
+      }
+
+      CardAnimationData data = cardLevelMap[c];
+      RenderBox box = context.findRenderObject();
+      Point p = data.newPoint;
+      Point trueP = box.globalToLocal(p);
+
+      positionedCards.add(new Positioned(
+        key: new GlobalObjectKey(c.toString()), //needed, or else the Positioned wrapper may be traded out and animations fail.
+        top: trueP.y, // must pass x and y or else it expands to the maximum Stack size.
+        left: trueP.x, // must pass x and y or else it expands to the maximum Stack size.
+        child: new component_card.ZCard(data.comp_card, data.oldPoint, data.newPoint)));
+    });
+
+    return new IgnorePointer(
+      ignoring: true,
+      child: new Container(
+        width: config.width,
+        height: config.height,
+        child: new Stack(positionedCards)
+      )
+    );
+  }
 }
 
 GameComponent createGameComponent(
@@ -78,4 +165,16 @@ GameComponent createGameComponent(
       assert(false);
       return null;
   }
+}
+
+/// CardAnimationData contains the relevant information for a ZCard to be built.
+/// It uses the comp_card's properties, the oldPoint, newPoint, and z-index to
+/// determine how it needs to animate.
+class CardAnimationData {
+  component_card.Card comp_card;
+  Point oldPoint;
+  Point newPoint;
+  double z;
+
+  CardAnimationData(this.comp_card, this.oldPoint, this.newPoint, this.z);
 }

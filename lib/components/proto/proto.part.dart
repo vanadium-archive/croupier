@@ -32,7 +32,7 @@ class ProtoGameComponentState extends GameComponentState<ProtoGameComponent> {
 
     cardCollections.add(new Container(
         decoration: new BoxDecoration(
-            backgroundColor: material.Colors.green[500], borderRadius: 5.0),
+            backgroundColor: Colors.green[500], borderRadius: 5.0),
         child: new CardCollectionComponent(
             config.game.cardCollections[4], true, CardCollectionOrientation.show1,
             dragChildren: true,
@@ -44,7 +44,7 @@ class ProtoGameComponentState extends GameComponentState<ProtoGameComponent> {
 
     return new Container(
         decoration:
-            new BoxDecoration(backgroundColor: material.Colors.pink[500]),
+            new BoxDecoration(backgroundColor: Colors.pink[500]),
         child: new Flex(cardCollections, direction: FlexDirection.vertical));
   }
 

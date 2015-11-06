@@ -149,7 +149,7 @@ class CroupierComponentState extends State<CroupierComponent> {
                 config.croupier.game, () {
               config.croupier.game.quit();
               makeSetStateCallback(logic_croupier.CroupierState.Welcome)();
-            }, width: screenSize.width, height: screenSize.height));
+            }, width: screenSize.width, height: screenSize.height - ui.window.padding.top));
       default:
         assert(false);
         return null;

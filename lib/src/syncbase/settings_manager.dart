@@ -198,7 +198,14 @@ class SettingsScanHandler extends discovery.ScanHandler {
     util.log(
         "SettingsScanHandler Found ${s.instanceUuid} ${s.instanceName} ${s.addrs}");
 
-    _cc.joinSyncgroup(s.addrs[0]);
+    // TODO(alexfandrianto): Filter based on instanceName?
+    if (s.addrs.length > 0) {
+      _cc.joinSyncgroup(s.addrs[0]);
+    } else {
+      // An unexpected service was found. Who is advertising it?
+      // https://github.com/vanadium/issues/issues/846
+      util.log("Unexpected service found: ${s.toString()}");
+    }
   }
 
   void lost(List<int> instanceId) {
