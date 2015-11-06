@@ -159,7 +159,12 @@ type Card struct {
 	node  *sprite.Node
 	image sprite.SubTex
 	back  sprite.SubTex
-	pos   *coords.Position
+	// XY coordinates of the initial placement of the card
+	initial *coords.Vec
+	// current XY coordinates of the card
+	current *coords.Vec
+	// current width and height of the card
+	dimensions *coords.Vec
 }
 
 // Returns the suit of c
@@ -187,23 +192,19 @@ func (c *Card) GetBack() sprite.SubTex {
 	return c.back
 }
 
-func (c *Card) GetPosition() *coords.Position {
-	return c.pos
-}
-
 // Returns a vector containing the current x- and y-coordinate of the upper left corner of c
 func (c *Card) GetCurrent() *coords.Vec {
-	return c.pos.GetCurrent()
+	return c.current
 }
 
 // Returns a vector containing the initial x- and y-coordinate of the upper left corner of c
 func (c *Card) GetInitial() *coords.Vec {
-	return c.pos.GetInitial()
+	return c.initial
 }
 
 // Returns a vector containing the width and height of c
 func (c *Card) GetDimensions() *coords.Vec {
-	return c.pos.GetDimensions()
+	return c.dimensions
 }
 
 // Sets the node of c to n
@@ -237,24 +238,13 @@ func (c *Card) Move(newXY, newDimensions *coords.Vec, eng sprite.Engine) {
 		{newDimensions.X, 0, newXY.X},
 		{0, newDimensions.Y, newXY.Y},
 	})
-	pos := coords.MakePosition(c.GetInitial(), newXY, newDimensions)
-	c.SetPos(pos)
-}
-
-// Sets the variables of c to a new position and size, but does not actually update the image on-screen
-func (c *Card) SetPos(pos *coords.Position) {
-	c.pos = pos
+	c.current = newXY
+	c.dimensions = newDimensions
 }
 
 // Sets the initial x and y coordinates of c
 func (c *Card) SetInitial(newInitial *coords.Vec) {
-	c.pos.SetInitial(newInitial)
-}
-
-func (c *Card) InitializePosition() {
-	zero := coords.MakeVec(0, 0)
-	pos := coords.MakePosition(zero, zero, zero)
-	c.SetPos(pos)
+	c.initial = newInitial
 }
 
 // Returns true if c is worth any points (all Hearts cards, and the Queen of Spades)
