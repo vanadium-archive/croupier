@@ -73,10 +73,12 @@ class DiscoveryClient {
   // This sends a stop signal to the scanner. Since it is non-blocking, the
   // scan handle may not stop instantaneously.
   void stopScan(String key) {
-    print("Stopping scan for ${key}.");
-    scanners[key].proxy.ptr.stop(scanners[key].handle);
-    scanners[key].proxy.close(); // don't wait for this future.
-    scanners.remove(key);
+    if (scanners[key] != null) {
+      print("Stopping scan for ${key}.");
+      scanners[key].proxy.ptr.stop(scanners[key].handle);
+      scanners[key].proxy.close(); // don't wait for this future.
+      scanners.remove(key);
+    }
   }
 
   // Advertises the given service information. Keeps track of the advertiser
@@ -108,9 +110,11 @@ class DiscoveryClient {
   // This sends a stop signal to the advertiser. Since it is non-blocking, the
   // advertise handle may not stop instantaneously.
   void stopAdvertise(String key) {
-    print("Stopping advertise for ${key}.");
-    advertisers[key].proxy.ptr.stop(advertisers[key].handle);
-    advertisers[key].proxy.close(); // don't wait for this future.
-    advertisers.remove(key);
+    if (advertisers[key] != null) {
+      print("Stopping advertise for ${key}.");
+      advertisers[key].proxy.ptr.stop(advertisers[key].handle);
+      advertisers[key].proxy.close(); // don't wait for this future.
+      advertisers.remove(key);
+    }
   }
 }

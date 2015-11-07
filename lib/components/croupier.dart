@@ -68,9 +68,9 @@ class CroupierComponentState extends State<CroupierComponent> {
                   onPressed: makeSetStateCallback(
                       logic_croupier.CroupierState.ChooseGame)),
               new FlatButton(
-                  child: new Text('Await Game'),
+                  child: new Text('Join Game'),
                   onPressed: makeSetStateCallback(
-                      logic_croupier.CroupierState.AwaitGame)),
+                      logic_croupier.CroupierState.JoinGame)),
               new FlatButton(
                   child: new Text('Settings'),
                   onPressed: makeSetStateCallback(
@@ -110,33 +110,50 @@ class CroupierComponentState extends State<CroupierComponent> {
                   onPressed: makeSetStateCallback(
                       logic_croupier.CroupierState.Welcome))
             ], direction: FlexDirection.vertical));
-      case logic_croupier.CroupierState.AwaitGame:
+      case logic_croupier.CroupierState.JoinGame:
+        // A stateful view, first showing the players that can be seen creating a game.
+        List<Widget> profileWidgets = new List<Widget>();
+        config.croupier.games_found.forEach((String _, logic_game.GameStartData gsd) {
+          CroupierSettings cs = config.croupier.settings_everyone[gsd.ownerID];
+          // cs could be null if this settings data hasn't synced yet.
+          if (cs != null) {
+            profileWidgets.add(new FlatButton(
+              child: new CroupierProfileComponent(cs),
+              onPressed: makeSetStateCallback(
+                logic_croupier.CroupierState.ArrangePlayers, gsd)
+            ));
+          }
+        });
         // in which players wait for game invitations to arrive.
         return new Container(
             padding: new EdgeDims.only(top: ui.window.padding.top),
             child: new Column([
-              new Text("Waiting for invitations..."),
+              new Text("Can join these games..."),
+              new Grid(profileWidgets, maxChildExtent: 150.0),
               new FlatButton(
                   child: new Text('Back'),
                   onPressed: makeSetStateCallback(
                       logic_croupier.CroupierState.Welcome))
             ]));
       case logic_croupier.CroupierState.ArrangePlayers:
-        // A stateful view, first showing the players that can be invited.
         List<Widget> profileWidgets = new List<Widget>();
-        config.croupier.settings_everyone.forEach((_, CroupierSettings cs) {
-          profileWidgets.add(new CroupierProfileComponent(cs));
+        config.croupier.players_found.forEach((int userID, _) {
+          CroupierSettings cs = config.croupier.settings_everyone[userID];
+          // cs could be null if this settings data hasn't synced yet.
+          if (cs != null) {
+            profileWidgets.add(new CroupierProfileComponent(cs));
+          }
         });
 
         // TODO(alexfandrianto): You can only start the game once there are enough players.
         return new Container(
             padding: new EdgeDims.only(top: ui.window.padding.top),
             child: new Column([
-              new Grid(profileWidgets, maxChildExtent: 150.0),
               new FlatButton(
                   child: new Text('Start Game'),
                   onPressed: makeSetStateCallback(
                       logic_croupier.CroupierState.PlayGame)),
+              new Grid(profileWidgets, maxChildExtent: 150.0),
               new FlatButton(
                   child: new Text('Back'),
                   onPressed: makeSetStateCallback(

@@ -4,12 +4,15 @@
 
 import 'dart:async';
 
-typedef void updateCallbackT(String key, String value);
+import 'util.dart' as util;
+import '../../logic/game/game.dart' as logic_game;
 
 class SettingsManager {
-  final updateCallbackT updateCallback;
+  final util.updateCallbackT updateCallback;
+  final util.updateCallbackT updateGamesCallback;
+  final util.updateCallbackT updatePlayerFoundCallback;
 
-  SettingsManager(this.updateCallback);
+  SettingsManager(this.updateCallback, this.updateGamesCallback, this.updatePlayerFoundCallback);
 
   Map<String, String> _data = new Map<String, String>();
 
@@ -26,7 +29,7 @@ class SettingsManager {
     return new Future(() => null);
   }
 
-  Future createSyncgroup() {
+  Future createSettingsSyncgroup() {
     return new Future(() => null);
   }
 
@@ -36,9 +39,17 @@ class SettingsManager {
 
   void stopScanSettings() {}
 
-  Future advertiseSettings() {
+  Future advertiseSettings(logic_game.GameStartData gsd) {
     return new Future(() => null);
   }
 
   void stopAdvertiseSettings() {}
+
+  Future createGameSyncgroup(String type, int gameID) {
+    return new Future(() => null);
+  }
+
+  Future joinGameSyncgroup(String sgName, int gameID) {
+    return new Future(() => null);
+  }
 }

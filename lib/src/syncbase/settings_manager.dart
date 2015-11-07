@@ -14,6 +14,7 @@
 /// In the background, these values will be synced.
 /// When setting up a syncgroup, the userIDs are very important.
 
+import '../../logic/game/game.dart' as logic_game;
 import '../../logic/croupier_settings.dart' show CroupierSettings;
 import 'croupier_client.dart' show CroupierClient;
 import 'discovery_client.dart' show DiscoveryClient;
@@ -26,7 +27,9 @@ import 'package:discovery/discovery.dart' as discovery;
 import 'package:syncbase/syncbase_client.dart' as sc;
 
 class SettingsManager {
-  final util.updateCallbackT updateCallback;
+  final util.updateCallbackT updateSettingsCallback;
+  final util.updateCallbackT updateGamesCallback;
+  final util.updateCallbackT updatePlayerFoundCallback;
   final CroupierClient _cc;
   sc.SyncbaseTable tb;
 
@@ -34,10 +37,14 @@ class SettingsManager {
   static const String _personalKey = "personal";
   static const String _settingsWatchSyncPrefix = "users";
 
-  SettingsManager([this.updateCallback]) : _cc = new CroupierClient();
+  SettingsManager(this.updateSettingsCallback, this.updateGamesCallback, this.updatePlayerFoundCallback) : _cc = new CroupierClient();
 
   String _settingsDataKey(int userID) {
     return "${_settingsWatchSyncPrefix}/${userID}/settings";
+  }
+  String _settingsDataKeyUserID(String dataKey) {
+    List<String> parts = dataKey.split("/");
+    return parts[parts.length - 2];
   }
 
   Future _prepareSettingsTable() async {
@@ -51,7 +58,7 @@ class SettingsManager {
     // Start to watch the stream for the shared settings table.
     Stream<sc.WatchChange> watchStream = db.watch(util.tableNameSettings,
         _settingsWatchSyncPrefix, await db.getResumeMarker());
-    _startWatch(watchStream); // Don't wait for this future.
+    _startWatchSettings(watchStream); // Don't wait for this future.
     _loadSettings(tb); // Don't wait for this future.
   }
 
@@ -95,7 +102,7 @@ class SettingsManager {
   // This watch method ensures that any changes are propagated to the caller.
   // In the case of the settings manager, we're checking for any changes to
   // any person's Croupier Settings.
-  Future _startWatch(Stream<sc.WatchChange> watchStream) async {
+  Future _startWatchSettings(Stream<sc.WatchChange> watchStream) async {
     util.log('Settings watching for changes...');
     // This stream never really ends, so I guess we'll watch forever.
     await for (sc.WatchChange wc in watchStream) {
@@ -115,19 +122,100 @@ class SettingsManager {
           assert(false);
       }
 
-      if (this.updateCallback != null) {
-        this.updateCallback(key, value);
+      if (this.updateSettingsCallback != null) {
+        this.updateSettingsCallback(_settingsDataKeyUserID(key), value);
       }
     }
   }
 
   // Best called after load(), to ensure that there are settings in the table.
-  Future createSyncgroup() async {
+  Future createSettingsSyncgroup() async {
     int id = await _getUserID();
 
     _cc.createSyncgroup(
         _cc.makeSyncgroupName(await _syncSuffix()), util.tableNameSettings,
         prefix: this._settingsDataKey(id));
+  }
+
+
+  // This watch method ensures that any changes are propagated to the caller.
+  // In this case, we're forwarding any player changes to the Croupier logic.
+  Future _startWatchPlayers(Stream<sc.WatchChange> watchStream) async {
+    util.log('Players watching for changes...');
+    // This stream never really ends, so I guess we'll watch forever.
+    await for (sc.WatchChange wc in watchStream) {
+      assert(wc.tableName == util.tableNameGames);
+      util.log('Watch Key: ${wc.rowKey}');
+      util.log('Watch Value ${UTF8.decode(wc.valueBytes)}');
+      String key = wc.rowKey;
+      String value;
+      switch (wc.changeType) {
+        case sc.WatchChangeTypes.put:
+          value = UTF8.decode(wc.valueBytes);
+          break;
+        case sc.WatchChangeTypes.delete:
+          value = null;
+          break;
+        default:
+          assert(false);
+      }
+
+      if (this.updatePlayerFoundCallback != null) {
+        String playerID = _getPartFromBack(key, "/", 1);
+        this.updatePlayerFoundCallback(playerID, value);
+
+        // Also, you should be sure to join this person's syncgroup.
+        _cc.joinSyncgroup(_cc.makeSyncgroupName(await _syncSuffix(int.parse(playerID))));
+      }
+    }
+  }
+
+  Future<logic_game.GameStartData> createGameSyncgroup(String type, int gameID) async {
+    print("Creating game syncgroup for ${type} and ${gameID}");
+    sc.SyncbaseNoSqlDatabase db = await _cc.createDatabase();
+    sc.SyncbaseTable gameTable = await _cc.createTable(db, util.tableNameGames);
+
+    // Watch for the players in the game.
+    Stream<sc.WatchChange> watchStream = db.watch(util.tableNameGames,
+        util.syncgamePrefix(gameID) + "/players", await db.getResumeMarker());
+    _startWatchPlayers(watchStream); // Don't wait for this future.
+
+    print("Now writing to some rows of ${gameID}");
+    // Start up the table and write yourself as player 0.
+    await gameTable.row("${gameID}/type").put(UTF8.encode("${type}"));
+
+    int id = await _getUserID();
+    await gameTable.row("${gameID}/owner").put(UTF8.encode("${id}"));
+    await gameTable.row("${gameID}/players/${id}/player_number").put(UTF8.encode("0"));
+
+    logic_game.GameStartData gsd = new logic_game.GameStartData(type, 0, gameID, id);
+
+    await _cc.createSyncgroup(
+        _cc.makeSyncgroupName(util.syncgameSuffix(gsd.toJSONString())), util.tableNameGames,
+        prefix: util.syncgamePrefix(gameID));
+
+    return gsd;
+  }
+
+  Future joinGameSyncgroup(String sgName, int gameID) async {
+    print("Now joining game syncgroup at ${sgName} and ${gameID}");
+    sc.SyncbaseSyncgroup sg = await _cc.joinSyncgroup(sgName);
+
+    sc.SyncbaseNoSqlDatabase db = await _cc.createDatabase();
+    sc.SyncbaseTable gameTable = await _cc.createTable(db, util.tableNameGames);
+
+    // Watch for the players in the game.
+    Stream<sc.WatchChange> watchStream = db.watch(util.tableNameGames,
+        util.syncgamePrefix(gameID) + "/players", await db.getResumeMarker());
+    _startWatchPlayers(watchStream); // Don't wait for this future.
+
+    // Also write yourself to the table as player |NUM_PLAYERS - 1|
+    Map<String, sc.SyncgroupMemberInfo> fellowPlayers = await sg.getMembers();
+    print("I have found! ${fellowPlayers} ${fellowPlayers.length}");
+
+    int id = await _getUserID();
+    int playerNumber = fellowPlayers.length - 1;
+    gameTable.row("${gameID}/players/${id}/player_number").put(UTF8.encode("${playerNumber}"));
   }
 
   // When starting the settings manager, there may be settings already in the
@@ -138,7 +226,7 @@ class SettingsManager {
         .forEach((sc.KeyValue kv) {
       if (kv.key.endsWith("/settings")) {
         // Then we can process the value as if it were settings data.
-        this.updateCallback(kv.key, UTF8.decode(kv.value));
+        this.updateSettingsCallback(_settingsDataKeyUserID(kv.key), UTF8.decode(kv.value));
       }
     });
   }
@@ -149,8 +237,8 @@ class SettingsManager {
 
   // Someone who is creating a game should scan for players who wish to join.
   Future scanSettings() async {
-    SettingsScanHandler ssh = new SettingsScanHandler(_cc);
-    _cc.discoveryClient.scan(_discoverySettingsKey, "CroupierSettings", ssh);
+    SettingsScanHandler ssh = new SettingsScanHandler(_cc, this.updateGamesCallback);
+    _cc.discoveryClient.scan(_discoverySettingsKey, "CroupierSettingsAndGame", ssh);
   }
 
   void stopScanSettings() {
@@ -158,13 +246,16 @@ class SettingsManager {
   }
 
   // Someone who wants to join a game should advertise their presence.
-  Future advertiseSettings() async {
+  Future advertiseSettings(logic_game.GameStartData gsd) async {
     String suffix = await _syncSuffix();
+    String gameSuffix = util.syncgameSuffix(gsd.toJSONString());
     _cc.discoveryClient.advertise(
         _discoverySettingsKey,
         DiscoveryClient.serviceMaker(
-            interfaceName: "CroupierSettings",
-            addrs: <String>[_cc.makeSyncgroupName(suffix)]));
+            interfaceName: "CroupierSettingsAndGame",
+            addrs: <String>[
+              _cc.makeSyncgroupName(suffix),
+              _cc.makeSyncgroupName(gameSuffix)]));
   }
 
   void stopAdvertiseSettings() {
@@ -179,11 +270,19 @@ class SettingsManager {
     return int.parse(result);
   }
 
-  Future<String> _syncSuffix() async {
-    int id = await _getUserID();
+  Future<String> _syncSuffix([int userID]) async {
+    int id = userID;
+    if (id == null) {
+      id = await _getUserID();
+    }
 
-    return "${util.sgSuffix}${id}";
+    return "${util.sgSuffix}-${id}";
   }
+}
+
+String _getPartFromBack(String input, String separator, int indexFromLast) {
+  List<String> parts = input.split(separator);
+  return parts[parts.length - 1 - indexFromLast];
 }
 
 // Implementation of the ScanHandler for Settings information.
@@ -191,15 +290,28 @@ class SettingsManager {
 // they're advertising.
 class SettingsScanHandler extends discovery.ScanHandler {
   CroupierClient _cc;
+  Map<List<int>, String> settingsAddrs;
+  Map<List<int>, String> gameAddrs;
+  util.updateCallbackT updateGamesCallback;
 
-  SettingsScanHandler(this._cc);
+  SettingsScanHandler(this._cc, this.updateGamesCallback) {
+    settingsAddrs = new Map<List<int>, String>();
+    gameAddrs = new Map<List<int>, String>();
+  }
 
   void found(discovery.Service s) {
     util.log(
         "SettingsScanHandler Found ${s.instanceUuid} ${s.instanceName} ${s.addrs}");
 
-    // TODO(alexfandrianto): Filter based on instanceName?
-    if (s.addrs.length > 0) {
+    if (s.addrs.length == 2) {
+      // Note: Assumes 2 addresses.
+      settingsAddrs[s.instanceUuid] = s.addrs[0];
+      gameAddrs[s.instanceUuid] = s.addrs[1];
+
+      String json = _getPartFromBack(s.addrs[1], "-", 0);
+      updateGamesCallback(s.addrs[1], json);
+
+
       _cc.joinSyncgroup(s.addrs[0]);
     } else {
       // An unexpected service was found. Who is advertising it?
@@ -213,5 +325,13 @@ class SettingsScanHandler extends discovery.ScanHandler {
 
     // TODO(alexfandrianto): Leave the syncgroup?
     // Looks like leave isn't actually implemented, so we can't do this.
+    String addr = gameAddrs[instanceId];
+    if (addr != null) {
+      List<String> parts = addr.split("-");
+      String gameID = parts[parts.length - 1];
+      updateGamesCallback(gameID, null);
+    }
+    settingsAddrs.remove(instanceId);
+    gameAddrs.remove(instanceId);
   }
 }

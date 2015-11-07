@@ -6,23 +6,31 @@ part of solitaire;
 
 class SolitaireLog extends GameLog {
   LogWriter logWriter;
+  Set<String> seenKeys; // the seen ones can be ignored.
 
   SolitaireLog() {
     // TODO(alexfandrianto): The Game ID needs to be part of this constructor.
-    logWriter = new LogWriter(handleSyncUpdate, [0], "<game_id>/log");
+    logWriter = new LogWriter(handleSyncUpdate, [0]);
+    seenKeys = new Set<String>();
   }
 
   @override
   void setGame(Game g) {
     this.game = g;
     logWriter.associatedUser = this.game.playerNumber;
+    logWriter.logPrefix = "${game.gameID}/log";
   }
 
   void handleSyncUpdate(String key, String cmd) {
-    // In Solitaire, we can ignore the key because this is a single player game,
-    // and the Solitaire schema only has TURN_BASED moves.
-    SolitaireCommand sc = new SolitaireCommand.fromCommand(cmd);
-    this.update(sc);
+    // In this game, we can execute commands in any order.
+    // However, we must avoid repeated keys.
+    if (!seenKeys.contains(key)) {
+      SolitaireCommand sc = new SolitaireCommand.fromCommand(cmd);
+      this.update(sc);
+      seenKeys.add(key);
+    } else {
+      print("The log is ignoring repeated key: ${key}");
+    }
   }
 
   @override

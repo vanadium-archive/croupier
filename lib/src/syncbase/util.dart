@@ -15,14 +15,25 @@ const tableNameSettings = 'table_settings';
 const mtAddr = '/192.168.86.254:8101';
 const sgPrefix = 'croupier/%%sync';
 const sgSuffix = 'discovery';
+const sgSuffixGame = 'gaming';
 
+typedef void NoArgCb();
 typedef void updateCallbackT(String key, String value);
 
 String openPermsJson =
     '{"Admin":{"In":["..."]},"Write":{"In":["..."]},"Read":{"In":["..."]},"Resolve":{"In":["..."]},"Debug":{"In":["..."]}}';
 Perms openPerms = SyncbaseClient.perms(openPermsJson);
 
-log(String msg) {
+void log(String msg) {
   DateTime now = new DateTime.now();
   print('$now $msg');
+}
+
+
+// data should contain a JSON-encoded logic_game.GameStartData
+String syncgameSuffix(String data) {
+  return "${sgSuffixGame}-${data}";
+}
+String syncgamePrefix(int gameID) {
+  return "${gameID}";
 }

@@ -54,7 +54,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
           width: config.width,
           height: config.height,
           child: heartsWidget));
-    if (game.phase == HeartsPhase.Deal || game.phase != HeartsPhase.Score) {
+    if (game.phase != HeartsPhase.Deal && game.phase != HeartsPhase.Score) {
       List<int> visibleCardCollections = new List<int>();
       int playerNum = game.playerNumber;
       if (game.viewType == HeartsType.Player) {

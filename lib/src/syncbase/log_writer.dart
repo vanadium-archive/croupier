@@ -39,7 +39,7 @@ class LogWriter {
   final CroupierClient _cc;
 
   // Affects read/write/watch locations of the log writer.
-  final String logPrefix;
+  String logPrefix = ''; // This is usually set to <game_id>/log
 
   // An internal boolean that should be set to true when watching and reset to
   // false once watch should be turned off.
@@ -49,6 +49,7 @@ class LogWriter {
   // Once a consensus has been reached, this is set to false again.
   bool inProposalMode = false;
   Map<String, String> proposalsKnown; // Only updated via watch.
+  Set<String> _acceptedProposals = new Set<String>(); // Add accepted proposals so that we can ignore them.
 
   // The associated user helps in the production of unique keys.
   int _associatedUser;
@@ -65,7 +66,7 @@ class LogWriter {
 
   // The LogWriter takes a callback for watch updates, the list of users, and
   // the logPrefix to write at on table.
-  LogWriter(this.updateCallback, this.users, this.logPrefix)
+  LogWriter(this.updateCallback, this.users)
       : _cc = new CroupierClient() {
     _prepareLog();
   }
@@ -115,7 +116,7 @@ class LogWriter {
       }
 
       if (_isProposalKey(key)) {
-        if (value != null) {
+        if (value != null && !_acceptedProposals.contains(key)) {
           await _receiveProposal(key, value);
         }
       } else {
@@ -148,12 +149,12 @@ class LogWriter {
       // For quick development purposes, we may wish to keep this block.
       // FAKE: Do some bonus work. Where "everyone else" accepts the proposal.
       // Normally, one would rely on watch and the syncgroup peers to do this.
-      for (int i = 0; i < users.length; i++) {
+      /*for (int i = 0; i < users.length; i++) {
         if (users[i] != associatedUser) {
           // DO NOT AWAIT HERE. It must be done "asynchronously".
           _writeData(_proposalKey(users[i]), proposalData);
         }
-      }
+      }*/
 
       return;
     }
@@ -192,31 +193,52 @@ class LogWriter {
     return key;
   }
 
+  bool _ownsProposal(String key, String proposalData) {
+    return _proposalSayer(key) == _proposalOwner(proposalData);
+  }
+  int _proposalSayer(String key) {
+    return int.parse(key.split("/").last);
+  }
+  int _proposalOwner(String proposalData) {
+    Map<String, String> pp = JSON.decode(proposalData);
+    String keyP = pp["key"];
+    return int.parse(keyP.split("-").last);
+  }
+
   // Helper that handles a proposal update for the associatedUser.
   Future _receiveProposal(String key, String proposalData) async {
     // If this is a separate device, it may not be in proposal mode yet.
     // Set to be in proposal mode now.
-    inProposalMode = true;
+    if (!inProposalMode) {
+      inProposalMode = true;
+      proposalsKnown = new Map<String, String>();
+    }
 
     // Let us update our proposal map.
     proposalsKnown[key] = proposalData;
 
-    // First check if something is already in data.
+    // Let's obtain our own proposal data.
     var pKey = _proposalKey(associatedUser);
     var pData = proposalsKnown[pKey];
-    if (pData != null) {
-      // Potentially change your proposal, if that person has higher priority.
-      Map<String, String> pp = JSON.decode(pData);
-      Map<String, String> op = JSON.decode(proposalData);
-      String keyP = pp["key"];
-      String keyO = op["key"];
-      if (keyO.compareTo(keyP) < 0) {
-        // Then switch proposals.
+
+    // We only have to update our proposal if the updating person is the owner.
+    // This avoids repeated and potentially race-y watch updates.
+    // By sharing the bare minimum, sync/watch should avoid races.
+    if (_ownsProposal(key, proposalData)) {
+      if (pData != null) {
+        // Potentially change your proposal, if that person has higher priority.
+        Map<String, String> pp = JSON.decode(pData);
+        Map<String, String> op = JSON.decode(proposalData);
+        String keyP = pp["key"];
+        String keyO = op["key"];
+        if (keyO.compareTo(keyP) < 0) {
+          // Then switch proposals.
+          await _writeData(pKey, proposalData);
+        }
+      } else {
+        // Otherwise, you have no proposal, so take theirs.
         await _writeData(pKey, proposalData);
       }
-    } else {
-      // Otherwise, you have no proposal, so take theirs.
-      await _writeData(pKey, proposalData);
     }
 
     // Given these changes, check if you can commit the full batch.
@@ -225,11 +247,16 @@ class LogWriter {
       String key = pp["key"];
       String value = pp["value"];
 
+      _acceptedProposals.add(key);
       print("All proposals accepted. Proceeding with ${key} ${value}");
       // WOULD DO A BATCH!
       for (int i = 0; i < users.length; i++) {
         await _deleteData(_proposalKey(users[i]));
       }
+      // TODO(alexfandrianto): It seems that this will trigger multiple watch
+      // updates even though the data written is the same value to the same key.
+      // I think this is intended, so to work around it, the layer above will
+      // be sure to ignore updates to repeated keys.
       await _writeData(key, value);
 
       proposalsKnown = null;

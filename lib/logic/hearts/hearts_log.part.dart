@@ -6,24 +6,31 @@ part of hearts;
 
 class HeartsLog extends GameLog {
   LogWriter logWriter;
+  Set<String> seenKeys; // the seen ones can be ignored.
 
   HeartsLog() {
     // TODO(alexfandrianto): The Game ID needs to be part of this constructor.
-    logWriter = new LogWriter(handleSyncUpdate, [0, 1, 2, 3], "<game_id>/log");
+    logWriter = new LogWriter(handleSyncUpdate, [0, 1, 2, 3]);
+    seenKeys = new Set<String>();
   }
 
   @override
   void setGame(Game g) {
     this.game = g;
     logWriter.associatedUser = this.game.playerNumber;
+    logWriter.logPrefix = "${game.gameID}/log";
   }
 
   void handleSyncUpdate(String key, String cmd) {
-    // In Hearts, we can ignore the key. Our in-memory log does not need to
-    // guarantee the event order of the INDEPENDENT phase, which can reference
-    // keys from the "earlier" actions of other players.
-    HeartsCommand hc = new HeartsCommand.fromCommand(cmd);
-    this.update(hc);
+    // In this game, we can execute commands in any order.
+    // However, we must avoid repeated keys.
+    if (!seenKeys.contains(key)) {
+      HeartsCommand hc = new HeartsCommand.fromCommand(cmd);
+      this.update(hc);
+      seenKeys.add(key);
+    } else {
+      print("The log is ignoring repeated key: ${key}");
+    }
   }
 
   @override

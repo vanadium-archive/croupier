@@ -7,6 +7,9 @@ part of solitaire;
 enum SolitairePileType { ACES, DISCARD, DRAW, DOWN, UP }
 
 class SolitaireGame extends Game {
+  @override
+  String get gameTypeName => "Solitaire";
+
   // Constants for the index-based offsets of the Solitaire Game's card collection.
   // There are 20 piles to track (4 aces, 1 discard, 1 draw, 7 down, 7 up).
   static const NUM_PILES = 20;
@@ -23,9 +26,9 @@ class SolitaireGame extends Game {
     _phase = other;
   }
 
-  SolitaireGame(int playerNumber)
+  SolitaireGame(int playerNumber, {int gameID})
       : super.create(
-            GameType.Solitaire, new SolitaireLog(), playerNumber, NUM_PILES) {
+            GameType.Solitaire, new SolitaireLog(), playerNumber, NUM_PILES, gameID: gameID) {
     resetGame();
   }
 

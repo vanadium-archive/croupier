@@ -4,8 +4,9 @@
 
 library hearts;
 
-import '../card.dart' show Card;
 import 'dart:math' as math;
+
+import '../card.dart' show Card;
 import '../game/game.dart' show Game, GameType, GameCommand, GameLog;
 import '../../src/syncbase/log_writer.dart' show LogWriter, SimulLevel;
 

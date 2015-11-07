@@ -34,7 +34,10 @@ class HeartsGame extends Game {
   final Card TWO_OF_CLUBS = new Card("classic", "c2");
   final Card QUEEN_OF_SPADES = new Card("classic", "sq");
 
-  HeartsType viewType;
+  @override
+  String get gameTypeName => "Hearts";
+
+  HeartsType viewType = HeartsType.Player;
 
   HeartsPhase _phase = HeartsPhase.Deal;
   HeartsPhase get phase => _phase;
@@ -62,8 +65,8 @@ class HeartsGame extends Game {
   List<int> scores = [0, 0, 0, 0];
   List<bool> ready;
 
-  HeartsGame(int playerNumber, [this.viewType = HeartsType.Player])
-      : super.create(GameType.Hearts, new HeartsLog(), playerNumber, 16) {
+  HeartsGame(int playerNumber, {int gameID})
+      : super.create(GameType.Hearts, new HeartsLog(), playerNumber, 16, gameID: gameID) {
     resetGame();
   }
 

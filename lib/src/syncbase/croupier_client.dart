@@ -61,15 +61,22 @@ class CroupierClient {
     return db;
   }
 
+  Completer _tableLock;
+
   // TODO(alexfandrianto): Try not to call this twice at the same time.
   // That would lead to very race-y behavior.
   Future<sc.SyncbaseTable> createTable(
       sc.SyncbaseNoSqlDatabase db, String tableName) async {
+    if (_tableLock != null) {
+      await _tableLock.future;
+    }
+    _tableLock = new Completer();
     var table = db.table(tableName);
     if (!(await table.exists())) {
       await table.create(util.openPerms);
     }
     util.log('CroupierClient: ${tableName} is ready');
+    _tableLock.complete();
     return table;
   }
 

@@ -11,12 +11,18 @@ typedef void updateCallbackT(String key, String value);
 class LogWriter {
   final updateCallbackT updateCallback;
   final List<int> users;
-  final String logPrefix; // This can be completely ignored.
+  String logPrefix; // This can be completely ignored.
 
   bool inProposalMode = false;
   int associatedUser;
 
-  LogWriter(this.updateCallback, this.users, this.logPrefix);
+  int _fakeTime = 0;
+  int _getNextTime() {
+    _fakeTime++;
+    return _fakeTime;
+  }
+
+  LogWriter(this.updateCallback, this.users);
 
   Map<String, String> _data = new Map<String, String>();
 
@@ -46,7 +52,7 @@ class LogWriter {
 
   // Helper that returns the log key using a mixture of timestamp + user.
   String _logKey(int user) {
-    int ms = new DateTime.now().millisecondsSinceEpoch;
+    int ms = _getNextTime();
     String key = "${ms}-${user}";
     return key;
   }
