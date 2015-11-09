@@ -66,6 +66,9 @@ func getStringImgs(input, color string, texs map[string]sprite.SubTex) []sprite.
 			key += "Space"
 		} else if char == 33 {
 			key += "Bang"
+			// if char is an apostrophe
+		} else if char == 39 {
+			key += "Apostrophe"
 			// if char is a colon
 		} else if char == 58 {
 			key += "Colon"
@@ -247,26 +250,27 @@ func LoadTextures(eng sprite.Engine) map[string]sprite.SubTex {
 		"D-Lower-DBlue.png", "E-Lower-DBlue.png", "F-Lower-DBlue.png", "G-Lower-DBlue.png", "H-Lower-DBlue.png", "I-Lower-DBlue.png",
 		"J-Lower-DBlue.png", "K-Lower-DBlue.png", "L-Lower-DBlue.png", "M-Lower-DBlue.png", "N-Lower-DBlue.png", "O-Lower-DBlue.png",
 		"P-Lower-DBlue.png", "Q-Lower-DBlue.png", "R-Lower-DBlue.png", "S-Lower-DBlue.png", "T-Lower-DBlue.png", "U-Lower-DBlue.png",
-		"V-Lower-DBlue.png", "W-Lower-DBlue.png", "X-Lower-DBlue.png", "Y-Lower-DBlue.png", "Z-Lower-DBlue.png", "A-Upper-LBlue.png",
-		"B-Upper-LBlue.png", "C-Upper-LBlue.png", "D-Upper-LBlue.png", "E-Upper-LBlue.png", "F-Upper-LBlue.png", "G-Upper-LBlue.png",
-		"H-Upper-LBlue.png", "I-Upper-LBlue.png", "J-Upper-LBlue.png", "K-Upper-LBlue.png", "L-Upper-LBlue.png", "M-Upper-LBlue.png",
-		"N-Upper-LBlue.png", "O-Upper-LBlue.png", "P-Upper-LBlue.png", "Q-Upper-LBlue.png", "R-Upper-LBlue.png", "S-Upper-LBlue.png",
-		"T-Upper-LBlue.png", "U-Upper-LBlue.png", "V-Upper-LBlue.png", "W-Upper-LBlue.png", "X-Upper-LBlue.png", "Y-Upper-LBlue.png",
-		"Z-Upper-LBlue.png", "A-Lower-LBlue.png", "B-Lower-LBlue.png", "C-Lower-LBlue.png", "D-Lower-LBlue.png", "E-Lower-LBlue.png",
-		"F-Lower-LBlue.png", "G-Lower-LBlue.png", "H-Lower-LBlue.png", "I-Lower-LBlue.png", "J-Lower-LBlue.png", "K-Lower-LBlue.png",
-		"L-Lower-LBlue.png", "M-Lower-LBlue.png", "N-Lower-LBlue.png", "O-Lower-LBlue.png", "P-Lower-LBlue.png", "Q-Lower-LBlue.png",
-		"R-Lower-LBlue.png", "S-Lower-LBlue.png", "T-Lower-LBlue.png", "U-Lower-LBlue.png", "V-Lower-LBlue.png", "W-Lower-LBlue.png",
-		"X-Lower-LBlue.png", "Y-Lower-LBlue.png", "Z-Lower-LBlue.png", "A-Upper-Gray.png", "B-Upper-Gray.png", "C-Upper-Gray.png",
-		"D-Upper-Gray.png", "E-Upper-Gray.png", "F-Upper-Gray.png", "G-Upper-Gray.png", "H-Upper-Gray.png", "I-Upper-Gray.png",
-		"J-Upper-Gray.png", "K-Upper-Gray.png", "L-Upper-Gray.png", "M-Upper-Gray.png", "N-Upper-Gray.png", "O-Upper-Gray.png",
-		"P-Upper-Gray.png", "Q-Upper-Gray.png", "R-Upper-Gray.png", "S-Upper-Gray.png", "T-Upper-Gray.png", "U-Upper-Gray.png",
-		"V-Upper-Gray.png", "W-Upper-Gray.png", "X-Upper-Gray.png", "Y-Upper-Gray.png", "Z-Upper-Gray.png", "A-Lower-Gray.png",
-		"B-Lower-Gray.png", "C-Lower-Gray.png", "D-Lower-Gray.png", "E-Lower-Gray.png", "F-Lower-Gray.png", "G-Lower-Gray.png",
-		"H-Lower-Gray.png", "I-Lower-Gray.png", "J-Lower-Gray.png", "K-Lower-Gray.png", "L-Lower-Gray.png", "M-Lower-Gray.png",
-		"N-Lower-Gray.png", "O-Lower-Gray.png", "P-Lower-Gray.png", "Q-Lower-Gray.png", "R-Lower-Gray.png", "S-Lower-Gray.png",
-		"T-Lower-Gray.png", "U-Lower-Gray.png", "V-Lower-Gray.png", "W-Lower-Gray.png", "X-Lower-Gray.png", "Y-Lower-Gray.png",
-		"Z-Lower-Gray.png", "Space-Gray.png", "RoundedRectangle-DBlue.png", "RoundedRectangle-LBlue.png", "RoundedRectangle-Gray.png",
-		"Rectangle-LBlue.png", "HorizontalPullTab.png", "VerticalPullTab.png",
+		"V-Lower-DBlue.png", "W-Lower-DBlue.png", "X-Lower-DBlue.png", "Y-Lower-DBlue.png", "Z-Lower-DBlue.png", "Apostrophe-DBlue.png",
+		"Space-DBlue.png", "A-Upper-LBlue.png", "B-Upper-LBlue.png", "C-Upper-LBlue.png", "D-Upper-LBlue.png", "E-Upper-LBlue.png",
+		"F-Upper-LBlue.png", "G-Upper-LBlue.png", "H-Upper-LBlue.png", "I-Upper-LBlue.png", "J-Upper-LBlue.png", "K-Upper-LBlue.png",
+		"L-Upper-LBlue.png", "M-Upper-LBlue.png", "N-Upper-LBlue.png", "O-Upper-LBlue.png", "P-Upper-LBlue.png", "Q-Upper-LBlue.png",
+		"R-Upper-LBlue.png", "S-Upper-LBlue.png", "T-Upper-LBlue.png", "U-Upper-LBlue.png", "V-Upper-LBlue.png", "W-Upper-LBlue.png",
+		"X-Upper-LBlue.png", "Y-Upper-LBlue.png", "Z-Upper-LBlue.png", "A-Lower-LBlue.png", "B-Lower-LBlue.png", "C-Lower-LBlue.png",
+		"D-Lower-LBlue.png", "E-Lower-LBlue.png", "F-Lower-LBlue.png", "G-Lower-LBlue.png", "H-Lower-LBlue.png", "I-Lower-LBlue.png",
+		"J-Lower-LBlue.png", "K-Lower-LBlue.png", "L-Lower-LBlue.png", "M-Lower-LBlue.png", "N-Lower-LBlue.png", "O-Lower-LBlue.png",
+		"P-Lower-LBlue.png", "Q-Lower-LBlue.png", "R-Lower-LBlue.png", "S-Lower-LBlue.png", "T-Lower-LBlue.png", "U-Lower-LBlue.png",
+		"V-Lower-LBlue.png", "W-Lower-LBlue.png", "X-Lower-LBlue.png", "Y-Lower-LBlue.png", "Z-Lower-LBlue.png", "A-Upper-Gray.png",
+		"B-Upper-Gray.png", "C-Upper-Gray.png", "D-Upper-Gray.png", "E-Upper-Gray.png", "F-Upper-Gray.png", "G-Upper-Gray.png",
+		"H-Upper-Gray.png", "I-Upper-Gray.png", "J-Upper-Gray.png", "K-Upper-Gray.png", "L-Upper-Gray.png", "M-Upper-Gray.png",
+		"N-Upper-Gray.png", "O-Upper-Gray.png", "P-Upper-Gray.png", "Q-Upper-Gray.png", "R-Upper-Gray.png", "S-Upper-Gray.png",
+		"T-Upper-Gray.png", "U-Upper-Gray.png", "V-Upper-Gray.png", "W-Upper-Gray.png", "X-Upper-Gray.png", "Y-Upper-Gray.png",
+		"Z-Upper-Gray.png", "A-Lower-Gray.png", "B-Lower-Gray.png", "C-Lower-Gray.png", "D-Lower-Gray.png", "E-Lower-Gray.png",
+		"F-Lower-Gray.png", "G-Lower-Gray.png", "H-Lower-Gray.png", "I-Lower-Gray.png", "J-Lower-Gray.png", "K-Lower-Gray.png",
+		"L-Lower-Gray.png", "M-Lower-Gray.png", "N-Lower-Gray.png", "O-Lower-Gray.png", "P-Lower-Gray.png", "Q-Lower-Gray.png",
+		"R-Lower-Gray.png", "S-Lower-Gray.png", "T-Lower-Gray.png", "U-Lower-Gray.png", "V-Lower-Gray.png", "W-Lower-Gray.png",
+		"X-Lower-Gray.png", "Y-Lower-Gray.png", "Z-Lower-Gray.png", "Space-Gray.png", "RoundedRectangle-DBlue.png",
+		"RoundedRectangle-LBlue.png", "RoundedRectangle-Gray.png", "Rectangle-LBlue.png", "Rectangle-DBlue.png", "HorizontalPullTab.png",
+		"VerticalPullTab.png",
 	}
 	for _, f := range boundedImgs {
 		a, err := asset.Open(f)

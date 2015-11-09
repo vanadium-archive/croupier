@@ -7,9 +7,6 @@
 package reposition
 
 import (
-	"math"
-	"time"
-
 	"hearts/img/coords"
 	"hearts/img/direction"
 	"hearts/img/staticimg"
@@ -24,8 +21,7 @@ import (
 
 const (
 	// animationFrameCounter is the number of frames it will take to complete any animation
-	// This is a float because it allows for future float operations without requiring conversion each time
-	animationFrameCounter = float32(100)
+	animationFrameCounter = 100
 	// animRotationScaler is the speed at which an image rotates, if rotation is involved in an animation
 	animRotationScaler = .15
 )
@@ -82,14 +78,6 @@ func DragImgs(t touch.Event, cards []*card.Card, imgs []*staticimg.StaticImg, u 
 	}
 }
 
-// Animation for the 'take' action, when app is in the table view
-func AnimateTableCardTake(animCard *card.Card, cardNum int, p *player.Player) {
-	destinationPos := p.GetPassedFrom()[cardNum].GetInitial()
-	c := make(chan bool)
-	animateCardMovement(c, animCard, destinationPos, animCard.GetDimensions())
-	<-c
-}
-
 // Animation for the 'pass' action, when app is in the table view
 func AnimateTableCardPass(animCard *card.Card, toPlayer, cardNum int, u *uistate.UIState) {
 	cardDim := animCard.GetDimensions()
@@ -123,52 +111,16 @@ func AnimateTableCardPass(animCard *card.Card, toPlayer, cardNum int, u *uistate
 	<-c
 }
 
-// Animation for the 'pass' action, when app is in the hand view
-func AnimateHandCardPass(ch chan bool, animImages []*staticimg.StaticImg, animCards []*card.Card, u *uistate.UIState) {
-	ch2 := make(chan bool)
-	for _, i := range animImages {
-		dims := i.GetDimensions()
-		to := coords.MakeVec(i.GetCurrent().X, i.GetCurrent().Y-u.WindowSize.Y)
-		AnimateImageMovement(i, to, dims)
-	}
-	for _, c := range animCards {
-		dims := c.GetDimensions()
-		to := coords.MakeVec(c.GetCurrent().X, c.GetCurrent().Y-u.WindowSize.Y)
-		animateCardMovement(ch2, c, to, dims)
-	}
-	select {
-	case <-ch2:
-		ch <- true
-	case <-time.After(1 * time.Second):
-		ch <- false
-	}
-}
-
-// Animation for the 'take' action, when app is in the hand view
-func AnimateHandCardTake(ch chan bool, animImages []*staticimg.StaticImg, u *uistate.UIState) {
-	ch2 := make(chan bool)
-	for _, i := range animImages {
-		destination := coords.MakeVec(i.GetCurrent().X, i.GetCurrent().Y-u.WindowSize.Y)
-		AnimateImageMovement(i, destination, i.GetDimensions())
-	}
-	select {
-	case <-ch2:
-		ch <- true
-	case <-time.After(1 * time.Second):
-		ch <- false
-	}
-}
-
-// Animation for the 'play' action, when app is in the hand view
-func AnimateHandCardPlay(c chan bool, animCard *card.Card, u *uistate.UIState) {
-	destination := determineDestination(animCard, direction.Across, u.WindowSize)
-	animateCardMovement(c, animCard, destination, animCard.GetDimensions())
+// Animation for the 'take' action, when app is in the table view
+func AnimateTableCardTake(animCard *card.Card, cardNum int, p *player.Player) {
+	destinationPos := p.GetPassedFrom()[cardNum].GetInitial()
+	c := make(chan bool)
+	animateCardMovement(c, animCard, destinationPos, animCard.GetDimensions())
 	<-c
-	c <- true
 }
 
 // Animation for the 'play' action, when app is in the table view
-func AnimateTableCardPlay(c chan bool, animCard *card.Card, playerInt int, u *uistate.UIState) {
+func AnimateTableCardPlay(animCard *card.Card, playerInt int, u *uistate.UIState) {
 	destination := u.DropTargets[playerInt]
 	destinationPos := destination.GetCurrent()
 	destinationDim := destination.GetDimensions()
@@ -176,7 +128,79 @@ func AnimateTableCardPlay(c chan bool, animCard *card.Card, playerInt int, u *ui
 	animateCardMovement(ch, animCard, destinationPos, destinationDim)
 	<-ch
 	animCard.SetFrontDisplay(u.Eng)
-	c <- true
+}
+
+// Animation for the 'pass' action, when app is in the hand view
+func AnimateHandCardPass(ch chan bool, animImages []*staticimg.StaticImg, animCards []*card.Card, u *uistate.UIState) {
+	for _, i := range animImages {
+		dims := i.GetDimensions()
+		to := coords.MakeVec(i.GetCurrent().X, i.GetCurrent().Y-u.WindowSize.Y)
+		AnimateImageNoChannel(i, to, dims)
+	}
+	for i, c := range animCards {
+		dims := c.GetDimensions()
+		to := coords.MakeVec(c.GetCurrent().X, c.GetCurrent().Y-u.WindowSize.Y)
+		if i < len(animCards)-1 {
+			animateCardNoChannel(c, to, dims)
+		} else {
+			animateCardMovement(ch, c, to, dims)
+		}
+	}
+}
+
+// Animation for the 'take' action, when app is in the hand view
+func AnimateHandCardTake(ch chan bool, animImages []*staticimg.StaticImg, u *uistate.UIState) {
+	for i, image := range animImages {
+		destination := coords.MakeVec(image.GetCurrent().X, image.GetCurrent().Y-u.WindowSize.Y)
+		if i < len(animImages)-1 {
+			AnimateImageNoChannel(image, destination, image.GetDimensions())
+		} else {
+			animateImageMovement(ch, image, destination, image.GetDimensions())
+		}
+	}
+}
+
+// Animation to bring in the take slot
+func AnimateInTake(u *uistate.UIState) {
+	imgs := append(u.Other, u.DropTargets...)
+	passedCards := u.CurTable.GetPlayers()[u.CurPlayerIndex].GetPassedTo()
+	for _, i := range imgs {
+		dims := i.GetDimensions()
+		var to *coords.Vec
+		if passedCards == nil {
+			to = coords.MakeVec(i.GetCurrent().X, i.GetCurrent().Y+u.WindowSize.Y/5)
+		} else {
+			to = coords.MakeVec(i.GetCurrent().X, i.GetCurrent().Y+u.WindowSize.Y/2)
+		}
+		AnimateImageNoChannel(i, to, dims)
+	}
+	for _, c := range passedCards {
+		dims := c.GetDimensions()
+		to := coords.MakeVec(c.GetCurrent().X, c.GetCurrent().Y+u.WindowSize.Y/2)
+		animateCardNoChannel(c, to, dims)
+	}
+}
+
+// Animation for the 'play' action, when app is in the hand view
+func AnimateHandCardPlay(ch chan bool, animCard *card.Card, u *uistate.UIState) {
+	imgs := []*staticimg.StaticImg{u.Other[0], u.DropTargets[0]}
+	for _, i := range imgs {
+		dims := i.GetDimensions()
+		to := coords.MakeVec(i.GetCurrent().X, i.GetCurrent().Y-u.WindowSize.Y)
+		AnimateImageNoChannel(i, to, dims)
+	}
+	to := coords.MakeVec(animCard.GetCurrent().X, animCard.GetCurrent().Y-u.WindowSize.Y)
+	animateCardMovement(ch, animCard, to, animCard.GetDimensions())
+}
+
+// Animation to bring in the play slot when app is in the hand view and it is the player's turn
+func AnimateInPlay(u *uistate.UIState) {
+	imgs := []*staticimg.StaticImg{u.Other[0], u.DropTargets[0]}
+	for _, i := range imgs {
+		dims := i.GetDimensions()
+		to := coords.MakeVec(i.GetCurrent().X, i.GetCurrent().Y+u.WindowSize.Y/3)
+		AnimateImageNoChannel(i, to, dims)
+	}
 }
 
 func determineDestination(animCard *card.Card, dir direction.Direction, windowSize *coords.Vec) *coords.Vec {
@@ -196,21 +220,21 @@ func determineDestination(animCard *card.Card, dir direction.Direction, windowSi
 }
 
 // Animation for when a trick is taken, when app is in the table view
-func AnimateTableCardTakeTrick(c chan bool, animCard *card.Card, dir direction.Direction, u *uistate.UIState) {
+func AnimateTableCardTakeTrick(animCard *card.Card, dir direction.Direction, u *uistate.UIState) {
 	destination := determineDestination(animCard, dir, u.WindowSize)
+	c := make(chan bool)
 	animateCardMovement(c, animCard, destination, animCard.GetDimensions())
 	<-c
-	c <- true
 }
 
-func AnimateImageMovement(animImage *staticimg.StaticImg, endPos, endDim *coords.Vec) {
+func animateImageMovement(c chan bool, animImage *staticimg.StaticImg, endPos, endDim *coords.Vec) {
 	node := animImage.GetNode()
 	startPos := animImage.GetCurrent()
 	startDim := animImage.GetDimensions()
 	iteration := 0
 	node.Arranger = arrangerFunc(func(eng sprite.Engine, node *sprite.Node, t clock.Time) {
 		iteration++
-		if float32(iteration) < animationFrameCounter {
+		if iteration < animationFrameCounter {
 			curXY := animImage.GetCurrent()
 			curDim := animImage.GetDimensions()
 			XYStep := endPos.MinusVec(startPos).DividedBy(animationFrameCounter)
@@ -218,7 +242,29 @@ func AnimateImageMovement(animImage *staticimg.StaticImg, endPos, endDim *coords
 			newVec := curXY.PlusVec(XYStep)
 			dimVec := curDim.PlusVec(dimStep)
 			animImage.Move(newVec, dimVec, eng)
-		} else if math.Abs(float64(animationFrameCounter)-float64(iteration)) < 0.0001 {
+		} else if iteration == animationFrameCounter {
+			animImage.Move(endPos, endDim, eng)
+			c <- true
+		}
+	})
+}
+
+func AnimateImageNoChannel(animImage *staticimg.StaticImg, endPos, endDim *coords.Vec) {
+	node := animImage.GetNode()
+	startPos := animImage.GetCurrent()
+	startDim := animImage.GetDimensions()
+	iteration := 0
+	node.Arranger = arrangerFunc(func(eng sprite.Engine, node *sprite.Node, t clock.Time) {
+		iteration++
+		if iteration < animationFrameCounter {
+			curXY := animImage.GetCurrent()
+			curDim := animImage.GetDimensions()
+			XYStep := endPos.MinusVec(startPos).DividedBy(animationFrameCounter)
+			dimStep := endDim.MinusVec(startDim).DividedBy(animationFrameCounter)
+			newVec := curXY.PlusVec(XYStep)
+			dimVec := curDim.PlusVec(dimStep)
+			animImage.Move(newVec, dimVec, eng)
+		} else if iteration == animationFrameCounter {
 			animImage.Move(endPos, endDim, eng)
 		}
 	})
@@ -231,7 +277,7 @@ func animateCardMovement(c chan bool, animCard *card.Card, endPos, endDim *coord
 	iteration := 0
 	node.Arranger = arrangerFunc(func(eng sprite.Engine, node *sprite.Node, t clock.Time) {
 		iteration++
-		if float32(iteration) < animationFrameCounter {
+		if iteration < animationFrameCounter {
 			curXY := animCard.GetCurrent()
 			curDim := animCard.GetDimensions()
 			XYStep := endPos.MinusVec(startPos).DividedBy(animationFrameCounter)
@@ -239,9 +285,30 @@ func animateCardMovement(c chan bool, animCard *card.Card, endPos, endDim *coord
 			newVec := curXY.PlusVec(XYStep)
 			dimVec := curDim.PlusVec(dimStep)
 			animCard.Move(newVec, dimVec, eng)
-		} else if math.Abs(float64(animationFrameCounter)-float64(iteration)) < 0.0001 {
+		} else if iteration == animationFrameCounter {
 			animCard.Move(endPos, endDim, eng)
 			c <- true
+		}
+	})
+}
+
+func animateCardNoChannel(animCard *card.Card, endPos, endDim *coords.Vec) {
+	node := animCard.GetNode()
+	startPos := animCard.GetCurrent()
+	startDim := animCard.GetDimensions()
+	iteration := 0
+	node.Arranger = arrangerFunc(func(eng sprite.Engine, node *sprite.Node, t clock.Time) {
+		iteration++
+		if iteration < animationFrameCounter {
+			curXY := animCard.GetCurrent()
+			curDim := animCard.GetDimensions()
+			XYStep := endPos.MinusVec(startPos).DividedBy(animationFrameCounter)
+			dimStep := endDim.MinusVec(startDim).DividedBy(animationFrameCounter)
+			newVec := curXY.PlusVec(XYStep)
+			dimVec := curDim.PlusVec(dimStep)
+			animCard.Move(newVec, dimVec, eng)
+		} else if iteration == animationFrameCounter {
+			animCard.Move(endPos, endDim, eng)
 		}
 	})
 }

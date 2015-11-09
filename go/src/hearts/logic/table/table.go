@@ -11,7 +11,6 @@ import (
 	"hearts/img/direction"
 	"hearts/logic/card"
 	"hearts/logic/player"
-	"log"
 	"math/rand"
 	"sort"
 )
@@ -90,8 +89,25 @@ func (t *Table) GetDir() direction.Direction {
 
 // Sets the firstplayer variable of t to index
 func (t *Table) SetFirstPlayer(index int) {
-	log.Println("Setting first player to", index)
 	t.firstPlayer = index
+}
+
+// Returns the index of the player whose turn it is, -1 if this cannot be determined at this time
+func (t *Table) WhoseTurn() int {
+	allNil := true
+	for i, c := range t.trick {
+		nextPlayerIndex := (i + 1) % len(t.players)
+		if c != nil {
+			allNil = false
+			if t.trick[nextPlayerIndex] == nil {
+				return nextPlayerIndex
+			}
+		}
+	}
+	if allNil {
+		return t.firstPlayer
+	}
+	return -1
 }
 
 // This function generates a traditional deck of 52 cards, with 13 in each of the four suits
@@ -126,17 +142,7 @@ func (t *Table) ValidPass(cardsPassed []*card.Card) bool {
 
 // Returns whether it is valid for the player at playerIndex to play a card
 func (t *Table) ValidPlayOrder(playerIndex int) bool {
-	if t.firstPlayer == playerIndex {
-		return true
-	}
-	playerBeforeMe := playerIndex - 1
-	if playerBeforeMe < 0 {
-		playerBeforeMe += len(t.players)
-	}
-	if t.trick[playerBeforeMe] == nil {
-		return false
-	}
-	return true
+	return t.WhoseTurn() == playerIndex
 }
 
 // Given a card and the index of its player, returns true if this move was valid based on game logic
@@ -183,7 +189,6 @@ func (t *Table) AllDoneDealing() bool {
 func (t *Table) AllDonePassing() bool {
 	for _, p := range t.players {
 		if !p.GetDonePassing() {
-			log.Println(p.GetPlayerIndex())
 			return false
 		}
 	}
@@ -315,6 +320,7 @@ func (t *Table) NewRound() {
 		if t.dir != direction.None {
 			p.SetDonePassing(false)
 			p.SetDoneTaking(false)
+			t.SetFirstPlayer(-1)
 		} else {
 			p.SetDonePassing(true)
 			p.SetDoneTaking(true)

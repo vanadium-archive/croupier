@@ -22,8 +22,6 @@ func UpdateImgPositions(sz size.Event, u *uistate.UIState) {
 	updateWindowSize(sz, u)
 	if windowExists(oldWindowSize) && windowExists(u.WindowSize) {
 		u.Padding = scaleVar(u.Padding, oldWindowSize, u.WindowSize)
-		u.CardDim = scaleVec(u.CardDim, oldWindowSize, u.WindowSize)
-		u.TableCardDim = scaleVec(u.TableCardDim, oldWindowSize, u.WindowSize)
 		AdjustImgs(oldWindowSize, u)
 	}
 }
@@ -64,7 +62,8 @@ func AdjustScaleDimensions(oldInitial, oldPos, oldDimensions, oldWindowSize, new
 // Adjusts the positioning of an individual array of images
 func adjustImgArray(imgs []*staticimg.StaticImg, oldWindowSize, newWindowSize *coords.Vec, eng sprite.Engine) {
 	for _, s := range imgs {
-		newInitial, newPos, newDimensions := AdjustScaleDimensions(s.GetInitial(), s.GetCurrent(), s.GetDimensions(), oldWindowSize, newWindowSize)
+		newInitial, newPos, newDimensions := AdjustScaleDimensions(
+			s.GetInitial(), s.GetCurrent(), s.GetDimensions(), oldWindowSize, newWindowSize)
 		s.Move(newPos, newDimensions, eng)
 		s.SetInitial(newInitial)
 	}
@@ -73,7 +72,8 @@ func adjustImgArray(imgs []*staticimg.StaticImg, oldWindowSize, newWindowSize *c
 // Adjusts the positioning of an individual array of cards
 func adjustCardArray(cards []*card.Card, oldWindowSize, newWindowSize *coords.Vec, eng sprite.Engine) {
 	for _, c := range cards {
-		newInitial, newPos, newDimensions := AdjustScaleDimensions(c.GetInitial(), c.GetCurrent(), c.GetDimensions(), oldWindowSize, newWindowSize)
+		newInitial, newPos, newDimensions := AdjustScaleDimensions(
+			c.GetInitial(), c.GetCurrent(), c.GetDimensions(), oldWindowSize, newWindowSize)
 		c.Move(newPos, newDimensions, eng)
 		c.SetInitial(newInitial)
 	}

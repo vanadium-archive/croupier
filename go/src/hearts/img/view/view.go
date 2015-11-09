@@ -233,14 +233,15 @@ func LoadTableView(u *uistate.UIState) {
 }
 
 // Decides which view of the player's hand to load based on what steps of the round they have completed
+// Likely just for debugging
 func LoadPassOrTakeOrPlay(u *uistate.UIState) {
 	p := u.CurTable.GetPlayers()[u.CurPlayerIndex]
 	if p.GetDoneTaking() || u.CurTable.GetDir() == direction.None {
-		loadPlayView(u)
+		LoadPlayView(u)
 	} else if p.GetDonePassing() {
-		loadTakeView(u)
+		LoadTakeView(u)
 	} else {
-		loadPassView(u)
+		LoadPassView(u)
 	}
 }
 
@@ -285,7 +286,7 @@ func LoadScoreView(winners []int, u *uistate.UIState) {
 }
 
 // Pass View: Shows player's hand and allows them to pass cards
-func loadPassView(u *uistate.UIState) {
+func LoadPassView(u *uistate.UIState) {
 	u.CurView = uistate.Pass
 	resetImgs(u)
 	resetScene(u)
@@ -299,7 +300,7 @@ func loadPassView(u *uistate.UIState) {
 }
 
 // Take View: Shows player's hand and allows them to take the cards that have been passed to them
-func loadTakeView(u *uistate.UIState) {
+func LoadTakeView(u *uistate.UIState) {
 	u.CurView = uistate.Take
 	resetImgs(u)
 	resetScene(u)
@@ -310,17 +311,24 @@ func loadTakeView(u *uistate.UIState) {
 	if u.Debug {
 		addDebugBar(u)
 	}
+	// animate in take bar
+	reposition.AnimateInTake(u)
 }
 
 // Play View: Shows player's hand and allows them to play cards
-func loadPlayView(u *uistate.UIState) {
+func LoadPlayView(u *uistate.UIState) {
 	u.CurView = uistate.Play
 	resetImgs(u)
 	resetScene(u)
-	addHeader(u)
+	addPlaySlot(u)
 	addHand(u)
+	addPlayHeader(u)
 	if u.Debug {
 		addDebugBar(u)
+	}
+	// animate in play slot if relevant
+	if u.CurTable.WhoseTurn() == u.CurPlayerIndex && u.CurTable.AllDonePassing() {
+		reposition.AnimateInPlay(u)
 	}
 }
 
@@ -328,35 +336,55 @@ func addHeader(u *uistate.UIState) {
 	// adding blue banner
 	headerImage := u.Texs["RoundedRectangle-DBlue.png"]
 	headerPos := coords.MakeVec(0, -10)
-	headerWidth := u.WindowSize.X
-	headerHeight := float32(20)
-	headerDimensions := coords.MakeVec(headerWidth, headerHeight)
+	headerDimensions := coords.MakeVec(u.WindowSize.X, float32(20))
 	u.BackgroundImgs = append(u.BackgroundImgs,
 		texture.MakeImgWithoutAlt(headerImage, headerPos, headerDimensions, u.Eng, u.Scene))
 }
 
-func addHeaderButton(u *uistate.UIState) {
-	// adding blue banner for croupier header
-	headerUnpressed := u.Texs["blue.png"]
-	headerPressed := u.Texs["bluePressed.png"]
+func addPlayHeader(u *uistate.UIState) {
+	// adding blue banner
+	headerImage := u.Texs["Rectangle-DBlue.png"]
 	headerPos := coords.MakeVec(0, 0)
-	headerWidth := u.WindowSize.X
-	var headerHeight float32
-	if 2*u.CardDim.Y < headerWidth/4 {
-		headerHeight = 2 * u.CardDim.Y
-	} else {
-		headerHeight = headerWidth / 4
-	}
-	headerDimensions := coords.MakeVec(headerWidth, headerHeight)
+	headerDimensions := coords.MakeVec(u.WindowSize.X, float32(50))
+	u.BackgroundImgs = append(u.BackgroundImgs,
+		texture.MakeImgWithoutAlt(headerImage, headerPos, headerDimensions, u.Eng, u.Scene))
+	// adding pull tab
+	pullTabImage := u.Texs["HorizontalPullTab.png"]
+	pullTabDim := u.CardDim.DividedBy(2)
+	pullTabPos := headerDimensions.MinusVec(pullTabDim).Minus(u.Padding)
 	u.Buttons = append(u.Buttons,
-		texture.MakeImgWithAlt(headerUnpressed, headerPressed, headerPos, headerDimensions, true, u.Eng, u.Scene))
-	// adding play button
-	playUnpressed := u.Texs["playUnpressed.png"]
-	playPressed := u.Texs["playPressed.png"]
-	playDim := coords.MakeVec(headerHeight, headerHeight/2)
-	playPos := coords.MakeVec((u.WindowSize.X-playDim.X)/2, (u.TopPadding+playDim.Y)/2)
-	play := texture.MakeImgWithAlt(playUnpressed, playPressed, playPos, playDim, true, u.Eng, u.Scene)
-	u.Buttons = append(u.Buttons, play)
+		texture.MakeImgWithoutAlt(pullTabImage, pullTabPos, pullTabDim, u.Eng, u.Scene))
+	// adding text
+	var turnText string
+	playerTurnNum := u.CurTable.WhoseTurn()
+	if playerTurnNum == -1 || !u.CurTable.AllDonePassing() {
+		turnText = "Waiting for other players"
+	} else if playerTurnNum == u.CurPlayerIndex {
+		turnText = "Your turn"
+	} else {
+		name := u.CurTable.GetPlayers()[playerTurnNum].GetName()
+		turnText = name + "'s turn"
+	}
+	color := "DBlue"
+	scaler := float32(4)
+	center := coords.MakeVec(u.WindowSize.X/2, 20)
+	maxWidth := u.WindowSize.X - pullTabDim.X/2
+	nameImgs := texture.MakeStringImgCenterAlign(turnText, color, color, true, center, scaler, maxWidth, u)
+	u.BackgroundImgs = append(u.BackgroundImgs, nameImgs...)
+}
+
+func addPlaySlot(u *uistate.UIState) {
+	// adding blue rectangle
+	blueRectImg := u.Texs["RoundedRectangle-LBlue.png"]
+	blueRectPos := coords.MakeVec(2*u.BottomPadding, 40-u.WindowSize.Y+4*u.BottomPadding)
+	blueRectDim := u.WindowSize.Minus(4 * u.BottomPadding)
+	u.Other = append(u.Other,
+		texture.MakeImgWithoutAlt(blueRectImg, blueRectPos, blueRectDim, u.Eng, u.Scene))
+	// adding drop target
+	dropTargetImg := u.Texs["trickDrop.png"]
+	dropTargetPos := coords.MakeVec(u.WindowSize.X/2-u.CardDim.X/2, -u.Padding)
+	u.DropTargets = append(u.DropTargets,
+		texture.MakeImgWithoutAlt(dropTargetImg, dropTargetPos, u.CardDim, u.Eng, u.Scene))
 }
 
 func addGrayPassBar(u *uistate.UIState) {
@@ -364,7 +392,7 @@ func addGrayPassBar(u *uistate.UIState) {
 	grayBarImg := u.Texs["RoundedRectangle-Gray.png"]
 	blueBarImg := u.Texs["RoundedRectangle-LBlue.png"]
 	grayBarPos := coords.MakeVec(2*u.BottomPadding, 40-u.WindowSize.Y+4*u.BottomPadding)
-	grayBarDim := coords.MakeVec(u.WindowSize.X-4*u.BottomPadding, u.WindowSize.Y-4*u.BottomPadding)
+	grayBarDim := u.WindowSize.Minus(4 * u.BottomPadding)
 	u.Other = append(u.Other,
 		texture.MakeImgWithAlt(grayBarImg, blueBarImg, grayBarPos, grayBarDim, true, u.Eng, u.Scene))
 	// adding name
@@ -393,15 +421,15 @@ func addGrayTakeBar(u *uistate.UIState) {
 	// adding gray bar
 	grayBarImg := u.Texs["RoundedRectangle-Gray.png"]
 	grayBarAlt := u.Texs["RoundedRectangle-LBlue.png"]
-	grayBarPos := coords.MakeVec(2*u.BottomPadding, -30)
 	topOfHand := u.WindowSize.Y - 5*(u.CardDim.Y+u.Padding) - (2 * u.Padding / 5) - u.BottomPadding
 	var grayBarHeight float32
 	if display {
 		grayBarHeight = 105
 	} else {
-		grayBarHeight = topOfHand - u.CardDim.Y
+		grayBarHeight = topOfHand + u.CardDim.Y
 	}
 	grayBarDim := coords.MakeVec(u.WindowSize.X-4*u.BottomPadding, grayBarHeight)
+	grayBarPos := coords.MakeVec(2*u.BottomPadding, -grayBarDim.Y)
 	u.Other = append(u.Other,
 		texture.MakeImgWithAlt(grayBarImg, grayBarAlt, grayBarPos, grayBarDim, display, u.Eng, u.Scene))
 	// adding name
@@ -418,7 +446,7 @@ func addGrayTakeBar(u *uistate.UIState) {
 	color := "Gray"
 	nameAltColor := "LBlue"
 	awaitingAltColor := "None"
-	center := coords.MakeVec(u.WindowSize.X/2, 5)
+	center := coords.MakeVec(u.WindowSize.X/2, 30-grayBarDim.Y)
 	scaler := float32(3)
 	maxWidth := u.WindowSize.X
 	nameImgs := texture.MakeStringImgCenterAlign(name, color, nameAltColor, display, center, scaler, maxWidth, u)
@@ -437,12 +465,11 @@ func moveTakeCards(u *uistate.UIState) {
 	passedCards := u.CurTable.GetPlayers()[u.CurPlayerIndex].GetPassedTo()
 	if len(passedCards) > 0 {
 		topOfHand := u.WindowSize.Y - 5*(u.CardDim.Y+u.Padding) - (2 * u.Padding / 5) - u.BottomPadding
-		cardY := topOfHand - 3*u.CardDim.Y
 		numCards := float32(3)
 		cardXStart := (u.WindowSize.X - (numCards*u.CardDim.X + (numCards-1)*u.Padding)) / 2
 		for i, c := range passedCards {
 			cardX := cardXStart + float32(i)*(u.Padding+u.CardDim.X)
-			cardPos := coords.MakeVec(cardX, cardY)
+			cardPos := coords.MakeVec(cardX, topOfHand-2*u.CardDim.Y-u.WindowSize.Y/2)
 			c.Move(cardPos, u.CardDim, u.Eng)
 			reposition.RealignSuit(c.GetSuit(), c.GetInitial().Y, u)
 			// invisible drop target holding card

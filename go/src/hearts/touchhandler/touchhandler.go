@@ -122,7 +122,7 @@ func beginClickPass(t touch.Event, u *uistate.UIState) {
 						finalX := blueBanner.GetInitial().X
 						finalY := pullTab.GetInitial().Y + pullTab.GetDimensions().Y - blueBanner.GetDimensions().Y
 						finalPos := coords.MakeVec(finalX, finalY)
-						reposition.AnimateImageMovement(blueBanner, finalPos, blueBanner.GetDimensions())
+						reposition.AnimateImageNoChannel(blueBanner, finalPos, blueBanner.GetDimensions())
 					}
 				}
 			} else if u.Buttons[1] == buttonList[0] {
@@ -191,13 +191,15 @@ func endClickPass(t touch.Event, u *uistate.UIState) {
 		}
 	} else if u.CurImg != nil && touchingStaticImg(t, u.Other[0], u) {
 		ch := make(chan bool)
-		go passCards(ch, u.CurPlayerIndex, u)
-		success := <-ch
-		if !success {
-			fmt.Println("Invalid pass")
-		} else {
-			view.LoadPassOrTakeOrPlay(u)
-		}
+		success := passCards(ch, u.CurPlayerIndex, u)
+		go func() {
+			<-ch
+			if !success {
+				fmt.Println("Invalid pass")
+			} else {
+				view.LoadTakeView(u)
+			}
+		}()
 	}
 	u.CurCard = nil
 	u.CurImg = nil
@@ -238,13 +240,15 @@ func endClickTake(t touch.Event, u *uistate.UIState) {
 		}
 		if doneTaking {
 			ch := make(chan bool)
-			go takeCards(ch, u.CurPlayerIndex, u)
-			success := <-ch
-			if !success {
-				fmt.Println("Invalid take")
-			} else {
-				view.LoadPassOrTakeOrPlay(u)
-			}
+			success := takeCards(ch, u.CurPlayerIndex, u)
+			go func() {
+				<-ch
+				if !success {
+					fmt.Println("Invalid take")
+				} else {
+					view.LoadPlayView(u)
+				}
+			}()
 		}
 	}
 	u.CurCard = nil
@@ -256,21 +260,11 @@ func beginClickPlay(t touch.Event, u *uistate.UIState) {
 	if len(buttonList) > 0 {
 		if u.Debug {
 			if u.Buttons[0] == buttonList[0] {
-				pressButton(buttonList[0], u)
-				err := playCard(u.CurPlayerIndex, u)
-				if err != "" {
-					fmt.Println(err)
-				}
+				u.CurImg = u.Buttons[0]
 			} else if u.Buttons[1] == buttonList[0] {
 				view.LoadTableView(u)
 			} else if u.Buttons[2] == buttonList[0] {
 				view.LoadPassOrTakeOrPlay(u)
-			}
-		} else {
-			pressButton(buttonList[0], u)
-			err := playCard(u.CurPlayerIndex, u)
-			if err != "" {
-				fmt.Println(err)
 			}
 		}
 	}
@@ -290,9 +284,19 @@ func endClickPlay(t touch.Event, u *uistate.UIState) {
 			// add card back to hand
 			reposition.ResetCardPosition(u.CurCard, u.Eng)
 			reposition.RealignSuit(u.CurCard.GetSuit(), u.CurCard.GetInitial().Y, u)
+		} else {
+			ch := make(chan bool)
+			err := playCard(ch, u.CurPlayerIndex, u)
+			go func() {
+				<-ch
+				if err != "" {
+					fmt.Println(err)
+				} else {
+					view.LoadPlayView(u)
+				}
+			}()
 		}
 	}
-	unpressButtons(u)
 	u.CurCard = nil
 }
 
@@ -330,7 +334,7 @@ func findClickedButton(t touch.Event, u *uistate.UIState) []*staticimg.StaticImg
 }
 
 // returns true if pass was successful
-func passCards(ch chan bool, playerId int, u *uistate.UIState) {
+func passCards(ch chan bool, playerId int, u *uistate.UIState) bool {
 	cardsPassed := make([]*card.Card, 0)
 	dropsToReset := make([]*staticimg.StaticImg, 0)
 	for _, d := range u.DropTargets {
@@ -358,16 +362,13 @@ func passCards(ch chan bool, playerId int, u *uistate.UIState) {
 		for _, i := range imgs {
 			u.Eng.SetSubTex(i.GetNode(), blankTex)
 		}
-		ch2 := make(chan bool)
-		go reposition.AnimateHandCardPass(ch2, u.Other, cardsPassed, u)
-		<-ch2
-		ch <- true
-	} else {
-		ch <- false
+		reposition.AnimateHandCardPass(ch, u.Other, cardsPassed, u)
+		return true
 	}
+	return false
 }
 
-func takeCards(ch chan bool, playerId int, u *uistate.UIState) {
+func takeCards(ch chan bool, playerId int, u *uistate.UIState) bool {
 	player := u.CurTable.GetPlayers()[playerId]
 	passedCards := player.GetPassedTo()
 	if len(passedCards) == 3 {
@@ -375,17 +376,13 @@ func takeCards(ch chan bool, playerId int, u *uistate.UIState) {
 		for !success {
 			success = gamelog.LogTake(u)
 		}
-		// UI
-		ch2 := make(chan bool)
-		go reposition.AnimateHandCardTake(ch2, u.Other, u)
-		<-ch2
-		ch <- true
-	} else {
-		ch <- false
+		reposition.AnimateHandCardTake(ch, u.Other, u)
+		return true
 	}
+	return false
 }
 
-func playCard(playerId int, u *uistate.UIState) string {
+func playCard(ch chan bool, playerId int, u *uistate.UIState) string {
 	c := u.DropTargets[0].GetCardHere()
 	if c != nil {
 		// checks to make sure that:
@@ -410,9 +407,7 @@ func playCard(playerId int, u *uistate.UIState) string {
 		for !success {
 			success = gamelog.LogPlay(u, c)
 		}
-		ch := make(chan bool)
 		reposition.AnimateHandCardPlay(ch, c, u)
-		<-ch
 		return ""
 	}
 	return "Invalid play: No card has been played"

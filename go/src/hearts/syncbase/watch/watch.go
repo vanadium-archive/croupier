@@ -91,6 +91,8 @@ func onPass(value string, u *uistate.UIState) {
 		for i, c := range curCards {
 			reposition.AnimateTableCardPass(c, receivingPlayer, i, u)
 		}
+	} else if u.CurView == uistate.Take && u.CurPlayerIndex == receivingPlayer {
+		view.LoadTakeView(u)
 	}
 }
 
@@ -147,9 +149,7 @@ func onPlay(value string, u *uistate.UIState) {
 	}
 	// UI
 	if u.CurView == uistate.Table {
-		c := make(chan bool)
-		go reposition.AnimateTableCardPlay(c, playedCard, playerInt, u)
-		<-c
+		reposition.AnimateTableCardPlay(playedCard, playerInt, u)
 		if trickOver {
 			var trickDir direction.Direction
 			switch recipient {
@@ -163,13 +163,15 @@ func onPlay(value string, u *uistate.UIState) {
 				trickDir = direction.Right
 			}
 			for _, c := range trickCards {
-				ch := make(chan bool)
-				reposition.AnimateTableCardTakeTrick(ch, c, trickDir, u)
-				<-ch
+				reposition.AnimateTableCardTakeTrick(c, trickDir, u)
 			}
 		}
-	} else if u.CurView == uistate.Play && roundOver {
-		view.LoadScoreView(winners, u)
+	} else if u.CurView == uistate.Play {
+		if roundOver {
+			view.LoadScoreView(winners, u)
+		} else if u.CurPlayerIndex != playerInt {
+			view.LoadPlayView(u)
+		}
 	}
 	// logic
 	if len(winners) > 0 {

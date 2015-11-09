@@ -24,7 +24,7 @@ credentials: bin/principal
 
 .PHONY:
 delete:
-	rm -rf tmp/syncbase_
+	rm -rf tmp/syncbase_$(id)
 
 # Naming collisions for different instances of syncbase for the same user?
 # Easy way to make --v23.permissions.literal?

@@ -15,7 +15,7 @@ hearts: fmt credentials
 	./hearts \
     --v23.proxy=proxy \
     --v23.tcp.address=:$(syncbase_port) \
-	--v23.credentials=../../credentials
+	--v23.credentials=credentials
 
 test:
 	jiri go test hearts/...
