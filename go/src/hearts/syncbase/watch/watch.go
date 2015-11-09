@@ -93,6 +93,8 @@ func onPass(value string, u *uistate.UIState) {
 		}
 	} else if u.CurView == uistate.Take && u.CurPlayerIndex == receivingPlayer {
 		view.LoadTakeView(u)
+	} else if u.CurView == uistate.Play && u.CurTable.AllDonePassing() {
+		view.LoadPlayView(u)
 	}
 }
 
@@ -110,14 +112,16 @@ func onTake(value string, u *uistate.UIState) {
 	}
 	if p.HasTwoOfClubs() {
 		u.CurTable.SetFirstPlayer(p.GetPlayerIndex())
+		// UI
+		if u.CurView == uistate.Play && u.CurPlayerIndex != playerInt {
+			view.LoadPlayView(u)
+		}
 	}
 	// UI
 	if u.CurView == uistate.Table {
 		for i, c := range passed {
 			reposition.AnimateTableCardTake(c, i, u.CurTable.GetPlayers()[playerInt])
 		}
-	} else if u.CurPlayerIndex == playerInt {
-		//view.LoadPassOrTakeOrPlay(u)
 	}
 }
 
@@ -143,9 +147,10 @@ func onPlay(value string, u *uistate.UIState) {
 	if trickOver {
 		roundOver, recipient = u.CurTable.SendTrick()
 	}
+	var roundScores []int
 	var winners []int
 	if roundOver {
-		winners = u.CurTable.EndRound()
+		roundScores, winners = u.CurTable.EndRound()
 	}
 	// UI
 	if u.CurView == uistate.Table {
@@ -168,7 +173,7 @@ func onPlay(value string, u *uistate.UIState) {
 		}
 	} else if u.CurView == uistate.Play {
 		if roundOver {
-			view.LoadScoreView(winners, u)
+			view.LoadScoreView(roundScores, winners, u)
 		} else if u.CurPlayerIndex != playerInt {
 			view.LoadPlayView(u)
 		}

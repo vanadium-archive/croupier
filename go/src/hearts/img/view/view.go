@@ -246,35 +246,73 @@ func LoadPassOrTakeOrPlay(u *uistate.UIState) {
 }
 
 // Score View: Shows current player standings at the end of every round, including the end of the game
-func LoadScoreView(winners []int, u *uistate.UIState) {
+func LoadScoreView(roundScores, winners []int, u *uistate.UIState) {
 	u.CurView = uistate.Score
 	resetImgs(u)
 	resetScene(u)
-	// adding score text
-	textImgs := make([]*staticimg.StaticImg, 0)
-	center := coords.MakeVec(u.WindowSize.X/2, u.WindowSize.Y/4)
+	addHeader(u)
+	top := u.CardDim.Y
 	scaler := float32(4)
-	maxWidthBanner := u.WindowSize.X - 2*u.Padding
-	maxWidthScores := u.WindowSize.X / 2
-	if len(winners) == 0 {
-		textImgs = texture.MakeStringImgCenterAlign("Current Standings", "", "", true, center, scaler, maxWidthBanner, u)
-	} else {
-		str := "Game over! Congratulations " + u.CurTable.GetPlayers()[winners[0]].GetName()
-		for i := 1; i < len(winners); i++ {
-			str += " and " + u.CurTable.GetPlayers()[winners[i]].GetName()
-		}
-		str += "!"
-		textImgs = texture.MakeStringImgCenterAlign(str, "", "", true, center, scaler, maxWidthBanner, u)
-	}
-	left := coords.MakeVec(u.WindowSize.X/4, center.Y+40)
+	maxWidth := u.WindowSize.X / 4
+	totalScores := make([]int, 0)
 	for _, p := range u.CurTable.GetPlayers() {
-		str := p.GetName() + ": " + strconv.Itoa(p.GetScore())
-		newTextImgs := texture.MakeStringImgLeftAlign(str, "", "", true, left, scaler, maxWidthScores, u)
-		textImgs = append(textImgs, newTextImgs...)
-		left = coords.MakeVec(left.X, left.Y+30)
+		totalScores = append(totalScores, p.GetScore())
 	}
-	for _, img := range textImgs {
-		u.BackgroundImgs = append(u.BackgroundImgs, img)
+	maxRoundScore := maxInt(roundScores)
+	maxTotalScore := maxInt(totalScores)
+	// adding score text
+	center := coords.MakeVec(u.WindowSize.X/4, top)
+	u.BackgroundImgs = append(u.BackgroundImgs,
+		texture.MakeStringImgCenterAlign("Score:", "", "", true, center, scaler, maxWidth, u)...)
+	// adding game text
+	center = coords.MakeVec(u.WindowSize.X/2, top)
+	u.BackgroundImgs = append(u.BackgroundImgs,
+		texture.MakeStringImgCenterAlign("Round", "", "", true, center, scaler, maxWidth, u)...)
+	// adding total text
+	center = coords.MakeVec(3*u.WindowSize.X/4, top)
+	u.BackgroundImgs = append(u.BackgroundImgs,
+		texture.MakeStringImgCenterAlign("Total", "", "", true, center, scaler, maxWidth, u)...)
+	// adding player info
+	rowHeight := u.WindowSize.Y / 5
+	for i, p := range u.CurTable.GetPlayers() {
+		var color string
+		// blue divider
+		dividerImage := u.Texs["blue.png"]
+		dividerDim := coords.MakeVec(u.WindowSize.X, u.Padding/2)
+		dividerPos := coords.MakeVec(0, top+(float32(i)+.5)*rowHeight)
+		u.BackgroundImgs = append(u.BackgroundImgs,
+			texture.MakeImgWithoutAlt(dividerImage, dividerPos, dividerDim, u.Eng, u.Scene))
+		// player icon
+		playerIconImage := p.GetImage()
+		playerIconDim := coords.MakeVec(rowHeight/2, rowHeight/2)
+		playerIconPos := coords.MakeVec(u.WindowSize.X/4-playerIconDim.X/2, top+(float32(i)+.5)*rowHeight+3*u.Padding)
+		u.BackgroundImgs = append(u.BackgroundImgs,
+			texture.MakeImgWithoutAlt(playerIconImage, playerIconPos, playerIconDim, u.Eng, u.Scene))
+		// player name
+		name := p.GetName()
+		center = coords.MakeVec(playerIconPos.X+playerIconDim.X/2, playerIconPos.Y+playerIconDim.Y)
+		u.BackgroundImgs = append(u.BackgroundImgs,
+			texture.MakeStringImgCenterAlign(name, "", "", true, center, scaler, maxWidth, u)...)
+		// player round score
+		roundScore := roundScores[i]
+		if roundScore == maxRoundScore {
+			color = "Red"
+		} else {
+			color = ""
+		}
+		center = coords.MakeVec(u.WindowSize.X/2, playerIconPos.Y+playerIconDim.Y/2)
+		u.BackgroundImgs = append(u.BackgroundImgs,
+			texture.MakeStringImgCenterAlign(strconv.Itoa(roundScore), color, color, true, center, scaler, maxWidth, u)...)
+		// player total score
+		totalScore := p.GetScore()
+		if totalScore == maxTotalScore {
+			color = "Red"
+		} else {
+			color = ""
+		}
+		center = coords.MakeVec(3*u.WindowSize.X/4, playerIconPos.Y+playerIconDim.Y/2)
+		u.BackgroundImgs = append(u.BackgroundImgs,
+			texture.MakeStringImgCenterAlign(strconv.Itoa(totalScore), color, color, true, center, scaler, maxWidth, u)...)
 	}
 	// adding play button to move to next round
 	pressedImg := u.Texs["playPressed.png"]
@@ -626,4 +664,15 @@ func addDebugBar(u *uistate.UIState) {
 	debugPassPos := coords.MakeVec(u.WindowSize.X-2*buttonDim.X, u.WindowSize.Y-buttonDim.Y)
 	u.Buttons = append(u.Buttons,
 		texture.MakeImgWithoutAlt(debugPassImage, debugPassPos, buttonDim, u.Eng, u.Scene))
+}
+
+// Helper function that returns the largest int in a non-negative int array (not index of largest int)
+func maxInt(array []int) int {
+	max := 0
+	for _, num := range array {
+		if num > max {
+			max = num
+		}
+	}
+	return max
 }

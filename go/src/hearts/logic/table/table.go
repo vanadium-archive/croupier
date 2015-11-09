@@ -245,9 +245,9 @@ func (t *Table) SendTrick() (bool, int) {
 	return false, highestIndex
 }
 
-// Updates each player's score with the score of the current round
+// Returns the score of the current round
 // Accounts for a player possibly shooting the moon
-func (t *Table) ScoreRound() {
+func (t *Table) ScoreRound() []int {
 	allPoints := 26
 	roundScores := make([]int, len(t.players))
 	shotMoon := false
@@ -268,7 +268,11 @@ func (t *Table) ScoreRound() {
 			}
 		}
 	}
-	// sending scores to players
+	return roundScores
+}
+
+// Adds the scores of the current round to the players total scores
+func (t *Table) UpdatePlayerScores(roundScores []int) {
 	for i := 0; i < len(t.players); i++ {
 		t.players[i].UpdateScore(roundScores[i])
 	}
@@ -285,9 +289,11 @@ func (t *Table) Deal() [][]*card.Card {
 	return allHands
 }
 
-// Returns empty array if the game hasn't been won yet, array containing all playerIndices of the winners if it has
-func (t *Table) EndRound() []int {
-	t.ScoreRound()
+// Returns an array of the current round's scores, and an array of the game winners
+// The winners array is empty if the game hasn't been won yet, contains all playerIndices of the winners if it has
+func (t *Table) EndRound() ([]int, []int) {
+	roundScores := t.ScoreRound()
+	t.UpdatePlayerScores(roundScores)
 	lowestScore := -1
 	winningPlayers := make([]int, 0)
 	winTriggered := false
@@ -308,7 +314,7 @@ func (t *Table) EndRound() []int {
 			}
 		}
 	}
-	return winningPlayers
+	return roundScores, winningPlayers
 }
 
 // Resets stats for a new round of the game

@@ -20,8 +20,8 @@ import (
 )
 
 const (
-	// animationFrameCounter is the number of frames it will take to complete any animation
-	animationFrameCounter = 100
+	// animationFrameCount is the number of frames it will take to complete any animation
+	animationFrameCount = 100
 	// animRotationScaler is the speed at which an image rotates, if rotation is involved in an animation
 	animRotationScaler = .15
 )
@@ -234,15 +234,15 @@ func animateImageMovement(c chan bool, animImage *staticimg.StaticImg, endPos, e
 	iteration := 0
 	node.Arranger = arrangerFunc(func(eng sprite.Engine, node *sprite.Node, t clock.Time) {
 		iteration++
-		if iteration < animationFrameCounter {
+		if iteration < animationFrameCount {
 			curXY := animImage.GetCurrent()
 			curDim := animImage.GetDimensions()
-			XYStep := endPos.MinusVec(startPos).DividedBy(animationFrameCounter)
-			dimStep := endDim.MinusVec(startDim).DividedBy(animationFrameCounter)
+			XYStep := endPos.MinusVec(startPos).DividedBy(animationFrameCount)
+			dimStep := endDim.MinusVec(startDim).DividedBy(animationFrameCount)
 			newVec := curXY.PlusVec(XYStep)
 			dimVec := curDim.PlusVec(dimStep)
 			animImage.Move(newVec, dimVec, eng)
-		} else if iteration == animationFrameCounter {
+		} else if iteration == animationFrameCount {
 			animImage.Move(endPos, endDim, eng)
 			c <- true
 		}
@@ -256,15 +256,15 @@ func AnimateImageNoChannel(animImage *staticimg.StaticImg, endPos, endDim *coord
 	iteration := 0
 	node.Arranger = arrangerFunc(func(eng sprite.Engine, node *sprite.Node, t clock.Time) {
 		iteration++
-		if iteration < animationFrameCounter {
+		if iteration < animationFrameCount {
 			curXY := animImage.GetCurrent()
 			curDim := animImage.GetDimensions()
-			XYStep := endPos.MinusVec(startPos).DividedBy(animationFrameCounter)
-			dimStep := endDim.MinusVec(startDim).DividedBy(animationFrameCounter)
+			XYStep := endPos.MinusVec(startPos).DividedBy(animationFrameCount)
+			dimStep := endDim.MinusVec(startDim).DividedBy(animationFrameCount)
 			newVec := curXY.PlusVec(XYStep)
 			dimVec := curDim.PlusVec(dimStep)
 			animImage.Move(newVec, dimVec, eng)
-		} else if iteration == animationFrameCounter {
+		} else if iteration == animationFrameCount {
 			animImage.Move(endPos, endDim, eng)
 		}
 	})
@@ -277,15 +277,15 @@ func animateCardMovement(c chan bool, animCard *card.Card, endPos, endDim *coord
 	iteration := 0
 	node.Arranger = arrangerFunc(func(eng sprite.Engine, node *sprite.Node, t clock.Time) {
 		iteration++
-		if iteration < animationFrameCounter {
+		if iteration < animationFrameCount {
 			curXY := animCard.GetCurrent()
 			curDim := animCard.GetDimensions()
-			XYStep := endPos.MinusVec(startPos).DividedBy(animationFrameCounter)
-			dimStep := endDim.MinusVec(startDim).DividedBy(animationFrameCounter)
+			XYStep := endPos.MinusVec(startPos).DividedBy(animationFrameCount)
+			dimStep := endDim.MinusVec(startDim).DividedBy(animationFrameCount)
 			newVec := curXY.PlusVec(XYStep)
 			dimVec := curDim.PlusVec(dimStep)
 			animCard.Move(newVec, dimVec, eng)
-		} else if iteration == animationFrameCounter {
+		} else if iteration == animationFrameCount {
 			animCard.Move(endPos, endDim, eng)
 			c <- true
 		}
@@ -299,15 +299,15 @@ func animateCardNoChannel(animCard *card.Card, endPos, endDim *coords.Vec) {
 	iteration := 0
 	node.Arranger = arrangerFunc(func(eng sprite.Engine, node *sprite.Node, t clock.Time) {
 		iteration++
-		if iteration < animationFrameCounter {
+		if iteration < animationFrameCount {
 			curXY := animCard.GetCurrent()
 			curDim := animCard.GetDimensions()
-			XYStep := endPos.MinusVec(startPos).DividedBy(animationFrameCounter)
-			dimStep := endDim.MinusVec(startDim).DividedBy(animationFrameCounter)
+			XYStep := endPos.MinusVec(startPos).DividedBy(animationFrameCount)
+			dimStep := endDim.MinusVec(startDim).DividedBy(animationFrameCount)
 			newVec := curXY.PlusVec(XYStep)
 			dimVec := curDim.PlusVec(dimStep)
 			animCard.Move(newVec, dimVec, eng)
-		} else if iteration == animationFrameCounter {
+		} else if iteration == animationFrameCount {
 			animCard.Move(endPos, endDim, eng)
 		}
 	})
