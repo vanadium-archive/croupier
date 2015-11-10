@@ -246,7 +246,7 @@ func endClickTake(t touch.Event, u *uistate.UIState) {
 				if !success {
 					fmt.Println("Invalid take")
 				} else {
-					view.LoadPlayView(u)
+					view.LoadPlayView("", u)
 				}
 			}()
 		}
@@ -287,13 +287,12 @@ func endClickPlay(t touch.Event, u *uistate.UIState) {
 		} else {
 			ch := make(chan bool)
 			err := playCard(ch, u.CurPlayerIndex, u)
+			if err != "" {
+				view.LoadPlayView(err, u)
+			}
 			go func() {
 				<-ch
-				if err != "" {
-					fmt.Println(err)
-				} else {
-					view.LoadPlayView(u)
-				}
+				view.LoadPlayView("", u)
 			}()
 		}
 	}
@@ -391,16 +390,16 @@ func playCard(ch chan bool, playerId int, u *uistate.UIState) string {
 		// -the play is in the right order
 		// -the play is valid given game logic
 		if u.CurTable.GetPlayers()[playerId].GetDonePlaying() {
-			return "Invalid play: The current player has already played a card in this trick"
+			return "You have already played a card in this trick"
 		}
 		if !u.CurTable.AllDonePassing() {
-			return "Invalid play: Not all players have passed their cards"
+			return "Not all players have passed their cards"
 		}
 		if !u.CurTable.ValidPlayOrder(playerId) {
-			return "Invalid play: It is not the current player's turn"
+			return "It is not your turn"
 		}
-		if !u.CurTable.ValidPlayLogic(c, playerId) {
-			return "Invalid play: This card does not follow game logic"
+		if err := u.CurTable.ValidPlayLogic(c, playerId); err != "" {
+			return err
 		}
 		u.DropTargets[0].SetCardHere(nil)
 		success := gamelog.LogPlay(u, c)
@@ -410,7 +409,7 @@ func playCard(ch chan bool, playerId int, u *uistate.UIState) string {
 		reposition.AnimateHandCardPlay(ch, c, u)
 		return ""
 	}
-	return "Invalid play: No card has been played"
+	return "No card has been played"
 }
 
 func pressButton(b *staticimg.StaticImg, u *uistate.UIState) {

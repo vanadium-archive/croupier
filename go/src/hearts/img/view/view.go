@@ -237,7 +237,7 @@ func LoadTableView(u *uistate.UIState) {
 func LoadPassOrTakeOrPlay(u *uistate.UIState) {
 	p := u.CurTable.GetPlayers()[u.CurPlayerIndex]
 	if p.GetDoneTaking() || u.CurTable.GetDir() == direction.None {
-		LoadPlayView(u)
+		LoadPlayView("", u)
 	} else if p.GetDonePassing() {
 		LoadTakeView(u)
 	} else {
@@ -251,76 +251,9 @@ func LoadScoreView(roundScores, winners []int, u *uistate.UIState) {
 	resetImgs(u)
 	resetScene(u)
 	addHeader(u)
-	top := u.CardDim.Y
-	scaler := float32(4)
-	maxWidth := u.WindowSize.X / 4
-	totalScores := make([]int, 0)
-	for _, p := range u.CurTable.GetPlayers() {
-		totalScores = append(totalScores, p.GetScore())
-	}
-	maxRoundScore := maxInt(roundScores)
-	maxTotalScore := maxInt(totalScores)
-	// adding score text
-	center := coords.MakeVec(u.WindowSize.X/4, top)
-	u.BackgroundImgs = append(u.BackgroundImgs,
-		texture.MakeStringImgCenterAlign("Score:", "", "", true, center, scaler, maxWidth, u)...)
-	// adding game text
-	center = coords.MakeVec(u.WindowSize.X/2, top)
-	u.BackgroundImgs = append(u.BackgroundImgs,
-		texture.MakeStringImgCenterAlign("Round", "", "", true, center, scaler, maxWidth, u)...)
-	// adding total text
-	center = coords.MakeVec(3*u.WindowSize.X/4, top)
-	u.BackgroundImgs = append(u.BackgroundImgs,
-		texture.MakeStringImgCenterAlign("Total", "", "", true, center, scaler, maxWidth, u)...)
-	// adding player info
-	rowHeight := u.WindowSize.Y / 5
-	for i, p := range u.CurTable.GetPlayers() {
-		var color string
-		// blue divider
-		dividerImage := u.Texs["blue.png"]
-		dividerDim := coords.MakeVec(u.WindowSize.X, u.Padding/2)
-		dividerPos := coords.MakeVec(0, top+(float32(i)+.5)*rowHeight)
-		u.BackgroundImgs = append(u.BackgroundImgs,
-			texture.MakeImgWithoutAlt(dividerImage, dividerPos, dividerDim, u.Eng, u.Scene))
-		// player icon
-		playerIconImage := p.GetImage()
-		playerIconDim := coords.MakeVec(rowHeight/2, rowHeight/2)
-		playerIconPos := coords.MakeVec(u.WindowSize.X/4-playerIconDim.X/2, top+(float32(i)+.5)*rowHeight+3*u.Padding)
-		u.BackgroundImgs = append(u.BackgroundImgs,
-			texture.MakeImgWithoutAlt(playerIconImage, playerIconPos, playerIconDim, u.Eng, u.Scene))
-		// player name
-		name := p.GetName()
-		center = coords.MakeVec(playerIconPos.X+playerIconDim.X/2, playerIconPos.Y+playerIconDim.Y)
-		u.BackgroundImgs = append(u.BackgroundImgs,
-			texture.MakeStringImgCenterAlign(name, "", "", true, center, scaler, maxWidth, u)...)
-		// player round score
-		roundScore := roundScores[i]
-		if roundScore == maxRoundScore {
-			color = "Red"
-		} else {
-			color = ""
-		}
-		center = coords.MakeVec(u.WindowSize.X/2, playerIconPos.Y+playerIconDim.Y/2)
-		u.BackgroundImgs = append(u.BackgroundImgs,
-			texture.MakeStringImgCenterAlign(strconv.Itoa(roundScore), color, color, true, center, scaler, maxWidth, u)...)
-		// player total score
-		totalScore := p.GetScore()
-		if totalScore == maxTotalScore {
-			color = "Red"
-		} else {
-			color = ""
-		}
-		center = coords.MakeVec(3*u.WindowSize.X/4, playerIconPos.Y+playerIconDim.Y/2)
-		u.BackgroundImgs = append(u.BackgroundImgs,
-			texture.MakeStringImgCenterAlign(strconv.Itoa(totalScore), color, color, true, center, scaler, maxWidth, u)...)
-	}
-	// adding play button to move to next round
-	pressedImg := u.Texs["playPressed.png"]
-	unpressedImg := u.Texs["playUnpressed.png"]
-	buttonDim := coords.MakeVec(2*u.CardDim.X, u.CardDim.Y)
-	buttonPos := coords.MakeVec((u.WindowSize.X-u.CardDim.X)/2, u.WindowSize.Y-u.CardDim.Y-u.BottomPadding)
-	u.Buttons = append(u.Buttons,
-		texture.MakeImgWithAlt(unpressedImg, pressedImg, buttonPos, buttonDim, true, u.Eng, u.Scene))
+	addScoreViewHeaderText(u)
+	addPlayerScores(roundScores, u)
+	addScoreButton(u)
 }
 
 // Pass View: Shows player's hand and allows them to pass cards
@@ -354,19 +287,31 @@ func LoadTakeView(u *uistate.UIState) {
 }
 
 // Play View: Shows player's hand and allows them to play cards
-func LoadPlayView(u *uistate.UIState) {
+func LoadPlayView(err string, u *uistate.UIState) {
 	u.CurView = uistate.Play
-	resetImgs(u)
-	resetScene(u)
-	addPlaySlot(u)
-	addHand(u)
-	addPlayHeader(u)
-	if u.Debug {
-		addDebugBar(u)
-	}
-	// animate in play slot if relevant
-	if u.CurTable.WhoseTurn() == u.CurPlayerIndex && u.CurTable.AllDonePassing() {
-		reposition.AnimateInPlay(u)
+	if err == "" {
+		resetImgs(u)
+		resetScene(u)
+		addPlaySlot(u)
+		addHand(u)
+		addPlayHeader(err, u)
+		if u.Debug {
+			addDebugBar(u)
+		}
+		// animate in play slot if relevant
+		if u.CurTable.WhoseTurn() == u.CurPlayerIndex && u.CurTable.AllDonePassing() {
+			reposition.AnimateInPlay(u)
+		}
+	} else {
+		// remove text and replace with err
+		var emptyTex sprite.SubTex
+		for i := u.NumSuits; i < len(u.BackgroundImgs); i++ {
+			u.Eng.SetSubTex(u.BackgroundImgs[i].GetNode(), emptyTex)
+		}
+		u.BackgroundImgs = u.BackgroundImgs[:u.NumSuits]
+		u.Eng.SetSubTex(u.Buttons[0].GetNode(), emptyTex)
+		u.Buttons = make([]*staticimg.StaticImg, 0)
+		addPlayHeader(err, u)
 	}
 }
 
@@ -379,7 +324,7 @@ func addHeader(u *uistate.UIState) {
 		texture.MakeImgWithoutAlt(headerImage, headerPos, headerDimensions, u.Eng, u.Scene))
 }
 
-func addPlayHeader(u *uistate.UIState) {
+func addPlayHeader(err string, u *uistate.UIState) {
 	// adding blue banner
 	headerImage := u.Texs["Rectangle-DBlue.png"]
 	headerPos := coords.MakeVec(0, 0)
@@ -394,21 +339,25 @@ func addPlayHeader(u *uistate.UIState) {
 		texture.MakeImgWithoutAlt(pullTabImage, pullTabPos, pullTabDim, u.Eng, u.Scene))
 	// adding text
 	var turnText string
-	playerTurnNum := u.CurTable.WhoseTurn()
-	if playerTurnNum == -1 || !u.CurTable.AllDonePassing() {
-		turnText = "Waiting for other players"
-	} else if playerTurnNum == u.CurPlayerIndex {
-		turnText = "Your turn"
+	if err != "" {
+		turnText = err
 	} else {
-		name := u.CurTable.GetPlayers()[playerTurnNum].GetName()
-		turnText = name + "'s turn"
+		playerTurnNum := u.CurTable.WhoseTurn()
+		if playerTurnNum == -1 || !u.CurTable.AllDonePassing() {
+			turnText = "Waiting for other players"
+		} else if playerTurnNum == u.CurPlayerIndex {
+			turnText = "Your turn"
+		} else {
+			name := u.CurTable.GetPlayers()[playerTurnNum].GetName()
+			turnText = name + "'s turn"
+		}
 	}
 	color := "DBlue"
 	scaler := float32(4)
 	center := coords.MakeVec(u.WindowSize.X/2, 20)
 	maxWidth := u.WindowSize.X - pullTabDim.X/2
-	nameImgs := texture.MakeStringImgCenterAlign(turnText, color, color, true, center, scaler, maxWidth, u)
-	u.BackgroundImgs = append(u.BackgroundImgs, nameImgs...)
+	u.BackgroundImgs = append(u.BackgroundImgs,
+		texture.MakeStringImgCenterAlign(turnText, color, color, true, center, scaler, maxWidth, u)...)
 }
 
 func addPlaySlot(u *uistate.UIState) {
@@ -633,6 +582,85 @@ func addHand(u *uistate.UIState) {
 		texture.PopulateCardImage(u.Cards[i], u.Texs, u.Eng, u.Scene)
 		reposition.SetCardPositionHand(u.Cards[i], numInSuit, suitCounts, u)
 	}
+}
+
+func addScoreViewHeaderText(u *uistate.UIState) {
+	top := u.CardDim.Y
+	scaler := float32(4)
+	maxWidth := u.WindowSize.X / 4
+	// adding score text
+	scoreCenter := coords.MakeVec(u.WindowSize.X/4, top)
+	u.BackgroundImgs = append(u.BackgroundImgs,
+		texture.MakeStringImgCenterAlign("Score:", "", "", true, scoreCenter, scaler, maxWidth, u)...)
+	// adding game text
+	gameCenter := coords.MakeVec(u.WindowSize.X/2, top)
+	u.BackgroundImgs = append(u.BackgroundImgs,
+		texture.MakeStringImgCenterAlign("Round", "", "", true, gameCenter, scaler, maxWidth, u)...)
+	// adding total text
+	totalCenter := coords.MakeVec(3*u.WindowSize.X/4, top)
+	u.BackgroundImgs = append(u.BackgroundImgs,
+		texture.MakeStringImgCenterAlign("Total", "", "", true, totalCenter, scaler, maxWidth, u)...)
+}
+
+func addPlayerScores(roundScores []int, u *uistate.UIState) {
+	totalScores := make([]int, 0)
+	for _, p := range u.CurTable.GetPlayers() {
+		totalScores = append(totalScores, p.GetScore())
+	}
+	maxRoundScore := maxInt(roundScores)
+	maxTotalScore := maxInt(totalScores)
+	top := u.CardDim.Y
+	scaler := float32(4)
+	maxWidth := u.WindowSize.X / 4
+	rowHeight := u.WindowSize.Y / 6
+	for i, p := range u.CurTable.GetPlayers() {
+		var color string
+		// blue divider
+		dividerImage := u.Texs["blue.png"]
+		dividerDim := coords.MakeVec(u.WindowSize.X, u.Padding/2)
+		dividerPos := coords.MakeVec(0, top+(float32(i)+.5)*rowHeight)
+		u.BackgroundImgs = append(u.BackgroundImgs,
+			texture.MakeImgWithoutAlt(dividerImage, dividerPos, dividerDim, u.Eng, u.Scene))
+		// player icon
+		playerIconImage := p.GetImage()
+		playerIconDim := coords.MakeVec(rowHeight/2, rowHeight/2)
+		playerIconPos := coords.MakeVec(u.WindowSize.X/4-playerIconDim.X/2, top+(float32(i)+.5)*rowHeight+2*u.Padding)
+		u.BackgroundImgs = append(u.BackgroundImgs,
+			texture.MakeImgWithoutAlt(playerIconImage, playerIconPos, playerIconDim, u.Eng, u.Scene))
+		// player name
+		name := p.GetName()
+		nameCenter := coords.MakeVec(playerIconPos.X+playerIconDim.X/2, playerIconPos.Y+playerIconDim.Y)
+		u.BackgroundImgs = append(u.BackgroundImgs,
+			texture.MakeStringImgCenterAlign(name, "", "", true, nameCenter, scaler, maxWidth, u)...)
+		// player round score
+		roundScore := roundScores[i]
+		if roundScore == maxRoundScore {
+			color = "Red"
+		} else {
+			color = ""
+		}
+		roundCenter := coords.MakeVec(u.WindowSize.X/2, playerIconPos.Y+playerIconDim.Y/2)
+		u.BackgroundImgs = append(u.BackgroundImgs,
+			texture.MakeStringImgCenterAlign(strconv.Itoa(roundScore), color, color, true, roundCenter, scaler, maxWidth, u)...)
+		// player total score
+		totalScore := p.GetScore()
+		if totalScore == maxTotalScore {
+			color = "Red"
+		} else {
+			color = ""
+		}
+		totalCenter := coords.MakeVec(3*u.WindowSize.X/4, playerIconPos.Y+playerIconDim.Y/2)
+		u.BackgroundImgs = append(u.BackgroundImgs,
+			texture.MakeStringImgCenterAlign(strconv.Itoa(totalScore), color, color, true, totalCenter, scaler, maxWidth, u)...)
+	}
+}
+
+func addScoreButton(u *uistate.UIState) {
+	buttonImg := u.Texs["playUnpressed.png"]
+	buttonDim := coords.MakeVec(2*u.CardDim.X, u.CardDim.Y)
+	buttonPos := coords.MakeVec((u.WindowSize.X-u.CardDim.X)/2, u.WindowSize.Y-u.CardDim.Y-u.BottomPadding)
+	u.Buttons = append(u.Buttons,
+		texture.MakeImgWithoutAlt(buttonImg, buttonPos, buttonDim, u.Eng, u.Scene))
 }
 
 func resetImgs(u *uistate.UIState) {

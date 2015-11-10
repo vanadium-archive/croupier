@@ -218,6 +218,10 @@ func MakeImgWithAlt(t, alt sprite.SubTex,
 	return s
 }
 
+func RemoveImg(s *staticimg.StaticImg, u *uistate.UIState) {
+	u.Eng.Unregister(s.GetNode())
+}
+
 // Loads all images for the app
 func LoadTextures(eng sprite.Engine) map[string]sprite.SubTex {
 	allTexs := make(map[string]sprite.SubTex)

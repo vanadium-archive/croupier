@@ -7,6 +7,7 @@
 package main
 
 import (
+	"flag"
 	"time"
 
 	"v.io/v23"
@@ -14,6 +15,7 @@ import (
 	"v.io/v23/security"
 	"v.io/v23/security/access"
 	"v.io/v23/syncbase"
+	"v.io/x/lib/vlog"
 	"v.io/x/ref/lib/signals"
 
 	"hearts/img/resize"
@@ -78,6 +80,9 @@ func main() {
 }
 
 func onStart(glctx gl.Context, u *uistate.UIState) {
+	vlog.Log.Configure(vlog.OverridePriorConfiguration(true), vlog.LogToStderr(true))
+	vlog.Log.Configure(vlog.OverridePriorConfiguration(true), vlog.Level(0))
+
 	sgName := "users/emshack@google.com/croupier/syncbase/%%sync/croupiersync"
 	contextChan := make(chan *context.T)
 	serviceChan := make(chan syncbase.Service)
@@ -123,6 +128,7 @@ func onPaint(glctx gl.Context, sz size.Event, u *uistate.UIState) {
 }
 
 func makeServerClient(contextChan chan *context.T, serviceChan chan syncbase.Service) {
+	flag.Set("v23.credentials", "/sdcard/credentials")
 	context, shutdown := v23.Init()
 	contextChan <- context
 	serviceChan <- client.GetService()

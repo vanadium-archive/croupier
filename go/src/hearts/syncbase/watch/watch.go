@@ -94,7 +94,7 @@ func onPass(value string, u *uistate.UIState) {
 	} else if u.CurView == uistate.Take && u.CurPlayerIndex == receivingPlayer {
 		view.LoadTakeView(u)
 	} else if u.CurView == uistate.Play && u.CurTable.AllDonePassing() {
-		view.LoadPlayView(u)
+		view.LoadPlayView("", u)
 	}
 }
 
@@ -114,7 +114,7 @@ func onTake(value string, u *uistate.UIState) {
 		u.CurTable.SetFirstPlayer(p.GetPlayerIndex())
 		// UI
 		if u.CurView == uistate.Play && u.CurPlayerIndex != playerInt {
-			view.LoadPlayView(u)
+			view.LoadPlayView("", u)
 		}
 	}
 	// UI
@@ -175,7 +175,7 @@ func onPlay(value string, u *uistate.UIState) {
 		if roundOver {
 			view.LoadScoreView(roundScores, winners, u)
 		} else if u.CurPlayerIndex != playerInt {
-			view.LoadPlayView(u)
+			view.LoadPlayView("", u)
 		}
 	}
 	// logic

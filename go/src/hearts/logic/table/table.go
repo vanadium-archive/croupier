@@ -145,34 +145,44 @@ func (t *Table) ValidPlayOrder(playerIndex int) bool {
 	return t.WhoseTurn() == playerIndex
 }
 
-// Given a card and the index of its player, returns true if this move was valid based on game logic
-func (t *Table) ValidPlayLogic(c *card.Card, playerIndex int) bool {
+// Given a card and the index of its player, returns "" if this move was valid based on game logic
+// Otherwise returns a string explaining the error
+func (t *Table) ValidPlayLogic(c *card.Card, playerIndex int) string {
+	validPlay := ""
 	player := t.players[playerIndex]
 	if t.firstPlayer == playerIndex {
 		if !t.firstTrick {
 			if c.GetSuit() != card.Heart || t.heartsBroken {
-				return true
+				return validPlay
 			} else {
 				if player.HasOnlyHearts() {
-					return true
+					return validPlay
+				} else {
+					return "Hearts have not been broken"
 				}
 			}
 		} else if c.GetSuit() == card.Club && c.GetFace() == card.Two {
-			return true
+			return validPlay
+		} else {
+			return "Must open with the Two of Clubs"
 		}
 	} else {
 		firstPlayedSuit := t.trick[t.firstPlayer].GetSuit()
 		if c.GetSuit() == firstPlayedSuit || !player.HasSuit(firstPlayedSuit) {
 			if !t.firstTrick {
-				return true
+				return validPlay
 			} else if !c.WorthPoints() {
-				return true
+				return validPlay
 			} else if player.HasAllPoints() {
-				return true
+				return validPlay
+			} else {
+				return "Point cards not allowed in the first round"
 			}
+		} else {
+			return "Must follow suit"
 		}
 	}
-	return false
+	return "Invalid play"
 }
 
 // Returns true if all players have their initial dealt hands
