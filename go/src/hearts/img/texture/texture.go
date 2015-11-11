@@ -173,16 +173,18 @@ func MakeStringImgCenterAlign(input, color, altColor string,
 	u *uistate.UIState) []*staticimg.StaticImg {
 	textures := getStringImgs(input, color, u.Texs)
 	totalWidth := float32(0)
+	newScaler := scaler
 	for _, img := range textures {
 		totalWidth += float32(img.R.Max.X) / scaler
 	}
 	if totalWidth > maxWidth {
-		scaler = totalWidth * scaler / maxWidth
+		newScaler = totalWidth * scaler / maxWidth
 		totalWidth = maxWidth
 	}
 	startX := center.X - totalWidth/2
-	start := coords.MakeVec(startX, center.Y)
-	return MakeStringImgLeftAlign(input, color, altColor, displayColor, start, scaler, maxWidth, u)
+	startY := center.Y + (float32(textures[0].R.Max.Y)/scaler-float32(textures[0].R.Max.Y)/newScaler)/2
+	start := coords.MakeVec(startX, startY)
+	return MakeStringImgLeftAlign(input, color, altColor, displayColor, start, newScaler, maxWidth, u)
 }
 
 // Returns a new StaticImg instance with desired image and dimensions
@@ -274,7 +276,7 @@ func LoadTextures(eng sprite.Engine) map[string]sprite.SubTex {
 		"R-Lower-Gray.png", "S-Lower-Gray.png", "T-Lower-Gray.png", "U-Lower-Gray.png", "V-Lower-Gray.png", "W-Lower-Gray.png",
 		"X-Lower-Gray.png", "Y-Lower-Gray.png", "Z-Lower-Gray.png", "Space-Gray.png", "RoundedRectangle-DBlue.png",
 		"RoundedRectangle-LBlue.png", "RoundedRectangle-Gray.png", "Rectangle-LBlue.png", "Rectangle-DBlue.png", "HorizontalPullTab.png",
-		"VerticalPullTab.png",
+		"VerticalPullTab.png", "NewGame.png", "NewRound.png",
 	}
 	for _, f := range boundedImgs {
 		a, err := asset.Open(f)

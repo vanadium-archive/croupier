@@ -20,6 +20,7 @@ import (
 	"hearts/syncbase/gamelog"
 	"strconv"
 	"strings"
+	"time"
 	"v.io/v23/syncbase/nosql"
 )
 
@@ -88,13 +89,12 @@ func onPass(value string, u *uistate.UIState) {
 	u.CurTable.GetPlayers()[playerInt].SetDonePassing(true)
 	// UI
 	if u.CurView == uistate.Table {
-		for i, c := range curCards {
-			reposition.AnimateTableCardPass(c, receivingPlayer, i, u)
-		}
+		reposition.AnimateTableCardPass(curCards, receivingPlayer, u)
+		reposition.SetTableDropColors(u)
 	} else if u.CurView == uistate.Take && u.CurPlayerIndex == receivingPlayer {
 		view.LoadTakeView(u)
 	} else if u.CurView == uistate.Play && u.CurTable.AllDonePassing() {
-		view.LoadPlayView("", u)
+		view.LoadPlayView(u)
 	}
 }
 
@@ -114,14 +114,13 @@ func onTake(value string, u *uistate.UIState) {
 		u.CurTable.SetFirstPlayer(p.GetPlayerIndex())
 		// UI
 		if u.CurView == uistate.Play && u.CurPlayerIndex != playerInt {
-			view.LoadPlayView("", u)
+			view.LoadPlayView(u)
 		}
 	}
 	// UI
 	if u.CurView == uistate.Table {
-		for i, c := range passed {
-			reposition.AnimateTableCardTake(c, i, u.CurTable.GetPlayers()[playerInt])
-		}
+		reposition.AnimateTableCardTake(passed, u.CurTable.GetPlayers()[playerInt], u)
+		reposition.SetTableDropColors(u)
 	}
 }
 
@@ -155,6 +154,7 @@ func onPlay(value string, u *uistate.UIState) {
 	// UI
 	if u.CurView == uistate.Table {
 		reposition.AnimateTableCardPlay(playedCard, playerInt, u)
+		reposition.SetTableDropColors(u)
 		if trickOver {
 			var trickDir direction.Direction
 			switch recipient {
@@ -167,15 +167,24 @@ func onPlay(value string, u *uistate.UIState) {
 			case 3:
 				trickDir = direction.Right
 			}
-			for _, c := range trickCards {
-				reposition.AnimateTableCardTakeTrick(c, trickDir, u)
-			}
+			reposition.AnimateTableCardTakeTrick(trickCards, trickDir, u)
 		}
 	} else if u.CurView == uistate.Play {
 		if roundOver {
 			view.LoadScoreView(roundScores, winners, u)
+		} else if trickOver {
+			if u.CurPlayerIndex != recipient {
+				message := u.CurTable.GetPlayers()[recipient].GetName() + "'s trick"
+				view.ChangePlayMessage(message, u)
+				<-time.After(1 * time.Second)
+				view.LoadPlayView(u)
+			} else {
+				view.ChangePlayMessage("Your trick", u)
+				<-time.After(1 * time.Second)
+				view.LoadPlayView(u)
+			}
 		} else if u.CurPlayerIndex != playerInt {
-			view.LoadPlayView("", u)
+			view.LoadPlayView(u)
 		}
 	}
 	// logic

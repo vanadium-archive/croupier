@@ -122,7 +122,7 @@ func beginClickPass(t touch.Event, u *uistate.UIState) {
 						finalX := blueBanner.GetInitial().X
 						finalY := pullTab.GetInitial().Y + pullTab.GetDimensions().Y - blueBanner.GetDimensions().Y
 						finalPos := coords.MakeVec(finalX, finalY)
-						reposition.AnimateImageNoChannel(blueBanner, finalPos, blueBanner.GetDimensions())
+						reposition.AnimateImageNoChannel(blueBanner, finalPos, blueBanner.GetDimensions(), u)
 					}
 				}
 			} else if u.Buttons[1] == buttonList[0] {
@@ -246,7 +246,7 @@ func endClickTake(t touch.Event, u *uistate.UIState) {
 				if !success {
 					fmt.Println("Invalid take")
 				} else {
-					view.LoadPlayView("", u)
+					view.LoadPlayView(u)
 				}
 			}()
 		}
@@ -286,13 +286,12 @@ func endClickPlay(t touch.Event, u *uistate.UIState) {
 			reposition.RealignSuit(u.CurCard.GetSuit(), u.CurCard.GetInitial().Y, u)
 		} else {
 			ch := make(chan bool)
-			err := playCard(ch, u.CurPlayerIndex, u)
-			if err != "" {
-				view.LoadPlayView(err, u)
+			if err := playCard(ch, u.CurPlayerIndex, u); err != "" {
+				view.ChangePlayMessage(err, u)
 			}
 			go func() {
 				<-ch
-				view.LoadPlayView("", u)
+				view.LoadPlayView(u)
 			}()
 		}
 	}

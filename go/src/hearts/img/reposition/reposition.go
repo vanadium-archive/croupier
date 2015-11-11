@@ -21,7 +21,7 @@ import (
 
 const (
 	// animationFrameCount is the number of frames it will take to complete any animation
-	animationFrameCount = 100
+	animationFrameCount = 60
 	// animRotationScaler is the speed at which an image rotates, if rotation is involved in an animation
 	animRotationScaler = .15
 )
@@ -58,6 +58,19 @@ func RealignSuit(suitNum card.Suit, oldY float32, u *uistate.UIState) {
 	}
 }
 
+func SetTableDropColors(u *uistate.UIState) {
+	blueTargetIndex := u.CurTable.WhoseTurn()
+	for i, d := range u.DropTargets {
+		if i == blueTargetIndex {
+			u.Eng.SetSubTex(d.GetNode(), d.GetAlt())
+			d.SetDisplayingImage(false)
+		} else {
+			u.Eng.SetSubTex(d.GetNode(), d.GetImage())
+			d.SetDisplayingImage(true)
+		}
+	}
+}
+
 // Drags card curCard along with the mouse
 func DragCard(t touch.Event, u *uistate.UIState) {
 	tVec := coords.MakeVec(t.X, t.Y)
@@ -79,44 +92,56 @@ func DragImgs(t touch.Event, cards []*card.Card, imgs []*staticimg.StaticImg, u 
 }
 
 // Animation for the 'pass' action, when app is in the table view
-func AnimateTableCardPass(animCard *card.Card, toPlayer, cardNum int, u *uistate.UIState) {
-	cardDim := animCard.GetDimensions()
-	dropTargetXY := u.DropTargets[toPlayer].GetCurrent()
-	dropTargetDim := u.DropTargets[toPlayer].GetDimensions()
-	targetCenter := dropTargetXY.PlusVec(dropTargetDim.DividedBy(2))
-	distFromTargetX := u.WindowSize.X / 4
-	distFromTargetY := u.WindowSize.Y / 5
-	blockEdge := targetCenter.MinusVec(cardDim.Times(3).Plus(2 * u.Padding))
-	var destination *coords.Vec
-	switch toPlayer {
-	case 0:
-		destination = coords.MakeVec(
-			blockEdge.X+float32(cardNum)*(u.Padding+cardDim.X),
-			targetCenter.Y+distFromTargetY-cardDim.Y/2)
-	case 1:
-		destination = coords.MakeVec(
-			targetCenter.X-distFromTargetX-cardDim.X/2,
-			blockEdge.Y+float32(cardNum)*(u.Padding+cardDim.Y))
-	case 2:
-		destination = coords.MakeVec(
-			blockEdge.X+float32(cardNum)*(u.Padding+cardDim.X),
-			targetCenter.Y-distFromTargetY-cardDim.Y/2)
-	case 3:
-		destination = coords.MakeVec(
-			targetCenter.X+distFromTargetX-cardDim.X/2,
-			blockEdge.Y+float32(cardNum)*(u.Padding+cardDim.Y))
+func AnimateTableCardPass(cards []*card.Card, toPlayer int, u *uistate.UIState) {
+	for cardNum, animCard := range cards {
+		cardDim := animCard.GetDimensions()
+		dropTargetXY := u.DropTargets[toPlayer].GetCurrent()
+		dropTargetDim := u.DropTargets[toPlayer].GetDimensions()
+		targetCenter := dropTargetXY.PlusVec(dropTargetDim.DividedBy(2))
+		xPlayerBlockSize := 2*u.PlayerIconDim.X + u.Padding
+		yPlayerBlockSize := u.TopPadding + 2*u.TableCardDim.Y + 3*u.Padding + u.PlayerIconDim.Y
+		blockEdge := targetCenter.MinusVec(cardDim.Times(1.5).Plus(u.Padding))
+		var destination *coords.Vec
+		switch toPlayer {
+		case 0:
+			destination = coords.MakeVec(
+				blockEdge.X+float32(cardNum)*(u.Padding+cardDim.X),
+				u.WindowSize.Y-yPlayerBlockSize-u.TableCardDim.Y)
+		case 1:
+			destination = coords.MakeVec(
+				xPlayerBlockSize,
+				blockEdge.Y+float32(cardNum)*(u.Padding+cardDim.Y))
+		case 2:
+			destination = coords.MakeVec(
+				blockEdge.X+float32(cardNum)*(u.Padding+cardDim.X),
+				yPlayerBlockSize)
+		case 3:
+			destination = coords.MakeVec(
+				u.WindowSize.X-xPlayerBlockSize-u.TableCardDim.X,
+				blockEdge.Y+float32(cardNum)*(u.Padding+cardDim.Y))
+		}
+		if cardNum < len(cards)-1 {
+			animateCardNoChannel(animCard, destination, cardDim, u)
+		} else {
+			c := make(chan bool)
+			animateCardMovement(c, animCard, destination, cardDim, u)
+			<-c
+		}
 	}
-	c := make(chan bool)
-	animateCardMovement(c, animCard, destination, cardDim)
-	<-c
 }
 
 // Animation for the 'take' action, when app is in the table view
-func AnimateTableCardTake(animCard *card.Card, cardNum int, p *player.Player) {
-	destinationPos := p.GetPassedFrom()[cardNum].GetInitial()
-	c := make(chan bool)
-	animateCardMovement(c, animCard, destinationPos, animCard.GetDimensions())
-	<-c
+func AnimateTableCardTake(cards []*card.Card, p *player.Player, u *uistate.UIState) {
+	for cardNum, animCard := range cards {
+		destinationPos := p.GetPassedFrom()[cardNum].GetInitial()
+		if cardNum < len(cards)-1 {
+			animateCardNoChannel(animCard, destinationPos, animCard.GetDimensions(), u)
+		} else {
+			c := make(chan bool)
+			animateCardMovement(c, animCard, destinationPos, animCard.GetDimensions(), u)
+			<-c
+		}
+	}
 }
 
 // Animation for the 'play' action, when app is in the table view
@@ -125,7 +150,7 @@ func AnimateTableCardPlay(animCard *card.Card, playerInt int, u *uistate.UIState
 	destinationPos := destination.GetCurrent()
 	destinationDim := destination.GetDimensions()
 	ch := make(chan bool)
-	animateCardMovement(ch, animCard, destinationPos, destinationDim)
+	animateCardMovement(ch, animCard, destinationPos, destinationDim, u)
 	<-ch
 	animCard.SetFrontDisplay(u.Eng)
 }
@@ -135,15 +160,15 @@ func AnimateHandCardPass(ch chan bool, animImages []*staticimg.StaticImg, animCa
 	for _, i := range animImages {
 		dims := i.GetDimensions()
 		to := coords.MakeVec(i.GetCurrent().X, i.GetCurrent().Y-u.WindowSize.Y)
-		AnimateImageNoChannel(i, to, dims)
+		AnimateImageNoChannel(i, to, dims, u)
 	}
 	for i, c := range animCards {
 		dims := c.GetDimensions()
 		to := coords.MakeVec(c.GetCurrent().X, c.GetCurrent().Y-u.WindowSize.Y)
 		if i < len(animCards)-1 {
-			animateCardNoChannel(c, to, dims)
+			animateCardNoChannel(c, to, dims, u)
 		} else {
-			animateCardMovement(ch, c, to, dims)
+			animateCardMovement(ch, c, to, dims, u)
 		}
 	}
 }
@@ -153,9 +178,9 @@ func AnimateHandCardTake(ch chan bool, animImages []*staticimg.StaticImg, u *uis
 	for i, image := range animImages {
 		destination := coords.MakeVec(image.GetCurrent().X, image.GetCurrent().Y-u.WindowSize.Y)
 		if i < len(animImages)-1 {
-			AnimateImageNoChannel(image, destination, image.GetDimensions())
+			AnimateImageNoChannel(image, destination, image.GetDimensions(), u)
 		} else {
-			animateImageMovement(ch, image, destination, image.GetDimensions())
+			animateImageMovement(ch, image, destination, image.GetDimensions(), u)
 		}
 	}
 }
@@ -168,16 +193,16 @@ func AnimateInTake(u *uistate.UIState) {
 		dims := i.GetDimensions()
 		var to *coords.Vec
 		if passedCards == nil {
-			to = coords.MakeVec(i.GetCurrent().X, i.GetCurrent().Y+u.WindowSize.Y/5)
+			to = coords.MakeVec(i.GetCurrent().X, i.GetCurrent().Y+u.WindowSize.Y)
 		} else {
-			to = coords.MakeVec(i.GetCurrent().X, i.GetCurrent().Y+u.WindowSize.Y/2)
+			to = coords.MakeVec(i.GetCurrent().X, i.GetCurrent().Y+u.WindowSize.Y)
 		}
-		AnimateImageNoChannel(i, to, dims)
+		AnimateImageNoChannel(i, to, dims, u)
 	}
 	for _, c := range passedCards {
 		dims := c.GetDimensions()
-		to := coords.MakeVec(c.GetCurrent().X, c.GetCurrent().Y+u.WindowSize.Y/2)
-		animateCardNoChannel(c, to, dims)
+		to := coords.MakeVec(c.GetCurrent().X, c.GetCurrent().Y+u.WindowSize.Y)
+		animateCardNoChannel(c, to, dims, u)
 	}
 }
 
@@ -187,10 +212,10 @@ func AnimateHandCardPlay(ch chan bool, animCard *card.Card, u *uistate.UIState) 
 	for _, i := range imgs {
 		dims := i.GetDimensions()
 		to := coords.MakeVec(i.GetCurrent().X, i.GetCurrent().Y-u.WindowSize.Y)
-		AnimateImageNoChannel(i, to, dims)
+		AnimateImageNoChannel(i, to, dims, u)
 	}
 	to := coords.MakeVec(animCard.GetCurrent().X, animCard.GetCurrent().Y-u.WindowSize.Y)
-	animateCardMovement(ch, animCard, to, animCard.GetDimensions())
+	animateCardMovement(ch, animCard, to, animCard.GetDimensions(), u)
 }
 
 // Animation to bring in the play slot when app is in the hand view and it is the player's turn
@@ -198,8 +223,8 @@ func AnimateInPlay(u *uistate.UIState) {
 	imgs := []*staticimg.StaticImg{u.Other[0], u.DropTargets[0]}
 	for _, i := range imgs {
 		dims := i.GetDimensions()
-		to := coords.MakeVec(i.GetCurrent().X, i.GetCurrent().Y+u.WindowSize.Y/3)
-		AnimateImageNoChannel(i, to, dims)
+		to := coords.MakeVec(i.GetCurrent().X, i.GetCurrent().Y+u.WindowSize.Y/3+u.TopPadding)
+		AnimateImageNoChannel(i, to, dims, u)
 	}
 }
 
@@ -220,14 +245,20 @@ func determineDestination(animCard *card.Card, dir direction.Direction, windowSi
 }
 
 // Animation for when a trick is taken, when app is in the table view
-func AnimateTableCardTakeTrick(animCard *card.Card, dir direction.Direction, u *uistate.UIState) {
-	destination := determineDestination(animCard, dir, u.WindowSize)
-	c := make(chan bool)
-	animateCardMovement(c, animCard, destination, animCard.GetDimensions())
-	<-c
+func AnimateTableCardTakeTrick(cards []*card.Card, dir direction.Direction, u *uistate.UIState) {
+	for i, animCard := range cards {
+		destination := determineDestination(animCard, dir, u.WindowSize)
+		if i < len(cards)-1 {
+			animateCardNoChannel(animCard, destination, animCard.GetDimensions(), u)
+		} else {
+			c := make(chan bool)
+			animateCardMovement(c, animCard, destination, animCard.GetDimensions(), u)
+			<-c
+		}
+	}
 }
 
-func animateImageMovement(c chan bool, animImage *staticimg.StaticImg, endPos, endDim *coords.Vec) {
+func animateImageMovement(c chan bool, animImage *staticimg.StaticImg, endPos, endDim *coords.Vec, u *uistate.UIState) {
 	node := animImage.GetNode()
 	startPos := animImage.GetCurrent()
 	startDim := animImage.GetDimensions()
@@ -249,7 +280,7 @@ func animateImageMovement(c chan bool, animImage *staticimg.StaticImg, endPos, e
 	})
 }
 
-func AnimateImageNoChannel(animImage *staticimg.StaticImg, endPos, endDim *coords.Vec) {
+func AnimateImageNoChannel(animImage *staticimg.StaticImg, endPos, endDim *coords.Vec, u *uistate.UIState) {
 	node := animImage.GetNode()
 	startPos := animImage.GetCurrent()
 	startDim := animImage.GetDimensions()
@@ -270,7 +301,7 @@ func AnimateImageNoChannel(animImage *staticimg.StaticImg, endPos, endDim *coord
 	})
 }
 
-func animateCardMovement(c chan bool, animCard *card.Card, endPos, endDim *coords.Vec) {
+func animateCardMovement(c chan bool, animCard *card.Card, endPos, endDim *coords.Vec, u *uistate.UIState) {
 	node := animCard.GetNode()
 	startPos := animCard.GetCurrent()
 	startDim := animCard.GetDimensions()
@@ -292,7 +323,7 @@ func animateCardMovement(c chan bool, animCard *card.Card, endPos, endDim *coord
 	})
 }
 
-func animateCardNoChannel(animCard *card.Card, endPos, endDim *coords.Vec) {
+func animateCardNoChannel(animCard *card.Card, endPos, endDim *coords.Vec, u *uistate.UIState) {
 	node := animCard.GetNode()
 	startPos := animCard.GetCurrent()
 	startDim := animCard.GetDimensions()

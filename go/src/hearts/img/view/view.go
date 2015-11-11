@@ -48,6 +48,7 @@ func LoadTableView(u *uistate.UIState) {
 	maxWidth := 4 * u.TableCardDim.X
 	// adding four drop targets for trick
 	dropTargetImage := u.Texs["trickDrop.png"]
+	dropTargetAlt := u.Texs["trickDropBlue.png"]
 	dropTargetDimensions := u.CardDim
 	dropTargetX := (u.WindowSize.X - u.CardDim.X) / 2
 	var dropTargetY float32
@@ -58,7 +59,7 @@ func LoadTableView(u *uistate.UIState) {
 	}
 	dropTargetPos := coords.MakeVec(dropTargetX, dropTargetY)
 	u.DropTargets = append(u.DropTargets,
-		texture.MakeImgWithoutAlt(dropTargetImage, dropTargetPos, dropTargetDimensions, u.Eng, u.Scene))
+		texture.MakeImgWithAlt(dropTargetImage, dropTargetAlt, dropTargetPos, dropTargetDimensions, true, u.Eng, u.Scene))
 	// card on top of first drop target
 	dropCard := u.CurTable.GetTrick()[0]
 	if dropCard != nil {
@@ -75,7 +76,7 @@ func LoadTableView(u *uistate.UIState) {
 	}
 	dropTargetPos = coords.MakeVec(dropTargetX, dropTargetY)
 	u.DropTargets = append(u.DropTargets,
-		texture.MakeImgWithoutAlt(dropTargetImage, dropTargetPos, dropTargetDimensions, u.Eng, u.Scene))
+		texture.MakeImgWithAlt(dropTargetImage, dropTargetAlt, dropTargetPos, dropTargetDimensions, true, u.Eng, u.Scene))
 	// card on top of second drop target
 	dropCard = u.CurTable.GetTrick()[1]
 	if dropCard != nil {
@@ -92,7 +93,7 @@ func LoadTableView(u *uistate.UIState) {
 	}
 	dropTargetPos = coords.MakeVec(dropTargetX, dropTargetY)
 	u.DropTargets = append(u.DropTargets,
-		texture.MakeImgWithoutAlt(dropTargetImage, dropTargetPos, dropTargetDimensions, u.Eng, u.Scene))
+		texture.MakeImgWithAlt(dropTargetImage, dropTargetAlt, dropTargetPos, dropTargetDimensions, true, u.Eng, u.Scene))
 	// card on top of third drop target
 	dropCard = u.CurTable.GetTrick()[2]
 	if dropCard != nil {
@@ -109,7 +110,7 @@ func LoadTableView(u *uistate.UIState) {
 	}
 	dropTargetPos = coords.MakeVec(dropTargetX, dropTargetY)
 	u.DropTargets = append(u.DropTargets,
-		texture.MakeImgWithoutAlt(dropTargetImage, dropTargetPos, dropTargetDimensions, u.Eng, u.Scene))
+		texture.MakeImgWithAlt(dropTargetImage, dropTargetAlt, dropTargetPos, dropTargetDimensions, true, u.Eng, u.Scene))
 	// card on top of fourth drop target
 	dropCard = u.CurTable.GetTrick()[3]
 	if dropCard != nil {
@@ -216,7 +217,7 @@ func LoadTableView(u *uistate.UIState) {
 	deviceIconPos = coords.MakeVec(playerIconPos.X-deviceIconDim.X, playerIconPos.Y+u.PlayerIconDim.Y-deviceIconDim.Y)
 	u.BackgroundImgs = append(u.BackgroundImgs,
 		texture.MakeImgWithoutAlt(deviceIconImage, deviceIconPos, deviceIconDim, u.Eng, u.Scene))
-	// adding cards
+	//adding cards
 	for _, p := range u.CurTable.GetPlayers() {
 		hand := p.GetHand()
 		for i, c := range hand {
@@ -237,7 +238,7 @@ func LoadTableView(u *uistate.UIState) {
 func LoadPassOrTakeOrPlay(u *uistate.UIState) {
 	p := u.CurTable.GetPlayers()[u.CurPlayerIndex]
 	if p.GetDoneTaking() || u.CurTable.GetDir() == direction.None {
-		LoadPlayView("", u)
+		LoadPlayView(u)
 	} else if p.GetDonePassing() {
 		LoadTakeView(u)
 	} else {
@@ -253,7 +254,12 @@ func LoadScoreView(roundScores, winners []int, u *uistate.UIState) {
 	addHeader(u)
 	addScoreViewHeaderText(u)
 	addPlayerScores(roundScores, u)
-	addScoreButton(u)
+	if len(winners) > 0 {
+		addScoreButton(true, u)
+	} else {
+		addScoreButton(false, u)
+	}
+
 }
 
 // Pass View: Shows player's hand and allows them to pass cards
@@ -287,44 +293,54 @@ func LoadTakeView(u *uistate.UIState) {
 }
 
 // Play View: Shows player's hand and allows them to play cards
-func LoadPlayView(err string, u *uistate.UIState) {
+func LoadPlayView(u *uistate.UIState) {
 	u.CurView = uistate.Play
-	if err == "" {
-		resetImgs(u)
-		resetScene(u)
-		addPlaySlot(u)
-		addHand(u)
-		addPlayHeader(err, u)
-		if u.Debug {
-			addDebugBar(u)
-		}
-		// animate in play slot if relevant
-		if u.CurTable.WhoseTurn() == u.CurPlayerIndex && u.CurTable.AllDonePassing() {
-			reposition.AnimateInPlay(u)
-		}
+	resetImgs(u)
+	resetScene(u)
+	addPlaySlot(u)
+	addHand(u)
+	var turnText string
+	playerTurnNum := u.CurTable.WhoseTurn()
+	if playerTurnNum == -1 || !u.CurTable.AllDonePassing() {
+		turnText = "Waiting for other players"
+	} else if playerTurnNum == u.CurPlayerIndex {
+		turnText = "Your turn"
 	} else {
-		// remove text and replace with err
-		var emptyTex sprite.SubTex
-		for i := u.NumSuits; i < len(u.BackgroundImgs); i++ {
-			u.Eng.SetSubTex(u.BackgroundImgs[i].GetNode(), emptyTex)
-		}
-		u.BackgroundImgs = u.BackgroundImgs[:u.NumSuits]
-		u.Eng.SetSubTex(u.Buttons[0].GetNode(), emptyTex)
-		u.Buttons = make([]*staticimg.StaticImg, 0)
-		addPlayHeader(err, u)
+		name := u.CurTable.GetPlayers()[playerTurnNum].GetName()
+		turnText = name + "'s turn"
 	}
+	addPlayHeader(turnText, u)
+	if u.Debug {
+		addDebugBar(u)
+	}
+	// animate in play slot if relevant
+	if u.CurTable.WhoseTurn() == u.CurPlayerIndex && u.CurTable.AllDonePassing() {
+		reposition.AnimateInPlay(u)
+	}
+}
+
+func ChangePlayMessage(message string, u *uistate.UIState) {
+	// remove text and replace with message
+	var emptyTex sprite.SubTex
+	for i := u.NumSuits; i < len(u.BackgroundImgs); i++ {
+		u.Eng.SetSubTex(u.BackgroundImgs[i].GetNode(), emptyTex)
+	}
+	u.BackgroundImgs = u.BackgroundImgs[:u.NumSuits]
+	u.Eng.SetSubTex(u.Buttons[0].GetNode(), emptyTex)
+	u.Buttons = make([]*staticimg.StaticImg, 0)
+	addPlayHeader(message, u)
 }
 
 func addHeader(u *uistate.UIState) {
 	// adding blue banner
 	headerImage := u.Texs["RoundedRectangle-DBlue.png"]
 	headerPos := coords.MakeVec(0, -10)
-	headerDimensions := coords.MakeVec(u.WindowSize.X, float32(20))
+	headerDimensions := coords.MakeVec(u.WindowSize.X, u.TopPadding+float32(20))
 	u.BackgroundImgs = append(u.BackgroundImgs,
 		texture.MakeImgWithoutAlt(headerImage, headerPos, headerDimensions, u.Eng, u.Scene))
 }
 
-func addPlayHeader(err string, u *uistate.UIState) {
+func addPlayHeader(message string, u *uistate.UIState) {
 	// adding blue banner
 	headerImage := u.Texs["Rectangle-DBlue.png"]
 	headerPos := coords.MakeVec(0, 0)
@@ -338,38 +354,25 @@ func addPlayHeader(err string, u *uistate.UIState) {
 	u.Buttons = append(u.Buttons,
 		texture.MakeImgWithoutAlt(pullTabImage, pullTabPos, pullTabDim, u.Eng, u.Scene))
 	// adding text
-	var turnText string
-	if err != "" {
-		turnText = err
-	} else {
-		playerTurnNum := u.CurTable.WhoseTurn()
-		if playerTurnNum == -1 || !u.CurTable.AllDonePassing() {
-			turnText = "Waiting for other players"
-		} else if playerTurnNum == u.CurPlayerIndex {
-			turnText = "Your turn"
-		} else {
-			name := u.CurTable.GetPlayers()[playerTurnNum].GetName()
-			turnText = name + "'s turn"
-		}
-	}
 	color := "DBlue"
 	scaler := float32(4)
 	center := coords.MakeVec(u.WindowSize.X/2, 20)
-	maxWidth := u.WindowSize.X - pullTabDim.X/2
+	maxWidth := u.WindowSize.X - pullTabDim.X*2 - u.Padding*4
 	u.BackgroundImgs = append(u.BackgroundImgs,
-		texture.MakeStringImgCenterAlign(turnText, color, color, true, center, scaler, maxWidth, u)...)
+		texture.MakeStringImgCenterAlign(message, color, color, true, center, scaler, maxWidth, u)...)
 }
 
 func addPlaySlot(u *uistate.UIState) {
+	topOfHand := u.WindowSize.Y - 5*(u.CardDim.Y+u.Padding) - (2 * u.Padding / 5) - u.BottomPadding
 	// adding blue rectangle
 	blueRectImg := u.Texs["RoundedRectangle-LBlue.png"]
-	blueRectPos := coords.MakeVec(2*u.BottomPadding, 40-u.WindowSize.Y+4*u.BottomPadding)
-	blueRectDim := u.WindowSize.Minus(4 * u.BottomPadding)
+	blueRectDim := coords.MakeVec(u.WindowSize.X-4*u.BottomPadding, topOfHand+u.CardDim.Y)
+	blueRectPos := coords.MakeVec(2*u.BottomPadding, -blueRectDim.Y)
 	u.Other = append(u.Other,
 		texture.MakeImgWithoutAlt(blueRectImg, blueRectPos, blueRectDim, u.Eng, u.Scene))
 	// adding drop target
 	dropTargetImg := u.Texs["trickDrop.png"]
-	dropTargetPos := coords.MakeVec(u.WindowSize.X/2-u.CardDim.X/2, -u.Padding)
+	dropTargetPos := coords.MakeVec(u.WindowSize.X/2-u.CardDim.X/2, -u.CardDim.Y-3*u.Padding)
 	u.DropTargets = append(u.DropTargets,
 		texture.MakeImgWithoutAlt(dropTargetImg, dropTargetPos, u.CardDim, u.Eng, u.Scene))
 }
@@ -378,8 +381,8 @@ func addGrayPassBar(u *uistate.UIState) {
 	// adding gray bar
 	grayBarImg := u.Texs["RoundedRectangle-Gray.png"]
 	blueBarImg := u.Texs["RoundedRectangle-LBlue.png"]
-	grayBarPos := coords.MakeVec(2*u.BottomPadding, 40-u.WindowSize.Y+4*u.BottomPadding)
 	grayBarDim := u.WindowSize.Minus(4 * u.BottomPadding)
+	grayBarPos := coords.MakeVec(2*u.BottomPadding, 40-grayBarDim.Y+u.TopPadding)
 	u.Other = append(u.Other,
 		texture.MakeImgWithAlt(grayBarImg, blueBarImg, grayBarPos, grayBarDim, true, u.Eng, u.Scene))
 	// adding name
@@ -395,7 +398,7 @@ func addGrayPassBar(u *uistate.UIState) {
 	name := u.CurTable.GetPlayers()[receivingPlayer].GetName()
 	color := "Gray"
 	altColor := "LBlue"
-	center := coords.MakeVec(u.WindowSize.X/2, 5)
+	center := coords.MakeVec(u.WindowSize.X/2, u.TopPadding+5)
 	scaler := float32(3)
 	maxWidth := u.WindowSize.X
 	nameImgs := texture.MakeStringImgCenterAlign(name, color, altColor, true, center, scaler, maxWidth, u)
@@ -416,7 +419,7 @@ func addGrayTakeBar(u *uistate.UIState) {
 		grayBarHeight = topOfHand + u.CardDim.Y
 	}
 	grayBarDim := coords.MakeVec(u.WindowSize.X-4*u.BottomPadding, grayBarHeight)
-	grayBarPos := coords.MakeVec(2*u.BottomPadding, -grayBarDim.Y)
+	grayBarPos := coords.MakeVec(2*u.BottomPadding, -u.WindowSize.Y-20)
 	u.Other = append(u.Other,
 		texture.MakeImgWithAlt(grayBarImg, grayBarAlt, grayBarPos, grayBarDim, display, u.Eng, u.Scene))
 	// adding name
@@ -433,15 +436,15 @@ func addGrayTakeBar(u *uistate.UIState) {
 	color := "Gray"
 	nameAltColor := "LBlue"
 	awaitingAltColor := "None"
-	center := coords.MakeVec(u.WindowSize.X/2, 30-grayBarDim.Y)
+	center := coords.MakeVec(u.WindowSize.X/2, 20-u.WindowSize.Y)
 	scaler := float32(3)
 	maxWidth := u.WindowSize.X
-	nameImgs := texture.MakeStringImgCenterAlign(name, color, nameAltColor, display, center, scaler, maxWidth, u)
-	u.Other = append(u.Other, nameImgs...)
-	center = coords.MakeVec(center.X, center.Y+40)
+	u.Other = append(u.Other,
+		texture.MakeStringImgCenterAlign(name, color, nameAltColor, display, center, scaler, maxWidth, u)...)
+	center = coords.MakeVec(center.X, center.Y+30)
 	scaler = float32(5)
-	awaitingImgs := texture.MakeStringImgCenterAlign("Awaiting pass", color, awaitingAltColor, display, center, scaler, maxWidth, u)
-	u.Other = append(u.Other, awaitingImgs...)
+	u.Other = append(u.Other,
+		texture.MakeStringImgCenterAlign("Awaiting pass", color, awaitingAltColor, display, center, scaler, maxWidth, u)...)
 	// adding cards to take, if cards have been passed
 	if !display {
 		u.Cards = append(u.Cards, passedCards...)
@@ -456,7 +459,7 @@ func moveTakeCards(u *uistate.UIState) {
 		cardXStart := (u.WindowSize.X - (numCards*u.CardDim.X + (numCards-1)*u.Padding)) / 2
 		for i, c := range passedCards {
 			cardX := cardXStart + float32(i)*(u.Padding+u.CardDim.X)
-			cardPos := coords.MakeVec(cardX, topOfHand-2*u.CardDim.Y-u.WindowSize.Y/2)
+			cardPos := coords.MakeVec(cardX, topOfHand-u.Padding-u.WindowSize.Y-20)
 			c.Move(cardPos, u.CardDim, u.Eng)
 			reposition.RealignSuit(c.GetSuit(), c.GetInitial().Y, u)
 			// invisible drop target holding card
@@ -587,7 +590,7 @@ func addHand(u *uistate.UIState) {
 func addScoreViewHeaderText(u *uistate.UIState) {
 	top := u.CardDim.Y
 	scaler := float32(4)
-	maxWidth := u.WindowSize.X / 4
+	maxWidth := u.WindowSize.X / 5
 	// adding score text
 	scoreCenter := coords.MakeVec(u.WindowSize.X/4, top)
 	u.BackgroundImgs = append(u.BackgroundImgs,
@@ -610,7 +613,7 @@ func addPlayerScores(roundScores []int, u *uistate.UIState) {
 	maxRoundScore := maxInt(roundScores)
 	maxTotalScore := maxInt(totalScores)
 	top := u.CardDim.Y
-	scaler := float32(4)
+	scaler := float32(5)
 	maxWidth := u.WindowSize.X / 4
 	rowHeight := u.WindowSize.Y / 6
 	for i, p := range u.CurTable.GetPlayers() {
@@ -624,7 +627,7 @@ func addPlayerScores(roundScores []int, u *uistate.UIState) {
 		// player icon
 		playerIconImage := p.GetImage()
 		playerIconDim := coords.MakeVec(rowHeight/2, rowHeight/2)
-		playerIconPos := coords.MakeVec(u.WindowSize.X/4-playerIconDim.X/2, top+(float32(i)+.5)*rowHeight+2*u.Padding)
+		playerIconPos := coords.MakeVec(u.WindowSize.X/4-playerIconDim.X/2, top+(float32(i)+.5)*rowHeight+rowHeight/7)
 		u.BackgroundImgs = append(u.BackgroundImgs,
 			texture.MakeImgWithoutAlt(playerIconImage, playerIconPos, playerIconDim, u.Eng, u.Scene))
 		// player name
@@ -653,12 +656,23 @@ func addPlayerScores(roundScores []int, u *uistate.UIState) {
 		u.BackgroundImgs = append(u.BackgroundImgs,
 			texture.MakeStringImgCenterAlign(strconv.Itoa(totalScore), color, color, true, totalCenter, scaler, maxWidth, u)...)
 	}
+	// final blue divider
+	dividerImage := u.Texs["blue.png"]
+	dividerDim := coords.MakeVec(u.WindowSize.X, u.Padding/2)
+	dividerPos := coords.MakeVec(0, top+(float32(len(u.CurTable.GetPlayers()))+.5)*rowHeight)
+	u.BackgroundImgs = append(u.BackgroundImgs,
+		texture.MakeImgWithoutAlt(dividerImage, dividerPos, dividerDim, u.Eng, u.Scene))
 }
 
-func addScoreButton(u *uistate.UIState) {
-	buttonImg := u.Texs["playUnpressed.png"]
-	buttonDim := coords.MakeVec(2*u.CardDim.X, u.CardDim.Y)
-	buttonPos := coords.MakeVec((u.WindowSize.X-u.CardDim.X)/2, u.WindowSize.Y-u.CardDim.Y-u.BottomPadding)
+func addScoreButton(gameOver bool, u *uistate.UIState) {
+	var buttonImg sprite.SubTex
+	if gameOver {
+		buttonImg = u.Texs["NewGame.png"]
+	} else {
+		buttonImg = u.Texs["NewRound.png"]
+	}
+	buttonDim := coords.MakeVec(2*u.CardDim.X, 3*u.CardDim.Y/4)
+	buttonPos := coords.MakeVec((u.WindowSize.X-buttonDim.X)/2, u.WindowSize.Y-buttonDim.Y-u.BottomPadding)
 	u.Buttons = append(u.Buttons,
 		texture.MakeImgWithoutAlt(buttonImg, buttonPos, buttonDim, u.Eng, u.Scene))
 }

@@ -33,11 +33,15 @@ import (
 	"golang.org/x/mobile/event/paint"
 	"golang.org/x/mobile/event/size"
 	"golang.org/x/mobile/event/touch"
-
+	"golang.org/x/mobile/exp/app/debug"
 	"golang.org/x/mobile/exp/gl/glutil"
 	"golang.org/x/mobile/exp/sprite/clock"
 	"golang.org/x/mobile/exp/sprite/glsprite"
 	"golang.org/x/mobile/gl"
+)
+
+var (
+	fps *debug.FPS
 )
 
 func main() {
@@ -102,6 +106,7 @@ func onStart(glctx gl.Context, u *uistate.UIState) {
 	namespace.SetPermissions(u.Ctx, "users/emshack@google.com/croupier", permissions, "")
 	u.Service.SetPermissions(u.Ctx, permissions, "")
 	u.Images = glutil.NewImages(glctx)
+	fps = debug.NewFPS(u.Images)
 	u.Eng = glsprite.Engine(u.Images)
 	u.Texs = texture.LoadTextures(u.Eng)
 	u.CurTable = table.InitializeGame(u.NumPlayers, u.Texs)
@@ -113,6 +118,7 @@ func onStart(glctx gl.Context, u *uistate.UIState) {
 
 func onStop(u *uistate.UIState) {
 	u.Eng.Release()
+	fps.Release()
 	u.Images.Release()
 	u.Done = true
 }
@@ -125,6 +131,7 @@ func onPaint(glctx gl.Context, sz size.Event, u *uistate.UIState) {
 	glctx.Clear(gl.COLOR_BUFFER_BIT)
 	now := clock.Time(time.Since(u.StartTime) * 60 / time.Second)
 	u.Eng.Render(u.Scene, now, sz)
+	fps.Draw(sz)
 }
 
 func makeServerClient(contextChan chan *context.T, serviceChan chan syncbase.Service) {
