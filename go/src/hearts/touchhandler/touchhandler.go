@@ -58,6 +58,15 @@ func OnTouch(t touch.Event, u *uistate.UIState) {
 		case "end":
 			endClickPlay(t, u)
 		}
+	case uistate.Split:
+		switch t.Type.String() {
+		case "begin":
+			beginClickSplit(t, u)
+		case "move":
+			moveClickSplit(t, u)
+		case "end":
+			endClickSplit(t, u)
+		}
 	case uistate.Score:
 		switch t.Type.String() {
 		case "begin":
@@ -261,6 +270,7 @@ func beginClickPlay(t touch.Event, u *uistate.UIState) {
 		if u.Debug {
 			if u.Buttons[0] == buttonList[0] {
 				u.CurImg = u.Buttons[0]
+				view.LoadSplitView(u)
 			} else if u.Buttons[1] == buttonList[0] {
 				view.LoadTableView(u)
 			} else if u.Buttons[2] == buttonList[0] {
@@ -296,6 +306,19 @@ func endClickPlay(t touch.Event, u *uistate.UIState) {
 		}
 	}
 	u.CurCard = nil
+}
+
+func beginClickSplit(t touch.Event, u *uistate.UIState) {
+	buttonList := findClickedButton(t, u)
+	if len(buttonList) > 0 {
+		view.LoadPlayView(u)
+	}
+}
+
+func moveClickSplit(t touch.Event, u *uistate.UIState) {
+}
+
+func endClickSplit(t touch.Event, u *uistate.UIState) {
 }
 
 func beginClickScore(t touch.Event, u *uistate.UIState) {

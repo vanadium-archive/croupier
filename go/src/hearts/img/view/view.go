@@ -119,7 +119,7 @@ func LoadTableView(u *uistate.UIState) {
 		u.Cards = append(u.Cards, dropCard)
 	}
 	// adding 4 player icons, text, and device icons
-	playerIconImage := u.CurTable.GetPlayers()[0].GetImage()
+	playerIconImage := u.CurTable.GetPlayers()[0].GetIconImage()
 	playerIconX := (u.WindowSize.X - u.PlayerIconDim.X) / 2
 	playerIconY := u.WindowSize.Y - u.TableCardDim.Y - u.BottomPadding - u.Padding - u.PlayerIconDim.Y
 	playerIconPos := coords.MakeVec(playerIconX, playerIconY)
@@ -137,13 +137,13 @@ func LoadTableView(u *uistate.UIState) {
 		u.BackgroundImgs = append(u.BackgroundImgs, img)
 	}
 	// player 0's device icon
-	deviceIconImage := u.Texs["phoneIcon.png"]
+	deviceIconImage := u.CurTable.GetPlayers()[0].GetDeviceImage()
 	deviceIconDim := u.PlayerIconDim.DividedBy(2)
 	deviceIconPos := coords.MakeVec(playerIconPos.X+u.PlayerIconDim.X, playerIconPos.Y)
 	u.BackgroundImgs = append(u.BackgroundImgs,
 		texture.MakeImgWithoutAlt(deviceIconImage, deviceIconPos, deviceIconDim, u.Eng, u.Scene))
 	// player 1's icon
-	playerIconImage = u.CurTable.GetPlayers()[1].GetImage()
+	playerIconImage = u.CurTable.GetPlayers()[1].GetIconImage()
 	playerIconX = u.BottomPadding
 	playerIconY = (u.WindowSize.Y+2*u.BottomPadding+u.PlayerIconDim.Y-
 		(float32(len(u.CurTable.GetPlayers()[1].GetHand()))*
@@ -164,12 +164,12 @@ func LoadTableView(u *uistate.UIState) {
 		u.BackgroundImgs = append(u.BackgroundImgs, img)
 	}
 	// player 1's device icon
-	deviceIconImage = u.Texs["tabletIcon.png"]
+	deviceIconImage = u.CurTable.GetPlayers()[1].GetDeviceImage()
 	deviceIconPos = coords.MakeVec(playerIconPos.X+u.PlayerIconDim.X, playerIconPos.Y+u.PlayerIconDim.Y-deviceIconDim.Y)
 	u.BackgroundImgs = append(u.BackgroundImgs,
 		texture.MakeImgWithoutAlt(deviceIconImage, deviceIconPos, deviceIconDim, u.Eng, u.Scene))
 	// player 2's icon
-	playerIconImage = u.CurTable.GetPlayers()[2].GetImage()
+	playerIconImage = u.CurTable.GetPlayers()[2].GetIconImage()
 	playerIconX = (u.WindowSize.X - u.PlayerIconDim.X) / 2
 	playerIconY = u.TopPadding + u.TableCardDim.Y + u.Padding
 	playerIconPos = coords.MakeVec(playerIconX, playerIconY)
@@ -187,12 +187,12 @@ func LoadTableView(u *uistate.UIState) {
 		u.BackgroundImgs = append(u.BackgroundImgs, img)
 	}
 	// player 2's device icon
-	deviceIconImage = u.Texs["watchIcon.png"]
+	deviceIconImage = u.CurTable.GetPlayers()[2].GetDeviceImage()
 	deviceIconPos = coords.MakeVec(playerIconPos.X+u.PlayerIconDim.X, playerIconPos.Y+u.PlayerIconDim.Y-deviceIconDim.Y)
 	u.BackgroundImgs = append(u.BackgroundImgs,
 		texture.MakeImgWithoutAlt(deviceIconImage, deviceIconPos, deviceIconDim, u.Eng, u.Scene))
 	// player 3's icon
-	playerIconImage = u.CurTable.GetPlayers()[3].GetImage()
+	playerIconImage = u.CurTable.GetPlayers()[3].GetIconImage()
 	playerIconX = u.WindowSize.X - u.BottomPadding - u.PlayerIconDim.X
 	playerIconY = (u.WindowSize.Y+2*u.BottomPadding+u.PlayerIconDim.Y-
 		(float32(len(u.CurTable.GetPlayers()[3].GetHand()))*
@@ -213,7 +213,7 @@ func LoadTableView(u *uistate.UIState) {
 		u.BackgroundImgs = append(u.BackgroundImgs, img)
 	}
 	// player 3's device icon
-	deviceIconImage = u.Texs["laptopIcon.png"]
+	deviceIconImage = u.CurTable.GetPlayers()[3].GetDeviceImage()
 	deviceIconPos = coords.MakeVec(playerIconPos.X-deviceIconDim.X, playerIconPos.Y+u.PlayerIconDim.Y-deviceIconDim.Y)
 	u.BackgroundImgs = append(u.BackgroundImgs,
 		texture.MakeImgWithoutAlt(deviceIconImage, deviceIconPos, deviceIconDim, u.Eng, u.Scene))
@@ -254,12 +254,7 @@ func LoadScoreView(roundScores, winners []int, u *uistate.UIState) {
 	addHeader(u)
 	addScoreViewHeaderText(u)
 	addPlayerScores(roundScores, u)
-	if len(winners) > 0 {
-		addScoreButton(true, u)
-	} else {
-		addScoreButton(false, u)
-	}
-
+	addScoreButton(len(winners) > 0, u)
 }
 
 // Pass View: Shows player's hand and allows them to pass cards
@@ -299,23 +294,25 @@ func LoadPlayView(u *uistate.UIState) {
 	resetScene(u)
 	addPlaySlot(u)
 	addHand(u)
-	var turnText string
-	playerTurnNum := u.CurTable.WhoseTurn()
-	if playerTurnNum == -1 || !u.CurTable.AllDonePassing() {
-		turnText = "Waiting for other players"
-	} else if playerTurnNum == u.CurPlayerIndex {
-		turnText = "Your turn"
-	} else {
-		name := u.CurTable.GetPlayers()[playerTurnNum].GetName()
-		turnText = name + "'s turn"
-	}
-	addPlayHeader(turnText, u)
+	addPlayHeader(getTurnText(u), u)
 	if u.Debug {
 		addDebugBar(u)
 	}
 	// animate in play slot if relevant
 	if u.CurTable.WhoseTurn() == u.CurPlayerIndex && u.CurTable.AllDonePassing() {
 		reposition.AnimateInPlay(u)
+	}
+}
+
+func LoadSplitView(u *uistate.UIState) {
+	u.CurView = uistate.Split
+	resetImgs(u)
+	resetScene(u)
+	addHand(u)
+	addPlayHeader(getTurnText(u), u)
+	addSplitViewPlayerIcons(u)
+	if u.Debug {
+		addDebugBar(u)
 	}
 }
 
@@ -331,6 +328,98 @@ func ChangePlayMessage(message string, u *uistate.UIState) {
 	addPlayHeader(message, u)
 }
 
+func addSplitViewPlayerIcons(u *uistate.UIState) {
+	topOfBanner := u.WindowSize.Y - 4*u.CardDim.Y - 5*u.Padding - u.BottomPadding - 40
+	splitWindowSize := coords.MakeVec(u.WindowSize.X, topOfBanner+u.TopPadding)
+	dropTargetImage := u.Texs["trickDrop.png"]
+	dropTargetAlt := u.Texs["trickDropBlue.png"]
+	dropTargetDimensions := u.CardDim
+	playerIconDimensions := u.CardDim.Minus(2)
+	// first drop target
+	dropTargetX := (splitWindowSize.X - u.CardDim.X) / 2
+	dropTargetY := splitWindowSize.Y/2 + u.Padding
+	dropTargetPos := coords.MakeVec(dropTargetX, dropTargetY)
+	u.DropTargets = append(u.DropTargets,
+		texture.MakeImgWithAlt(dropTargetImage, dropTargetAlt, dropTargetPos, dropTargetDimensions, true, u.Eng, u.Scene))
+	// first player icon
+	playerIconImage := u.CurTable.GetPlayers()[u.CurPlayerIndex].GetIconImage()
+	u.BackgroundImgs = append(u.BackgroundImgs,
+		texture.MakeImgWithoutAlt(playerIconImage, dropTargetPos.Plus(1), playerIconDimensions, u.Eng, u.Scene))
+	// card on top of first drop target
+	dropCard := u.CurTable.GetTrick()[u.CurPlayerIndex]
+	if dropCard != nil {
+		texture.PopulateCardImage(dropCard, u.Texs, u.Eng, u.Scene)
+		dropCard.Move(dropTargetPos, dropTargetDimensions, u.Eng)
+		u.TableCards = append(u.TableCards, dropCard)
+	}
+	// second drop target
+	dropTargetY = (splitWindowSize.Y - u.CardDim.Y) / 2
+	dropTargetX = splitWindowSize.X/2 - 3*u.CardDim.X/2 - u.Padding
+	dropTargetPos = coords.MakeVec(dropTargetX, dropTargetY)
+	u.DropTargets = append(u.DropTargets,
+		texture.MakeImgWithAlt(dropTargetImage, dropTargetAlt, dropTargetPos, dropTargetDimensions, true, u.Eng, u.Scene))
+	// second player icon
+	playerIconImage = u.CurTable.GetPlayers()[(u.CurPlayerIndex+1)%len(u.CurTable.GetPlayers())].GetIconImage()
+	u.BackgroundImgs = append(u.BackgroundImgs,
+		texture.MakeImgWithoutAlt(playerIconImage, dropTargetPos.Plus(1), playerIconDimensions, u.Eng, u.Scene))
+	// card on top of second drop target
+	dropCard = u.CurTable.GetTrick()[(u.CurPlayerIndex+1)%len(u.CurTable.GetPlayers())]
+	if dropCard != nil {
+		texture.PopulateCardImage(dropCard, u.Texs, u.Eng, u.Scene)
+		dropCard.Move(dropTargetPos, dropTargetDimensions, u.Eng)
+		u.TableCards = append(u.TableCards, dropCard)
+	}
+	// third drop target
+	dropTargetX = (splitWindowSize.X - u.CardDim.X) / 2
+	dropTargetY = splitWindowSize.Y/2 - u.Padding - u.CardDim.Y
+	dropTargetPos = coords.MakeVec(dropTargetX, dropTargetY)
+	u.DropTargets = append(u.DropTargets,
+		texture.MakeImgWithAlt(dropTargetImage, dropTargetAlt, dropTargetPos, dropTargetDimensions, true, u.Eng, u.Scene))
+	// third player icon
+	playerIconImage = u.CurTable.GetPlayers()[(u.CurPlayerIndex+2)%len(u.CurTable.GetPlayers())].GetIconImage()
+	u.BackgroundImgs = append(u.BackgroundImgs,
+		texture.MakeImgWithoutAlt(playerIconImage, dropTargetPos.Plus(1), playerIconDimensions, u.Eng, u.Scene))
+	// card on top of third drop target
+	dropCard = u.CurTable.GetTrick()[(u.CurPlayerIndex+2)%len(u.CurTable.GetPlayers())]
+	if dropCard != nil {
+		texture.PopulateCardImage(dropCard, u.Texs, u.Eng, u.Scene)
+		dropCard.Move(dropTargetPos, dropTargetDimensions, u.Eng)
+		u.TableCards = append(u.TableCards, dropCard)
+	}
+	// fourth drop target
+	dropTargetY = (splitWindowSize.Y - u.CardDim.Y) / 2
+	dropTargetX = splitWindowSize.X/2 + u.CardDim.X/2 + u.Padding
+	dropTargetPos = coords.MakeVec(dropTargetX, dropTargetY)
+	u.DropTargets = append(u.DropTargets,
+		texture.MakeImgWithAlt(dropTargetImage, dropTargetAlt, dropTargetPos, dropTargetDimensions, true, u.Eng, u.Scene))
+	// fourth player icon
+	playerIconImage = u.CurTable.GetPlayers()[(u.CurPlayerIndex+3)%len(u.CurTable.GetPlayers())].GetIconImage()
+	u.BackgroundImgs = append(u.BackgroundImgs,
+		texture.MakeImgWithoutAlt(playerIconImage, dropTargetPos.Plus(1), playerIconDimensions, u.Eng, u.Scene))
+	// card on top of fourth drop target
+	dropCard = u.CurTable.GetTrick()[(u.CurPlayerIndex+3)%len(u.CurTable.GetPlayers())]
+	if dropCard != nil {
+		texture.PopulateCardImage(dropCard, u.Texs, u.Eng, u.Scene)
+		dropCard.Move(dropTargetPos, dropTargetDimensions, u.Eng)
+		u.TableCards = append(u.TableCards, dropCard)
+	}
+}
+
+// returns a string which says whose turn it is
+func getTurnText(u *uistate.UIState) string {
+	var turnText string
+	playerTurnNum := u.CurTable.WhoseTurn()
+	if playerTurnNum == -1 || !u.CurTable.AllDonePassing() {
+		turnText = "Waiting for other players"
+	} else if playerTurnNum == u.CurPlayerIndex {
+		turnText = "Your turn"
+	} else {
+		name := u.CurTable.GetPlayers()[playerTurnNum].GetName()
+		turnText = name + "'s turn"
+	}
+	return turnText
+}
+
 func addHeader(u *uistate.UIState) {
 	// adding blue banner
 	headerImage := u.Texs["RoundedRectangle-DBlue.png"]
@@ -343,20 +432,33 @@ func addHeader(u *uistate.UIState) {
 func addPlayHeader(message string, u *uistate.UIState) {
 	// adding blue banner
 	headerImage := u.Texs["Rectangle-DBlue.png"]
-	headerPos := coords.MakeVec(0, 0)
-	headerDimensions := coords.MakeVec(u.WindowSize.X, float32(50))
+	var headerDimensions *coords.Vec
+	var headerPos *coords.Vec
+	if u.CurView == uistate.Play {
+		headerDimensions = coords.MakeVec(u.WindowSize.X, float32(50))
+		headerPos = coords.MakeVec(0, 0)
+	} else {
+		headerDimensions = coords.MakeVec(u.WindowSize.X, float32(40))
+		topOfHand := u.WindowSize.Y - 4*(u.CardDim.Y+u.Padding) - u.BottomPadding
+		headerPos = coords.MakeVec(0, topOfHand-headerDimensions.Y-u.Padding)
+	}
 	u.BackgroundImgs = append(u.BackgroundImgs,
 		texture.MakeImgWithoutAlt(headerImage, headerPos, headerDimensions, u.Eng, u.Scene))
 	// adding pull tab
 	pullTabImage := u.Texs["HorizontalPullTab.png"]
 	pullTabDim := u.CardDim.DividedBy(2)
-	pullTabPos := headerDimensions.MinusVec(pullTabDim).Minus(u.Padding)
+	pullTabPos := headerPos.PlusVec(headerDimensions).MinusVec(pullTabDim).Minus(u.Padding)
 	u.Buttons = append(u.Buttons,
 		texture.MakeImgWithoutAlt(pullTabImage, pullTabPos, pullTabDim, u.Eng, u.Scene))
 	// adding text
 	color := "DBlue"
 	scaler := float32(4)
-	center := coords.MakeVec(u.WindowSize.X/2, 20)
+	var center *coords.Vec
+	if u.CurView == uistate.Play {
+		center = coords.MakeVec(u.WindowSize.X/2, headerPos.Y+20)
+	} else {
+		center = coords.MakeVec(u.WindowSize.X/2, headerPos.Y+10)
+	}
 	maxWidth := u.WindowSize.X - pullTabDim.X*2 - u.Padding*4
 	u.BackgroundImgs = append(u.BackgroundImgs,
 		texture.MakeStringImgCenterAlign(message, color, color, true, center, scaler, maxWidth, u)...)
@@ -625,7 +727,7 @@ func addPlayerScores(roundScores []int, u *uistate.UIState) {
 		u.BackgroundImgs = append(u.BackgroundImgs,
 			texture.MakeImgWithoutAlt(dividerImage, dividerPos, dividerDim, u.Eng, u.Scene))
 		// player icon
-		playerIconImage := p.GetImage()
+		playerIconImage := p.GetIconImage()
 		playerIconDim := coords.MakeVec(rowHeight/2, rowHeight/2)
 		playerIconPos := coords.MakeVec(u.WindowSize.X/4-playerIconDim.X/2, top+(float32(i)+.5)*rowHeight+rowHeight/7)
 		u.BackgroundImgs = append(u.BackgroundImgs,

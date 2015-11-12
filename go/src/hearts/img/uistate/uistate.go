@@ -32,6 +32,7 @@ const (
 	Table   View = "Table"
 	Play    View = "Play"
 	Score   View = "Score"
+	Split   View = "Split"
 )
 
 const (

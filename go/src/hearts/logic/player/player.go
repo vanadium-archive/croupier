@@ -12,33 +12,35 @@ import (
 )
 
 // Returns a player instance with playerIndex equal to index
-func NewPlayer(index int, name string, tex sprite.SubTex) *Player {
+func NewPlayer(index int, name string, iconTex, deviceTex sprite.SubTex) *Player {
 	return &Player{
-		hand:        nil,
-		tricks:      make([]*card.Card, 0),
-		score:       0,
-		playerIndex: index,
-		playerName:  name,
-		playerImage: tex,
-		donePassing: false,
-		doneTaking:  false,
-		doneScoring: false,
+		hand:              nil,
+		tricks:            make([]*card.Card, 0),
+		score:             0,
+		playerIndex:       index,
+		playerName:        name,
+		playerIconImage:   iconTex,
+		playerDeviceImage: deviceTex,
+		donePassing:       false,
+		doneTaking:        false,
+		doneScoring:       false,
 	}
 }
 
 type Player struct {
-	hand        []*card.Card
-	passedFrom  []*card.Card
-	passedTo    []*card.Card
-	tricks      []*card.Card
-	score       int
-	playerIndex int
-	playerName  string
-	playerImage sprite.SubTex
-	donePassing bool
-	doneTaking  bool
-	donePlaying bool
-	doneScoring bool
+	hand              []*card.Card
+	passedFrom        []*card.Card
+	passedTo          []*card.Card
+	tricks            []*card.Card
+	score             int
+	playerIndex       int
+	playerName        string
+	playerIconImage   sprite.SubTex
+	playerDeviceImage sprite.SubTex
+	donePassing       bool
+	doneTaking        bool
+	donePlaying       bool
+	doneScoring       bool
 }
 
 // Returns the hand of p
@@ -70,8 +72,12 @@ func (p *Player) GetName() string {
 	return p.playerName
 }
 
-func (p *Player) GetImage() sprite.SubTex {
-	return p.playerImage
+func (p *Player) GetIconImage() sprite.SubTex {
+	return p.playerIconImage
+}
+
+func (p *Player) GetDeviceImage() sprite.SubTex {
+	return p.playerDeviceImage
 }
 
 // Returns true if p has finished the pass phase of the current round
