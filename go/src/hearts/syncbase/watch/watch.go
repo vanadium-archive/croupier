@@ -169,6 +169,26 @@ func onPlay(value string, u *uistate.UIState) {
 			}
 			reposition.AnimateTableCardTakeTrick(trickCards, trickDir, u)
 		}
+	} else if u.CurView == uistate.Split {
+		if playerInt != u.CurPlayerIndex {
+			reposition.AnimateSplitCardPlay(playedCard, playerInt, u)
+		}
+		reposition.SetSplitDropColors(u)
+		if trickOver {
+			var trickDir direction.Direction
+			switch recipient {
+			case u.CurPlayerIndex:
+				trickDir = direction.Down
+			case (u.CurPlayerIndex + 1) % u.NumPlayers:
+				trickDir = direction.Left
+			case (u.CurPlayerIndex + 2) % u.NumPlayers:
+				trickDir = direction.Across
+			case (u.CurPlayerIndex + 3) % u.NumPlayers:
+				trickDir = direction.Right
+			}
+			reposition.AnimateTableCardTakeTrick(trickCards, trickDir, u)
+		}
+		view.LoadSplitView(true, u)
 	} else if u.CurView == uistate.Play {
 		if roundOver {
 			view.LoadScoreView(roundScores, winners, u)

@@ -19,7 +19,7 @@ tmp:
 	mkdir -p $@
 
 credentials: bin/principal
-	principal seekblessings --v23.credentials ./credentials
+	bin/principal seekblessings --v23.credentials ./credentials
 	touch $@
 
 .PHONY:
@@ -32,7 +32,7 @@ delete:
 syncbase: delete bin/syncbased credentials tmp
 	$(eval blessing := $(shell bin/principal dump --v23.credentials=./credentials -s=true))
 	$(eval email := $(subst dev.v.io/u/,,$(blessing)))
-	syncbased \
+	bin/syncbased \
 		--v=5 \
 		--alsologtostderr=false \
 		--root-dir=tmp/syncbase_$(id) \

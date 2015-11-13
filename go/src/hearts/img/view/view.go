@@ -231,6 +231,7 @@ func LoadTableView(u *uistate.UIState) {
 	if u.Debug {
 		addDebugBar(u)
 	}
+	reposition.SetTableDropColors(u)
 }
 
 // Decides which view of the player's hand to load based on what steps of the round they have completed
@@ -294,7 +295,7 @@ func LoadPlayView(u *uistate.UIState) {
 	resetScene(u)
 	addPlaySlot(u)
 	addHand(u)
-	addPlayHeader(getTurnText(u), u)
+	addPlayHeader(getTurnText(u), false, u)
 	if u.Debug {
 		addDebugBar(u)
 	}
@@ -304,47 +305,54 @@ func LoadPlayView(u *uistate.UIState) {
 	}
 }
 
-func LoadSplitView(u *uistate.UIState) {
+func LoadSplitView(reloading bool, u *uistate.UIState) {
 	u.CurView = uistate.Split
 	resetImgs(u)
 	resetScene(u)
+	addPlayHeader(getTurnText(u), !reloading, u)
+	addSplitViewPlayerIcons(!reloading, u)
 	addHand(u)
-	addPlayHeader(getTurnText(u), u)
-	addSplitViewPlayerIcons(u)
 	if u.Debug {
 		addDebugBar(u)
+	}
+	reposition.SetSplitDropColors(u)
+	if !reloading {
+		reposition.AnimateInSplit(u)
 	}
 }
 
 func ChangePlayMessage(message string, u *uistate.UIState) {
 	// remove text and replace with message
 	var emptyTex sprite.SubTex
-	for i := u.NumSuits; i < len(u.BackgroundImgs); i++ {
-		u.Eng.SetSubTex(u.BackgroundImgs[i].GetNode(), emptyTex)
+	for _, img := range u.Other {
+		u.Eng.SetSubTex(img.GetNode(), emptyTex)
 	}
-	u.BackgroundImgs = u.BackgroundImgs[:u.NumSuits]
 	u.Eng.SetSubTex(u.Buttons[0].GetNode(), emptyTex)
+	u.Other = make([]*staticimg.StaticImg, 0)
 	u.Buttons = make([]*staticimg.StaticImg, 0)
-	addPlayHeader(message, u)
+	addPlayHeader(message, false, u)
 }
 
-func addSplitViewPlayerIcons(u *uistate.UIState) {
+func addSplitViewPlayerIcons(beforeSplitAnimation bool, u *uistate.UIState) {
 	topOfBanner := u.WindowSize.Y - 4*u.CardDim.Y - 5*u.Padding - u.BottomPadding - 40
 	splitWindowSize := coords.MakeVec(u.WindowSize.X, topOfBanner+u.TopPadding)
 	dropTargetImage := u.Texs["trickDrop.png"]
 	dropTargetAlt := u.Texs["trickDropBlue.png"]
 	dropTargetDimensions := u.CardDim
-	playerIconDimensions := u.CardDim.Minus(2)
+	playerIconDimensions := u.CardDim.Minus(4)
 	// first drop target
 	dropTargetX := (splitWindowSize.X - u.CardDim.X) / 2
 	dropTargetY := splitWindowSize.Y/2 + u.Padding
+	if beforeSplitAnimation {
+		dropTargetY -= topOfBanner
+	}
 	dropTargetPos := coords.MakeVec(dropTargetX, dropTargetY)
 	u.DropTargets = append(u.DropTargets,
 		texture.MakeImgWithAlt(dropTargetImage, dropTargetAlt, dropTargetPos, dropTargetDimensions, true, u.Eng, u.Scene))
 	// first player icon
 	playerIconImage := u.CurTable.GetPlayers()[u.CurPlayerIndex].GetIconImage()
 	u.BackgroundImgs = append(u.BackgroundImgs,
-		texture.MakeImgWithoutAlt(playerIconImage, dropTargetPos.Plus(1), playerIconDimensions, u.Eng, u.Scene))
+		texture.MakeImgWithoutAlt(playerIconImage, dropTargetPos.Plus(2), playerIconDimensions, u.Eng, u.Scene))
 	// card on top of first drop target
 	dropCard := u.CurTable.GetTrick()[u.CurPlayerIndex]
 	if dropCard != nil {
@@ -354,6 +362,9 @@ func addSplitViewPlayerIcons(u *uistate.UIState) {
 	}
 	// second drop target
 	dropTargetY = (splitWindowSize.Y - u.CardDim.Y) / 2
+	if beforeSplitAnimation {
+		dropTargetY -= topOfBanner
+	}
 	dropTargetX = splitWindowSize.X/2 - 3*u.CardDim.X/2 - u.Padding
 	dropTargetPos = coords.MakeVec(dropTargetX, dropTargetY)
 	u.DropTargets = append(u.DropTargets,
@@ -361,7 +372,7 @@ func addSplitViewPlayerIcons(u *uistate.UIState) {
 	// second player icon
 	playerIconImage = u.CurTable.GetPlayers()[(u.CurPlayerIndex+1)%len(u.CurTable.GetPlayers())].GetIconImage()
 	u.BackgroundImgs = append(u.BackgroundImgs,
-		texture.MakeImgWithoutAlt(playerIconImage, dropTargetPos.Plus(1), playerIconDimensions, u.Eng, u.Scene))
+		texture.MakeImgWithoutAlt(playerIconImage, dropTargetPos.Plus(2), playerIconDimensions, u.Eng, u.Scene))
 	// card on top of second drop target
 	dropCard = u.CurTable.GetTrick()[(u.CurPlayerIndex+1)%len(u.CurTable.GetPlayers())]
 	if dropCard != nil {
@@ -372,13 +383,16 @@ func addSplitViewPlayerIcons(u *uistate.UIState) {
 	// third drop target
 	dropTargetX = (splitWindowSize.X - u.CardDim.X) / 2
 	dropTargetY = splitWindowSize.Y/2 - u.Padding - u.CardDim.Y
+	if beforeSplitAnimation {
+		dropTargetY -= topOfBanner
+	}
 	dropTargetPos = coords.MakeVec(dropTargetX, dropTargetY)
 	u.DropTargets = append(u.DropTargets,
 		texture.MakeImgWithAlt(dropTargetImage, dropTargetAlt, dropTargetPos, dropTargetDimensions, true, u.Eng, u.Scene))
 	// third player icon
 	playerIconImage = u.CurTable.GetPlayers()[(u.CurPlayerIndex+2)%len(u.CurTable.GetPlayers())].GetIconImage()
 	u.BackgroundImgs = append(u.BackgroundImgs,
-		texture.MakeImgWithoutAlt(playerIconImage, dropTargetPos.Plus(1), playerIconDimensions, u.Eng, u.Scene))
+		texture.MakeImgWithoutAlt(playerIconImage, dropTargetPos.Plus(2), playerIconDimensions, u.Eng, u.Scene))
 	// card on top of third drop target
 	dropCard = u.CurTable.GetTrick()[(u.CurPlayerIndex+2)%len(u.CurTable.GetPlayers())]
 	if dropCard != nil {
@@ -388,6 +402,9 @@ func addSplitViewPlayerIcons(u *uistate.UIState) {
 	}
 	// fourth drop target
 	dropTargetY = (splitWindowSize.Y - u.CardDim.Y) / 2
+	if beforeSplitAnimation {
+		dropTargetY -= topOfBanner
+	}
 	dropTargetX = splitWindowSize.X/2 + u.CardDim.X/2 + u.Padding
 	dropTargetPos = coords.MakeVec(dropTargetX, dropTargetY)
 	u.DropTargets = append(u.DropTargets,
@@ -395,7 +412,7 @@ func addSplitViewPlayerIcons(u *uistate.UIState) {
 	// fourth player icon
 	playerIconImage = u.CurTable.GetPlayers()[(u.CurPlayerIndex+3)%len(u.CurTable.GetPlayers())].GetIconImage()
 	u.BackgroundImgs = append(u.BackgroundImgs,
-		texture.MakeImgWithoutAlt(playerIconImage, dropTargetPos.Plus(1), playerIconDimensions, u.Eng, u.Scene))
+		texture.MakeImgWithoutAlt(playerIconImage, dropTargetPos.Plus(2), playerIconDimensions, u.Eng, u.Scene))
 	// card on top of fourth drop target
 	dropCard = u.CurTable.GetTrick()[(u.CurPlayerIndex+3)%len(u.CurTable.GetPlayers())]
 	if dropCard != nil {
@@ -429,12 +446,12 @@ func addHeader(u *uistate.UIState) {
 		texture.MakeImgWithoutAlt(headerImage, headerPos, headerDimensions, u.Eng, u.Scene))
 }
 
-func addPlayHeader(message string, u *uistate.UIState) {
+func addPlayHeader(message string, beforeSplitAnimation bool, u *uistate.UIState) {
 	// adding blue banner
 	headerImage := u.Texs["Rectangle-DBlue.png"]
 	var headerDimensions *coords.Vec
 	var headerPos *coords.Vec
-	if u.CurView == uistate.Play {
+	if u.CurView == uistate.Play || beforeSplitAnimation {
 		headerDimensions = coords.MakeVec(u.WindowSize.X, float32(50))
 		headerPos = coords.MakeVec(0, 0)
 	} else {
@@ -442,7 +459,7 @@ func addPlayHeader(message string, u *uistate.UIState) {
 		topOfHand := u.WindowSize.Y - 4*(u.CardDim.Y+u.Padding) - u.BottomPadding
 		headerPos = coords.MakeVec(0, topOfHand-headerDimensions.Y-u.Padding)
 	}
-	u.BackgroundImgs = append(u.BackgroundImgs,
+	u.Other = append(u.Other,
 		texture.MakeImgWithoutAlt(headerImage, headerPos, headerDimensions, u.Eng, u.Scene))
 	// adding pull tab
 	pullTabImage := u.Texs["HorizontalPullTab.png"]
@@ -453,14 +470,9 @@ func addPlayHeader(message string, u *uistate.UIState) {
 	// adding text
 	color := "DBlue"
 	scaler := float32(4)
-	var center *coords.Vec
-	if u.CurView == uistate.Play {
-		center = coords.MakeVec(u.WindowSize.X/2, headerPos.Y+20)
-	} else {
-		center = coords.MakeVec(u.WindowSize.X/2, headerPos.Y+10)
-	}
+	center := coords.MakeVec(u.WindowSize.X/2, headerPos.Y+headerDimensions.Y-30)
 	maxWidth := u.WindowSize.X - pullTabDim.X*2 - u.Padding*4
-	u.BackgroundImgs = append(u.BackgroundImgs,
+	u.Other = append(u.Other,
 		texture.MakeStringImgCenterAlign(message, color, color, true, center, scaler, maxWidth, u)...)
 }
 
@@ -470,7 +482,7 @@ func addPlaySlot(u *uistate.UIState) {
 	blueRectImg := u.Texs["RoundedRectangle-LBlue.png"]
 	blueRectDim := coords.MakeVec(u.WindowSize.X-4*u.BottomPadding, topOfHand+u.CardDim.Y)
 	blueRectPos := coords.MakeVec(2*u.BottomPadding, -blueRectDim.Y)
-	u.Other = append(u.Other,
+	u.BackgroundImgs = append(u.BackgroundImgs,
 		texture.MakeImgWithoutAlt(blueRectImg, blueRectPos, blueRectDim, u.Eng, u.Scene))
 	// adding drop target
 	dropTargetImg := u.Texs["trickDrop.png"]

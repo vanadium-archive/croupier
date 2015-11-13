@@ -85,8 +85,8 @@ func CreateOrJoinSyncgroup(u *uistate.UIState, sgName string) {
 	app := u.Service.App(appName)
 	db := app.NoSQLDatabase(dbName, nil)
 	sg := db.Syncgroup(sgName)
-	myInfo := wire.SyncgroupMemberInfo{8}
-	_, err := sg.Join(u.Ctx, myInfo)
+	myInfoJoiner := wire.SyncgroupMemberInfo{8, false}
+	_, err := sg.Join(u.Ctx, myInfoJoiner)
 	if err == nil {
 		fmt.Println("Successfully joined syncgroup")
 	} else {
@@ -101,7 +101,8 @@ func CreateOrJoinSyncgroup(u *uistate.UIState, sgName string) {
 			Prefixes:    prefs,
 			MountTables: tables,
 			IsPrivate:   false}
-		err := sg.Create(u.Ctx, spec, myInfo)
+		myInfoCreator := wire.SyncgroupMemberInfo{8, true}
+		err := sg.Create(u.Ctx, spec, myInfoCreator)
 		if err != nil {
 			fmt.Println("SYNCGROUP CREATE ERROR: ", err)
 		}

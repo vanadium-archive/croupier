@@ -22,54 +22,70 @@ import (
 func OnTouch(t touch.Event, u *uistate.UIState) {
 	switch u.CurView {
 	case uistate.Opening:
-		switch t.Type.String() {
-		case "begin":
+		switch t.Type {
+		case touch.TypeBegin:
 			beginClickOpening(t, u)
 		}
 	case uistate.Table:
-		switch t.Type.String() {
-		case "begin":
-			beginClickTable(t, u)
+		switch t.Type {
+		case touch.TypeBegin:
+			if u.Debug {
+				beginClickTable(t, u)
+			}
 		}
 	case uistate.Pass:
-		switch t.Type.String() {
-		case "begin":
+		switch t.Type {
+		case touch.TypeBegin:
 			beginClickPass(t, u)
-		case "move":
+		case touch.TypeMove:
 			moveClickPass(t, u)
-		case "end":
+		case touch.TypeEnd:
 			endClickPass(t, u)
 		}
 	case uistate.Take:
-		switch t.Type.String() {
-		case "begin":
+		switch t.Type {
+		case touch.TypeBegin:
 			beginClickTake(t, u)
-		case "move":
-			moveClickTake(t, u)
-		case "end":
-			endClickTake(t, u)
+		case touch.TypeMove:
+			if u.CurCard != nil {
+				moveClickTake(t, u)
+			}
+		case touch.TypeEnd:
+			if u.CurCard != nil {
+				endClickTake(t, u)
+				u.CurCard = nil
+			}
 		}
 	case uistate.Play:
-		switch t.Type.String() {
-		case "begin":
+		switch t.Type {
+		case touch.TypeBegin:
 			beginClickPlay(t, u)
-		case "move":
-			moveClickPlay(t, u)
-		case "end":
-			endClickPlay(t, u)
+		case touch.TypeMove:
+			if u.CurCard != nil {
+				moveClickPlay(t, u)
+			}
+		case touch.TypeEnd:
+			if u.CurCard != nil {
+				endClickPlay(t, u)
+			}
 		}
 	case uistate.Split:
-		switch t.Type.String() {
-		case "begin":
+		switch t.Type {
+		case touch.TypeBegin:
 			beginClickSplit(t, u)
-		case "move":
-			moveClickSplit(t, u)
-		case "end":
-			endClickSplit(t, u)
+		case touch.TypeMove:
+			if u.CurCard != nil {
+				moveClickSplit(t, u)
+			}
+		case touch.TypeEnd:
+			if u.CurCard != nil {
+				endClickSplit(t, u)
+				u.CurCard = nil
+			}
 		}
 	case uistate.Score:
-		switch t.Type.String() {
-		case "begin":
+		switch t.Type {
+		case touch.TypeBegin:
 			beginClickScore(t, u)
 		}
 	}
@@ -89,27 +105,9 @@ func beginClickOpening(t touch.Event, u *uistate.UIState) {
 }
 
 func beginClickTable(t touch.Event, u *uistate.UIState) {
-	if u.Debug {
-		buttonList := findClickedButton(t, u)
-		if len(buttonList) > 0 {
-			if u.Buttons[0] == buttonList[0] {
-				u.CurPlayerIndex = 0
-				view.LoadPassOrTakeOrPlay(u)
-			} else if u.Buttons[1] == buttonList[0] {
-				u.CurPlayerIndex = 1
-				view.LoadPassOrTakeOrPlay(u)
-			} else if u.Buttons[2] == buttonList[0] {
-				u.CurPlayerIndex = 2
-				view.LoadPassOrTakeOrPlay(u)
-			} else if u.Buttons[3] == buttonList[0] {
-				u.CurPlayerIndex = 3
-				view.LoadPassOrTakeOrPlay(u)
-			} else if u.Buttons[4] == buttonList[0] {
-				view.LoadTableView(u)
-			} else if u.Buttons[5] == buttonList[0] {
-				view.LoadPassOrTakeOrPlay(u)
-			}
-		}
+	buttonList := findClickedButton(t, u)
+	if len(buttonList) > 0 {
+		updateViewFromTable(buttonList[0], u)
 	}
 }
 
@@ -229,38 +227,33 @@ func beginClickTake(t touch.Event, u *uistate.UIState) {
 }
 
 func moveClickTake(t touch.Event, u *uistate.UIState) {
-	if u.CurCard != nil {
-		reposition.DragCard(t, u)
-	}
+	reposition.DragCard(t, u)
 }
 
 func endClickTake(t touch.Event, u *uistate.UIState) {
-	if u.CurCard != nil {
-		// check to see if card was removed from a drop target
-		removeCardFromTarget(u.CurCard, u)
-		// add card back to hand
-		reposition.ResetCardPosition(u.CurCard, u.Eng)
-		reposition.RealignSuit(u.CurCard.GetSuit(), u.CurCard.GetInitial().Y, u)
-		doneTaking := true
-		for _, d := range u.DropTargets {
-			if d.GetCardHere() != nil {
-				doneTaking = false
-			}
-		}
-		if doneTaking {
-			ch := make(chan bool)
-			success := takeCards(ch, u.CurPlayerIndex, u)
-			go func() {
-				<-ch
-				if !success {
-					fmt.Println("Invalid take")
-				} else {
-					view.LoadPlayView(u)
-				}
-			}()
+	// check to see if card was removed from a drop target
+	removeCardFromTarget(u.CurCard, u)
+	// add card back to hand
+	reposition.ResetCardPosition(u.CurCard, u.Eng)
+	reposition.RealignSuit(u.CurCard.GetSuit(), u.CurCard.GetInitial().Y, u)
+	doneTaking := true
+	for _, d := range u.DropTargets {
+		if d.GetCardHere() != nil {
+			doneTaking = false
 		}
 	}
-	u.CurCard = nil
+	if doneTaking {
+		ch := make(chan bool)
+		success := takeCards(ch, u.CurPlayerIndex, u)
+		go func() {
+			<-ch
+			if !success {
+				fmt.Println("Invalid take")
+			} else {
+				view.LoadPlayView(u)
+			}
+		}()
+	}
 }
 
 func beginClickPlay(t touch.Event, u *uistate.UIState) {
@@ -270,7 +263,7 @@ func beginClickPlay(t touch.Event, u *uistate.UIState) {
 		if u.Debug {
 			if u.Buttons[0] == buttonList[0] {
 				u.CurImg = u.Buttons[0]
-				view.LoadSplitView(u)
+				view.LoadSplitView(false, u)
 			} else if u.Buttons[1] == buttonList[0] {
 				view.LoadTableView(u)
 			} else if u.Buttons[2] == buttonList[0] {
@@ -281,44 +274,83 @@ func beginClickPlay(t touch.Event, u *uistate.UIState) {
 }
 
 func moveClickPlay(t touch.Event, u *uistate.UIState) {
-	if u.CurCard != nil {
-		reposition.DragCard(t, u)
-	}
+	reposition.DragCard(t, u)
 }
 
 func endClickPlay(t touch.Event, u *uistate.UIState) {
-	if u.CurCard != nil {
-		if !dropCardOnTarget(u.CurCard, t, u) {
-			// check to see if card was removed from a drop target
+	if dropCardOnTarget(u.CurCard, t, u) {
+		ch := make(chan bool)
+		if err := playCard(ch, u.CurPlayerIndex, u); err != "" {
+			view.ChangePlayMessage(err, u)
 			removeCardFromTarget(u.CurCard, u)
 			// add card back to hand
 			reposition.ResetCardPosition(u.CurCard, u.Eng)
 			reposition.RealignSuit(u.CurCard.GetSuit(), u.CurCard.GetInitial().Y, u)
+		}
+		go func() {
+			<-ch
+			view.LoadPlayView(u)
+		}()
+	} else {
+		// check to see if card was removed from a drop target
+		removeCardFromTarget(u.CurCard, u)
+		// add card back to hand
+		reposition.ResetCardPosition(u.CurCard, u.Eng)
+		reposition.RealignSuit(u.CurCard.GetSuit(), u.CurCard.GetInitial().Y, u)
+	}
+}
+
+func beginClickSplit(t touch.Event, u *uistate.UIState) {
+	u.CurCard = findClickedCard(t, u)
+	buttonList := findClickedButton(t, u)
+	if len(buttonList) > 0 {
+		if u.Debug {
+			if u.Buttons[0] == buttonList[0] {
+				ch := make(chan bool)
+				reposition.AnimateOutSplit(ch, u)
+				go func() {
+					<-ch
+					view.LoadPlayView(u)
+				}()
+			} else if u.Buttons[1] == buttonList[0] {
+				view.LoadTableView(u)
+			} else if u.Buttons[2] == buttonList[0] {
+				view.LoadPassOrTakeOrPlay(u)
+			}
 		} else {
 			ch := make(chan bool)
-			if err := playCard(ch, u.CurPlayerIndex, u); err != "" {
-				view.ChangePlayMessage(err, u)
-			}
+			reposition.AnimateOutSplit(ch, u)
 			go func() {
 				<-ch
 				view.LoadPlayView(u)
 			}()
 		}
 	}
-	u.CurCard = nil
-}
-
-func beginClickSplit(t touch.Event, u *uistate.UIState) {
-	buttonList := findClickedButton(t, u)
-	if len(buttonList) > 0 {
-		view.LoadPlayView(u)
-	}
 }
 
 func moveClickSplit(t touch.Event, u *uistate.UIState) {
+	reposition.DragCard(t, u)
 }
 
 func endClickSplit(t touch.Event, u *uistate.UIState) {
+	if dropCardHere(u.CurCard, u.DropTargets[0], t, u) {
+		ch := make(chan bool)
+		if err := playCard(ch, u.CurPlayerIndex, u); err != "" {
+			view.ChangePlayMessage(err, u)
+			removeCardFromTarget(u.CurCard, u)
+			// add card back to hand
+			reposition.ResetCardPosition(u.CurCard, u.Eng)
+			reposition.RealignSuit(u.CurCard.GetSuit(), u.CurCard.GetInitial().Y, u)
+		} else {
+			reposition.RealignSuit(u.CurCard.GetSuit(), u.CurCard.GetInitial().Y, u)
+		}
+	} else {
+		// check to see if card was removed from a drop target
+		removeCardFromTarget(u.CurCard, u)
+		// add card back to hand
+		reposition.ResetCardPosition(u.CurCard, u.Eng)
+		reposition.RealignSuit(u.CurCard.GetSuit(), u.CurCard.GetInitial().Y, u)
+	}
 }
 
 func beginClickScore(t touch.Event, u *uistate.UIState) {
@@ -366,72 +398,75 @@ func passCards(ch chan bool, playerId int, u *uistate.UIState) bool {
 		}
 	}
 	// if the pass is not valid, don't pass any cards
-	if u.CurTable.ValidPass(cardsPassed) && !u.CurTable.GetPlayers()[playerId].GetDonePassing() {
-		success := gamelog.LogPass(u, cardsPassed)
-		for !success {
-			success = gamelog.LogPass(u, cardsPassed)
-		}
-		// UI component
-		pullTab := u.Buttons[0]
-		blueBanner := u.BackgroundImgs[1]
-		imgs := []*staticimg.StaticImg{pullTab, blueBanner}
-		for _, d := range dropsToReset {
-			imgs = append(imgs, d)
-			d.SetCardHere(nil)
-		}
-		var blankTex sprite.SubTex
-		for _, i := range imgs {
-			u.Eng.SetSubTex(i.GetNode(), blankTex)
-		}
-		reposition.AnimateHandCardPass(ch, u.Other, cardsPassed, u)
-		return true
+	if !u.CurTable.ValidPass(cardsPassed) || u.CurTable.GetPlayers()[playerId].GetDonePassing() {
+		return false
 	}
-	return false
+	success := gamelog.LogPass(u, cardsPassed)
+	for !success {
+		success = gamelog.LogPass(u, cardsPassed)
+	}
+	// UI component
+	pullTab := u.Buttons[0]
+	blueBanner := u.BackgroundImgs[1]
+	imgs := []*staticimg.StaticImg{pullTab, blueBanner}
+	for _, d := range dropsToReset {
+		imgs = append(imgs, d)
+		d.SetCardHere(nil)
+	}
+	var blankTex sprite.SubTex
+	for _, i := range imgs {
+		u.Eng.SetSubTex(i.GetNode(), blankTex)
+	}
+	reposition.AnimateHandCardPass(ch, u.Other, cardsPassed, u)
+	return true
 }
 
 func takeCards(ch chan bool, playerId int, u *uistate.UIState) bool {
 	player := u.CurTable.GetPlayers()[playerId]
 	passedCards := player.GetPassedTo()
-	if len(passedCards) == 3 {
-		success := gamelog.LogTake(u)
-		for !success {
-			success = gamelog.LogTake(u)
-		}
-		reposition.AnimateHandCardTake(ch, u.Other, u)
-		return true
+	if len(passedCards) != 3 {
+		return false
 	}
-	return false
+	success := gamelog.LogTake(u)
+	for !success {
+		success = gamelog.LogTake(u)
+	}
+	reposition.AnimateHandCardTake(ch, u.Other, u)
+	return true
 }
 
 func playCard(ch chan bool, playerId int, u *uistate.UIState) string {
 	c := u.DropTargets[0].GetCardHere()
-	if c != nil {
-		// checks to make sure that:
-		// -player has not already played a card this round
-		// -all players have passed cards
-		// -the play is in the right order
-		// -the play is valid given game logic
-		if u.CurTable.GetPlayers()[playerId].GetDonePlaying() {
-			return "You have already played a card in this trick"
-		}
-		if !u.CurTable.AllDonePassing() {
-			return "Not all players have passed their cards"
-		}
-		if !u.CurTable.ValidPlayOrder(playerId) {
-			return "It is not your turn"
-		}
-		if err := u.CurTable.ValidPlayLogic(c, playerId); err != "" {
-			return err
-		}
-		u.DropTargets[0].SetCardHere(nil)
-		success := gamelog.LogPlay(u, c)
-		for !success {
-			success = gamelog.LogPlay(u, c)
-		}
-		reposition.AnimateHandCardPlay(ch, c, u)
-		return ""
+	if c == nil {
+		return "No card has been played"
 	}
-	return "No card has been played"
+	// checks to make sure that:
+	// -player has not already played a card this round
+	// -all players have passed cards
+	// -the play is in the right order
+	// -the play is valid given game logic
+	if u.CurTable.GetPlayers()[playerId].GetDonePlaying() {
+		return "You have already played a card in this trick"
+	}
+	if !u.CurTable.AllDonePassing() {
+		return "Not all players have passed their cards"
+	}
+	if !u.CurTable.ValidPlayOrder(playerId) {
+		return "It is not your turn"
+	}
+	if err := u.CurTable.ValidPlayLogic(c, playerId); err != "" {
+		return err
+	}
+	u.DropTargets[0].SetCardHere(nil)
+	success := gamelog.LogPlay(u, c)
+	for !success {
+		success = gamelog.LogPlay(u, c)
+	}
+	// no animation when in split view
+	if u.CurView == uistate.Play {
+		reposition.AnimateHandCardPlay(ch, c, u)
+	}
+	return ""
 }
 
 func pressButton(b *staticimg.StaticImg, u *uistate.UIState) {
@@ -446,6 +481,7 @@ func unpressButtons(u *uistate.UIState) {
 	}
 }
 
+// checks all drop targets to see if a card was dropped there
 func dropCardOnTarget(c *card.Card, t touch.Event, u *uistate.UIState) bool {
 	for _, d := range u.DropTargets {
 		// checking to see if card was dropped onto a drop target
@@ -453,25 +489,37 @@ func dropCardOnTarget(c *card.Card, t touch.Event, u *uistate.UIState) bool {
 			lastDroppedCard := d.GetCardHere()
 			if lastDroppedCard != nil {
 				reposition.ResetCardPosition(lastDroppedCard, u.Eng)
-				if u.CurView == uistate.Pass || u.CurView == uistate.Play {
-					reposition.RealignSuit(lastDroppedCard.GetSuit(), lastDroppedCard.GetInitial().Y, u)
-				} else if u.CurView == uistate.Table {
-					u.Eng.SetSubTex(lastDroppedCard.GetNode(), lastDroppedCard.GetBack())
-					lastDroppedCard.Move(lastDroppedCard.GetCurrent(), u.TableCardDim, u.Eng)
-				}
+				reposition.RealignSuit(lastDroppedCard.GetSuit(), lastDroppedCard.GetInitial().Y, u)
 			}
 			oldY := c.GetInitial().Y
 			suit := c.GetSuit()
 			u.CurCard.Move(d.GetCurrent(), c.GetDimensions(), u.Eng)
 			d.SetCardHere(u.CurCard)
 			// realign suit the card just left
-			if u.CurView == uistate.Pass || u.CurView == uistate.Play {
-				reposition.RealignSuit(suit, oldY, u)
-			}
+			reposition.RealignSuit(suit, oldY, u)
 			return true
 		}
 	}
 	return false
+}
+
+// checks one specific drop target to see if a card was dropped there
+func dropCardHere(c *card.Card, d *staticimg.StaticImg, t touch.Event, u *uistate.UIState) bool {
+	if !touchingStaticImg(t, d, u) {
+		return false
+	}
+	lastDroppedCard := d.GetCardHere()
+	if lastDroppedCard != nil {
+		reposition.ResetCardPosition(lastDroppedCard, u.Eng)
+		reposition.RealignSuit(lastDroppedCard.GetSuit(), lastDroppedCard.GetInitial().Y, u)
+	}
+	oldY := c.GetInitial().Y
+	suit := c.GetSuit()
+	u.CurCard.Move(d.GetCurrent(), c.GetDimensions(), u.Eng)
+	d.SetCardHere(u.CurCard)
+	// realign suit the card just left
+	reposition.RealignSuit(suit, oldY, u)
+	return true
 }
 
 func removeCardFromTarget(c *card.Card, u *uistate.UIState) bool {
@@ -494,4 +542,24 @@ func touchingStaticImg(t touch.Event, s *staticimg.StaticImg, u *uistate.UIState
 	withinXBounds := t.X/u.PixelsPerPt >= s.GetCurrent().X && t.X/u.PixelsPerPt <= s.GetDimensions().X+s.GetCurrent().X
 	withinYBounds := t.Y/u.PixelsPerPt >= s.GetCurrent().Y && t.Y/u.PixelsPerPt <= s.GetDimensions().Y+s.GetCurrent().Y
 	return withinXBounds && withinYBounds
+}
+
+func updateViewFromTable(b *staticimg.StaticImg, u *uistate.UIState) {
+	if u.Buttons[0] == b {
+		u.CurPlayerIndex = 0
+		view.LoadPassOrTakeOrPlay(u)
+	} else if u.Buttons[1] == b {
+		u.CurPlayerIndex = 1
+		view.LoadPassOrTakeOrPlay(u)
+	} else if u.Buttons[2] == b {
+		u.CurPlayerIndex = 2
+		view.LoadPassOrTakeOrPlay(u)
+	} else if u.Buttons[3] == b {
+		u.CurPlayerIndex = 3
+		view.LoadPassOrTakeOrPlay(u)
+	} else if u.Buttons[4] == b {
+		view.LoadTableView(u)
+	} else if u.Buttons[5] == b {
+		view.LoadPassOrTakeOrPlay(u)
+	}
 }

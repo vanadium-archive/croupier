@@ -10,6 +10,7 @@ import (
 	"hearts/img/coords"
 	"hearts/img/direction"
 	"hearts/img/staticimg"
+	"hearts/img/texture"
 	"hearts/img/uistate"
 	"hearts/logic/card"
 	"hearts/logic/player"
@@ -62,6 +63,19 @@ func SetTableDropColors(u *uistate.UIState) {
 	blueTargetIndex := u.CurTable.WhoseTurn()
 	for i, d := range u.DropTargets {
 		if i == blueTargetIndex {
+			u.Eng.SetSubTex(d.GetNode(), d.GetAlt())
+			d.SetDisplayingImage(false)
+		} else {
+			u.Eng.SetSubTex(d.GetNode(), d.GetImage())
+			d.SetDisplayingImage(true)
+		}
+	}
+}
+
+func SetSplitDropColors(u *uistate.UIState) {
+	blueTargetIndex := u.CurTable.WhoseTurn()
+	for i, d := range u.DropTargets {
+		if (u.CurPlayerIndex+i)%u.NumPlayers == blueTargetIndex {
 			u.Eng.SetSubTex(d.GetNode(), d.GetAlt())
 			d.SetDisplayingImage(false)
 		} else {
@@ -208,7 +222,7 @@ func AnimateInTake(u *uistate.UIState) {
 
 // Animation for the 'play' action, when app is in the hand view
 func AnimateHandCardPlay(ch chan bool, animCard *card.Card, u *uistate.UIState) {
-	imgs := []*staticimg.StaticImg{u.Other[0], u.DropTargets[0]}
+	imgs := []*staticimg.StaticImg{u.BackgroundImgs[0], u.DropTargets[0]}
 	for _, i := range imgs {
 		dims := i.GetDimensions()
 		to := coords.MakeVec(i.GetCurrent().X, i.GetCurrent().Y-u.WindowSize.Y)
@@ -220,11 +234,101 @@ func AnimateHandCardPlay(ch chan bool, animCard *card.Card, u *uistate.UIState) 
 
 // Animation to bring in the play slot when app is in the hand view and it is the player's turn
 func AnimateInPlay(u *uistate.UIState) {
-	imgs := []*staticimg.StaticImg{u.Other[0], u.DropTargets[0]}
+	imgs := []*staticimg.StaticImg{u.BackgroundImgs[0], u.DropTargets[0]}
 	for _, i := range imgs {
 		dims := i.GetDimensions()
 		to := coords.MakeVec(i.GetCurrent().X, i.GetCurrent().Y+u.WindowSize.Y/3+u.TopPadding)
 		AnimateImageNoChannel(i, to, dims, u)
+	}
+}
+
+// Animate playing of a card in the split view
+// Should not be called when the player whose hand is being displayed is the player of the card
+func AnimateSplitCardPlay(c *card.Card, player int, u *uistate.UIState) {
+	dropTarget := u.DropTargets[(u.CurPlayerIndex+player)%u.NumPlayers]
+	toPos := dropTarget.GetCurrent()
+	toDim := dropTarget.GetDimensions()
+	texture.PopulateCardImage(c, u.Texs, u.Eng, u.Scene)
+	switch player {
+	case (u.CurPlayerIndex + 1) % u.NumPlayers:
+		c.Move(coords.MakeVec(-toDim.X, 0), toDim, u.Eng)
+	case (u.CurPlayerIndex + 2) % u.NumPlayers:
+		c.Move(coords.MakeVec((u.WindowSize.X-toDim.X)/2, -toDim.Y), toDim, u.Eng)
+	case (u.CurPlayerIndex + 3) % u.NumPlayers:
+		c.Move(coords.MakeVec(u.WindowSize.X, 0), toDim, u.Eng)
+	}
+	ch := make(chan bool)
+	animateCardMovement(ch, c, toPos, toDim, u)
+	<-ch
+}
+
+func AnimateInSplit(u *uistate.UIState) {
+	topOfBanner := u.WindowSize.Y - 4*u.CardDim.Y - 5*u.Padding - u.BottomPadding - 40
+	tableImgs := make([]*staticimg.StaticImg, 0)
+	bannerImgs := make([]*staticimg.StaticImg, 0)
+	cards := make([]*card.Card, 0)
+	bannerImgs = append(bannerImgs, u.Other...)
+	bannerImgs = append(bannerImgs, u.Buttons[0])
+	tableImgs = append(tableImgs, u.DropTargets...)
+	tableImgs = append(tableImgs, u.BackgroundImgs[:u.NumPlayers]...)
+	cards = append(cards, u.TableCards...)
+	for _, card := range cards {
+		from := card.GetCurrent()
+		to := coords.MakeVec(from.X, from.Y+topOfBanner)
+		animateCardNoChannel(card, to, card.GetDimensions(), u)
+	}
+	for _, img := range tableImgs {
+		from := img.GetCurrent()
+		to := coords.MakeVec(from.X, from.Y+topOfBanner)
+		AnimateImageNoChannel(img, to, img.GetDimensions(), u)
+	}
+	for i, img := range bannerImgs {
+		from := img.GetCurrent()
+		to := coords.MakeVec(from.X, from.Y+topOfBanner-10)
+		if i == 0 {
+			oldDim := img.GetDimensions()
+			newDim := coords.MakeVec(oldDim.X, oldDim.Y-10)
+			newTo := coords.MakeVec(to.X, to.Y+10)
+			AnimateImageNoChannel(img, newTo, newDim, u)
+		} else {
+			AnimateImageNoChannel(img, to, img.GetDimensions(), u)
+		}
+	}
+}
+
+func AnimateOutSplit(ch chan bool, u *uistate.UIState) {
+	topOfBanner := u.WindowSize.Y - 4*u.CardDim.Y - 5*u.Padding - u.BottomPadding - 40
+	tableImgs := make([]*staticimg.StaticImg, 0)
+	bannerImgs := make([]*staticimg.StaticImg, 0)
+	cards := make([]*card.Card, 0)
+	bannerImgs = append(bannerImgs, u.Other...)
+	bannerImgs = append(bannerImgs, u.Buttons[0])
+	tableImgs = append(tableImgs, u.DropTargets...)
+	tableImgs = append(tableImgs, u.BackgroundImgs[:u.NumPlayers]...)
+	cards = append(cards, u.TableCards...)
+	for _, card := range cards {
+		from := card.GetCurrent()
+		to := coords.MakeVec(from.X, from.Y-topOfBanner)
+		animateCardNoChannel(card, to, card.GetDimensions(), u)
+	}
+	for _, img := range tableImgs {
+		from := img.GetCurrent()
+		to := coords.MakeVec(from.X, from.Y-topOfBanner)
+		AnimateImageNoChannel(img, to, img.GetDimensions(), u)
+	}
+	for i, img := range bannerImgs {
+		from := img.GetCurrent()
+		to := coords.MakeVec(from.X, from.Y-topOfBanner+10)
+		if i == 0 && i < len(bannerImgs)-1 {
+			oldDim := img.GetDimensions()
+			newDim := coords.MakeVec(oldDim.X, oldDim.Y+10)
+			newTo := coords.MakeVec(to.X, to.Y-10)
+			AnimateImageNoChannel(img, newTo, newDim, u)
+		} else if i < len(bannerImgs)-1 {
+			AnimateImageNoChannel(img, to, img.GetDimensions(), u)
+		} else {
+			animateImageMovement(ch, img, to, img.GetDimensions(), u)
+		}
 	}
 }
 
