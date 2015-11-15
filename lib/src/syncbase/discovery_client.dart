@@ -4,8 +4,8 @@
 
 import 'dart:async';
 
-import 'package:discovery/discovery.dart' as discovery;
-import 'package:flutter/services.dart' show embedder;
+import 'package:v23discovery/discovery.dart' as discovery;
+import 'package:flutter/services.dart' show shell;
 
 class ProxyHandlePair<T> {
   final T proxy;
@@ -53,7 +53,7 @@ class DiscoveryClient {
 
     print('Starting up discovery scanner ${key}. Looking for ${query}');
 
-    embedder.connectToService(discoveryUrl, s);
+    shell.connectToService(discoveryUrl, s);
 
     // Use a ScanHandlerStub (Mojo-encodable interface) to wrap the scan handler.
     discovery.ScanHandlerStub shs = new discovery.ScanHandlerStub.unbound();
@@ -95,7 +95,7 @@ class DiscoveryClient {
     print(
         'Starting up discovery advertiser ${key}. Broadcasting for ${serviceInfo.instanceName}');
 
-    embedder.connectToService(discoveryUrl, a);
+    shell.connectToService(discoveryUrl, a);
 
     return a.ptr
         .advertise(serviceInfo, visibility ?? <String>[])

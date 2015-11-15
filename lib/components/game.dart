@@ -29,8 +29,7 @@ abstract class GameComponent extends StatefulComponent {
   final double width;
   final double height;
 
-  GameComponent(this.game, this.gameEndCallback,
-      {this.width, this.height});
+  GameComponent(this.game, this.gameEndCallback, {this.width, this.height});
 }
 
 abstract class GameComponentState<T extends GameComponent> extends State<T> {
@@ -68,7 +67,6 @@ abstract class GameComponentState<T extends GameComponent> extends State<T> {
   @override
   Widget build(BuildContext context); // still UNIMPLEMENTED
 
-
   void _cardLevelMapProcessAllVisible(List<int> visibleCardCollections) {
     Game game = config.game;
 
@@ -81,7 +79,8 @@ abstract class GameComponentState<T extends GameComponent> extends State<T> {
   }
 
   void _cardLevelMapProcess(logic_card.Card logicCard) {
-    component_card.GlobalCardKey key = new component_card.GlobalCardKey(logicCard, component_card.CardUIType.CARD);
+    component_card.GlobalCardKey key = new component_card.GlobalCardKey(
+        logicCard, component_card.CardUIType.CARD);
     component_card.CardState cardState = key.currentState;
     if (cardState == null) {
       return; // There's nothing we can really do about this card since it hasn't drawn yet.
@@ -112,10 +111,11 @@ abstract class GameComponentState<T extends GameComponent> extends State<T> {
     List<Widget> positionedCards = new List<Widget>();
 
     // Sort the cards by z-index.
-    List<logic_card.Card> orderedKeys = cardLevelMap.keys.toList()..sort((logic_card.Card a, logic_card.Card b) {
-      double diff = cardLevelMap[a].z - cardLevelMap[b].z;
-      return diff.sign.toInt();
-    });
+    List<logic_card.Card> orderedKeys = cardLevelMap.keys.toList()
+      ..sort((logic_card.Card a, logic_card.Card b) {
+        double diff = cardLevelMap[a].z - cardLevelMap[b].z;
+        return diff.sign.toInt();
+      });
 
     orderedKeys.forEach((logic_card.Card c) {
       // Don't show a card if it isn't part of a visible collection.
@@ -126,29 +126,30 @@ abstract class GameComponentState<T extends GameComponent> extends State<T> {
 
       CardAnimationData data = cardLevelMap[c];
       RenderBox box = context.findRenderObject();
-      Point p = data.newPoint;
-      Point trueP = box.globalToLocal(p);
+      Point localOld =
+          data.oldPoint != null ? box.globalToLocal(data.oldPoint) : null;
+      Point localNew = box.globalToLocal(data.newPoint);
 
       positionedCards.add(new Positioned(
-        key: new GlobalObjectKey(c.toString()), //needed, or else the Positioned wrapper may be traded out and animations fail.
-        top: trueP.y, // must pass x and y or else it expands to the maximum Stack size.
-        left: trueP.x, // must pass x and y or else it expands to the maximum Stack size.
-        child: new component_card.ZCard(data.comp_card, data.oldPoint, data.newPoint)));
+          key: new GlobalObjectKey(c
+              .toString()), //needed, or else the Positioned wrapper may be traded out and animations fail.
+          top:
+              0.0, // must pass x and y or else it expands to the maximum Stack size.
+          left:
+              0.0, // must pass x and y or else it expands to the maximum Stack size.
+          child: new component_card.ZCard(data.comp_card, localOld, localNew)));
     });
 
     return new IgnorePointer(
-      ignoring: true,
-      child: new Container(
-        width: config.width,
-        height: config.height,
-        child: new Stack(positionedCards)
-      )
-    );
+        ignoring: true,
+        child: new Container(
+            width: config.width,
+            height: config.height,
+            child: new Stack(positionedCards)));
   }
 }
 
-GameComponent createGameComponent(
-    Game game, NoArgCb gameEndCallback,
+GameComponent createGameComponent(Game game, NoArgCb gameEndCallback,
     {double width, double height}) {
   switch (game.gameType) {
     case GameType.Proto:

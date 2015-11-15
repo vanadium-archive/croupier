@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-import 'game/game.dart' show Game, GameType, GameStartData, stringToGameType, gameTypeToString;
+import 'game/game.dart'
+    show Game, GameType, GameStartData, stringToGameType, gameTypeToString;
 import 'create_game.dart' as cg;
 import 'croupier_settings.dart' show CroupierSettings;
 import '../src/syncbase/settings_manager.dart' show SettingsManager;
@@ -34,7 +35,8 @@ class Croupier {
     settings_everyone = new Map<int, CroupierSettings>();
     games_found = new Map<String, GameStartData>();
     players_found = new Map<int, int>();
-    settings_manager = new SettingsManager(_updateSettingsEveryoneCb, _updateGamesFoundCb, _updatePlayerFoundCb);
+    settings_manager = new SettingsManager(
+        _updateSettingsEveryoneCb, _updateGamesFoundCb, _updatePlayerFoundCb);
 
     settings_manager.load().then((String csString) {
       settings = new CroupierSettings.fromJSONString(csString);
@@ -45,7 +47,8 @@ class Croupier {
   // Updates the settings_everyone map as people join the main Croupier syncgroup
   // and change their settings.
   void _updateSettingsEveryoneCb(String key, String json) {
-    settings_everyone[int.parse(key)] = new CroupierSettings.fromJSONString(json);
+    settings_everyone[int.parse(key)] =
+        new CroupierSettings.fromJSONString(json);
     if (this.informUICb != null) {
       this.informUICb();
     }
@@ -111,9 +114,12 @@ class Croupier {
         GameType gt = data as GameType;
         game = cg.createGame(gt, 0); // Start as player 0 of whatever game type.
 
-        settings_manager.createGameSyncgroup(gameTypeToString(gt), game.gameID).then((GameStartData gsd) {
+        settings_manager
+            .createGameSyncgroup(gameTypeToString(gt), game.gameID)
+            .then((GameStartData gsd) {
           // Only the game chooser should be advertising the game.
-          settings_manager.advertiseSettings(gsd); // don't wait for this future.
+          settings_manager
+              .advertiseSettings(gsd); // don't wait for this future.
         });
 
         break;
@@ -128,7 +134,8 @@ class Croupier {
 
         // data would probably be the game id again.
         GameStartData gsd = data as GameStartData;
-        game = cg.createGame(stringToGameType(gsd.type), gsd.playerNumber, gameID: gsd.gameID); // Start as player 0 of whatever game type.
+        game = cg.createGame(stringToGameType(gsd.type), gsd.playerNumber,
+            gameID: gsd.gameID); // Start as player 0 of whatever game type.
         String sgName;
         games_found.forEach((String name, GameStartData g) {
           if (g == gsd) {

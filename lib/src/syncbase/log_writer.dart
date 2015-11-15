@@ -49,7 +49,8 @@ class LogWriter {
   // Once a consensus has been reached, this is set to false again.
   bool inProposalMode = false;
   Map<String, String> proposalsKnown; // Only updated via watch.
-  Set<String> _acceptedProposals = new Set<String>(); // Add accepted proposals so that we can ignore them.
+  Set<String> _acceptedProposals =
+      new Set<String>(); // Add accepted proposals so that we can ignore them.
 
   // The associated user helps in the production of unique keys.
   int _associatedUser;
@@ -66,8 +67,7 @@ class LogWriter {
 
   // The LogWriter takes a callback for watch updates, the list of users, and
   // the logPrefix to write at on table.
-  LogWriter(this.updateCallback, this.users)
-      : _cc = new CroupierClient() {
+  LogWriter(this.updateCallback, this.users) : _cc = new CroupierClient() {
     _prepareLog();
   }
 
@@ -196,9 +196,11 @@ class LogWriter {
   bool _ownsProposal(String key, String proposalData) {
     return _proposalSayer(key) == _proposalOwner(proposalData);
   }
+
   int _proposalSayer(String key) {
     return int.parse(key.split("/").last);
   }
+
   int _proposalOwner(String proposalData) {
     Map<String, String> pp = JSON.decode(proposalData);
     String keyP = pp["key"];

@@ -33,8 +33,7 @@ class CroupierSettingsComponent extends StatefulComponent {
   final SaveDataCb saveDataCb;
   final NoArgCb backCb;
 
-  CroupierSettingsComponent(
-      this.settings, this.saveDataCb, this.backCb);
+  CroupierSettingsComponent(this.settings, this.saveDataCb, this.backCb);
 
   CroupierSettingsComponentState createState() =>
       new CroupierSettingsComponentState();
@@ -58,13 +57,11 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
   Widget _makeColoredRectangle(int colorInfo, String text, NoArgCb cb) {
     return new Container(
         decoration: new BoxDecoration(backgroundColor: new Color(colorInfo)),
-        child: new FlatButton(
-            child: new Text(""), onPressed: cb));
+        child: new FlatButton(child: new Text(""), onPressed: cb));
   }
 
   Widget _makeImageButton(String url, NoArgCb cb) {
-    return new FlatButton(
-        child: new NetworkImage(src: url), onPressed: cb);
+    return new FlatButton(child: new NetworkImage(src: url), onPressed: cb);
   }
 
   Widget build(BuildContext context) {
@@ -106,16 +103,15 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
                 placeholder: capType,
                 initialValue: config.settings.getStringValue(type),
                 keyboardType: KeyboardType.TEXT,
-                onChanged: _makeHandleChanged(type)), onDismiss: () {
-          navigator.pop();
-        }, actions: [
-          new FlatButton(child: new Text('CANCEL'), onPressed: () {
-            navigator.pop();
-          }),
-          new FlatButton(child: new Text('SAVE'), onPressed: () {
-            navigator.pop(_tempData[type]);
-          }),
-        ]);
+                onChanged: _makeHandleChanged(type)),
+            actions: [
+              new FlatButton(child: new Text('CANCEL'), onPressed: () {
+                navigator.pop();
+              }),
+              new FlatButton(child: new Text('SAVE'), onPressed: () {
+                navigator.pop(_tempData[type]);
+              }),
+            ]);
         break;
       case DialogType.ColorPicker:
         List<Widget> flexColors = new List<Widget>();
@@ -140,13 +136,12 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
 
         dialog = new Dialog(
             title: new Text(capType),
-            content: new Grid(flexColors, maxChildExtent: 75.0), onDismiss: () {
-          navigator.pop();
-        }, actions: [
-          new FlatButton(child: new Text('CANCEL'), onPressed: () {
-            navigator.pop();
-          })
-        ]);
+            content: new Grid(flexColors, maxChildExtent: 75.0),
+            actions: [
+              new FlatButton(child: new Text('CANCEL'), onPressed: () {
+                navigator.pop();
+              })
+            ]);
         break;
       case DialogType.ImagePicker:
         List<Widget> flexAvatars = new List<Widget>();
@@ -160,13 +155,11 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
         dialog = new Dialog(
             title: new Text(capType),
             content: new Grid(flexAvatars, maxChildExtent: 75.0),
-            onDismiss: () {
-          navigator.pop();
-        }, actions: [
-          new FlatButton(child: new Text('CANCEL'), onPressed: () {
-            navigator.pop();
-          })
-        ]);
+            actions: [
+              new FlatButton(child: new Text('CANCEL'), onPressed: () {
+                navigator.pop();
+              })
+            ]);
         break;
       default:
         assert(false);

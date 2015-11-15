@@ -11,19 +11,15 @@ import 'package:flutter/material.dart' as widgets;
 import 'package:flutter/rendering.dart';
 import 'package:vector_math/vector_math_64.dart' as vector_math;
 
-enum CardAnimationType {
-  NONE, OLD_TO_NEW, IN_TOP
-}
+enum CardAnimationType { NONE, OLD_TO_NEW, IN_TOP }
 
-enum CardUIType {
-  CARD, ZCARD
-}
+enum CardUIType { CARD, ZCARD }
 
 class GlobalCardKey extends widgets.GlobalKey {
   logic_card.Card card;
   CardUIType type;
 
-  GlobalCardKey(this.card, this.type): super.constructor();
+  GlobalCardKey(this.card, this.type) : super.constructor();
 
   bool operator ==(Object other) {
     if (other is! GlobalCardKey) {
@@ -47,18 +43,19 @@ class ZCard extends widgets.StatefulComponent {
   final bool animateEntrance;
   final double z;
 
+  // These points are in local coordinates.
   final Point startingPosition;
   final Point endingPosition;
 
-  ZCard(Card dataComponent, this.startingPosition, this.endingPosition) :
-    super(key: new GlobalCardKey(dataComponent.card, CardUIType.ZCARD)),
-    card = dataComponent.card,
-    faceUp = dataComponent.faceUp,
-    width = dataComponent.width ?? 40.0,
-    height = dataComponent.height ?? 40.0,
-    rotation = dataComponent.rotation,
-    animateEntrance = dataComponent.animateEntrance,
-    z = dataComponent.z;
+  ZCard(Card dataComponent, this.startingPosition, this.endingPosition)
+      : super(key: new GlobalCardKey(dataComponent.card, CardUIType.ZCARD)),
+        card = dataComponent.card,
+        faceUp = dataComponent.faceUp,
+        width = dataComponent.width ?? 40.0,
+        height = dataComponent.height ?? 40.0,
+        rotation = dataComponent.rotation,
+        animateEntrance = dataComponent.animateEntrance,
+        z = dataComponent.z;
 
   _ZCardState createState() => new _ZCardState();
 }
@@ -75,7 +72,13 @@ class Card extends widgets.StatefulComponent {
   final double z;
 
   Card(logic_card.Card card, this.faceUp,
-      {double width, double height, this.rotation: 0.0, bool useKey: false, this.visible: true, this.animateEntrance: true, this.z})
+      {double width,
+      double height,
+      this.rotation: 0.0,
+      bool useKey: false,
+      this.visible: true,
+      this.animateEntrance: true,
+      this.z})
       : card = card,
         width = width ?? 40.0,
         height = height ?? 40.0,
@@ -86,9 +89,13 @@ class Card extends widgets.StatefulComponent {
   // Used by the drag and drop layer.
   Card clone({bool visible}) {
     return new Card(this.card, this.faceUp,
-      width: width, height: height, rotation: rotation,
-      useKey: false, visible: visible ?? this.visible, animateEntrance: false,
-      z: z);
+        width: width,
+        height: height,
+        rotation: rotation,
+        useKey: false,
+        visible: visible ?? this.visible,
+        animateEntrance: false,
+        z: z);
   }
 
   CardState createState() => new CardState();
@@ -103,19 +110,16 @@ class CardState extends widgets.State<Card> {
   }
 
   widgets.Widget build(widgets.BuildContext context) {
-    widgets.Widget image = null;
-    if (config.visible) {
-      image = new widgets.Transform(
-                child: _imageFromCard(config.card, config.faceUp),
-                transform: new vector_math.Matrix4.identity()
-                    .rotateZ(config.rotation),
-                alignment: new FractionalOffset(0.5, 0.5));
-    }
+    widgets.Widget image = new widgets.Opacity(
+        opacity: config.visible ? 1.0 : 0.0,
+        child: new widgets.Transform(
+            child: _imageFromCard(config.card, config.faceUp),
+            transform:
+                new vector_math.Matrix4.identity().rotateZ(config.rotation),
+            alignment: new FractionalOffset(0.5, 0.5)));
 
     return new widgets.Container(
-            width: config.width,
-            height: config.height,
-            child: image);
+        width: config.width, height: config.height, child: image);
   }
 }
 
@@ -128,7 +132,8 @@ widgets.Widget _imageFromCard(logic_card.Card c, bool faceUp) {
 
 class _ZCardState extends widgets.State<ZCard> {
   ValuePerformance<Point> _performance;
-  List<Point> _pointQueue; // at least 1 longer than the current animation index.
+  List<
+      Point> _pointQueue; // at least 1 longer than the current animation index.
   int _animationIndex;
   bool _cardUpdateScheduled = false;
 
@@ -147,9 +152,8 @@ class _ZCardState extends widgets.State<ZCard> {
     }
     _pointQueue.add(config.endingPosition);
     _performance = new ValuePerformance<Point>(
-      variable: new AnimatedValue<Point>(Point.origin, curve: Curves.ease),
-      duration: const Duration(milliseconds: 250)
-    );
+        variable: new AnimatedValue<Point>(Point.origin, curve: Curves.ease),
+        duration: const Duration(milliseconds: 250));
     _performance.addStatusListener((PerformanceStatus status) {
       if (status == PerformanceStatus.completed) {
         _animationIndex++;
@@ -185,10 +189,10 @@ class _ZCardState extends widgets.State<ZCard> {
 
   // A callback that sets up the animation from point a to point b.
   void _updatePosition() {
-    _cardUpdateScheduled = false; // allow the next attempt to schedule _updatePosition to succeed.
+    _cardUpdateScheduled =
+        false; // allow the next attempt to schedule _updatePosition to succeed.
     if (!config.animateEntrance || _pointQueue.length == 1) {
-      RenderBox box = context.findRenderObject();
-      Point endingLocation = box.globalToLocal(config.endingPosition);
+      Point endingLocation = config.endingPosition;
       _performance.variable
         ..begin = endingLocation
         ..value = endingLocation
@@ -207,11 +211,8 @@ class _ZCardState extends widgets.State<ZCard> {
   void _tryAnimate() {
     // Let animations finish... (Is this a good idea?)
     if (!_performance.isAnimating && _needsAnimation()) {
-      RenderBox box = context.findRenderObject();
-      Point globalStart = _pointQueue[_animationIndex];
-      Point globalEnd = _pointQueue[_animationIndex + 1];
-      Point startingLocation = box.globalToLocal(globalStart);
-      Point endingLocation = box.globalToLocal(globalEnd);
+      Point startingLocation = _pointQueue[_animationIndex];
+      Point endingLocation = _pointQueue[_animationIndex + 1];
       _performance.variable
         ..begin = startingLocation
         ..value = startingLocation
@@ -223,28 +224,20 @@ class _ZCardState extends widgets.State<ZCard> {
 
   widgets.Widget build(widgets.BuildContext context) {
     widgets.Widget image = new widgets.Transform(
-      child: _imageFromCard(config.card, config.faceUp),
-      transform: new vector_math.Matrix4.identity()
-          .rotateZ(config.rotation),
-      alignment: new FractionalOffset(0.5, 0.5));
+        child: _imageFromCard(config.card, config.faceUp),
+        transform: new vector_math.Matrix4.identity().rotateZ(config.rotation),
+        alignment: new FractionalOffset(0.5, 0.5));
 
-    // Set up the drag listener.
-    widgets.Widget listeningCard = new widgets.Listener(
-        child: new widgets.Container(
-            width: config.width,
-            height: config.height,
-            child: image));
+    // Size the card appropriately.
+    widgets.Widget containedCard = new widgets.Container(
+        width: config.width, height: config.height, child: image);
 
     // Set up the slide transition.
     // During animation, we must ignore all events.
-    widgets.Widget retWidget = new widgets.IgnorePointer(
-      ignoring: _performance.isAnimating,
-      child: new widgets.SlideTransition(
+    widgets.Widget retWidget = new widgets.SlideTransition(
         performance: _performance.view,
         position: _performance.variable,
-        child: listeningCard
-      )
-    );
+        child: containedCard);
 
     return retWidget;
   }

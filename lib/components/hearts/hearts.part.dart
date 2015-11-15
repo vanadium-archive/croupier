@@ -5,8 +5,7 @@
 part of game_component;
 
 class HeartsGameComponent extends GameComponent {
-  HeartsGameComponent(Game game, NoArgCb cb,
-      {double width, double height})
+  HeartsGameComponent(Game game, NoArgCb cb, {double width, double height})
       : super(game, cb, width: width, height: height);
 
   HeartsGameComponentState createState() => new HeartsGameComponentState();
@@ -43,28 +42,27 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
 
     // Hearts Widget
     Widget heartsWidget = new Container(
-        decoration:
-            new BoxDecoration(backgroundColor: Colors.grey[300]),
+        decoration: new BoxDecoration(backgroundColor: Colors.grey[300]),
         child: buildHearts());
 
     List<Widget> children = new List<Widget>();
     children.add(new Container(
-          decoration:
-              new BoxDecoration(backgroundColor: Colors.grey[300]),
-          width: config.width,
-          height: config.height,
-          child: heartsWidget));
+        decoration: new BoxDecoration(backgroundColor: Colors.grey[300]),
+        width: config.width,
+        height: config.height,
+        child: heartsWidget));
     if (game.phase != HeartsPhase.Deal && game.phase != HeartsPhase.Score) {
       List<int> visibleCardCollections = new List<int>();
       int playerNum = game.playerNumber;
       if (game.viewType == HeartsType.Player) {
-        switch(game.phase) {
+        switch (game.phase) {
           case HeartsPhase.Pass:
             visibleCardCollections.add(HeartsGame.OFFSET_PASS + playerNum);
             visibleCardCollections.add(HeartsGame.OFFSET_HAND + playerNum);
             break;
           case HeartsPhase.Take:
-            visibleCardCollections.add(HeartsGame.OFFSET_PASS + game.takeTarget);
+            visibleCardCollections
+                .add(HeartsGame.OFFSET_PASS + game.takeTarget);
             visibleCardCollections.add(HeartsGame.OFFSET_HAND + playerNum);
             break;
           case HeartsPhase.Play:
@@ -86,10 +84,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     }
 
     return new Container(
-      width: config.width,
-      height: config.height,
-      child: new Stack(children)
-    );
+        width: config.width, height: config.height, child: new Stack(children));
   }
 
   void _switchViewCallback() {
@@ -226,8 +221,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
 
   @override
   Widget _makeButton(String text, NoArgCb callback, {bool inactive: false}) {
-    var borderColor =
-        inactive ? Colors.grey[500] : Colors.white;
+    var borderColor = inactive ? Colors.grey[500] : Colors.white;
     var backgroundColor = inactive ? Colors.grey[500] : null;
     return new FlatButton(
         child: new Container(
@@ -316,8 +310,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
           width: config.width));
     }
     cardCollections.add(new Container(
-        decoration:
-            new BoxDecoration(backgroundColor: Colors.teal[600]),
+        decoration: new BoxDecoration(backgroundColor: Colors.teal[600]),
         width: config.width,
         child:
             new Flex(plays, justifyContent: FlexJustifyContent.spaceAround)));
@@ -325,8 +318,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     int p = game.playerNumber;
 
     Widget playArea = new Container(
-        decoration:
-            new BoxDecoration(backgroundColor: Colors.teal[500]),
+        decoration: new BoxDecoration(backgroundColor: Colors.teal[500]),
         width: config.width,
         child: new Center(
             child: new CardCollectionComponent(
@@ -337,9 +329,8 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
                 acceptCallback: _makeGameMoveCallback,
                 acceptType: p == game.whoseTurn ? DropType.card : DropType.none,
                 width: config.width,
-                backgroundColor: p == game.whoseTurn
-                    ? Colors.white
-                    : Colors.grey[500],
+                backgroundColor:
+                    p == game.whoseTurn ? Colors.white : Colors.grey[500],
                 altColor: p == game.whoseTurn
                     ? Colors.grey[200]
                     : Colors.grey[600])));
@@ -375,8 +366,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     }
 
     return new Container(
-        decoration:
-            new BoxDecoration(backgroundColor: Colors.pink[500]),
+        decoration: new BoxDecoration(backgroundColor: Colors.pink[500]),
         child: new Flex([
           new Text('Player ${game.playerNumber}'),
           // TODO(alexfandrianto): we want to show round by round, deltas too, don't we?
@@ -391,8 +381,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     HeartsGame game = config.game as HeartsGame;
 
     return new Container(
-        decoration:
-            new BoxDecoration(backgroundColor: Colors.pink[500]),
+        decoration: new BoxDecoration(backgroundColor: Colors.pink[500]),
         child: new Flex([
           new Text('Player ${game.playerNumber}'),
           _makeButton('Deal', game.dealCards),
@@ -421,8 +410,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     topCardWidgets.add(_topCardWidget(c3, cb));
     topCardWidgets.add(_makeButton(name, buttoncb, inactive: completed));
 
-    Color bgColor =
-        completed ? Colors.teal[600] : Colors.teal[500];
+    Color bgColor = completed ? Colors.teal[600] : Colors.teal[500];
 
     Widget topArea = new Container(
         decoration: new BoxDecoration(backgroundColor: bgColor),

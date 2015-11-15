@@ -49,8 +49,7 @@ class CardCollectionComponent extends StatefulComponent {
   Color get backgroundColor => _backgroundColor ?? Colors.grey[500];
   Color get altColor => _altColor ?? Colors.grey[500];
 
-  CardCollectionComponent(
-      this.cards, this.faceUp, this.orientation,
+  CardCollectionComponent(this.cards, this.faceUp, this.orientation,
       {this.dragChildren: false,
       DropType acceptType,
       this.acceptCallback: null,
@@ -137,7 +136,10 @@ class CardCollectionComponentState extends State<CardCollectionComponent> {
     }
   }
 
-  List<Widget> _makeDraggableAndPositioned(List<component_card.Card> cardWidgets, PosComputer topComputer, PosComputer leftComputer) {
+  List<Widget> _makeDraggableAndPositioned(
+      List<component_card.Card> cardWidgets,
+      PosComputer topComputer,
+      PosComputer leftComputer) {
     List<Widget> ret = new List<Widget>();
     for (int i = 0; i < cardWidgets.length; i++) {
       Point p = new Point(leftComputer(i), topComputer(i));
@@ -146,15 +148,11 @@ class CardCollectionComponentState extends State<CardCollectionComponent> {
       Widget widgetToAdd = w;
       if (config.dragChildren) {
         widgetToAdd = new Draggable(
-          child: w,
-          data: w,
-          feedback: new Opacity(child: w.clone(visible: true), opacity: 0.5));
+            child: w,
+            data: w,
+            feedback: new Opacity(child: w.clone(visible: true), opacity: 0.5));
       }
-      widgetToAdd = new Positioned(
-        left: p.x,
-        top: p.y,
-        child: widgetToAdd
-      );
+      widgetToAdd = new Positioned(left: p.x, top: p.y, child: widgetToAdd);
 
       ret.add(widgetToAdd);
     }
@@ -170,7 +168,8 @@ class CardCollectionComponentState extends State<CardCollectionComponent> {
     PosComputer topComputer = (int i) => CARD_MARGIN + spacing * i;
     PosComputer leftComputer = (int i) => CARD_MARGIN;
 
-    List<Widget> draggableKids = _makeDraggableAndPositioned(cardWidgets, topComputer, leftComputer);
+    List<Widget> draggableKids =
+        _makeDraggableAndPositioned(cardWidgets, topComputer, leftComputer);
     return new Container(
         decoration: new BoxDecoration(backgroundColor: config.backgroundColor),
         height: config.height,
@@ -179,7 +178,8 @@ class CardCollectionComponentState extends State<CardCollectionComponent> {
   }
 
   double get _produceRowHeight => config.heightCard + CARD_MARGIN * 2;
-  Widget _produceRow(List<component_card.Card> cardWidgets, {emptyBackgroundImage: ""}) {
+  Widget _produceRow(List<component_card.Card> cardWidgets,
+      {emptyBackgroundImage: ""}) {
     if (cardWidgets.length == 0) {
       // Just return a centered background image.
       return new Container(
@@ -204,7 +204,8 @@ class CardCollectionComponentState extends State<CardCollectionComponent> {
     PosComputer topComputer = (int i) => CARD_MARGIN;
     PosComputer leftComputer = (int i) => CARD_MARGIN + spacing * i;
 
-    List<Widget> draggableKids = _makeDraggableAndPositioned(cardWidgets, topComputer, leftComputer);
+    List<Widget> draggableKids =
+        _makeDraggableAndPositioned(cardWidgets, topComputer, leftComputer);
     return new Container(
         decoration: new BoxDecoration(backgroundColor: config.backgroundColor),
         height: _produceRowHeight,
@@ -216,7 +217,8 @@ class CardCollectionComponentState extends State<CardCollectionComponent> {
     PosComputer topComputer = (int i) => CARD_MARGIN;
     PosComputer leftComputer = (int i) => CARD_MARGIN;
 
-    List<Widget> draggableKids = _makeDraggableAndPositioned(cardWidgets, topComputer, leftComputer);
+    List<Widget> draggableKids =
+        _makeDraggableAndPositioned(cardWidgets, topComputer, leftComputer);
     return new Container(
         decoration: new BoxDecoration(backgroundColor: config.backgroundColor),
         height: _produceRowHeight,
@@ -266,8 +268,7 @@ class CardCollectionComponentState extends State<CardCollectionComponent> {
           }
         }
         return new Container(
-            decoration:
-                new BoxDecoration(backgroundColor: Colors.white),
+            decoration: new BoxDecoration(backgroundColor: Colors.white),
             child: new Stack(<Widget>[
               new Positioned(
                   top: 0.0,
@@ -306,7 +307,8 @@ class CardCollectionComponentState extends State<CardCollectionComponent> {
           width: config.widthCard,
           height: config.heightCard,
           rotation: config.rotation,
-          visible: !config.useKeys, // TODO(alexfandrianto): Is there a case where you want an invisible card and a key?
+          visible:
+              !config.useKeys, // TODO(alexfandrianto): Is there a case where you want an invisible card and a key?
           useKey: config.useKeys,
           z: 0.0 + i);
 

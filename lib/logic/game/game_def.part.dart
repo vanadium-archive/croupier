@@ -47,8 +47,12 @@ class GameStartData {
   }
 
   String toJSONString() {
-    return JSON.encode(
-        {"type": type, "playerNumber": playerNumber, "gameID": gameID, "ownerID": ownerID});
+    return JSON.encode({
+      "type": type,
+      "playerNumber": playerNumber,
+      "gameID": gameID,
+      "ownerID": ownerID
+    });
   }
 
   GameType get gameType => stringToGameType(type);
@@ -58,7 +62,10 @@ class GameStartData {
       return false;
     }
     GameStartData gsd = other;
-    return gsd.type == type && gsd.playerNumber == playerNumber && gsd.gameID == gameID && gsd.ownerID == ownerID;
+    return gsd.type == type &&
+        gsd.playerNumber == playerNumber &&
+        gsd.gameID == gameID &&
+        gsd.ownerID == ownerID;
   }
 }
 
@@ -89,9 +96,9 @@ abstract class Game {
 
   // A super constructor, don't call this unless you're a subclass.
   Game.create(
-      this.gameType, this.gamelog, this._playerNumber, int numCollections, {
-        int gameID
-      }) : gameID = gameID ?? new math.Random().nextInt(0x00FFFFFF) {
+      this.gameType, this.gamelog, this._playerNumber, int numCollections,
+      {int gameID})
+      : gameID = gameID ?? new math.Random().nextInt(0x00FFFFFF) {
     print("The gameID is ${gameID}");
     gamelog.setGame(this);
     for (int i = 0; i < numCollections; i++) {

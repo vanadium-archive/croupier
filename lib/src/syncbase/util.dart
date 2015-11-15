@@ -29,11 +29,11 @@ void log(String msg) {
   print('$now $msg');
 }
 
-
 // data should contain a JSON-encoded logic_game.GameStartData
 String syncgameSuffix(String data) {
   return "${sgSuffixGame}-${data}";
 }
+
 String syncgamePrefix(int gameID) {
   return "${gameID}";
 }

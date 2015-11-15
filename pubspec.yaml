@@ -1,11 +1,13 @@
 name: croupier
 dependencies:
-  discovery: ">=0.0.0 <0.1.0"
+  v23discovery: ">=0.0.0 <0.1.0"
   syncbase: ">=0.0.0 <0.1.0"
-  flutter: "0.0.14"
-  sky_tools: any
+  flutter:
+    path: ../../../../../flutter/packages/flutter
+  sky_tools:
+    path: ../../../../../flutter/packages/flutter_tools
   test: any
 
 dependency_overrides:
-  discovery:
+  v23discovery:
     path: ../../mojo/discovery

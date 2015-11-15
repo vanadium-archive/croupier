@@ -66,7 +66,8 @@ class HeartsGame extends Game {
   List<bool> ready;
 
   HeartsGame(int playerNumber, {int gameID})
-      : super.create(GameType.Hearts, new HeartsLog(), playerNumber, 16, gameID: gameID) {
+      : super.create(GameType.Hearts, new HeartsLog(), playerNumber, 16,
+            gameID: gameID) {
     resetGame();
   }
 

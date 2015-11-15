@@ -6,18 +6,25 @@ import 'dart:async';
 
 import 'util.dart' as util;
 import '../../logic/game/game.dart' as logic_game;
+import '../../logic/croupier_settings.dart' show CroupierSettings;
 
 class SettingsManager {
   final util.updateCallbackT updateCallback;
   final util.updateCallbackT updateGamesCallback;
   final util.updateCallbackT updatePlayerFoundCallback;
 
-  SettingsManager(this.updateCallback, this.updateGamesCallback, this.updatePlayerFoundCallback);
+  SettingsManager(this.updateCallback, this.updateGamesCallback,
+      this.updatePlayerFoundCallback);
 
   Map<String, String> _data = new Map<String, String>();
 
   Future<String> load([int userID]) {
     if (userID == null) {
+      if (_data["settings"] == null) {
+        CroupierSettings settings = new CroupierSettings.random();
+        String jsonStr = settings.toJSONString();
+        _data["settings"] = jsonStr;
+      }
       return new Future<String>(() => _data["settings"]);
     }
     return new Future<String>(() => _data["${userID}"]);

@@ -5,8 +5,7 @@
 part of game_component;
 
 class SolitaireGameComponent extends GameComponent {
-  SolitaireGameComponent(Game game, NoArgCb cb,
-      {double width, double height})
+  SolitaireGameComponent(Game game, NoArgCb cb, {double width, double height})
       : super(game, cb, width: width, height: height);
 
   SolitaireGameComponentState createState() =>
@@ -15,7 +14,6 @@ class SolitaireGameComponent extends GameComponent {
 
 class SolitaireGameComponentState
     extends GameComponentState<SolitaireGameComponent> {
-
   @override
   Widget build(BuildContext context) {
     SolitaireGame game = config.game as SolitaireGame;
@@ -29,23 +27,20 @@ class SolitaireGameComponentState
 
     List<Widget> children = new List<Widget>();
     children.add(new Container(
-          decoration:
-              new BoxDecoration(backgroundColor: Colors.grey[300]),
-          width: config.width,
-          height: config.height,
-          child: solitaireWidget));
+        decoration: new BoxDecoration(backgroundColor: Colors.grey[300]),
+        width: config.width,
+        height: config.height,
+        child: solitaireWidget));
     if (game.phase == SolitairePhase.Play) {
       // All cards are visible.
-      List<int> visibleCardCollections = game.cardCollections.asMap().keys.toList();
+      List<int> visibleCardCollections =
+          game.cardCollections.asMap().keys.toList();
 
       children.add(this.buildCardAnimationLayer(visibleCardCollections));
     }
 
     return new Container(
-      width: config.width,
-      height: config.height,
-      child: new Stack(children)
-    );
+        width: config.width, height: config.height, child: new Stack(children));
   }
 
   void _cheatCallback() {
@@ -74,8 +69,7 @@ class SolitaireGameComponentState
 
   @override
   Widget _makeButton(String text, NoArgCb callback, {bool inactive: false}) {
-    var borderColor =
-        inactive ? Colors.grey[500] : Colors.white;
+    var borderColor = inactive ? Colors.grey[500] : Colors.white;
     var backgroundColor = inactive ? Colors.grey[500] : null;
     return new FlatButton(
         child: new Container(
@@ -204,8 +198,7 @@ class SolitaireGameComponentState
     SolitaireGame game = config.game as SolitaireGame;
 
     return new Container(
-        decoration:
-            new BoxDecoration(backgroundColor: Colors.pink[500]),
+        decoration: new BoxDecoration(backgroundColor: Colors.pink[500]),
         child: new Flex([
           new Text('Player ${game.playerNumber}'),
           _makeButton("Return to Lobby", _quitGameCallback),
@@ -217,8 +210,7 @@ class SolitaireGameComponentState
     SolitaireGame game = config.game as SolitaireGame;
 
     return new Container(
-        decoration:
-            new BoxDecoration(backgroundColor: Colors.pink[500]),
+        decoration: new BoxDecoration(backgroundColor: Colors.pink[500]),
         child: new Flex([
           new Text('Player ${game.playerNumber}'),
           _makeButton('Deal', game.dealCardsUI),

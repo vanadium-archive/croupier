@@ -43,6 +43,12 @@ ifeq ($(ANDROID), 1)
 	SYNCBASE_FLAGS += --name=$(NAME)
 endif
 
+# If this is not the first mojo shell, then you must reuse the devservers
+# to avoid a "port in use" error.
+ifneq ($(shell fuser 31841/tcp),)
+	REUSE_FLAG := --reuse-servers
+endif
+
 else
 	SYNCBASE_MOJO_BIN_DIR := packages/syncbase/mojo_services/linux_amd64
 	DISCOVERY_MOJO_BIN_DIR := $(DISCOVERY_DIR)/gen/mojo/linux_amd64
@@ -71,8 +77,8 @@ define RUN_SKY_APP
 	--checked \
 	--mojo-debug \
 	-- $(MOJO_SHELL_FLAGS) \
-	--no-config-file \
-	--free-host-ports
+	$(REUSE_FLAG) \
+	--no-config-file
 endef
 
 .DELETE_ON_ERROR:

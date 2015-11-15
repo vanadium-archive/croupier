@@ -113,15 +113,15 @@ class CroupierComponentState extends State<CroupierComponent> {
       case logic_croupier.CroupierState.JoinGame:
         // A stateful view, first showing the players that can be seen creating a game.
         List<Widget> profileWidgets = new List<Widget>();
-        config.croupier.games_found.forEach((String _, logic_game.GameStartData gsd) {
+        config.croupier.games_found
+            .forEach((String _, logic_game.GameStartData gsd) {
           CroupierSettings cs = config.croupier.settings_everyone[gsd.ownerID];
           // cs could be null if this settings data hasn't synced yet.
           if (cs != null) {
             profileWidgets.add(new FlatButton(
-              child: new CroupierProfileComponent(cs),
-              onPressed: makeSetStateCallback(
-                logic_croupier.CroupierState.ArrangePlayers, gsd)
-            ));
+                child: new CroupierProfileComponent(cs),
+                onPressed: makeSetStateCallback(
+                    logic_croupier.CroupierState.ArrangePlayers, gsd)));
           }
         });
         // in which players wait for game invitations to arrive.
@@ -162,11 +162,12 @@ class CroupierComponentState extends State<CroupierComponent> {
       case logic_croupier.CroupierState.PlayGame:
         return new Container(
             padding: new EdgeDims.only(top: ui.window.padding.top),
-            child: component_game.createGameComponent(
-                config.croupier.game, () {
+            child: component_game.createGameComponent(config.croupier.game, () {
               config.croupier.game.quit();
               makeSetStateCallback(logic_croupier.CroupierState.Welcome)();
-            }, width: screenSize.width, height: screenSize.height - ui.window.padding.top));
+            },
+                width: screenSize.width,
+                height: screenSize.height - ui.window.padding.top));
       default:
         assert(false);
         return null;

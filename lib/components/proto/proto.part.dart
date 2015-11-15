@@ -5,8 +5,7 @@
 part of game_component;
 
 class ProtoGameComponent extends GameComponent {
-  ProtoGameComponent(Game game, NoArgCb cb,
-      {double width, double height})
+  ProtoGameComponent(Game game, NoArgCb cb, {double width, double height})
       : super(game, cb, width: width, height: height);
 
   ProtoGameComponentState createState() => new ProtoGameComponentState();
@@ -33,8 +32,8 @@ class ProtoGameComponentState extends GameComponentState<ProtoGameComponent> {
     cardCollections.add(new Container(
         decoration: new BoxDecoration(
             backgroundColor: Colors.green[500], borderRadius: 5.0),
-        child: new CardCollectionComponent(
-            config.game.cardCollections[4], true, CardCollectionOrientation.show1,
+        child: new CardCollectionComponent(config.game.cardCollections[4], true,
+            CardCollectionOrientation.show1,
             dragChildren: true,
             acceptType: DropType.card,
             acceptCallback: _makeGameMoveCallback,
@@ -43,8 +42,7 @@ class ProtoGameComponentState extends GameComponentState<ProtoGameComponent> {
     cardCollections.add(_makeDebugButtons());
 
     return new Container(
-        decoration:
-            new BoxDecoration(backgroundColor: Colors.pink[500]),
+        decoration: new BoxDecoration(backgroundColor: Colors.pink[500]),
         child: new Flex(cardCollections, direction: FlexDirection.vertical));
   }
 

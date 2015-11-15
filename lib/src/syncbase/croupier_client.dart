@@ -8,8 +8,8 @@ import 'util.dart' as util;
 import 'dart:async';
 import 'dart:io' show Platform;
 
-import 'package:discovery/discovery.dart' as discovery;
-import 'package:flutter/services.dart' show embedder;
+import 'package:v23discovery/discovery.dart' as discovery;
+import 'package:flutter/services.dart' show shell;
 import 'package:syncbase/src/naming/util.dart' as naming;
 import 'package:syncbase/syncbase_client.dart' as sc;
 
@@ -31,7 +31,7 @@ class CroupierClient {
 
   CroupierClient._internal()
       : _syncbaseClient =
-            new sc.SyncbaseClient(embedder.connectToService, syncbaseServerUrl),
+            new sc.SyncbaseClient(shell.connectToService, syncbaseServerUrl),
         _discoveryClient = new DiscoveryClient() {
     print('Fetching syncbase_server.mojo from $syncbaseServerUrl');
 

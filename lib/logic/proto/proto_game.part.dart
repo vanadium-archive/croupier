@@ -9,7 +9,8 @@ class ProtoGame extends Game {
   String get gameTypeName => "Proto";
 
   ProtoGame(int playerNumber, {int gameID})
-      : super.create(GameType.Proto, new ProtoLog(), playerNumber, 6, gameID: gameID) {
+      : super.create(GameType.Proto, new ProtoLog(), playerNumber, 6,
+            gameID: gameID) {
     // playerNumber would be used in a real game, but I have to ignore it for debugging.
     // It would determine faceUp/faceDown status.faceDown
 

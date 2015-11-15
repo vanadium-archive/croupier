@@ -28,7 +28,8 @@ class SolitaireGame extends Game {
 
   SolitaireGame(int playerNumber, {int gameID})
       : super.create(
-            GameType.Solitaire, new SolitaireLog(), playerNumber, NUM_PILES, gameID: gameID) {
+            GameType.Solitaire, new SolitaireLog(), playerNumber, NUM_PILES,
+            gameID: gameID) {
     resetGame();
   }
 

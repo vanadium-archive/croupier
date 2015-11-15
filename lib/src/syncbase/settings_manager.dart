@@ -23,7 +23,7 @@ import 'util.dart' as util;
 import 'dart:async';
 import 'dart:convert' show UTF8, JSON;
 
-import 'package:discovery/discovery.dart' as discovery;
+import 'package:v23discovery/discovery.dart' as discovery;
 import 'package:syncbase/syncbase_client.dart' as sc;
 
 class SettingsManager {
@@ -37,11 +37,14 @@ class SettingsManager {
   static const String _personalKey = "personal";
   static const String _settingsWatchSyncPrefix = "users";
 
-  SettingsManager(this.updateSettingsCallback, this.updateGamesCallback, this.updatePlayerFoundCallback) : _cc = new CroupierClient();
+  SettingsManager(this.updateSettingsCallback, this.updateGamesCallback,
+      this.updatePlayerFoundCallback)
+      : _cc = new CroupierClient();
 
   String _settingsDataKey(int userID) {
     return "${_settingsWatchSyncPrefix}/${userID}/settings";
   }
+
   String _settingsDataKeyUserID(String dataKey) {
     List<String> parts = dataKey.split("/");
     return parts[parts.length - 2];
@@ -137,7 +140,6 @@ class SettingsManager {
         prefix: this._settingsDataKey(id));
   }
 
-
   // This watch method ensures that any changes are propagated to the caller.
   // In this case, we're forwarding any player changes to the Croupier logic.
   Future _startWatchPlayers(Stream<sc.WatchChange> watchStream) async {
@@ -165,12 +167,14 @@ class SettingsManager {
         this.updatePlayerFoundCallback(playerID, value);
 
         // Also, you should be sure to join this person's syncgroup.
-        _cc.joinSyncgroup(_cc.makeSyncgroupName(await _syncSuffix(int.parse(playerID))));
+        _cc.joinSyncgroup(
+            _cc.makeSyncgroupName(await _syncSuffix(int.parse(playerID))));
       }
     }
   }
 
-  Future<logic_game.GameStartData> createGameSyncgroup(String type, int gameID) async {
+  Future<logic_game.GameStartData> createGameSyncgroup(
+      String type, int gameID) async {
     print("Creating game syncgroup for ${type} and ${gameID}");
     sc.SyncbaseNoSqlDatabase db = await _cc.createDatabase();
     sc.SyncbaseTable gameTable = await _cc.createTable(db, util.tableNameGames);
@@ -186,12 +190,16 @@ class SettingsManager {
 
     int id = await _getUserID();
     await gameTable.row("${gameID}/owner").put(UTF8.encode("${id}"));
-    await gameTable.row("${gameID}/players/${id}/player_number").put(UTF8.encode("0"));
+    await gameTable
+        .row("${gameID}/players/${id}/player_number")
+        .put(UTF8.encode("0"));
 
-    logic_game.GameStartData gsd = new logic_game.GameStartData(type, 0, gameID, id);
+    logic_game.GameStartData gsd =
+        new logic_game.GameStartData(type, 0, gameID, id);
 
     await _cc.createSyncgroup(
-        _cc.makeSyncgroupName(util.syncgameSuffix(gsd.toJSONString())), util.tableNameGames,
+        _cc.makeSyncgroupName(util.syncgameSuffix(gsd.toJSONString())),
+        util.tableNameGames,
         prefix: util.syncgamePrefix(gameID));
 
     return gsd;
@@ -215,7 +223,9 @@ class SettingsManager {
 
     int id = await _getUserID();
     int playerNumber = fellowPlayers.length - 1;
-    gameTable.row("${gameID}/players/${id}/player_number").put(UTF8.encode("${playerNumber}"));
+    gameTable
+        .row("${gameID}/players/${id}/player_number")
+        .put(UTF8.encode("${playerNumber}"));
   }
 
   // When starting the settings manager, there may be settings already in the
@@ -226,7 +236,8 @@ class SettingsManager {
         .forEach((sc.KeyValue kv) {
       if (kv.key.endsWith("/settings")) {
         // Then we can process the value as if it were settings data.
-        this.updateSettingsCallback(_settingsDataKeyUserID(kv.key), UTF8.decode(kv.value));
+        this.updateSettingsCallback(
+            _settingsDataKeyUserID(kv.key), UTF8.decode(kv.value));
       }
     });
   }
@@ -237,8 +248,10 @@ class SettingsManager {
 
   // Someone who is creating a game should scan for players who wish to join.
   Future scanSettings() async {
-    SettingsScanHandler ssh = new SettingsScanHandler(_cc, this.updateGamesCallback);
-    _cc.discoveryClient.scan(_discoverySettingsKey, "CroupierSettingsAndGame", ssh);
+    SettingsScanHandler ssh =
+        new SettingsScanHandler(_cc, this.updateGamesCallback);
+    _cc.discoveryClient
+        .scan(_discoverySettingsKey, "CroupierSettingsAndGame", ssh);
   }
 
   void stopScanSettings() {
@@ -255,7 +268,8 @@ class SettingsManager {
             interfaceName: "CroupierSettingsAndGame",
             addrs: <String>[
               _cc.makeSyncgroupName(suffix),
-              _cc.makeSyncgroupName(gameSuffix)]));
+              _cc.makeSyncgroupName(gameSuffix)
+            ]));
   }
 
   void stopAdvertiseSettings() {
@@ -310,7 +324,6 @@ class SettingsScanHandler extends discovery.ScanHandler {
 
       String json = _getPartFromBack(s.addrs[1], "-", 0);
       updateGamesCallback(s.addrs[1], json);
-
 
       _cc.joinSyncgroup(s.addrs[0]);
     } else {
