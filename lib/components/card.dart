@@ -98,6 +98,14 @@ class Card extends widgets.StatefulComponent {
         z: z);
   }
 
+  // Check if the data between these Cards matches.
+  // This isn't == since I don't want to override that and hashCode.
+  bool isMatchWith(Card c) {
+    return c.card == card && c.faceUp == faceUp && c.width == width &&
+      c.height == height && c.rotation == rotation && c.useKey == useKey &&
+      c.visible == visible && c.animateEntrance == animateEntrance && c.z == z;
+  }
+
   CardState createState() => new CardState();
 }
 

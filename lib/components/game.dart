@@ -96,6 +96,13 @@ abstract class GameComponentState<T extends GameComponent> extends State<T> {
       setState(() {
         cardLevelMap[logicCard] = new CardAnimationData(c, cad?.newPoint, p, z);
       });
+    } else if (!cad.comp_card.isMatchWith(c)) {
+      // Even if the position or z index didn't change, we can still update the
+      // card itself. This can help during screen rotations, since the top-left
+      // card likely not change positions or z-index.
+      setState(() {
+        cad.comp_card = c;
+      });
     }
   }
 
