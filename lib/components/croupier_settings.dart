@@ -61,7 +61,7 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
   }
 
   Widget _makeImageButton(String url, NoArgCb cb) {
-    return new FlatButton(child: new NetworkImage(src: url), onPressed: cb);
+    return new FlatButton(child: new NetworkImage(src: CroupierSettings.makeAvatarUrl(url)), onPressed: cb);
   }
 
   Widget build(BuildContext context) {
@@ -70,7 +70,7 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
     w.add(_makeButtonRow(
         colorKey, _makeColoredRectangle(config.settings.color, "", null)));
     w.add(_makeButtonRow(
-        avatarKey, new NetworkImage(src: config.settings.avatar)));
+        avatarKey, new NetworkImage(src: CroupierSettings.makeAvatarUrl(config.settings.avatar))));
 
     w.add(new FlatButton(child: new Text("Return"), onPressed: config.backCb));
     return new Column(w);

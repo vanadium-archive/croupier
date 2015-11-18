@@ -103,6 +103,10 @@ class LogWriter {
       util.log('Watch Key: ${wc.rowKey}');
       util.log('Watch Value ${UTF8.decode(wc.valueBytes)}');
       String key = wc.rowKey.replaceFirst("${this.logPrefix}/", "");
+      if (key == wc.rowKey) {
+        print("Lacks prefix '${this.logPrefix}/', skipping...");
+        continue;
+      }
       String value;
       switch (wc.changeType) {
         case WatchChangeTypes.put:

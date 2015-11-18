@@ -10,13 +10,13 @@ class HeartsLog extends GameLog {
 
   HeartsLog() {
     // TODO(alexfandrianto): The Game ID needs to be part of this constructor.
-    logWriter = new LogWriter(handleSyncUpdate, [0, 1, 2, 3]);
     seenKeys = new Set<String>();
   }
 
   @override
   void setGame(Game g) {
     this.game = g;
+    logWriter = new LogWriter(handleSyncUpdate, [0, 1, 2, 3]);
     logWriter.associatedUser = this.game.playerNumber;
     logWriter.logPrefix = "${game.gameID}/log";
   }

@@ -13,6 +13,8 @@ class CroupierSettings {
   String name;
   int color;
 
+  static String makeAvatarUrl(String key) => 'images/avatars/${key}';
+
   CroupierSettings.random() {
     _randomInitialization();
   }
@@ -82,10 +84,10 @@ class CroupierSettings {
 
 class RandomSettings {
   static final List avatars = [
-    'images/suits/Club.png',
-    'images/suits/Diamond.png',
-    'images/suits/Heart.png',
-    'images/suits/Spade.png'
+    'Club.png',
+    'Diamond.png',
+    'Heart.png',
+    'Spade.png'
   ];
   static final List names = [
     'Anne',

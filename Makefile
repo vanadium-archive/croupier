@@ -26,7 +26,7 @@ ifdef ANDROID
 	# Location of mounttable on syncslides-alpha network.
 	MOUNTTABLE := /192.168.86.254:8101
 	# Name to mount under.
-	NAME := croupier
+	NAME := croupierAlex
 
 	APP_HOME_DIR = /data/data/org.chromium.mojo.shell/app_home
 	ANDROID_CREDS_DIR := /sdcard/v23creds
@@ -34,13 +34,15 @@ ifdef ANDROID
 	SYNCBASE_FLAGS += --logtostderr=true \
 		--root-dir=$(APP_HOME_DIR)/syncbase_data \
 		--v23.credentials=$(ANDROID_CREDS_DIR) \
-		--v23.namespace.root=$(MOUNTTABLE)
+		--v23.proxy=proxy
+
+	#--v23.namespace.root=$(MOUNTTABLE) \
 
 ifeq ($(ANDROID), 1)
 	# If ANDROID is set to 1 exactly, then treat it like the first device.
 	# TODO(alexfandrianto): If we can do a better job of this, we won't have to
 	# special-case the first device.
-	SYNCBASE_FLAGS += --name=$(NAME)
+	SYNCBASE_FLAGS += --name=$(MOUNTTABLE)/$(NAME)
 endif
 
 # If this is not the first mojo shell, then you must reuse the devservers
@@ -70,10 +72,10 @@ endif
 # Runs a sky app.
 # $1 is location of flx file.
 define RUN_SKY_APP
-	pub run sky_tools -v --very-verbose run_mojo \
+	pub run flutter_tools -v --very-verbose run_mojo \
 	--app $1 \
 	$(MOJO_ANDROID_FLAGS) \
-	--mojo-path $(MOJO_DIR)/src/mojo/devtools/common/mojo_run \
+	--mojo-path $(MOJO_DIR)/src \
 	--checked \
 	--mojo-debug \
 	-- $(MOJO_SHELL_FLAGS) \
@@ -113,7 +115,7 @@ lint: packages
 build: croupier.flx
 
 croupier.flx: packages $(DART_LIB_FILES_ALL)
-	pub run sky_tools -v build --manifest manifest.yaml --output-file $@
+	pub run flutter_tools -v build --manifest manifest.yaml --output-file $@
 
 # Starts the app on the specified ANDROID device.
 # Don't forget to make creds first if they are not present.

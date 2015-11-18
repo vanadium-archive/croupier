@@ -13,7 +13,7 @@ const tableNameSettings = 'table_settings';
 // proxy. Otherwise, it will be difficult for other users to run.
 // https://github.com/vanadium/issues/issues/782
 const mtAddr = '/192.168.86.254:8101';
-const sgPrefix = 'croupier/%%sync';
+const sgPrefix = 'croupierAlex/%%sync';
 const sgSuffix = 'discovery';
 const sgSuffixGame = 'gaming';
 
@@ -37,3 +37,4 @@ String syncgameSuffix(String data) {
 String syncgamePrefix(int gameID) {
   return "${gameID}";
 }
+
