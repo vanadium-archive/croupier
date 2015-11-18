@@ -37,6 +37,8 @@ type StaticImg struct {
 	dimensions *coords.Vec
 	// cardHere is used if the StaticImg instance is a drop target
 	cardHere *card.Card
+	// info contains any additional information contained in the image (eg. game syncgroup address, in a join game button)
+	info []string
 }
 
 // Returns the node of s
@@ -78,6 +80,11 @@ func (s *StaticImg) GetCardHere() *card.Card {
 	return s.cardHere
 }
 
+// Returns the additional info associated with s
+func (s *StaticImg) GetInfo() []string {
+	return s.info
+}
+
 // Returns the node of s
 func (s *StaticImg) SetNode(n *sprite.Node) {
 	s.node = n
@@ -114,4 +121,9 @@ func (s *StaticImg) SetInitial(initial *coords.Vec) {
 // Pins card c to s
 func (s *StaticImg) SetCardHere(c *card.Card) {
 	s.cardHere = c
+}
+
+// Sets the additional info of s
+func (s *StaticImg) SetInfo(i []string) {
+	s.info = i
 }

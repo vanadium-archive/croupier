@@ -24,7 +24,7 @@ credentials: bin/principal
 
 .PHONY:
 delete:
-	rm -rf tmp/syncbase_$(id)
+	rm -rf tmp/$(name)
 
 # Naming collisions for different instances of syncbase for the same user?
 # Easy way to make --v23.permissions.literal?
@@ -35,7 +35,7 @@ syncbase: delete bin/syncbased credentials tmp
 	bin/syncbased \
 		--v=5 \
 		--alsologtostderr=false \
-		--root-dir=tmp/syncbase_$(id) \
+		--root-dir=tmp/$(name) \
 		--name=users/$(email)/croupier/$(name) \
 		--v23.proxy=proxy \
 		--v23.credentials=credentials \
@@ -51,3 +51,5 @@ vet:
 	jiri go vet hearts/...
 
 all: fmt 
+
+	#--name=/192.168.86.254:8101/croupier/$(name) \

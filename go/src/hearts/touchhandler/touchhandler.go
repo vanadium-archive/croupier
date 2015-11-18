@@ -16,11 +16,18 @@ import (
 	"hearts/img/uistate"
 	"hearts/img/view"
 	"hearts/logic/card"
+	"hearts/syncbase/client"
 	"hearts/syncbase/gamelog"
+	"hearts/syncbase/server"
 )
 
 func OnTouch(t touch.Event, u *uistate.UIState) {
 	switch u.CurView {
+	case uistate.Discovery:
+		switch t.Type {
+		case touch.TypeBegin:
+			beginClickDiscovery(t, u)
+		}
 	case uistate.Opening:
 		switch t.Type {
 		case touch.TypeBegin:
@@ -93,14 +100,44 @@ func OnTouch(t touch.Event, u *uistate.UIState) {
 	u.LastMouseXY.Y = t.Y
 }
 
+func beginClickDiscovery(t touch.Event, u *uistate.UIState) {
+	buttonList := findClickedButton(t, u)
+	if len(buttonList) > 0 {
+		if buttonList[0] == u.Buttons[0] {
+			logChan := make(chan string)
+			settingsChan := make(chan string)
+			go server.CreateSyncgroup(logChan, u)
+			go server.CreateSettingsSyncgroup(settingsChan, u)
+			logName := <-logChan
+			settingsName := <-settingsChan
+			if logName != "" && settingsName != "" {
+				go server.Advertise(logName, settingsName, u.Ctx)
+				view.LoadOpeningView(u)
+			}
+		} else {
+			for _, b := range u.Buttons {
+				if buttonList[0] == b {
+					joinDone := make(chan bool)
+					settingsAddr := b.GetInfo()[0]
+					logAddr := b.GetInfo()[1]
+					go client.JoinSyncgroups(joinDone, logAddr, settingsAddr, u)
+					if success := <-joinDone; success {
+						view.LoadOpeningView(u)
+					} else {
+						fmt.Println("Failed to join")
+					}
+				}
+			}
+		}
+	}
+}
+
 func beginClickOpening(t touch.Event, u *uistate.UIState) {
 	buttonList := findClickedButton(t, u)
 	if len(buttonList) > 0 {
-		if u.CurTable.GetPlayers()[0].GetHand() == nil {
-			fmt.Println("Dealing")
-			allHands := u.CurTable.Deal()
-			gamelog.LogDeal(u, u.CurPlayerIndex, allHands)
-		}
+		fmt.Println("Dealing")
+		allHands := u.CurTable.Deal()
+		gamelog.LogDeal(u, u.CurPlayerIndex, allHands)
 	}
 }
 

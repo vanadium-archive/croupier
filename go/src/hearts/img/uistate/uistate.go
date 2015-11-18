@@ -25,14 +25,15 @@ import (
 type View string
 
 const (
-	None    View = "None"
-	Opening View = "Opening"
-	Pass    View = "Pass"
-	Take    View = "Take"
-	Table   View = "Table"
-	Play    View = "Play"
-	Score   View = "Score"
-	Split   View = "Split"
+	None      View = "None"
+	Opening   View = "Opening"
+	Discovery View = "Discovery"
+	Pass      View = "Pass"
+	Take      View = "Take"
+	Table     View = "Table"
+	Play      View = "Play"
+	Score     View = "Score"
+	Split     View = "Split"
 )
 
 const (
@@ -82,6 +83,8 @@ type UIState struct {
 	Ctx            *context.T
 	Service        syncbase.Service
 	Debug          bool
+	Shutdown       func()
+	GameID		   int
 }
 
 func MakeUIState() *UIState {

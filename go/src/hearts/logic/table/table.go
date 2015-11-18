@@ -40,7 +40,7 @@ func makeTable(p []*player.Player) *Table {
 		heartsBroken: false,
 		firstTrick:   true,
 		winCondition: 100,
-		dir:          direction.None,
+		dir:          direction.Right,
 	}
 }
 

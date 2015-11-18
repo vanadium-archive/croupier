@@ -32,14 +32,14 @@ const (
 	Bar   string = "|"
 	Space string = " "
 	Colon string = ":"
-	Plus  string = "+"
+	Dash  string = "-"
 	End   string = "END"
 )
 
 // Formats deal command and sends to Syncbase
 func LogDeal(u *uistate.UIState, playerIndex int, hands [][]*card.Card) bool {
 	for i, h := range hands {
-		key := getKey(playerIndex)
+		key := getKey(playerIndex, u)
 		value := Deal + Bar
 		value += strconv.Itoa(i) + Colon
 		for _, c := range h {
@@ -56,7 +56,7 @@ func LogDeal(u *uistate.UIState, playerIndex int, hands [][]*card.Card) bool {
 
 // Formats pass command and sends to Syncbase
 func LogPass(u *uistate.UIState, cards []*card.Card) bool {
-	key := getKey(u.CurPlayerIndex)
+	key := getKey(u.CurPlayerIndex, u)
 	value := Pass + Bar + strconv.Itoa(u.CurPlayerIndex) + Colon
 	for _, c := range cards {
 		value += cardType + Space + c.GetSuit().String() + c.GetFace().String() + Colon
@@ -67,14 +67,14 @@ func LogPass(u *uistate.UIState, cards []*card.Card) bool {
 
 // Formats take command and sends to Syncbase
 func LogTake(u *uistate.UIState) bool {
-	key := getKey(u.CurPlayerIndex)
+	key := getKey(u.CurPlayerIndex, u)
 	value := Take + Bar + strconv.Itoa(u.CurPlayerIndex) + Colon + End
 	return logKeyValue(u.Service, u.Ctx, key, value)
 }
 
 // Formats play command and sends to Syncbase
 func LogPlay(u *uistate.UIState, c *card.Card) bool {
-	key := getKey(u.CurPlayerIndex)
+	key := getKey(u.CurPlayerIndex, u)
 	value := Play + Bar + strconv.Itoa(u.CurPlayerIndex) + Colon
 	value += cardType + Space + c.GetSuit().String() + c.GetFace().String() + Colon + End
 	return logKeyValue(u.Service, u.Ctx, key, value)
@@ -82,15 +82,15 @@ func LogPlay(u *uistate.UIState, c *card.Card) bool {
 
 // Formats ready command and sends to Syncbase
 func LogReady(u *uistate.UIState) bool {
-	key := getKey(u.CurPlayerIndex)
+	key := getKey(u.CurPlayerIndex, u)
 	value := Ready + Bar + strconv.Itoa(u.CurPlayerIndex) + Colon + End
 	return logKeyValue(u.Service, u.Ctx, key, value)
 }
 
 // Note: The + is syntax used to replicate the way Croupier in Dart/Flutter writes keys.
-func getKey(playerId int) string {
+func getKey(playerId int, u *uistate.UIState) string {
 	t := int(time.Now().UnixNano() / 1000000)
-	key := strconv.Itoa(t) + Plus + strconv.Itoa(playerId)
+	key := strconv.Itoa(u.GameID) + "/log/" + strconv.Itoa(t) + Dash + strconv.Itoa(playerId)
 	return key
 }
 

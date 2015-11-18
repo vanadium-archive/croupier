@@ -11,12 +11,10 @@ import (
 	"time"
 
 	"v.io/v23"
-	"v.io/v23/context"
 	"v.io/v23/security"
 	"v.io/v23/security/access"
 	"v.io/v23/syncbase"
 	"v.io/x/lib/vlog"
-	"v.io/x/ref/lib/signals"
 
 	"hearts/img/resize"
 	"hearts/img/texture"
@@ -25,6 +23,7 @@ import (
 	"hearts/logic/table"
 	"hearts/syncbase/client"
 	"hearts/syncbase/server"
+	"hearts/syncbase/util"
 	"hearts/syncbase/watch"
 	"hearts/touchhandler"
 
@@ -84,16 +83,13 @@ func main() {
 }
 
 func onStart(glctx gl.Context, u *uistate.UIState) {
+	flag.Set("v23.credentials", "/sdcard/credentials")
 	vlog.Log.Configure(vlog.OverridePriorConfiguration(true), vlog.LogToStderr(true))
 	vlog.Log.Configure(vlog.OverridePriorConfiguration(true), vlog.Level(0))
-
-	sgName := "users/emshack@google.com/croupier/syncbase/%%sync/croupiersync"
-	contextChan := make(chan *context.T)
-	serviceChan := make(chan syncbase.Service)
-	go makeServerClient(contextChan, serviceChan)
-	// wait for server to generate ctx, client to generate service
-	u.Ctx = <-contextChan
-	u.Service = <-serviceChan
+	ctx, shutdown := v23.Init()
+	u.Shutdown = shutdown
+	u.Ctx = ctx
+	u.Service = syncbase.NewService(util.MountPoint + "/croupier/" + util.SBName)
 	namespace := v23.GetNamespace(u.Ctx)
 	allAccess := access.AccessList{In: []security.BlessingPattern{"..."}}
 	permissions := access.Permissions{
@@ -103,17 +99,19 @@ func onStart(glctx gl.Context, u *uistate.UIState) {
 		"Resolve": allAccess,
 		"Debug":   allAccess,
 	}
-	namespace.SetPermissions(u.Ctx, "users/emshack@google.com/croupier", permissions, "")
+	namespace.SetPermissions(u.Ctx, util.MountPoint, permissions, "")
+	namespace.SetPermissions(u.Ctx, util.MountPoint+"/croupier", permissions, "")
 	u.Service.SetPermissions(u.Ctx, permissions, "")
 	u.Images = glutil.NewImages(glctx)
 	fps = debug.NewFPS(u.Images)
 	u.Eng = glsprite.Engine(u.Images)
 	u.Texs = texture.LoadTextures(u.Eng)
 	u.CurTable = table.InitializeGame(u.NumPlayers, u.Texs)
-	server.CreateTable(u)
-	server.CreateOrJoinSyncgroup(u, sgName)
+	server.CreateTables(u)
 	// Create watch stream to update game state based on Syncbase updates
 	go watch.Update(u)
+	go watch.PrintStream("Stream 1", u)
+	go watch.PrintStream("Stream 2", u)
 }
 
 func onStop(u *uistate.UIState) {
@@ -121,34 +119,18 @@ func onStop(u *uistate.UIState) {
 	fps.Release()
 	u.Images.Release()
 	u.Done = true
+	u.Shutdown()
 }
 
 func onPaint(glctx gl.Context, sz size.Event, u *uistate.UIState) {
 	if u.CurView == uistate.None {
-		view.LoadOpeningView(u)
+		discChan := make(chan []string)
+		go client.ScanForSG(discChan, u.Ctx)
+		view.LoadDiscoveryView(discChan, u)
 	}
 	glctx.ClearColor(1, 1, 1, 1)
 	glctx.Clear(gl.COLOR_BUFFER_BIT)
 	now := clock.Time(time.Since(u.StartTime) * 60 / time.Second)
 	u.Eng.Render(u.Scene, now, sz)
 	fps.Draw(sz)
-}
-
-func makeServerClient(contextChan chan *context.T, serviceChan chan syncbase.Service) {
-	flag.Set("v23.credentials", "/sdcard/credentials")
-	context, shutdown := v23.Init()
-	contextChan <- context
-	serviceChan <- client.GetService()
-	defer shutdown()
-
-	stop := server.Advertise(context)
-	<-signals.ShutdownOnSignals(context)
-	stop()
-
-	// Time for stopping advertisements gracefully like advertising
-	// goodbye through mDNS before the program exits.
-	//
-	// This is not required and the advertised services will be garbage
-	// collected by TTL anyway.
-	time.Sleep(1 * time.Second)
 }

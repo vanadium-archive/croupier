@@ -11,6 +11,7 @@ package view
 import (
 	"sort"
 	"strconv"
+	"time"
 
 	"hearts/img/coords"
 	"hearts/img/direction"
@@ -27,23 +28,41 @@ import (
 // Opening View: Only temporary, for debugging, while discovery is not integrated
 func LoadOpeningView(u *uistate.UIState) {
 	u.CurView = uistate.Opening
-	resetScene(u)
-	buttonX := (u.WindowSize.X - u.CardDim.X) / 2
-	tableButtonY := (u.WindowSize.Y - 2*u.CardDim.Y - u.Padding) / 2
-	passButtonY := tableButtonY + u.CardDim.Y + u.Padding
-	tableButtonPos := coords.MakeVec(buttonX, tableButtonY)
-	passButtonPos := coords.MakeVec(buttonX, passButtonY)
-	tableButtonImage := u.Texs["BakuSquare.png"]
-	passButtonImage := u.Texs["Clubs-2.png"]
-	u.Buttons = append(u.Buttons, texture.MakeImgWithoutAlt(tableButtonImage, tableButtonPos, u.CardDim, u.Eng, u.Scene))
-	u.Buttons = append(u.Buttons, texture.MakeImgWithoutAlt(passButtonImage, passButtonPos, u.CardDim, u.Eng, u.Scene))
+	<-time.After(1 * time.Second)
+	resetImgs(u)
+	ResetScene(u)
+	buttonPos := coords.MakeVec((u.WindowSize.X-2*u.CardDim.X)/2, (u.WindowSize.Y-u.CardDim.Y)/2)
+	buttonDim := coords.MakeVec(2*u.CardDim.X, u.CardDim.Y)
+	buttonImage := u.Texs["Deal.png"]
+	u.Buttons = append(u.Buttons, texture.MakeImgWithoutAlt(buttonImage, buttonPos, buttonDim, u.Eng, u.Scene))
+}
+
+func LoadDiscoveryView(discChan chan []string, u *uistate.UIState) {
+	u.CurView = uistate.Discovery
+	resetImgs(u)
+	ResetScene(u)
+	newGameImg := u.Texs["NewGame.png"]
+	newGameDim := coords.MakeVec(2*u.CardDim.X, u.CardDim.Y)
+	newGamePos := coords.MakeVec((u.WindowSize.X-newGameDim.X)/2, u.TopPadding)
+	u.Buttons = append(u.Buttons, texture.MakeImgWithoutAlt(newGameImg, newGamePos, newGameDim, u.Eng, u.Scene))
+	buttonNum := 1
+	go func() {
+		for u.CurView == uistate.Discovery {
+			sgSet := <-discChan
+			joinGameImg := u.Texs["JoinGame.png"]
+			joinGamePos := coords.MakeVec(newGamePos.X, newGamePos.Y+float32(buttonNum)*(newGameDim.Y+u.Padding))
+			u.Buttons = append(u.Buttons, texture.MakeImgWithoutAlt(joinGameImg, joinGamePos, newGameDim, u.Eng, u.Scene))
+			u.Buttons[buttonNum].SetInfo(sgSet)
+			buttonNum++
+		}
+	}()
 }
 
 // Table View: Displays the table. Intended for public devices
 func LoadTableView(u *uistate.UIState) {
 	u.CurView = uistate.Table
 	resetImgs(u)
-	resetScene(u)
+	ResetScene(u)
 	scaler := float32(4)
 	maxWidth := 4 * u.TableCardDim.X
 	// adding four drop targets for trick
@@ -251,7 +270,7 @@ func LoadPassOrTakeOrPlay(u *uistate.UIState) {
 func LoadScoreView(roundScores, winners []int, u *uistate.UIState) {
 	u.CurView = uistate.Score
 	resetImgs(u)
-	resetScene(u)
+	ResetScene(u)
 	addHeader(u)
 	addScoreViewHeaderText(u)
 	addPlayerScores(roundScores, u)
@@ -262,7 +281,7 @@ func LoadScoreView(roundScores, winners []int, u *uistate.UIState) {
 func LoadPassView(u *uistate.UIState) {
 	u.CurView = uistate.Pass
 	resetImgs(u)
-	resetScene(u)
+	ResetScene(u)
 	addHeader(u)
 	addGrayPassBar(u)
 	addPassDrops(u)
@@ -276,7 +295,7 @@ func LoadPassView(u *uistate.UIState) {
 func LoadTakeView(u *uistate.UIState) {
 	u.CurView = uistate.Take
 	resetImgs(u)
-	resetScene(u)
+	ResetScene(u)
 	addHeader(u)
 	addGrayTakeBar(u)
 	addHand(u)
@@ -292,7 +311,7 @@ func LoadTakeView(u *uistate.UIState) {
 func LoadPlayView(u *uistate.UIState) {
 	u.CurView = uistate.Play
 	resetImgs(u)
-	resetScene(u)
+	ResetScene(u)
 	addPlaySlot(u)
 	addHand(u)
 	addPlayHeader(getTurnText(u), false, u)
@@ -308,7 +327,7 @@ func LoadPlayView(u *uistate.UIState) {
 func LoadSplitView(reloading bool, u *uistate.UIState) {
 	u.CurView = uistate.Split
 	resetImgs(u)
-	resetScene(u)
+	ResetScene(u)
 	addPlayHeader(getTurnText(u), !reloading, u)
 	addSplitViewPlayerIcons(!reloading, u)
 	addHand(u)
@@ -801,7 +820,7 @@ func resetImgs(u *uistate.UIState) {
 	u.Other = make([]*staticimg.StaticImg, 0)
 }
 
-func resetScene(u *uistate.UIState) {
+func ResetScene(u *uistate.UIState) {
 	u.Scene = &sprite.Node{}
 	u.Eng.Register(u.Scene)
 	u.Eng.SetTransform(u.Scene, f32.Affine{

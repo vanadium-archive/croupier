@@ -24,6 +24,26 @@ import (
 	"v.io/v23/syncbase/nosql"
 )
 
+func PrintStream(prefix string, u *uistate.UIState) {
+	stream, err := client.WatchData(u)
+	if err != nil {
+		fmt.Println("WatchData error:", err)
+	}
+	for {
+		if updateExists := stream.Advance(); updateExists {
+			c := stream.Change()
+			if c.ChangeType == nosql.PutChange {
+				var value []byte
+				if err := c.Value(&value); err != nil {
+					fmt.Println("Value error:", err)
+				}
+				valueStr := string(value)
+				fmt.Println(prefix, valueStr)
+			}
+		}
+	}
+}
+
 func Update(u *uistate.UIState) {
 	stream, err := client.WatchData(u)
 	if err != nil {
@@ -33,27 +53,30 @@ func Update(u *uistate.UIState) {
 		if updateExists := stream.Advance(); updateExists {
 			c := stream.Change()
 			if c.ChangeType == nosql.PutChange {
-				var value string
+				var value []byte
 				if err := c.Value(&value); err != nil {
 					fmt.Println("Value error:", err)
 				}
-				updateType := strings.Split(value, "|")[0]
+				valueStr := string(value)
+				fmt.Println(valueStr)
+				updateType := strings.Split(valueStr, "|")[0]
 				switch updateType {
 				case gamelog.Deal:
-					onDeal(value, u)
+					onDeal(valueStr, u)
 				case gamelog.Pass:
-					onPass(value, u)
+					onPass(valueStr, u)
 				case gamelog.Take:
-					onTake(value, u)
+					onTake(valueStr, u)
 				case gamelog.Play:
-					onPlay(value, u)
+					onPlay(valueStr, u)
 				case gamelog.Ready:
-					onReady(value, u)
+					onReady(valueStr, u)
 				}
 			} else {
 				fmt.Println("Unexpected ChangeType: ", c.ChangeType)
 			}
 		}
+		fmt.Println(stream.Err())
 	}
 }
 
