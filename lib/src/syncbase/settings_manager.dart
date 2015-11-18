@@ -251,7 +251,7 @@ class SettingsManager {
     SettingsScanHandler ssh =
         new SettingsScanHandler(_cc, this.updateGamesCallback);
     _cc.discoveryClient
-        .scan(_discoverySettingsKey, "CroupierSettingsAndGame", ssh);
+        .scan(_discoverySettingsKey, 'v.InterfaceName="${util.discoveryInterfaceName}"', ssh);
   }
 
   void stopScanSettings() {
@@ -265,7 +265,7 @@ class SettingsManager {
     _cc.discoveryClient.advertise(
         _discoverySettingsKey,
         DiscoveryClient.serviceMaker(
-            interfaceName: "CroupierSettingsAndGame",
+            interfaceName: util.discoveryInterfaceName,
             addrs: <String>[
               _cc.makeSyncgroupName(suffix),
               _cc.makeSyncgroupName(gameSuffix)

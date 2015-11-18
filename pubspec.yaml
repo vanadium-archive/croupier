@@ -7,7 +7,3 @@ dependencies:
   flutter_tools:
     path: ../../../../../flutter/packages/flutter_tools
   test: any
-
-dependency_overrides:
-  v23discovery:
-    path: ../../mojo/discovery

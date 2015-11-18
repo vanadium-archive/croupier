@@ -17,6 +17,8 @@ const sgPrefix = 'croupierAlex/%%sync';
 const sgSuffix = 'discovery';
 const sgSuffixGame = 'gaming';
 
+const discoveryInterfaceName = 'CroupierSettingsAndGame2';
+
 typedef void NoArgCb();
 typedef void updateCallbackT(String key, String value);
 

@@ -21,7 +21,7 @@ endif
 ifdef ANDROID
 	MOJO_ANDROID_FLAGS := --android
 	SYNCBASE_MOJO_BIN_DIR := packages/syncbase/mojo_services/android
-	DISCOVERY_MOJO_BIN_DIR := $(DISCOVERY_DIR)/gen/mojo/android
+	DISCOVERY_MOJO_BIN_DIR := packages/v23discovery/mojo_services/android
 
 	# Location of mounttable on syncslides-alpha network.
 	MOUNTTABLE := /192.168.86.254:8101
@@ -53,7 +53,7 @@ endif
 
 else
 	SYNCBASE_MOJO_BIN_DIR := packages/syncbase/mojo_services/linux_amd64
-	DISCOVERY_MOJO_BIN_DIR := $(DISCOVERY_DIR)/gen/mojo/linux_amd64
+	DISCOVERY_MOJO_BIN_DIR := packages/v23discovery/mojo_services/linux_amd64
 	SYNCBASE_FLAGS += --root-dir=$(PWD)/tmp/syncbase_data --v23.credentials=$(PWD)/creds
 endif
 
