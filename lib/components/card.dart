@@ -121,21 +121,20 @@ class CardState extends widgets.State<Card> {
     widgets.Widget image = new widgets.Opacity(
         opacity: config.visible ? 1.0 : 0.0,
         child: new widgets.Transform(
-            child: _imageFromCard(config.card, config.faceUp),
+            child: _imageFromCard(config.card, config.faceUp, config.width, config.height),
             transform:
                 new vector_math.Matrix4.identity().rotateZ(config.rotation),
             alignment: new FractionalOffset(0.5, 0.5)));
 
-    return new widgets.Container(
-        width: config.width, height: config.height, child: image);
+    return image;
   }
 }
 
-widgets.Widget _imageFromCard(logic_card.Card c, bool faceUp) {
+widgets.Widget _imageFromCard(logic_card.Card c, bool faceUp, double width, double height) {
   // TODO(alexfandrianto): Instead of 'default', what if we were told which theme to use?
   String imageName =
       "images/default/${c.deck}/${faceUp ? 'up' : 'down'}/${c.identifier}.png";
-  return new widgets.NetworkImage(src: imageName);
+  return new widgets.AssetImage(name: imageName, width: width, height: height);
 }
 
 class _ZCardState extends widgets.State<ZCard> {
@@ -232,20 +231,16 @@ class _ZCardState extends widgets.State<ZCard> {
 
   widgets.Widget build(widgets.BuildContext context) {
     widgets.Widget image = new widgets.Transform(
-        child: _imageFromCard(config.card, config.faceUp),
+        child: _imageFromCard(config.card, config.faceUp, config.width, config.height),
         transform: new vector_math.Matrix4.identity().rotateZ(config.rotation),
         alignment: new FractionalOffset(0.5, 0.5));
-
-    // Size the card appropriately.
-    widgets.Widget containedCard = new widgets.Container(
-        width: config.width, height: config.height, child: image);
 
     // Set up the slide transition.
     // During animation, we must ignore all events.
     widgets.Widget retWidget = new widgets.SlideTransition(
         performance: _performance.view,
         position: _performance.variable,
-        child: containedCard);
+        child: image);
 
     return retWidget;
   }

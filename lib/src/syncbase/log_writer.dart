@@ -81,7 +81,7 @@ class LogWriter {
 
     // Start to watch the stream.
     Stream<WatchChange> watchStream =
-        db.watch(tbName, this.logPrefix, await db.getResumeMarker());
+        db.watch(tbName, this.logPrefix, UTF8.encode("now"));
     _startWatch(watchStream); // Don't wait for this future.
   }
 

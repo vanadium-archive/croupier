@@ -15,6 +15,6 @@ class CroupierProfileComponent extends StatelessComponent {
         decoration:
             new BoxDecoration(backgroundColor: new Color(settings.color)),
         child: new Column(
-            [new NetworkImage(src: CroupierSettings.makeAvatarUrl(settings.avatar)), new Text(settings.name)]));
+            [new AssetImage(name: CroupierSettings.makeAvatarUrl(settings.avatar)), new Text(settings.name)]));
   }
 }

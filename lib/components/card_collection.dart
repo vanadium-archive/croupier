@@ -190,11 +190,9 @@ class CardCollectionComponentState extends State<CardCollectionComponent> {
           child: new Center(
               child: new Opacity(
                   opacity: 0.45,
-                  child: new Container(
-                      height: config.heightCard,
-                      child: emptyBackgroundImage == ""
-                          ? null
-                          : new NetworkImage(src: emptyBackgroundImage)))));
+                  child: emptyBackgroundImage == ""
+                      ? null
+                      : new AssetImage(name: emptyBackgroundImage, fit: ImageFit.scaleDown, height: config.heightCard))));
     }
 
     double w = config.width ?? config.widthCard * 5;

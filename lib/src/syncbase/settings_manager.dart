@@ -60,7 +60,7 @@ class SettingsManager {
 
     // Start to watch the stream for the shared settings table.
     Stream<sc.WatchChange> watchStream = db.watch(util.tableNameSettings,
-        _settingsWatchSyncPrefix, await db.getResumeMarker());
+        _settingsWatchSyncPrefix, UTF8.encode("now"));
     _startWatchSettings(watchStream); // Don't wait for this future.
     _loadSettings(tb); // Don't wait for this future.
   }
@@ -181,7 +181,7 @@ class SettingsManager {
 
     // Watch for the players in the game.
     Stream<sc.WatchChange> watchStream = db.watch(util.tableNameGames,
-        util.syncgamePrefix(gameID) + "/players", await db.getResumeMarker());
+        util.syncgamePrefix(gameID) + "/players", UTF8.encode("now"));
     _startWatchPlayers(watchStream); // Don't wait for this future.
 
     print("Now writing to some rows of ${gameID}");
@@ -214,7 +214,7 @@ class SettingsManager {
 
     // Watch for the players in the game.
     Stream<sc.WatchChange> watchStream = db.watch(util.tableNameGames,
-        util.syncgamePrefix(gameID) + "/players", await db.getResumeMarker());
+        util.syncgamePrefix(gameID) + "/players", UTF8.encode("now"));
     _startWatchPlayers(watchStream); // Don't wait for this future.
 
     // Also write yourself to the table as player |NUM_PLAYERS - 1|
