@@ -27,18 +27,20 @@ class DiscoveryClient {
   DiscoveryClient() {}
 
   static discovery.Service serviceMaker(
-      {List<int> instanceUuid,
+      {String instanceId,
       String instanceName,
       String interfaceName,
       Map<String, String> attrs,
       List<String> addrs}) {
-    // None of these are nullable, so it's nice to have a helper to create them.
+    // Discovery requires that some of these values must be set.
+    assert(interfaceName != null && interfaceName != '');
+    assert(addrs != null && addrs.length > 0);
     return new discovery.Service()
-      ..instanceUuid = instanceUuid ?? new List<int>()
-      ..instanceName = instanceName ?? ''
-      ..interfaceName = interfaceName ?? ''
-      ..attrs = attrs ?? new Map<String, String>()
-      ..addrs = addrs ?? new List<String>();
+      ..instanceId = instanceId
+      ..instanceName = instanceName
+      ..interfaceName = interfaceName
+      ..attrs = attrs
+      ..addrs = addrs;
   }
 
   // Scans for this query and handles found/lost objects with the handler.

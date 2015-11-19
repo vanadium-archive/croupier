@@ -37,9 +37,10 @@ class CroupierClient {
 
     // TODO(alexfandrianto): Remove this test advertisement once we are more
     // comfortable with Discovery.
-    _discoveryClient.scan(discoveryTestKey, "HelloWorld!", new MyScanHandler());
+    String interfaceName = "HelloWorld!";
+    _discoveryClient.scan(discoveryTestKey, 'v.InterfaceName="${interfaceName}"', new MyScanHandler());
     _discoveryClient.advertise(discoveryTestKey,
-        DiscoveryClient.serviceMaker(interfaceName: "HelloWorld!"));
+        DiscoveryClient.serviceMaker(interfaceName: interfaceName, addrs: ["dummy address"]));
   }
 
   DiscoveryClient get discoveryClient => _discoveryClient;
@@ -143,10 +144,10 @@ class CroupierClient {
 // Example implementation of a ScanHandler.
 class MyScanHandler extends discovery.ScanHandler {
   void found(discovery.Service s) {
-    util.log("MYSCANHANDLER Found ${s.instanceUuid} ${s.instanceName}");
+    util.log("MYSCANHANDLER Found ${s.instanceId} ${s.instanceName}");
   }
 
-  void lost(List<int> instanceId) {
+  void lost(String instanceId) {
     util.log("MYSCANHANDLER Lost ${instanceId}");
   }
 }

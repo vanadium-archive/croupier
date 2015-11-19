@@ -304,23 +304,23 @@ String _getPartFromBack(String input, String separator, int indexFromLast) {
 // they're advertising.
 class SettingsScanHandler extends discovery.ScanHandler {
   CroupierClient _cc;
-  Map<List<int>, String> settingsAddrs;
-  Map<List<int>, String> gameAddrs;
+  Map<String, String> settingsAddrs;
+  Map<String, String> gameAddrs;
   util.updateCallbackT updateGamesCallback;
 
   SettingsScanHandler(this._cc, this.updateGamesCallback) {
-    settingsAddrs = new Map<List<int>, String>();
-    gameAddrs = new Map<List<int>, String>();
+    settingsAddrs = new Map<String, String>();
+    gameAddrs = new Map<String, String>();
   }
 
   void found(discovery.Service s) {
     util.log(
-        "SettingsScanHandler Found ${s.instanceUuid} ${s.instanceName} ${s.addrs}");
+        "SettingsScanHandler Found ${s.instanceId} ${s.instanceName} ${s.addrs}");
 
     if (s.addrs.length == 2) {
       // Note: Assumes 2 addresses.
-      settingsAddrs[s.instanceUuid] = s.addrs[0];
-      gameAddrs[s.instanceUuid] = s.addrs[1];
+      settingsAddrs[s.instanceId] = s.addrs[0];
+      gameAddrs[s.instanceId] = s.addrs[1];
 
       String json = _getPartFromBack(s.addrs[1], "-", 0);
       updateGamesCallback(s.addrs[1], json);
@@ -333,7 +333,7 @@ class SettingsScanHandler extends discovery.ScanHandler {
     }
   }
 
-  void lost(List<int> instanceId) {
+  void lost(String instanceId) {
     util.log("SettingsScanHandler Lost ${instanceId}");
 
     // TODO(alexfandrianto): Leave the syncgroup?
