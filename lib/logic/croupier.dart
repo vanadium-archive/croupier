@@ -2,11 +2,13 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-import 'game/game.dart'
-    show Game, GameType, GameStartData, stringToGameType, gameTypeToString;
+import 'dart:async';
+
+import '../src/syncbase/settings_manager.dart' show SettingsManager;
 import 'create_game.dart' as cg;
 import 'croupier_settings.dart' show CroupierSettings;
-import '../src/syncbase/settings_manager.dart' show SettingsManager;
+import 'game/game.dart'
+    show Game, GameType, GameStartData, stringToGameType, gameTypeToString;
 
 enum CroupierState {
   Welcome,
@@ -29,6 +31,10 @@ class Croupier {
   Map<int, int> players_found; // empty, but loads asynchronously
   Game game; // null until chosen
   NoArgCb informUICb;
+
+  // Futures to use in order to cancel scans and advertisements.
+  Future _scanFuture;
+  Future _advertiseFuture;
 
   Croupier() {
     state = CroupierState.Welcome;
@@ -91,12 +97,6 @@ class Croupier {
       case CroupierState.Welcome:
         // data should be empty.
         assert(data == null);
-
-        // Start scanning for games if that's what's next for you.
-        if (nextState == CroupierState.JoinGame) {
-          settings_manager.scanSettings(); // don't wait for this future.
-        }
-
         break;
       case CroupierState.Settings:
         // data should be empty.
@@ -114,18 +114,20 @@ class Croupier {
         GameType gt = data as GameType;
         game = cg.createGame(gt, 0); // Start as player 0 of whatever game type.
 
-        settings_manager
+        _advertiseFuture = settings_manager
             .createGameSyncgroup(gameTypeToString(gt), game.gameID)
             .then((GameStartData gsd) {
           // Only the game chooser should be advertising the game.
-          settings_manager
-              .advertiseSettings(gsd); // don't wait for this future.
-        });
+          return settings_manager.advertiseSettings(gsd);
+        }); // don't wait for this future.
 
         break;
       case CroupierState.JoinGame:
         // Note that if we were in join game, we must have been scanning.
-        settings_manager.stopScanSettings();
+        _scanFuture.then((_) {
+          settings_manager.stopScanSettings();
+          _scanFuture = null;
+        });
 
         if (data == null) {
           // Back button pressed.
@@ -148,7 +150,12 @@ class Croupier {
         break;
       case CroupierState.ArrangePlayers:
         // Note that if we were arranging players, we might have been advertising.
-        settings_manager.stopAdvertiseSettings();
+        if (_advertiseFuture != null) {
+          _advertiseFuture.then((_) {
+            settings_manager.stopAdvertiseSettings();
+            _advertiseFuture = null;
+          });
+        }
 
         // data should be empty.
         // All rearrangements affect the Game's player number without changing app state.
@@ -173,6 +180,10 @@ class Croupier {
     if (nextState == CroupierState.Welcome) {
       games_found = new Map<String, GameStartData>();
       players_found = new Map<int, int>();
+    } else if (nextState == CroupierState.JoinGame) {
+      // Start scanning for games since that's what's next for you.
+      _scanFuture =
+          settings_manager.scanSettings(); // don't wait for this future.
     }
 
     state = nextState;

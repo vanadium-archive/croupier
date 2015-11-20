@@ -6,10 +6,10 @@ import 'dart:convert' show JSON;
 
 enum SimulLevel { TURN_BASED, INDEPENDENT, DEPENDENT }
 
-typedef void updateCallbackT(String key, String value);
+typedef void keyValueCallback(String key, String value);
 
 class LogWriter {
-  final updateCallbackT updateCallback;
+  final keyValueCallback updateCallback;
   final List<int> users;
   String logPrefix; // This can be completely ignored.
 

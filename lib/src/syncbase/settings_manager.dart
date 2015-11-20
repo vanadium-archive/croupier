@@ -27,9 +27,9 @@ import 'package:v23discovery/discovery.dart' as discovery;
 import 'package:syncbase/syncbase_client.dart' as sc;
 
 class SettingsManager {
-  final util.updateCallbackT updateSettingsCallback;
-  final util.updateCallbackT updateGamesCallback;
-  final util.updateCallbackT updatePlayerFoundCallback;
+  final util.keyValueCallback updateSettingsCallback;
+  final util.keyValueCallback updateGamesCallback;
+  final util.keyValueCallback updatePlayerFoundCallback;
   final CroupierClient _cc;
   sc.SyncbaseTable tb;
 
@@ -59,8 +59,8 @@ class SettingsManager {
     tb = await _cc.createTable(db, util.tableNameSettings);
 
     // Start to watch the stream for the shared settings table.
-    Stream<sc.WatchChange> watchStream = db.watch(util.tableNameSettings,
-        _settingsWatchSyncPrefix, UTF8.encode("now"));
+    Stream<sc.WatchChange> watchStream = db.watch(
+        util.tableNameSettings, _settingsWatchSyncPrefix, UTF8.encode("now"));
     _startWatchSettings(watchStream); // Don't wait for this future.
     _loadSettings(tb); // Don't wait for this future.
   }
@@ -198,7 +198,7 @@ class SettingsManager {
         new logic_game.GameStartData(type, 0, gameID, id);
 
     await _cc.createSyncgroup(
-        _cc.makeSyncgroupName(util.syncgameSuffix(gsd.toJSONString())),
+        _cc.makeSyncgroupName(util.syncgameSuffix("${gsd.gameID}")),
         util.tableNameGames,
         prefix: util.syncgamePrefix(gameID));
 
@@ -250,30 +250,31 @@ class SettingsManager {
   Future scanSettings() async {
     SettingsScanHandler ssh =
         new SettingsScanHandler(_cc, this.updateGamesCallback);
-    _cc.discoveryClient
-        .scan(_discoverySettingsKey, 'v.InterfaceName="${util.discoveryInterfaceName}"', ssh);
+    return _cc.discoveryClient.scan(_discoverySettingsKey,
+        'v.InterfaceName="${util.discoveryInterfaceName}"', ssh);
   }
 
-  void stopScanSettings() {
-    _cc.discoveryClient.stopScan(_discoverySettingsKey);
+  Future stopScanSettings() {
+    return _cc.discoveryClient.stopScan(_discoverySettingsKey);
   }
 
   // Someone who wants to join a game should advertise their presence.
   Future advertiseSettings(logic_game.GameStartData gsd) async {
     String suffix = await _syncSuffix();
-    String gameSuffix = util.syncgameSuffix(gsd.toJSONString());
-    _cc.discoveryClient.advertise(
+    String gameSuffix = util.syncgameSuffix("${gsd.gameID}");
+    return _cc.discoveryClient.advertise(
         _discoverySettingsKey,
         DiscoveryClient.serviceMaker(
             interfaceName: util.discoveryInterfaceName,
-            addrs: <String>[
-              _cc.makeSyncgroupName(suffix),
-              _cc.makeSyncgroupName(gameSuffix)
-            ]));
+            attrs: <String, String>{
+              util.syncgameSettingsAttr: _cc.makeSyncgroupName(suffix),
+              util.syncgameGameStartDataAttr: gsd.toJSONString()
+            },
+            addrs: <String>[_cc.makeSyncgroupName(gameSuffix)]));
   }
 
-  void stopAdvertiseSettings() {
-    _cc.discoveryClient.stopAdvertise(_discoverySettingsKey);
+  Future stopAdvertiseSettings() {
+    return _cc.discoveryClient.stopAdvertise(_discoverySettingsKey);
   }
 
   Future<int> _getUserID() async {
@@ -306,7 +307,7 @@ class SettingsScanHandler extends discovery.ScanHandler {
   CroupierClient _cc;
   Map<String, String> settingsAddrs;
   Map<String, String> gameAddrs;
-  util.updateCallbackT updateGamesCallback;
+  util.keyValueCallback updateGamesCallback;
 
   SettingsScanHandler(this._cc, this.updateGamesCallback) {
     settingsAddrs = new Map<String, String>();
@@ -317,15 +318,15 @@ class SettingsScanHandler extends discovery.ScanHandler {
     util.log(
         "SettingsScanHandler Found ${s.instanceId} ${s.instanceName} ${s.addrs}");
 
-    if (s.addrs.length == 2) {
-      // Note: Assumes 2 addresses.
-      settingsAddrs[s.instanceId] = s.addrs[0];
-      gameAddrs[s.instanceId] = s.addrs[1];
+    if (s.addrs.length == 1 && s.attrs != null) {
+      // Note: Assumes 1 address and attributes for the game.
+      settingsAddrs[s.instanceId] = s.attrs[util.syncgameSettingsAttr];
+      gameAddrs[s.instanceId] = s.addrs[0];
 
-      String json = _getPartFromBack(s.addrs[1], "-", 0);
-      updateGamesCallback(s.addrs[1], json);
+      String gameSettingsJSON = s.attrs[util.syncgameGameStartDataAttr];
+      updateGamesCallback(gameAddrs[s.instanceId], gameSettingsJSON);
 
-      _cc.joinSyncgroup(s.addrs[0]);
+      _cc.joinSyncgroup(settingsAddrs[s.instanceId]);
     } else {
       // An unexpected service was found. Who is advertising it?
       // https://github.com/vanadium/issues/issues/846

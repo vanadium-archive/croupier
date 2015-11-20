@@ -9,9 +9,9 @@ import '../../logic/game/game.dart' as logic_game;
 import '../../logic/croupier_settings.dart' show CroupierSettings;
 
 class SettingsManager {
-  final util.updateCallbackT updateCallback;
-  final util.updateCallbackT updateGamesCallback;
-  final util.updateCallbackT updatePlayerFoundCallback;
+  final util.keyValueCallback updateCallback;
+  final util.keyValueCallback updateGamesCallback;
+  final util.keyValueCallback updatePlayerFoundCallback;
 
   SettingsManager(this.updateCallback, this.updateGamesCallback,
       this.updatePlayerFoundCallback);
@@ -44,13 +44,17 @@ class SettingsManager {
     return new Future(() => null);
   }
 
-  void stopScanSettings() {}
+  Future stopScanSettings() {
+    return new Future(() => null);
+  }
 
   Future advertiseSettings(logic_game.GameStartData gsd) {
     return new Future(() => null);
   }
 
-  void stopAdvertiseSettings() {}
+  Future stopAdvertiseSettings() {
+    return new Future(() => null);
+  }
 
   Future createGameSyncgroup(String type, int gameID) {
     return new Future(() => null);

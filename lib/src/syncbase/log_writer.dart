@@ -30,7 +30,7 @@ enum SimulLevel { TURN_BASED, INDEPENDENT, DEPENDENT }
 
 class LogWriter {
   // This callback is called on each watch update, passing the key and value.
-  final util.updateCallbackT updateCallback;
+  final util.keyValueCallback updateCallback;
 
   // The users that we should look for when coming to a proposal consensus.
   final List<int> users;

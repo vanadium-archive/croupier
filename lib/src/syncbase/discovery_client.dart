@@ -17,10 +17,13 @@ class ProxyHandlePair<T> {
 /// Make this into the Dart Discovery client
 /// https://github.com/vanadium/issues/issues/835
 class DiscoveryClient {
-  final Map<String, ProxyHandlePair<discovery.AdvertiserProxy>> advertisers =
-      new Map<String, ProxyHandlePair<discovery.AdvertiserProxy>>();
-  final Map<String, ProxyHandlePair<discovery.ScannerProxy>> scanners =
-      new Map<String, ProxyHandlePair<discovery.ScannerProxy>>();
+  final Map<String,
+          Future<ProxyHandlePair<discovery.AdvertiserProxy>>> _advertisers =
+      new Map<String, Future<ProxyHandlePair<discovery.AdvertiserProxy>>>();
+  final Map<String, Future<ProxyHandlePair<discovery.ScannerProxy>>> _scanners =
+      new Map<String, Future<ProxyHandlePair<discovery.ScannerProxy>>>();
+  final Map<String, Future> _stoppingAdvertisers = new Map<String, Future>();
+  final Map<String, Future> _stoppingScanners = new Map<String, Future>();
 
   static final String discoveryUrl = 'https://mojo2.v.io/discovery.mojo';
 
@@ -46,77 +49,132 @@ class DiscoveryClient {
   // Scans for this query and handles found/lost objects with the handler.
   // Keeps track of this scanner via the key.
   Future scan(String key, String query, discovery.ScanHandler handler) async {
-    // Cancel the scan if one is already going for this key.
-    if (scanners.containsKey(key)) {
-      stopScan(key);
+    // Return the existing scan if one is already going.
+    if (_scanners.containsKey(key)) {
+      return _scanners[key];
     }
 
-    discovery.ScannerProxy s = new discovery.ScannerProxy.unbound();
+    Future _scanHelper() async {
+      discovery.ScannerProxy s = new discovery.ScannerProxy.unbound();
 
-    print('Starting up discovery scanner ${key}. Looking for ${query}');
+      print('Starting up discovery scanner ${key}. Looking for ${query}');
 
-    shell.connectToService(discoveryUrl, s);
+      shell.connectToService(discoveryUrl, s);
 
-    // Use a ScanHandlerStub (Mojo-encodable interface) to wrap the scan handler.
-    discovery.ScanHandlerStub shs = new discovery.ScanHandlerStub.unbound();
-    shs.impl = handler;
+      // Use a ScanHandlerStub (Mojo-encodable interface) to wrap the scan handler.
+      discovery.ScanHandlerStub shs = new discovery.ScanHandlerStub.unbound();
+      shs.impl = handler;
 
-    print('Scanning begins!');
-    return s.ptr
-        .scan(query, shs)
-        .then((discovery.ScannerScanResponseParams response) {
-      print(
-          "${key} scanning started. The cancel handle is ${response.handle}.");
-      scanners[key] =
-          new ProxyHandlePair<discovery.ScannerProxy>(s, response.handle);
+      print('Scanning begins!');
+      return s.ptr
+          .scan(query, shs)
+          .then((discovery.ScannerScanResponseParams response) {
+        print(
+            "${key} scanning started. The cancel handle is ${response.handle}.");
+
+        return new ProxyHandlePair<discovery.ScannerProxy>(s, response.handle);
+      });
+    }
+
+    // Otherwise, set _scanners[key] and do the preparation inside the future
+    // so that stopScan can stop it if the two are called back to back.
+    _scanners[key] = _scanHelper();
+
+    return _scanners[key];
+  }
+
+  // This sends a stop signal to the scanner. Handles repeated stop calls on
+  // the same key by returning the same Future.
+  Future stopScan(String key) {
+    if (!_scanners.containsKey(key)) {
+      return new Future.value();
+    }
+    if (_stoppingScanners.containsKey(key)) {
+      return _stoppingScanners[key];
+    }
+
+    _stoppingScanners[key] = _stopScanHelper(key);
+
+    return _stoppingScanners[key].then((_) {
+      // Success! Let's clean up both _scanners and _stoppingScanners.
+      _scanners.remove(key);
+      _stoppingScanners.remove(key);
+    }).catchError((e) {
+      // Failure. We can only clean up _stoppingScanners.
+      _stoppingScanners.remove(key);
+      throw e;
     });
   }
 
-  // This sends a stop signal to the scanner. Since it is non-blocking, the
-  // scan handle may not stop instantaneously.
-  void stopScan(String key) {
-    if (scanners[key] != null) {
-      print("Stopping scan for ${key}.");
-      scanners[key].proxy.ptr.stop(scanners[key].handle);
-      scanners[key].proxy.close(); // don't wait for this future.
-      scanners.remove(key);
-    }
+  Future _stopScanHelper(String key) async {
+    ProxyHandlePair<discovery.ScannerProxy> sp = await _scanners[key];
+    await sp.proxy.ptr.stop(sp.handle);
+    await sp.proxy.close();
+    print("Scan was stopped for ${key}!");
   }
 
   // Advertises the given service information. Keeps track of the advertiser
   // handle via the key.
   Future advertise(String key, discovery.Service serviceInfo,
       {List<String> visibility}) async {
-    // Cancel the advertisement if one is already going for this key.
-    if (advertisers.containsKey(key)) {
-      stopAdvertise(key);
+    // Return the existing advertisement if one is already going.
+    if (_advertisers.containsKey(key)) {
+      return _advertisers[key];
     }
 
-    discovery.AdvertiserProxy a = new discovery.AdvertiserProxy.unbound();
+    Future _advertiseHelper() async {
+      discovery.AdvertiserProxy a = new discovery.AdvertiserProxy.unbound();
 
-    print(
-        'Starting up discovery advertiser ${key}. Broadcasting for ${serviceInfo.instanceName}');
-
-    shell.connectToService(discoveryUrl, a);
-
-    return a.ptr
-        .advertise(serviceInfo, visibility ?? <String>[])
-        .then((discovery.AdvertiserAdvertiseResponseParams response) {
       print(
-          "${key} advertising started. The cancel handle is ${response.handle}.");
-      advertisers[key] =
-          new ProxyHandlePair<discovery.AdvertiserProxy>(a, response.handle);
+          'Starting up discovery advertiser ${key}. Broadcasting for ${serviceInfo.instanceName}');
+
+      shell.connectToService(discoveryUrl, a);
+
+      return a.ptr
+          .advertise(serviceInfo, visibility ?? <String>[])
+          .then((discovery.AdvertiserAdvertiseResponseParams response) {
+        print(
+            "${key} advertising started. The cancel handle is ${response.handle}.");
+
+        return new ProxyHandlePair<discovery.AdvertiserProxy>(
+            a, response.handle);
+      });
+    }
+
+    // Otherwise, set _advertisers[key] and do the preparation inside the future
+    // so that stopAdvertise can stop it if the two are called back to back.
+    _advertisers[key] = _advertiseHelper();
+
+    return _advertisers[key];
+  }
+
+  // This sends a stop signal to the advertiser. Handles repeated stop calls on
+  // the same key by returning the same Future.
+  Future stopAdvertise(String key) {
+    if (!_advertisers.containsKey(key)) {
+      return new Future.value();
+    }
+    if (_stoppingAdvertisers.containsKey(key)) {
+      return _stoppingAdvertisers[key];
+    }
+
+    _stoppingAdvertisers[key] = _stopAdvertiseHelper(key);
+
+    return _stoppingAdvertisers[key].then((_) {
+      // Success! Let's clean up both _advertisers and _stoppingAdvertisers.
+      _advertisers.remove(key);
+      _stoppingAdvertisers.remove(key);
+    }).catchError((e) {
+      // Failure. We can only clean up _stoppingAdvertisers.
+      _stoppingAdvertisers.remove(key);
+      throw e;
     });
   }
 
-  // This sends a stop signal to the advertiser. Since it is non-blocking, the
-  // advertise handle may not stop instantaneously.
-  void stopAdvertise(String key) {
-    if (advertisers[key] != null) {
-      print("Stopping advertise for ${key}.");
-      advertisers[key].proxy.ptr.stop(advertisers[key].handle);
-      advertisers[key].proxy.close(); // don't wait for this future.
-      advertisers.remove(key);
-    }
+  Future _stopAdvertiseHelper(String key) async {
+    ProxyHandlePair<discovery.AdvertiserProxy> ap = await _advertisers[key];
+    await ap.proxy.ptr.stop(ap.handle);
+    await ap.proxy.close();
+    print("Advertise was stopped for ${key}!");
   }
 }
