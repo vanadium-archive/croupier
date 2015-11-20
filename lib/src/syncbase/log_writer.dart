@@ -89,6 +89,8 @@ class LogWriter {
     util.log('watching for changes...');
     _watching = true;
 
+    List<WatchChange> watchSequence = new List<WatchChange>();
+
     // This stream never really ends, so it will watch forever.
     // https://github.com/vanadium/issues/issues/833
     // To break out of the watch handler, we can use the _watching flag.
@@ -99,34 +101,58 @@ class LogWriter {
         break;
       }
 
-      assert(wc.tableName == tbName);
-      util.log('Watch Key: ${wc.rowKey}');
-      util.log('Watch Value ${UTF8.decode(wc.valueBytes)}');
-      String key = wc.rowKey.replaceFirst("${this.logPrefix}/", "");
-      if (key == wc.rowKey) {
-        print("Lacks prefix '${this.logPrefix}/', skipping...");
+      // Accumulate the WatchChange's in watchSequence.
+      watchSequence.add(wc);
+      if (wc.continued) {
+        // Since there are more WatchChange's to collect, do not act yet.
         continue;
-      }
-      String value;
-      switch (wc.changeType) {
-        case WatchChangeTypes.put:
-          value = UTF8.decode(wc.valueBytes);
-          break;
-        case WatchChangeTypes.delete:
-          value = null;
-          break;
-        default:
-          assert(false);
-      }
-
-      if (_isProposalKey(key)) {
-        if (value != null && !_acceptedProposals.contains(key)) {
-          await _receiveProposal(key, value);
-        }
       } else {
-        print("Update callback: ${key}, ${value}");
-        this.updateCallback(key, value);
+        // 1. Sort the watchSequence by timestamp.
+        // Note: The rowKeys for the logPrefix can be sorted this way.
+        // It should not matter if proposals gets mixed up with writes.
+        watchSequence.sort((WatchChange a, WatchChange b) {
+          return a.rowKey.compareTo(b.rowKey);
+        });
+
+        // 2. Then run through each value in order.
+        watchSequence.forEach((WatchChange w) {
+          _handleWatchChange(w);
+        });
+
+        // 3. Then clear the watchSequence.
+        watchSequence.clear();
       }
+    }
+  }
+
+  Future _handleWatchChange(WatchChange wc) async {
+    assert(wc.tableName == tbName);
+    util.log('Watch Key: ${wc.rowKey}');
+    util.log('Watch Value ${UTF8.decode(wc.valueBytes)}');
+    String key = wc.rowKey.replaceFirst("${this.logPrefix}/", "");
+    if (key == wc.rowKey) {
+      print("Lacks prefix '${this.logPrefix}/', skipping...");
+      return;
+    }
+    String value;
+    switch (wc.changeType) {
+      case WatchChangeTypes.put:
+        value = UTF8.decode(wc.valueBytes);
+        break;
+      case WatchChangeTypes.delete:
+        value = null;
+        break;
+      default:
+        assert(false);
+    }
+
+    if (_isProposalKey(key)) {
+      if (value != null && !_acceptedProposals.contains(key)) {
+        await _receiveProposal(key, value);
+      }
+    } else {
+      print("Update callback: ${key}, ${value}");
+      this.updateCallback(key, value);
     }
   }
 
