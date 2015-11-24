@@ -38,16 +38,19 @@ class CroupierClient {
     // TODO(alexfandrianto): Remove this test advertisement once we are more
     // comfortable with Discovery.
     String interfaceName = "HelloWorld!";
-    _discoveryClient.scan(discoveryTestKey, 'v.InterfaceName="${interfaceName}"', new MyScanHandler());
-    _discoveryClient.advertise(discoveryTestKey,
-        DiscoveryClient.serviceMaker(interfaceName: interfaceName, addrs: ["dummy address"]));
+    _discoveryClient.scan(discoveryTestKey,
+        'v.InterfaceName="${interfaceName}"', new MyScanHandler());
+    _discoveryClient.advertise(
+        discoveryTestKey,
+        DiscoveryClient.serviceMaker(
+            interfaceName: interfaceName, addrs: ["dummy address"]));
   }
 
   DiscoveryClient get discoveryClient => _discoveryClient;
 
   // TODO(alexfandrianto): Try not to call this twice at the same time.
   // That would lead to very race-y behavior.
-  Future<sc.SyncbaseNoSqlDatabase> createDatabase() async {
+  Future<sc.SyncbaseDatabase> createDatabase() async {
     util.log('CroupierClient.createDatabase');
     var app = _syncbaseClient.app(util.appName);
     if (!(await app.exists())) {
@@ -67,7 +70,7 @@ class CroupierClient {
   // TODO(alexfandrianto): Try not to call this twice at the same time.
   // That would lead to very race-y behavior.
   Future<sc.SyncbaseTable> createTable(
-      sc.SyncbaseNoSqlDatabase db, String tableName) async {
+      sc.SyncbaseDatabase db, String tableName) async {
     if (_tableLock != null) {
       await _tableLock.future;
     }
@@ -128,7 +131,7 @@ class CroupierClient {
 
   // Helper to get the SyncbaseSyncgroup object from the string.
   Future<sc.SyncbaseSyncgroup> _getSyncgroup(String sgName) async {
-    sc.SyncbaseNoSqlDatabase db = await createDatabase();
+    sc.SyncbaseDatabase db = await createDatabase();
     return db.syncgroup(sgName);
   }
 

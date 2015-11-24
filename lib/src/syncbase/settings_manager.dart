@@ -55,7 +55,7 @@ class SettingsManager {
       return; // Then we're already prepared.
     }
 
-    sc.SyncbaseNoSqlDatabase db = await _cc.createDatabase();
+    sc.SyncbaseDatabase db = await _cc.createDatabase();
     tb = await _cc.createTable(db, util.tableNameSettings);
 
     // Start to watch the stream for the shared settings table.
@@ -176,7 +176,7 @@ class SettingsManager {
   Future<logic_game.GameStartData> createGameSyncgroup(
       String type, int gameID) async {
     print("Creating game syncgroup for ${type} and ${gameID}");
-    sc.SyncbaseNoSqlDatabase db = await _cc.createDatabase();
+    sc.SyncbaseDatabase db = await _cc.createDatabase();
     sc.SyncbaseTable gameTable = await _cc.createTable(db, util.tableNameGames);
 
     // Watch for the players in the game.
@@ -209,7 +209,7 @@ class SettingsManager {
     print("Now joining game syncgroup at ${sgName} and ${gameID}");
     sc.SyncbaseSyncgroup sg = await _cc.joinSyncgroup(sgName);
 
-    sc.SyncbaseNoSqlDatabase db = await _cc.createDatabase();
+    sc.SyncbaseDatabase db = await _cc.createDatabase();
     sc.SyncbaseTable gameTable = await _cc.createTable(db, util.tableNameGames);
 
     // Watch for the players in the game.

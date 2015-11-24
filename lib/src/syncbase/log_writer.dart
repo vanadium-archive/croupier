@@ -24,7 +24,7 @@ import 'dart:async';
 import 'dart:convert' show UTF8, JSON;
 
 import 'package:syncbase/syncbase_client.dart'
-    show SyncbaseNoSqlDatabase, SyncbaseTable, WatchChange, WatchChangeTypes;
+    show SyncbaseDatabase, SyncbaseTable, WatchChange, WatchChangeTypes;
 
 enum SimulLevel { TURN_BASED, INDEPENDENT, DEPENDENT }
 
@@ -76,7 +76,7 @@ class LogWriter {
       return; // Then we're already prepared.
     }
 
-    SyncbaseNoSqlDatabase db = await _cc.createDatabase();
+    SyncbaseDatabase db = await _cc.createDatabase();
     tb = await _cc.createTable(db, tbName);
 
     // Start to watch the stream.
