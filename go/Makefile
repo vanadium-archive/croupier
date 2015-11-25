@@ -26,12 +26,10 @@ credentials: bin/principal
 delete:
 	rm -rf tmp/$(name)
 
-# Naming collisions for different instances of syncbase for the same user?
-# Easy way to make --v23.permissions.literal?
 .PHONY:
 syncbase: delete bin/syncbased credentials tmp
 	$(eval blessing := $(shell bin/principal dump --v23.credentials=./credentials -s=true))
-	$(eval email := $(subst dev.v.io/u/,,$(blessing)))
+	$(eval email := $(subst dev.v.io:u:,,$(blessing)))
 	bin/syncbased \
 		--v=5 \
 		--alsologtostderr=false \
@@ -52,4 +50,5 @@ vet:
 
 all: fmt 
 
-	#--name=/192.168.86.254:8101/croupier/$(name) \
+# Switch mountpoints by replacing the --name flag in syncbase with the following line:
+# --name=/192.168.86.254:8101/croupier/$(name) \

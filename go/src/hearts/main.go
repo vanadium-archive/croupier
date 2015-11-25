@@ -110,8 +110,6 @@ func onStart(glctx gl.Context, u *uistate.UIState) {
 	server.CreateTables(u)
 	// Create watch stream to update game state based on Syncbase updates
 	go watch.Update(u)
-	go watch.PrintStream("Stream 1", u)
-	go watch.PrintStream("Stream 2", u)
 }
 
 func onStop(u *uistate.UIState) {
@@ -125,7 +123,8 @@ func onStop(u *uistate.UIState) {
 func onPaint(glctx gl.Context, sz size.Event, u *uistate.UIState) {
 	if u.CurView == uistate.None {
 		discChan := make(chan []string)
-		go client.ScanForSG(discChan, u.Ctx)
+		u.ScanChan = make(chan bool)
+		go client.ScanForSG(discChan, u.Ctx, u.ScanChan)
 		view.LoadDiscoveryView(discChan, u)
 	}
 	glctx.ClearColor(1, 1, 1, 1)

@@ -8,16 +8,16 @@ package util
 
 const (
 	// switch back to my mountpoint with the following code:
-	// MountPoint = "users/emshack@google.com"
-	MountPoint        = "/192.168.86.254:8101"
+	MountPoint = "users/emshack@google.com"
+	//MountPoint        = "/192.168.86.254:8101"
 	UserID            = 123
 	UserColor         = 16777215
 	UserAvatar        = "Club.png"
 	UserName          = "Croupier Go Player (the blue)"
-	SBName            = "syncbase1"
+	SBName            = "syncbase"
 	AppName           = "app"
 	DbName            = "db"
 	LogName           = "games"
 	SettingsName      = "table_settings"
-	CroupierInterface = "CroupierSettingsAndGame"
+	CroupierInterface = "CroupierSettingsAndGameEmily"
 )

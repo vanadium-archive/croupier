@@ -28,10 +28,10 @@ func OnTouch(t touch.Event, u *uistate.UIState) {
 		case touch.TypeBegin:
 			beginClickDiscovery(t, u)
 		}
-	case uistate.Opening:
+	case uistate.Arrange:
 		switch t.Type {
 		case touch.TypeBegin:
-			beginClickOpening(t, u)
+			beginClickArrange(t, u)
 		}
 	case uistate.Table:
 		switch t.Type {
@@ -104,15 +104,16 @@ func beginClickDiscovery(t touch.Event, u *uistate.UIState) {
 	buttonList := findClickedButton(t, u)
 	if len(buttonList) > 0 {
 		if buttonList[0] == u.Buttons[0] {
-			logChan := make(chan string)
-			settingsChan := make(chan string)
-			go server.CreateSyncgroup(logChan, u)
-			go server.CreateSettingsSyncgroup(settingsChan, u)
-			logName := <-logChan
-			settingsName := <-settingsChan
+			ch := make(chan string)
+			go server.CreateSyncgroups(ch, u)
+			logName := <-ch
+			settingsName := <-ch
 			if logName != "" && settingsName != "" {
-				go server.Advertise(logName, settingsName, u.Ctx)
-				view.LoadOpeningView(u)
+				u.ScanChan <- true
+				u.ScanChan = nil
+				u.SGChan = make(chan bool)
+				go server.Advertise(logName, settingsName, u.SGChan, u.Ctx)
+				view.LoadArrangeView(u)
 			}
 		} else {
 			for _, b := range u.Buttons {
@@ -122,7 +123,9 @@ func beginClickDiscovery(t touch.Event, u *uistate.UIState) {
 					logAddr := b.GetInfo()[1]
 					go client.JoinSyncgroups(joinDone, logAddr, settingsAddr, u)
 					if success := <-joinDone; success {
-						view.LoadOpeningView(u)
+						u.ScanChan <- true
+						u.ScanChan = nil
+						view.LoadArrangeView(u)
 					} else {
 						fmt.Println("Failed to join")
 					}
@@ -132,12 +135,11 @@ func beginClickDiscovery(t touch.Event, u *uistate.UIState) {
 	}
 }
 
-func beginClickOpening(t touch.Event, u *uistate.UIState) {
+func beginClickArrange(t touch.Event, u *uistate.UIState) {
 	buttonList := findClickedButton(t, u)
 	if len(buttonList) > 0 {
-		fmt.Println("Dealing")
-		allHands := u.CurTable.Deal()
-		gamelog.LogDeal(u, u.CurPlayerIndex, allHands)
+		gamelog.LogReady(u)
+		view.LoadWaitingView(u)
 	}
 }
 
@@ -177,9 +179,17 @@ func beginClickPass(t touch.Event, u *uistate.UIState) {
 		} else {
 			pullTab := u.Buttons[0]
 			if pullTab.GetDisplayingImage() {
+				u.CurImg = u.Buttons[0]
 				for _, img := range u.Other {
 					u.Eng.SetSubTex(img.GetNode(), img.GetAlt())
 					img.SetDisplayingImage(false)
+				}
+				blueBanner := u.Other[0]
+				if blueBanner.GetNode().Arranger == nil {
+					finalX := blueBanner.GetInitial().X
+					finalY := pullTab.GetInitial().Y + pullTab.GetDimensions().Y - blueBanner.GetDimensions().Y
+					finalPos := coords.MakeVec(finalX, finalY)
+					reposition.AnimateImageNoChannel(blueBanner, finalPos, blueBanner.GetDimensions(), u)
 				}
 			}
 		}
@@ -236,13 +246,17 @@ func endClickPass(t touch.Event, u *uistate.UIState) {
 	} else if u.CurImg != nil && touchingStaticImg(t, u.Other[0], u) {
 		ch := make(chan bool)
 		success := passCards(ch, u.CurPlayerIndex, u)
+		quit := make(chan bool)
+		u.AnimChans = append(u.AnimChans, quit)
 		go func() {
-			<-ch
-			if !success {
-				fmt.Println("Invalid pass")
-			} else {
-				view.LoadTakeView(u)
+			onDone := func() {
+				if !success {
+					fmt.Println("Invalid pass")
+				} else {
+					view.LoadTakeView(u)
+				}
 			}
+			reposition.SwitchOnChan(ch, quit, onDone, u)
 		}()
 	}
 	u.CurCard = nil
@@ -251,6 +265,9 @@ func endClickPass(t touch.Event, u *uistate.UIState) {
 
 func beginClickTake(t touch.Event, u *uistate.UIState) {
 	u.CurCard = findClickedCard(t, u)
+	if u.CurCard != nil {
+		u.CurCard.GetNode().Arranger = nil
+	}
 	buttonList := findClickedButton(t, u)
 	if len(buttonList) > 0 {
 		if u.Debug {
@@ -282,13 +299,17 @@ func endClickTake(t touch.Event, u *uistate.UIState) {
 	if doneTaking {
 		ch := make(chan bool)
 		success := takeCards(ch, u.CurPlayerIndex, u)
+		quit := make(chan bool)
+		u.AnimChans = append(u.AnimChans, quit)
 		go func() {
-			<-ch
-			if !success {
-				fmt.Println("Invalid take")
-			} else {
-				view.LoadPlayView(u)
+			onDone := func() {
+				if !success {
+					fmt.Println("Invalid take")
+				} else {
+					view.LoadPlayView(u)
+				}
 			}
+			reposition.SwitchOnChan(ch, quit, onDone, u)
 		}()
 	}
 }
@@ -306,6 +327,9 @@ func beginClickPlay(t touch.Event, u *uistate.UIState) {
 			} else if u.Buttons[2] == buttonList[0] {
 				view.LoadPassOrTakeOrPlay(u)
 			}
+		} else {
+			u.CurImg = u.Buttons[0]
+			view.LoadSplitView(false, u)
 		}
 	}
 }
@@ -324,9 +348,11 @@ func endClickPlay(t touch.Event, u *uistate.UIState) {
 			reposition.ResetCardPosition(u.CurCard, u.Eng)
 			reposition.RealignSuit(u.CurCard.GetSuit(), u.CurCard.GetInitial().Y, u)
 		}
+		quit := make(chan bool)
+		u.AnimChans = append(u.AnimChans, quit)
 		go func() {
-			<-ch
-			view.LoadPlayView(u)
+			onDone := func() { view.LoadPlayView(u) }
+			reposition.SwitchOnChan(ch, quit, onDone, u)
 		}()
 	} else {
 		// check to see if card was removed from a drop target
@@ -345,9 +371,11 @@ func beginClickSplit(t touch.Event, u *uistate.UIState) {
 			if u.Buttons[0] == buttonList[0] {
 				ch := make(chan bool)
 				reposition.AnimateOutSplit(ch, u)
+				quit := make(chan bool)
+				u.AnimChans = append(u.AnimChans, quit)
 				go func() {
-					<-ch
-					view.LoadPlayView(u)
+					onDone := func() { view.LoadPlayView(u) }
+					reposition.SwitchOnChan(ch, quit, onDone, u)
 				}()
 			} else if u.Buttons[1] == buttonList[0] {
 				view.LoadTableView(u)
@@ -357,9 +385,11 @@ func beginClickSplit(t touch.Event, u *uistate.UIState) {
 		} else {
 			ch := make(chan bool)
 			reposition.AnimateOutSplit(ch, u)
+			quit := make(chan bool)
+			u.AnimChans = append(u.AnimChans, quit)
 			go func() {
-				<-ch
-				view.LoadPlayView(u)
+				onDone := func() { view.LoadPlayView(u) }
+				reposition.SwitchOnChan(ch, quit, onDone, u)
 			}()
 		}
 	}
@@ -397,6 +427,7 @@ func beginClickScore(t touch.Event, u *uistate.UIState) {
 		for !success {
 			gamelog.LogReady(u)
 		}
+		view.LoadWaitingView(u)
 	}
 }
 

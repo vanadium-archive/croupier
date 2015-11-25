@@ -61,22 +61,21 @@ func getStringImgs(input, color string, texs map[string]sprite.SubTex) []sprite.
 	imgs := make([]sprite.SubTex, 0)
 	for _, char := range input {
 		key := ""
-		// if char is a space
 		if char == 32 {
 			key += "Space"
 		} else if char == 33 {
 			key += "Bang"
-			// if char is an apostrophe
 		} else if char == 39 {
 			key += "Apostrophe"
-			// if char is a colon
+		} else if char == 46 {
+			key += "Period"
 		} else if char == 58 {
 			key += "Colon"
-			// if char is a number
 		} else if char >= 48 && char <= 57 {
+			// if char is a number
 			key += string(char)
-			// if char is a letter
 		} else {
+			// if char is a letter
 			key += strings.ToUpper(string(char))
 			if char > 90 {
 				key += "-Lower"
@@ -276,7 +275,7 @@ func LoadTextures(eng sprite.Engine) map[string]sprite.SubTex {
 		"R-Lower-Gray.png", "S-Lower-Gray.png", "T-Lower-Gray.png", "U-Lower-Gray.png", "V-Lower-Gray.png", "W-Lower-Gray.png",
 		"X-Lower-Gray.png", "Y-Lower-Gray.png", "Z-Lower-Gray.png", "Space-Gray.png", "RoundedRectangle-DBlue.png",
 		"RoundedRectangle-LBlue.png", "RoundedRectangle-Gray.png", "Rectangle-LBlue.png", "Rectangle-DBlue.png", "HorizontalPullTab.png",
-		"VerticalPullTab.png", "NewGame.png", "NewRound.png", "JoinGame.png", "Deal.png",
+		"VerticalPullTab.png", "NewGame.png", "NewRound.png", "JoinGame.png", "Deal.png", "Period.png",
 	}
 	for _, f := range boundedImgs {
 		a, err := asset.Open(f)

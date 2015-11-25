@@ -26,7 +26,7 @@ type View string
 
 const (
 	None      View = "None"
-	Opening   View = "Opening"
+	Arrange   View = "Arrange"
 	Discovery View = "Discovery"
 	Pass      View = "Pass"
 	Take      View = "Take"
@@ -46,10 +46,11 @@ const (
 )
 
 type UIState struct {
-	StartTime      time.Time
-	Images         *glutil.Images
-	Eng            sprite.Engine
-	Scene          *sprite.Node
+	StartTime time.Time
+	Images    *glutil.Images
+	Eng       sprite.Engine
+	Scene     *sprite.Node
+	// the following arrays keep track of all displayed images
 	Cards          []*card.Card
 	TableCards     []*card.Card
 	BackgroundImgs []*staticimg.StaticImg
@@ -57,34 +58,38 @@ type UIState struct {
 	DropTargets    []*staticimg.StaticImg
 	Buttons        []*staticimg.StaticImg
 	Other          []*staticimg.StaticImg
-	CurCard        *card.Card
-	CurImg         *staticimg.StaticImg
+	CurCard        *card.Card           // the card that is currently clicked on
+	CurImg         *staticimg.StaticImg // the image that is currently clicked on
 	// lastMouseXY is in Px: divide by pixelsPerPt to get Pt
-	LastMouseXY   *coords.Vec
-	NumPlayers    int
-	NumSuits      int
-	CardSize      float32
-	CardScaler    float32
-	TopPadding    float32
-	BottomPadding float32
-	// windowSize is in Pt
-	WindowSize     *coords.Vec
+	LastMouseXY *coords.Vec // the position of the mouse in the most recent frame
+	NumPlayers  int
+	NumSuits    int
+	// the following variables are used for sizing and positioning specifications
+	CardSize       float32
+	CardScaler     float32
+	TopPadding     float32
+	BottomPadding  float32
+	WindowSize     *coords.Vec // windowSize is in Pt
 	CardDim        *coords.Vec
 	TableCardDim   *coords.Vec
 	PlayerIconDim  *coords.Vec
 	PixelsPerPt    float32
 	Overlap        *coords.Vec
 	Padding        float32
-	CurView        View
-	CurTable       *table.Table
-	Done           bool
-	Texs           map[string]sprite.SubTex
-	CurPlayerIndex int
+	CurView        View                     // the screen currently being shown to the user
+	CurTable       *table.Table             // the table of the current game
+	Done           bool                     // true if the app has been quit
+	Texs           map[string]sprite.SubTex // map of all loaded images
+	CurPlayerIndex int                      // the player number of this player
 	Ctx            *context.T
 	Service        syncbase.Service
-	Debug          bool
-	Shutdown       func()
-	GameID		   int
+	Debug          bool        // true if debugging, adds extra functionality to switch between players
+	Shutdown       func()      // used to shut down a v23.Init()
+	GameID         int         // used to differentiate between concurrent games
+	IsOwner        bool        // true if this player is the game creator
+	AnimChans      []chan bool // keeps track of all 'quit' channels in animations so their goroutines can be stopped
+	SGChan         chan bool   // pass in a bool to stop advertising the syncgroup
+	ScanChan       chan bool   // pass in a bool to stop scanning for syncgroups
 }
 
 func MakeUIState() *UIState {
@@ -112,7 +117,7 @@ func MakeUIState() *UIState {
 		Padding:        float32(5),
 		CurView:        None,
 		Done:           false,
-		CurPlayerIndex: 0,
-		Debug:          true,
+		Debug:          false,
+		AnimChans:      make([]chan bool, 0),
 	}
 }

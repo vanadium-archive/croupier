@@ -25,22 +25,40 @@ import (
 	"golang.org/x/mobile/exp/sprite"
 )
 
-// Opening View: Only temporary, for debugging, while discovery is not integrated
-func LoadOpeningView(u *uistate.UIState) {
-	u.CurView = uistate.Opening
+// TODO(emshack): Flesh out Arrange view to actually arrange players
+func LoadArrangeView(u *uistate.UIState) {
+	u.CurView = uistate.Arrange
 	<-time.After(1 * time.Second)
+	resetAnims(u)
 	resetImgs(u)
-	ResetScene(u)
+	resetScene(u)
 	buttonPos := coords.MakeVec((u.WindowSize.X-2*u.CardDim.X)/2, (u.WindowSize.Y-u.CardDim.Y)/2)
 	buttonDim := coords.MakeVec(2*u.CardDim.X, u.CardDim.Y)
 	buttonImage := u.Texs["Deal.png"]
 	u.Buttons = append(u.Buttons, texture.MakeImgWithoutAlt(buttonImage, buttonPos, buttonDim, u.Eng, u.Scene))
 }
 
+// Waiting view: Displays the word "Waiting". To be displayed when players are waiting for a new round to be dealt
+// TODO(emshack): Integrate this with Arrange view and Score view so that a separate screen is not necessary
+func LoadWaitingView(u *uistate.UIState) {
+	resetAnims(u)
+	resetImgs(u)
+	resetScene(u)
+	center := u.WindowSize.DividedBy(2)
+	maxWidth := u.WindowSize.X - 2*u.Padding
+	scaler := float32(3)
+	textImgs := texture.MakeStringImgCenterAlign("Waiting...", "", "", true, center, scaler, maxWidth, u)
+	for _, img := range textImgs {
+		u.BackgroundImgs = append(u.BackgroundImgs, img)
+	}
+}
+
+// Discovery view: Displays a menu of possible games to join
 func LoadDiscoveryView(discChan chan []string, u *uistate.UIState) {
 	u.CurView = uistate.Discovery
+	resetAnims(u)
 	resetImgs(u)
-	ResetScene(u)
+	resetScene(u)
 	newGameImg := u.Texs["NewGame.png"]
 	newGameDim := coords.MakeVec(2*u.CardDim.X, u.CardDim.Y)
 	newGamePos := coords.MakeVec((u.WindowSize.X-newGameDim.X)/2, u.TopPadding)
@@ -61,8 +79,9 @@ func LoadDiscoveryView(discChan chan []string, u *uistate.UIState) {
 // Table View: Displays the table. Intended for public devices
 func LoadTableView(u *uistate.UIState) {
 	u.CurView = uistate.Table
+	resetAnims(u)
 	resetImgs(u)
-	ResetScene(u)
+	resetScene(u)
 	scaler := float32(4)
 	maxWidth := 4 * u.TableCardDim.X
 	// adding four drop targets for trick
@@ -238,6 +257,7 @@ func LoadTableView(u *uistate.UIState) {
 		texture.MakeImgWithoutAlt(deviceIconImage, deviceIconPos, deviceIconDim, u.Eng, u.Scene))
 	//adding cards
 	for _, p := range u.CurTable.GetPlayers() {
+		// cards in hand
 		hand := p.GetHand()
 		for i, c := range hand {
 			texture.PopulateCardImage(c, u.Texs, u.Eng, u.Scene)
@@ -245,6 +265,29 @@ func LoadTableView(u *uistate.UIState) {
 			reposition.SetCardPositionTable(c, p.GetPlayerIndex(), cardIndex, u)
 			u.Eng.SetSubTex(c.GetNode(), c.GetBack())
 			u.TableCards = append(u.TableCards, c)
+		}
+		// cards that have been passed
+		passed := p.GetPassedTo()
+		for i, c := range passed {
+			var passer int
+			switch u.CurTable.GetDir() {
+			case direction.Right:
+				passer = (p.GetPlayerIndex() + 1) % u.NumPlayers
+			case direction.Across:
+				passer = (p.GetPlayerIndex() + 2) % u.NumPlayers
+			case direction.Left:
+				passer = (p.GetPlayerIndex() + 3) % u.NumPlayers
+			}
+			cardIndexVec := coords.MakeVec(float32(len(hand)+len(passed)), float32(len(hand)+i))
+			initial := reposition.CardPositionTable(passer, cardIndexVec, u)
+			c.SetInitial(initial)
+			if !p.GetDoneTaking() {
+				texture.PopulateCardImage(c, u.Texs, u.Eng, u.Scene)
+				c.SetBackDisplay(u.Eng)
+				pos := reposition.DetermineTablePassPosition(c, i, p.GetPlayerIndex(), u)
+				c.Move(pos, u.TableCardDim, u.Eng)
+				u.TableCards = append(u.TableCards, c)
+			}
 		}
 	}
 	if u.Debug {
@@ -269,8 +312,9 @@ func LoadPassOrTakeOrPlay(u *uistate.UIState) {
 // Score View: Shows current player standings at the end of every round, including the end of the game
 func LoadScoreView(roundScores, winners []int, u *uistate.UIState) {
 	u.CurView = uistate.Score
+	resetAnims(u)
 	resetImgs(u)
-	ResetScene(u)
+	resetScene(u)
 	addHeader(u)
 	addScoreViewHeaderText(u)
 	addPlayerScores(roundScores, u)
@@ -280,8 +324,9 @@ func LoadScoreView(roundScores, winners []int, u *uistate.UIState) {
 // Pass View: Shows player's hand and allows them to pass cards
 func LoadPassView(u *uistate.UIState) {
 	u.CurView = uistate.Pass
+	resetAnims(u)
 	resetImgs(u)
-	ResetScene(u)
+	resetScene(u)
 	addHeader(u)
 	addGrayPassBar(u)
 	addPassDrops(u)
@@ -294,8 +339,9 @@ func LoadPassView(u *uistate.UIState) {
 // Take View: Shows player's hand and allows them to take the cards that have been passed to them
 func LoadTakeView(u *uistate.UIState) {
 	u.CurView = uistate.Take
+	resetAnims(u)
 	resetImgs(u)
-	ResetScene(u)
+	resetScene(u)
 	addHeader(u)
 	addGrayTakeBar(u)
 	addHand(u)
@@ -310,8 +356,9 @@ func LoadTakeView(u *uistate.UIState) {
 // Play View: Shows player's hand and allows them to play cards
 func LoadPlayView(u *uistate.UIState) {
 	u.CurView = uistate.Play
+	resetAnims(u)
 	resetImgs(u)
-	ResetScene(u)
+	resetScene(u)
 	addPlaySlot(u)
 	addHand(u)
 	addPlayHeader(getTurnText(u), false, u)
@@ -326,8 +373,9 @@ func LoadPlayView(u *uistate.UIState) {
 
 func LoadSplitView(reloading bool, u *uistate.UIState) {
 	u.CurView = uistate.Split
+	resetAnims(u)
 	resetImgs(u)
-	ResetScene(u)
+	resetScene(u)
 	addPlayHeader(getTurnText(u), !reloading, u)
 	addSplitViewPlayerIcons(!reloading, u)
 	addHand(u)
@@ -818,15 +866,23 @@ func resetImgs(u *uistate.UIState) {
 	u.DropTargets = make([]*staticimg.StaticImg, 0)
 	u.Buttons = make([]*staticimg.StaticImg, 0)
 	u.Other = make([]*staticimg.StaticImg, 0)
+	u.CurCard = nil
 }
 
-func ResetScene(u *uistate.UIState) {
+func resetScene(u *uistate.UIState) {
 	u.Scene = &sprite.Node{}
 	u.Eng.Register(u.Scene)
 	u.Eng.SetTransform(u.Scene, f32.Affine{
 		{1, 0, 0},
 		{0, 1, 0},
 	})
+}
+
+func resetAnims(u *uistate.UIState) {
+	for _, ch := range u.AnimChans {
+		ch <- true
+	}
+	u.AnimChans = make([]chan bool, 0)
 }
 
 func addDebugBar(u *uistate.UIState) {

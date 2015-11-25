@@ -24,26 +24,6 @@ import (
 	"v.io/v23/syncbase/nosql"
 )
 
-func PrintStream(prefix string, u *uistate.UIState) {
-	stream, err := client.WatchData(u)
-	if err != nil {
-		fmt.Println("WatchData error:", err)
-	}
-	for {
-		if updateExists := stream.Advance(); updateExists {
-			c := stream.Change()
-			if c.ChangeType == nosql.PutChange {
-				var value []byte
-				if err := c.Value(&value); err != nil {
-					fmt.Println("Value error:", err)
-				}
-				valueStr := string(value)
-				fmt.Println(prefix, valueStr)
-			}
-		}
-	}
-}
-
 func Update(u *uistate.UIState) {
 	stream, err := client.WatchData(u)
 	if err != nil {
@@ -62,15 +42,15 @@ func Update(u *uistate.UIState) {
 				updateType := strings.Split(valueStr, "|")[0]
 				switch updateType {
 				case gamelog.Deal:
-					onDeal(valueStr, u)
+					go onDeal(valueStr, u)
 				case gamelog.Pass:
-					onPass(valueStr, u)
+					go onPass(valueStr, u)
 				case gamelog.Take:
-					onTake(valueStr, u)
+					go onTake(valueStr, u)
 				case gamelog.Play:
-					onPlay(valueStr, u)
+					go onPlay(valueStr, u)
 				case gamelog.Ready:
-					onReady(valueStr, u)
+					go onReady(valueStr, u)
 				}
 			} else {
 				fmt.Println("Unexpected ChangeType: ", c.ChangeType)
@@ -85,7 +65,11 @@ func onDeal(value string, u *uistate.UIState) {
 	u.CurTable.GetPlayers()[playerInt].SetHand(curCards)
 	if u.CurTable.AllDoneDealing() {
 		u.CurTable.NewRound()
-		view.LoadTableView(u)
+		if u.CurPlayerIndex >= 0 && u.CurPlayerIndex < u.NumPlayers {
+			view.LoadPassOrTakeOrPlay(u)
+		} else {
+			view.LoadTableView(u)
+		}
 	}
 }
 
@@ -104,15 +88,14 @@ func onPass(value string, u *uistate.UIState) {
 	for _, c := range curCards {
 		u.CurTable.GetPlayers()[playerInt].RemoveFromHand(c)
 	}
-	if u.CurPlayerIndex >= 0 {
-		u.Cards = u.CurTable.GetPlayers()[u.CurPlayerIndex].GetHand()
-	}
 	u.CurTable.GetPlayers()[playerInt].SetPassedFrom(curCards)
 	u.CurTable.GetPlayers()[receivingPlayer].SetPassedTo(curCards)
 	u.CurTable.GetPlayers()[playerInt].SetDonePassing(true)
 	// UI
 	if u.CurView == uistate.Table {
-		reposition.AnimateTableCardPass(curCards, receivingPlayer, u)
+		quit := make(chan bool)
+		u.AnimChans = append(u.AnimChans, quit)
+		reposition.AnimateTableCardPass(curCards, receivingPlayer, quit, u)
 		reposition.SetTableDropColors(u)
 	} else if u.CurView == uistate.Take && u.CurPlayerIndex == receivingPlayer {
 		view.LoadTakeView(u)
@@ -130,9 +113,6 @@ func onTake(value string, u *uistate.UIState) {
 		p.AddToHand(c)
 	}
 	u.CurTable.GetPlayers()[playerInt].SetDoneTaking(true)
-	if u.CurPlayerIndex >= 0 {
-		u.Cards = u.CurTable.GetPlayers()[u.CurPlayerIndex].GetHand()
-	}
 	if p.HasTwoOfClubs() {
 		u.CurTable.SetFirstPlayer(p.GetPlayerIndex())
 		// UI
@@ -142,7 +122,9 @@ func onTake(value string, u *uistate.UIState) {
 	}
 	// UI
 	if u.CurView == uistate.Table {
-		reposition.AnimateTableCardTake(passed, u.CurTable.GetPlayers()[playerInt], u)
+		quit := make(chan bool)
+		u.AnimChans = append(u.AnimChans, quit)
+		reposition.AnimateTableCardTake(passed, u.CurTable.GetPlayers()[playerInt], quit, u)
 		reposition.SetTableDropColors(u)
 	}
 }
@@ -154,9 +136,6 @@ func onPlay(value string, u *uistate.UIState) {
 	u.CurTable.GetPlayers()[playerInt].RemoveFromHand(playedCard)
 	u.CurTable.SetPlayedCard(playedCard, playerInt)
 	u.CurTable.GetPlayers()[playerInt].SetDonePlaying(true)
-	if u.CurPlayerIndex >= 0 {
-		u.Cards = u.CurTable.GetPlayers()[u.CurPlayerIndex].GetHand()
-	}
 	trickOver := true
 	trickCards := u.CurTable.GetTrick()
 	for _, c := range trickCards {
@@ -176,7 +155,9 @@ func onPlay(value string, u *uistate.UIState) {
 	}
 	// UI
 	if u.CurView == uistate.Table {
-		reposition.AnimateTableCardPlay(playedCard, playerInt, u)
+		quit := make(chan bool)
+		u.AnimChans = append(u.AnimChans, quit)
+		reposition.AnimateTableCardPlay(playedCard, playerInt, quit, u)
 		reposition.SetTableDropColors(u)
 		if trickOver {
 			var trickDir direction.Direction
@@ -190,28 +171,38 @@ func onPlay(value string, u *uistate.UIState) {
 			case 3:
 				trickDir = direction.Right
 			}
-			reposition.AnimateTableCardTakeTrick(trickCards, trickDir, u)
+			quit := make(chan bool)
+			u.AnimChans = append(u.AnimChans, quit)
+			reposition.AnimateTableCardTakeTrick(trickCards, trickDir, quit, u)
 		}
 	} else if u.CurView == uistate.Split {
-		if playerInt != u.CurPlayerIndex {
-			reposition.AnimateSplitCardPlay(playedCard, playerInt, u)
-		}
-		reposition.SetSplitDropColors(u)
-		if trickOver {
-			var trickDir direction.Direction
-			switch recipient {
-			case u.CurPlayerIndex:
-				trickDir = direction.Down
-			case (u.CurPlayerIndex + 1) % u.NumPlayers:
-				trickDir = direction.Left
-			case (u.CurPlayerIndex + 2) % u.NumPlayers:
-				trickDir = direction.Across
-			case (u.CurPlayerIndex + 3) % u.NumPlayers:
-				trickDir = direction.Right
+		if roundOver {
+			view.LoadScoreView(roundScores, winners, u)
+		} else {
+			if playerInt != u.CurPlayerIndex {
+				quit := make(chan bool)
+				u.AnimChans = append(u.AnimChans, quit)
+				reposition.AnimateSplitCardPlay(playedCard, playerInt, quit, u)
 			}
-			reposition.AnimateTableCardTakeTrick(trickCards, trickDir, u)
+			reposition.SetSplitDropColors(u)
+			if trickOver {
+				var trickDir direction.Direction
+				switch recipient {
+				case u.CurPlayerIndex:
+					trickDir = direction.Down
+				case (u.CurPlayerIndex + 1) % u.NumPlayers:
+					trickDir = direction.Left
+				case (u.CurPlayerIndex + 2) % u.NumPlayers:
+					trickDir = direction.Across
+				case (u.CurPlayerIndex + 3) % u.NumPlayers:
+					trickDir = direction.Right
+				}
+				quit := make(chan bool)
+				u.AnimChans = append(u.AnimChans, quit)
+				reposition.AnimateTableCardTakeTrick(trickCards, trickDir, quit, u)
+			}
+			view.LoadSplitView(true, u)
 		}
-		view.LoadSplitView(true, u)
 	} else if u.CurView == uistate.Play {
 		if roundOver {
 			view.LoadScoreView(roundScores, winners, u)
@@ -240,16 +231,19 @@ func onReady(value string, u *uistate.UIState) {
 	// logic
 	playerInt, _ := parsePlayerAndCards(value, u)
 	u.CurTable.GetPlayers()[playerInt].SetDoneScoring(true)
-	if u.CurTable.AllReadyForNewRound() {
+	if u.CurTable.AllReadyForNewRound() && u.IsOwner {
 		newHands := u.CurTable.Deal()
-		success := gamelog.LogDeal(u, playerInt, newHands)
+		success := gamelog.LogDeal(u, u.CurPlayerIndex, newHands)
 		for !success {
-			success = gamelog.LogDeal(u, playerInt, newHands)
+			success = gamelog.LogDeal(u, u.CurPlayerIndex, newHands)
 		}
 	}
 	// UI
-	if playerInt == u.CurPlayerIndex {
-		view.LoadTableView(u)
+	if u.CurTable.AllReadyForNewRound() {
+		if u.SGChan != nil {
+			u.SGChan <- true
+			u.SGChan = nil
+		}
 	}
 }
 

@@ -7,11 +7,11 @@
 package client
 
 import (
-	"fmt"
-	"strings"
 	"encoding/json"
+	"fmt"
 	"hearts/img/uistate"
 	"hearts/syncbase/util"
+	"strings"
 	"v.io/v23/context"
 	"v.io/v23/discovery"
 	wire "v.io/v23/services/syncbase/nosql"
@@ -23,7 +23,7 @@ import (
 )
 
 // Searches for new syncgroups being advertised, sends found syncgroups to sgChan
-func ScanForSG(sgChan chan []string, ctx *context.T) {
+func ScanForSG(sgChan chan []string, ctx *context.T, quit chan bool) {
 	mdns, err := mdns.New("")
 	if err != nil {
 		ctx.Fatalf("Plugin failed: %v", err)
@@ -45,6 +45,8 @@ loop:
 			}
 		case <-signals.ShutdownOnSignals(ctx):
 			break loop
+		case <-quit:
+			break loop
 		}
 	}
 }
@@ -54,19 +56,19 @@ func GetSG(instances map[string]string, update discovery.Update) []string {
 	switch u := update.(type) {
 	case discovery.UpdateFound:
 		found := u.Value
-		instances[string(found.Service.InstanceUuid)] = found.Service.InstanceName
-		fmt.Printf("Discovered %q: Instance=%x, Interface=%q, Addrs=%v\n", found.Service.InstanceName, found.Service.InstanceUuid, found.Service.InterfaceName, found.Service.Addrs)
+		instances[string(found.Service.InstanceId)] = found.Service.InstanceName
+		fmt.Printf("Discovered %q: Instance=%x, Interface=%q, Addrs=%v\n", found.Service.InstanceName, found.Service.InstanceId, found.Service.InterfaceName, found.Service.Addrs)
 		if found.Service.InterfaceName == util.CroupierInterface {
 			return found.Service.Addrs
 		}
 	case discovery.UpdateLost:
 		lost := u.Value
-		name, ok := instances[string(lost.InstanceUuid)]
+		name, ok := instances[string(lost.InstanceId)]
 		if !ok {
 			name = "unknown"
 		}
-		delete(instances, string(lost.InstanceUuid))
-		fmt.Printf("Lost %q: Instance=%x\n", name, lost.InstanceUuid)
+		delete(instances, string(lost.InstanceId))
+		fmt.Printf("Lost %q: Instance=%x\n", name, lost.InstanceId)
 	}
 	return nil
 }
@@ -83,8 +85,10 @@ func WatchData(u *uistate.UIState) (nosql.WatchStream, error) {
 }
 
 // Joins a set of gamelog and game settings syncgroups
+// TODO(emshack): After joining a syncgroup, advertise user settings data
 func JoinSyncgroups(ch chan bool, logName, settingsName string, u *uistate.UIState) {
 	fmt.Println("Joining syncgroup")
+	u.IsOwner = false
 	app := u.Service.App(util.AppName)
 	db := app.NoSQLDatabase(util.DbName, nil)
 	logSg := db.Syncgroup(logName)
@@ -97,6 +101,7 @@ func JoinSyncgroups(ch chan bool, logName, settingsName string, u *uistate.UISta
 		ch <- false
 	} else {
 		fmt.Println("Syncgroup joined")
+		// Set UIState GameID
 		tmp := strings.Split(logName, "-")
 		lasttmp := tmp[len(tmp)-1]
 		tmpMap := make(map[string]interface{})
@@ -105,6 +110,19 @@ func JoinSyncgroups(ch chan bool, logName, settingsName string, u *uistate.UISta
 			fmt.Println("ERROR UNMARSHALLING")
 		}
 		u.GameID = int(tmpMap["gameID"].(float64))
+		u.CurPlayerIndex = NumInSG(logName, u) - 1
+		fmt.Println(u.CurPlayerIndex)
 		ch <- true
 	}
+}
+
+func NumInSG(logName string, u *uistate.UIState) int {
+	app := u.Service.App(util.AppName)
+	db := app.NoSQLDatabase(util.DbName, nil)
+	sg := db.Syncgroup(logName)
+	members, err := sg.GetMembers(u.Ctx)
+	if err != nil {
+		fmt.Println(err)
+	}
+	return len(members)
 }

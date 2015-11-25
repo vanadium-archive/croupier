@@ -62,7 +62,7 @@ func RealignSuit(suitNum card.Suit, oldY float32, u *uistate.UIState) {
 func SetTableDropColors(u *uistate.UIState) {
 	blueTargetIndex := u.CurTable.WhoseTurn()
 	for i, d := range u.DropTargets {
-		if i == blueTargetIndex {
+		if i == blueTargetIndex && u.CurTable.AllDonePassing() {
 			u.Eng.SetSubTex(d.GetNode(), d.GetAlt())
 			d.SetDisplayingImage(false)
 		} else {
@@ -106,46 +106,52 @@ func DragImgs(t touch.Event, cards []*card.Card, imgs []*staticimg.StaticImg, u 
 }
 
 // Animation for the 'pass' action, when app is in the table view
-func AnimateTableCardPass(cards []*card.Card, toPlayer int, u *uistate.UIState) {
+func AnimateTableCardPass(cards []*card.Card, toPlayer int, quit chan bool, u *uistate.UIState) {
 	for cardNum, animCard := range cards {
-		cardDim := animCard.GetDimensions()
-		dropTargetXY := u.DropTargets[toPlayer].GetCurrent()
-		dropTargetDim := u.DropTargets[toPlayer].GetDimensions()
-		targetCenter := dropTargetXY.PlusVec(dropTargetDim.DividedBy(2))
-		xPlayerBlockSize := 2*u.PlayerIconDim.X + u.Padding
-		yPlayerBlockSize := u.TopPadding + 2*u.TableCardDim.Y + 3*u.Padding + u.PlayerIconDim.Y
-		blockEdge := targetCenter.MinusVec(cardDim.Times(1.5).Plus(u.Padding))
-		var destination *coords.Vec
-		switch toPlayer {
-		case 0:
-			destination = coords.MakeVec(
-				blockEdge.X+float32(cardNum)*(u.Padding+cardDim.X),
-				u.WindowSize.Y-yPlayerBlockSize-u.TableCardDim.Y)
-		case 1:
-			destination = coords.MakeVec(
-				xPlayerBlockSize,
-				blockEdge.Y+float32(cardNum)*(u.Padding+cardDim.Y))
-		case 2:
-			destination = coords.MakeVec(
-				blockEdge.X+float32(cardNum)*(u.Padding+cardDim.X),
-				yPlayerBlockSize)
-		case 3:
-			destination = coords.MakeVec(
-				u.WindowSize.X-xPlayerBlockSize-u.TableCardDim.X,
-				blockEdge.Y+float32(cardNum)*(u.Padding+cardDim.Y))
-		}
+		destination := DetermineTablePassPosition(animCard, cardNum, toPlayer, u)
 		if cardNum < len(cards)-1 {
-			animateCardNoChannel(animCard, destination, cardDim, u)
+			animateCardNoChannel(animCard, destination, animCard.GetDimensions(), u)
 		} else {
 			c := make(chan bool)
-			animateCardMovement(c, animCard, destination, cardDim, u)
-			<-c
+			animateCardMovement(c, animCard, destination, animCard.GetDimensions(), u)
+			SwitchOnChan(c, quit, func() {}, u)
 		}
 	}
 }
 
+// Returns a vec containing a card's position after being passed to the player with index playerIndex
+func DetermineTablePassPosition(c *card.Card, cardNum, playerIndex int, u *uistate.UIState) *coords.Vec {
+	cardDim := u.TableCardDim
+	dropTargetXY := u.DropTargets[playerIndex].GetCurrent()
+	dropTargetDim := u.DropTargets[playerIndex].GetDimensions()
+	targetCenter := dropTargetXY.PlusVec(dropTargetDim.DividedBy(2))
+	xPlayerBlockSize := 2*u.PlayerIconDim.X + u.Padding
+	yPlayerBlockSize := u.TopPadding + 2*u.TableCardDim.Y + 3*u.Padding + u.PlayerIconDim.Y
+	blockEdge := targetCenter.MinusVec(cardDim.Times(1.5).Plus(u.Padding))
+	var destination *coords.Vec
+	switch playerIndex {
+	case 0:
+		destination = coords.MakeVec(
+			blockEdge.X+float32(cardNum)*(u.Padding+cardDim.X),
+			u.WindowSize.Y-yPlayerBlockSize-u.TableCardDim.Y)
+	case 1:
+		destination = coords.MakeVec(
+			xPlayerBlockSize,
+			blockEdge.Y+float32(cardNum)*(u.Padding+cardDim.Y))
+	case 2:
+		destination = coords.MakeVec(
+			blockEdge.X+float32(cardNum)*(u.Padding+cardDim.X),
+			yPlayerBlockSize)
+	case 3:
+		destination = coords.MakeVec(
+			u.WindowSize.X-xPlayerBlockSize-u.TableCardDim.X,
+			blockEdge.Y+float32(cardNum)*(u.Padding+cardDim.Y))
+	}
+	return destination
+}
+
 // Animation for the 'take' action, when app is in the table view
-func AnimateTableCardTake(cards []*card.Card, p *player.Player, u *uistate.UIState) {
+func AnimateTableCardTake(cards []*card.Card, p *player.Player, quit chan bool, u *uistate.UIState) {
 	for cardNum, animCard := range cards {
 		destinationPos := p.GetPassedFrom()[cardNum].GetInitial()
 		if cardNum < len(cards)-1 {
@@ -153,20 +159,20 @@ func AnimateTableCardTake(cards []*card.Card, p *player.Player, u *uistate.UISta
 		} else {
 			c := make(chan bool)
 			animateCardMovement(c, animCard, destinationPos, animCard.GetDimensions(), u)
-			<-c
+			SwitchOnChan(c, quit, func() {}, u)
 		}
 	}
 }
 
 // Animation for the 'play' action, when app is in the table view
-func AnimateTableCardPlay(animCard *card.Card, playerInt int, u *uistate.UIState) {
+func AnimateTableCardPlay(animCard *card.Card, playerInt int, quit chan bool, u *uistate.UIState) {
 	destination := u.DropTargets[playerInt]
 	destinationPos := destination.GetCurrent()
 	destinationDim := destination.GetDimensions()
 	ch := make(chan bool)
 	animateCardMovement(ch, animCard, destinationPos, destinationDim, u)
-	<-ch
-	animCard.SetFrontDisplay(u.Eng)
+	onDone := func() { animCard.SetFrontDisplay(u.Eng) }
+	SwitchOnChan(ch, quit, onDone, u)
 }
 
 // Animation for the 'pass' action, when app is in the hand view
@@ -244,8 +250,8 @@ func AnimateInPlay(u *uistate.UIState) {
 
 // Animate playing of a card in the split view
 // Should not be called when the player whose hand is being displayed is the player of the card
-func AnimateSplitCardPlay(c *card.Card, player int, u *uistate.UIState) {
-	dropTarget := u.DropTargets[(u.CurPlayerIndex+player)%u.NumPlayers]
+func AnimateSplitCardPlay(c *card.Card, player int, quit chan bool, u *uistate.UIState) {
+	dropTarget := u.DropTargets[(player-u.CurPlayerIndex+u.NumPlayers)%u.NumPlayers]
 	toPos := dropTarget.GetCurrent()
 	toDim := dropTarget.GetDimensions()
 	texture.PopulateCardImage(c, u.Texs, u.Eng, u.Scene)
@@ -259,7 +265,7 @@ func AnimateSplitCardPlay(c *card.Card, player int, u *uistate.UIState) {
 	}
 	ch := make(chan bool)
 	animateCardMovement(ch, c, toPos, toDim, u)
-	<-ch
+	SwitchOnChan(ch, quit, func() {}, u)
 }
 
 func AnimateInSplit(u *uistate.UIState) {
@@ -349,7 +355,7 @@ func determineDestination(animCard *card.Card, dir direction.Direction, windowSi
 }
 
 // Animation for when a trick is taken, when app is in the table view
-func AnimateTableCardTakeTrick(cards []*card.Card, dir direction.Direction, u *uistate.UIState) {
+func AnimateTableCardTakeTrick(cards []*card.Card, dir direction.Direction, quit chan bool, u *uistate.UIState) {
 	for i, animCard := range cards {
 		destination := determineDestination(animCard, dir, u.WindowSize)
 		if i < len(cards)-1 {
@@ -357,7 +363,7 @@ func AnimateTableCardTakeTrick(cards []*card.Card, dir direction.Direction, u *u
 		} else {
 			c := make(chan bool)
 			animateCardMovement(c, animCard, destination, animCard.GetDimensions(), u)
-			<-c
+			SwitchOnChan(c, quit, func() {}, u)
 		}
 	}
 }
@@ -457,12 +463,12 @@ func (a arrangerFunc) Arrange(e sprite.Engine, n *sprite.Node, t clock.Time) { a
 // cardIndex has an X of the total number of cards in hand, and a Y of the position within the hand of the current card
 // padding has an X of the padding along the top edge, and a Y of the padding along each other edge
 func SetCardPositionTable(c *card.Card, playerIndex int, cardIndex *coords.Vec, u *uistate.UIState) {
-	pos := cardPositionTable(playerIndex, cardIndex, u)
+	pos := CardPositionTable(playerIndex, cardIndex, u)
 	c.SetInitial(pos)
 	c.Move(pos, u.TableCardDim, u.Eng)
 }
 
-func cardPositionTable(playerIndex int, cardIndex *coords.Vec, u *uistate.UIState) *coords.Vec {
+func CardPositionTable(playerIndex int, cardIndex *coords.Vec, u *uistate.UIState) *coords.Vec {
 	var x float32
 	var y float32
 	switch playerIndex {
@@ -504,4 +510,25 @@ func SetCardPositionHand(c *card.Card, indexInSuit int, suitCounts []int, u *uis
 	pos := coords.MakeVec(x, y)
 	c.SetInitial(pos)
 	c.Move(pos, u.CardDim, u.Eng)
+}
+
+func RemoveAnimChan(ch chan bool, u *uistate.UIState) {
+	for i, c := range u.AnimChans {
+		if ch == c {
+			u.AnimChans = append(u.AnimChans[:i], u.AnimChans[i+1:]...)
+			return
+		}
+	}
+}
+
+func SwitchOnChan(animChan, quitChan chan bool, f func(), u *uistate.UIState) {
+	select {
+	case <-quitChan:
+		RemoveAnimChan(quitChan, u)
+		return
+	case <-animChan:
+		RemoveAnimChan(quitChan, u)
+		f()
+		return
+	}
 }

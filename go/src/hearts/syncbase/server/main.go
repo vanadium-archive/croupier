@@ -7,11 +7,11 @@
 package server
 
 import (
-	"math/rand"
 	"encoding/json"
 	"fmt"
 	"hearts/img/uistate"
 	"hearts/syncbase/util"
+	"math/rand"
 	"v.io/v23/context"
 	"v.io/v23/discovery"
 	"v.io/v23/security"
@@ -25,7 +25,7 @@ import (
 )
 
 // Advertises a set of game log and game settings syncgroups
-func Advertise(logAddress, settingsAddress string, ctx *context.T) {
+func Advertise(logAddress, settingsAddress string, quit chan bool, ctx *context.T) {
 	ctx, stop := context.WithCancel(ctx)
 	mdns, err := mdns.New("")
 	if err != nil {
@@ -35,14 +35,18 @@ func Advertise(logAddress, settingsAddress string, ctx *context.T) {
 	gameService := discovery.Service{
 		InstanceName:  "A sample game service",
 		InterfaceName: util.CroupierInterface,
-		Addrs: []string{settingsAddress, logAddress},
+		Addrs:         []string{settingsAddress, logAddress},
 	}
 	fmt.Println(gameService)
-	if _, err := discoveryService.Advertise(ctx, gameService, nil); err != nil {
+	if _, err := discoveryService.Advertise(ctx, &gameService, nil); err != nil {
 		ctx.Fatalf("Advertise failed: %v", err)
 	}
-	<-signals.ShutdownOnSignals(ctx)
-	stop()
+	select {
+	case <-signals.ShutdownOnSignals(ctx):
+		stop()
+	case <-quit:
+		stop()
+	}
 }
 
 // Puts key and value into the syncbase table
@@ -94,6 +98,7 @@ func CreateTables(u *uistate.UIState) {
 			fmt.Println("TABLE ERROR: ", err)
 		}
 	}
+	// Add user settings data to represent this player
 	settingsMap := make(map[string]interface{})
 	settingsMap["userID"] = util.UserID
 	settingsMap["avatar"] = util.UserAvatar
@@ -106,9 +111,12 @@ func CreateTables(u *uistate.UIState) {
 	settingsTable.Put(u.Ctx, fmt.Sprintf("users/%d/settings", util.UserID), value)
 }
 
-// Creates a new syncgroup
-func CreateSyncgroup(ch chan string, u *uistate.UIState) {
+// Creates a new set of gamelog and game settings syncgroups
+func CreateSyncgroups(ch chan string, u *uistate.UIState) {
 	fmt.Println("Creating Syncgroup")
+	u.IsOwner = true
+	u.CurPlayerIndex = 0
+	// Generate random gameID information to advertise this game
 	gameID := rand.Intn(1000000)
 	gameMap := make(map[string]interface{})
 	gameMap["type"] = "Hearts"
@@ -119,7 +127,8 @@ func CreateSyncgroup(ch chan string, u *uistate.UIState) {
 	if err != nil {
 		fmt.Println("WE HAVE A HUGE PROBLEM:", err)
 	}
-	sgName := util.MountPoint + "/croupier/" + util.SBName + "/%%sync/gaming-" + string(value)
+	// Create gamelog syncgroup
+	logSGName := util.MountPoint + "/croupier/" + util.SBName + "/%%sync/gaming-" + string(value)
 	allAccess := access.AccessList{In: []security.BlessingPattern{"..."}}
 	permissions := access.Permissions{
 		"Admin":   allAccess,
@@ -128,63 +137,47 @@ func CreateSyncgroup(ch chan string, u *uistate.UIState) {
 		"Resolve": allAccess,
 		"Debug":   allAccess,
 	}
-	pref := wire.TableRow{util.LogName, ""}
-	prefs := []wire.TableRow{pref}
+	logPref := wire.TableRow{util.LogName, ""}
+	logPrefs := []wire.TableRow{logPref}
 	tables := []string{util.MountPoint + "/croupier"}
-	spec := wire.SyncgroupSpec{
+	logSpec := wire.SyncgroupSpec{
 		Description: "croupier syncgroup",
 		Perms:       permissions,
-		Prefixes:    prefs,
+		Prefixes:    logPrefs,
 		MountTables: tables,
 		IsPrivate:   false,
 	}
 	myInfoCreator := wire.SyncgroupMemberInfo{8, true}
 	app := u.Service.App(util.AppName)
 	db := app.NoSQLDatabase(util.DbName, nil)
-	sg := db.Syncgroup(sgName)
-	err = sg.Create(u.Ctx, spec, myInfoCreator)
+	logSG := db.Syncgroup(logSGName)
+	err = logSG.Create(u.Ctx, logSpec, myInfoCreator)
 	if err != nil {
 		fmt.Println("SYNCGROUP CREATE ERROR: ", err)
 		ch <- ""
 	} else {
 		fmt.Println("Syncgroup created")
 		u.GameID = gameID
-		ch <- sgName
+		ch <- logSGName
 	}
-}
-
-// Creates a new syncgroup
-func CreateSettingsSyncgroup(ch chan string, u *uistate.UIState) {
-	fmt.Println("Creating Settings Syncgroup")
-	sgName := fmt.Sprintf("%s/croupier/%s/%%%%sync/discovery-%d", util.MountPoint, util.SBName, util.UserID)
-	allAccess := access.AccessList{In: []security.BlessingPattern{"..."}}
-	permissions := access.Permissions{
-		"Admin":   allAccess,
-		"Write":   allAccess,
-		"Read":    allAccess,
-		"Resolve": allAccess,
-		"Debug":   allAccess,
-	}
-	pref := wire.TableRow{util.SettingsName, ""}
-	prefs := []wire.TableRow{pref}
-	tables := []string{util.MountPoint + "/croupier"}
-	spec := wire.SyncgroupSpec{
+	// Create game settings syncgroup
+	settingsSGName := fmt.Sprintf("%s/croupier/%s/%%%%sync/discovery-%d", util.MountPoint, util.SBName, util.UserID)
+	settingsPref := wire.TableRow{util.SettingsName, ""}
+	settingsPrefs := []wire.TableRow{settingsPref}
+	settingsSpec := wire.SyncgroupSpec{
 		Description: "croupier syncgroup",
 		Perms:       permissions,
-		Prefixes:    prefs,
+		Prefixes:    settingsPrefs,
 		MountTables: tables,
 		IsPrivate:   false,
 	}
-	myInfoCreator := wire.SyncgroupMemberInfo{8, true}
-	app := u.Service.App(util.AppName)
-	db := app.NoSQLDatabase(util.DbName, nil)
-	sg := db.Syncgroup(sgName)
-	err := sg.Create(u.Ctx, spec, myInfoCreator)
+	settingsSG := db.Syncgroup(settingsSGName)
+	err = settingsSG.Create(u.Ctx, settingsSpec, myInfoCreator)
 	if err != nil {
 		fmt.Println("SYNCGROUP CREATE ERROR: ", err)
 		ch <- ""
 	} else {
 		fmt.Println("Syncgroup created")
-		ch <- sgName
+		ch <- settingsSGName
 	}
 }
