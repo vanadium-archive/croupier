@@ -9,9 +9,11 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
+
 	"hearts/img/uistate"
 	"hearts/syncbase/util"
-	"math/rand"
+
 	"v.io/v23/context"
 	"v.io/v23/discovery"
 	"v.io/v23/security"
@@ -25,7 +27,7 @@ import (
 )
 
 // Advertises a set of game log and game settings syncgroups
-func Advertise(logAddress, settingsAddress string, quit chan bool, ctx *context.T) {
+func Advertise(logAddress, settingsAddress, gameStartData string, quit chan bool, ctx *context.T) {
 	ctx, stop := context.WithCancel(ctx)
 	mdns, err := mdns.New("")
 	if err != nil {
@@ -35,9 +37,9 @@ func Advertise(logAddress, settingsAddress string, quit chan bool, ctx *context.
 	gameService := discovery.Service{
 		InstanceName:  "A sample game service",
 		InterfaceName: util.CroupierInterface,
-		Addrs:         []string{settingsAddress, logAddress},
+		Attrs:         map[string]string{"settings_sgname": settingsAddress, "game_start_data": gameStartData},
+		Addrs:         []string{logAddress},
 	}
-	fmt.Println(gameService)
 	if _, err := discoveryService.Advertise(ctx, &gameService, nil); err != nil {
 		ctx.Fatalf("Advertise failed: %v", err)
 	}
@@ -49,7 +51,7 @@ func Advertise(logAddress, settingsAddress string, quit chan bool, ctx *context.
 	}
 }
 
-// Puts key and value into the syncbase table
+// Puts key and value into the syncbase gamelog table
 func AddKeyValue(service syncbase.Service, ctx *context.T, key, value string) bool {
 	app := service.App(util.AppName)
 	db := app.NoSQLDatabase(util.DbName, nil)
@@ -104,6 +106,7 @@ func CreateTables(u *uistate.UIState) {
 	settingsMap["avatar"] = util.UserAvatar
 	settingsMap["name"] = util.UserName
 	settingsMap["color"] = util.UserColor
+	u.UserData[util.UserID] = settingsMap
 	value, err := json.Marshal(settingsMap)
 	if err != nil {
 		fmt.Println("WE HAVE A HUGE PROBLEM:", err)
@@ -115,7 +118,6 @@ func CreateTables(u *uistate.UIState) {
 func CreateSyncgroups(ch chan string, u *uistate.UIState) {
 	fmt.Println("Creating Syncgroup")
 	u.IsOwner = true
-	u.CurPlayerIndex = 0
 	// Generate random gameID information to advertise this game
 	gameID := rand.Intn(1000000)
 	gameMap := make(map[string]interface{})
@@ -127,8 +129,9 @@ func CreateSyncgroups(ch chan string, u *uistate.UIState) {
 	if err != nil {
 		fmt.Println("WE HAVE A HUGE PROBLEM:", err)
 	}
+	ch <- string(value)
 	// Create gamelog syncgroup
-	logSGName := util.MountPoint + "/croupier/" + util.SBName + "/%%sync/gaming-" + string(value)
+	logSGName := fmt.Sprintf("%s/croupier/%s/%%%%sync/gaming-%d", util.MountPoint, util.SBName, gameID)
 	allAccess := access.AccessList{In: []security.BlessingPattern{"..."}}
 	permissions := access.Permissions{
 		"Admin":   allAccess,

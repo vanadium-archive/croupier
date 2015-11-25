@@ -7,11 +7,13 @@
 package client
 
 import (
-	"encoding/json"
 	"fmt"
+	"strconv"
+	"strings"
+
 	"hearts/img/uistate"
 	"hearts/syncbase/util"
-	"strings"
+
 	"v.io/v23/context"
 	"v.io/v23/discovery"
 	wire "v.io/v23/services/syncbase/nosql"
@@ -59,7 +61,7 @@ func GetSG(instances map[string]string, update discovery.Update) []string {
 		instances[string(found.Service.InstanceId)] = found.Service.InstanceName
 		fmt.Printf("Discovered %q: Instance=%x, Interface=%q, Addrs=%v\n", found.Service.InstanceName, found.Service.InstanceId, found.Service.InterfaceName, found.Service.Addrs)
 		if found.Service.InterfaceName == util.CroupierInterface {
-			return found.Service.Addrs
+			return []string{found.Service.Attrs["settings_sgname"], found.Service.Addrs[0]}
 		}
 	case discovery.UpdateLost:
 		lost := u.Value
@@ -73,15 +75,14 @@ func GetSG(instances map[string]string, update discovery.Update) []string {
 	return nil
 }
 
-// Returns a watchstream of the gamelog data
-func WatchData(u *uistate.UIState) (nosql.WatchStream, error) {
+// Returns a watchstream of the data in the table
+func WatchData(tableName, prefix string, u *uistate.UIState) (nosql.WatchStream, error) {
 	db := u.Service.App(util.AppName).NoSQLDatabase(util.DbName, nil)
-	prefix := ""
 	resumeMarker, err := db.GetResumeMarker(u.Ctx)
 	if err != nil {
 		fmt.Println("RESUMEMARKER ERR: ", err)
 	}
-	return db.Watch(u.Ctx, util.LogName, prefix, resumeMarker)
+	return db.Watch(u.Ctx, tableName, prefix, resumeMarker)
 }
 
 // Joins a set of gamelog and game settings syncgroups
@@ -103,15 +104,8 @@ func JoinSyncgroups(ch chan bool, logName, settingsName string, u *uistate.UISta
 		fmt.Println("Syncgroup joined")
 		// Set UIState GameID
 		tmp := strings.Split(logName, "-")
-		lasttmp := tmp[len(tmp)-1]
-		tmpMap := make(map[string]interface{})
-		err = json.Unmarshal([]byte(lasttmp), &tmpMap)
-		if err != nil {
-			fmt.Println("ERROR UNMARSHALLING")
-		}
-		u.GameID = int(tmpMap["gameID"].(float64))
-		u.CurPlayerIndex = NumInSG(logName, u) - 1
-		fmt.Println(u.CurPlayerIndex)
+		gameID, _ := strconv.Atoi(tmp[len(tmp)-1])
+		u.GameID = gameID
 		ch <- true
 	}
 }

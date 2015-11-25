@@ -119,6 +119,18 @@ func (p *Player) SetHand(cards []*card.Card) {
 	p.hand = cards
 }
 
+func (p *Player) SetName(name string) {
+	p.playerName = name
+}
+
+func (p *Player) SetIconImage(image sprite.SubTex) {
+	p.playerIconImage = image
+}
+
+func (p *Player) SetDeviceImage(image sprite.SubTex) {
+	p.playerDeviceImage = image
+}
+
 // Sets passedTo of p to cards
 func (p *Player) SetPassedTo(cards []*card.Card) {
 	p.passedTo = cards

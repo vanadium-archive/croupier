@@ -109,7 +109,8 @@ func onStart(glctx gl.Context, u *uistate.UIState) {
 	u.CurTable = table.InitializeGame(u.NumPlayers, u.Texs)
 	server.CreateTables(u)
 	// Create watch stream to update game state based on Syncbase updates
-	go watch.Update(u)
+	go watch.UpdateGame(u)
+	go watch.UpdateSettings(u)
 }
 
 func onStop(u *uistate.UIState) {

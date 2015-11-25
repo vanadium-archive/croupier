@@ -83,13 +83,15 @@ type UIState struct {
 	CurPlayerIndex int                      // the player number of this player
 	Ctx            *context.T
 	Service        syncbase.Service
-	Debug          bool        // true if debugging, adds extra functionality to switch between players
-	Shutdown       func()      // used to shut down a v23.Init()
-	GameID         int         // used to differentiate between concurrent games
-	IsOwner        bool        // true if this player is the game creator
-	AnimChans      []chan bool // keeps track of all 'quit' channels in animations so their goroutines can be stopped
-	SGChan         chan bool   // pass in a bool to stop advertising the syncgroup
-	ScanChan       chan bool   // pass in a bool to stop scanning for syncgroups
+	Debug          bool                           // true if debugging, adds extra functionality to switch between players
+	Shutdown       func()                         // used to shut down a v23.Init()
+	GameID         int                            // used to differentiate between concurrent games
+	IsOwner        bool                           // true if this player is the game creator
+	UserData       map[int]map[string]interface{} // user data indexed by user ID
+	PlayerData     map[int]map[string]interface{} // user data indexed by player number
+	AnimChans      []chan bool                    // keeps track of all 'quit' channels in animations so their goroutines can be stopped
+	SGChan         chan bool                      // pass in a bool to stop advertising the syncgroup
+	ScanChan       chan bool                      // pass in a bool to stop scanning for syncgroups
 }
 
 func MakeUIState() *UIState {
@@ -118,6 +120,8 @@ func MakeUIState() *UIState {
 		CurView:        None,
 		Done:           false,
 		Debug:          false,
+		UserData:       make(map[int]map[string]interface{}, 0),
+		PlayerData:     make(map[int]map[string]interface{}, 0),
 		AnimChans:      make([]chan bool, 0),
 	}
 }

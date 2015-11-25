@@ -8,8 +8,10 @@ package touchhandler
 
 import (
 	"fmt"
+
 	"golang.org/x/mobile/event/touch"
 	"golang.org/x/mobile/exp/sprite"
+
 	"hearts/img/coords"
 	"hearts/img/reposition"
 	"hearts/img/staticimg"
@@ -106,13 +108,14 @@ func beginClickDiscovery(t touch.Event, u *uistate.UIState) {
 		if buttonList[0] == u.Buttons[0] {
 			ch := make(chan string)
 			go server.CreateSyncgroups(ch, u)
+			gameStartData := <-ch
 			logName := <-ch
 			settingsName := <-ch
 			if logName != "" && settingsName != "" {
 				u.ScanChan <- true
 				u.ScanChan = nil
 				u.SGChan = make(chan bool)
-				go server.Advertise(logName, settingsName, u.SGChan, u.Ctx)
+				go server.Advertise(logName, settingsName, gameStartData, u.SGChan, u.Ctx)
 				view.LoadArrangeView(u)
 			}
 		} else {
@@ -137,8 +140,16 @@ func beginClickDiscovery(t touch.Event, u *uistate.UIState) {
 
 func beginClickArrange(t touch.Event, u *uistate.UIState) {
 	buttonList := findClickedButton(t, u)
-	if len(buttonList) > 0 {
-		gamelog.LogReady(u)
+	if len(buttonList) > 0 && u.PlayerData[u.CurPlayerIndex] == nil {
+		for i, b := range u.Buttons {
+			if buttonList[0] == b {
+				u.CurPlayerIndex = i
+			}
+		}
+		if u.CurPlayerIndex < 4 {
+			gamelog.LogReady(u)
+			gamelog.LogPlayerNum(u)
+		}
 		view.LoadWaitingView(u)
 	}
 }

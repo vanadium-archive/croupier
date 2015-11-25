@@ -14,6 +14,7 @@ import (
 	"hearts/img/uistate"
 	"hearts/logic/card"
 	"hearts/syncbase/server"
+	"hearts/syncbase/util"
 
 	"v.io/v23/context"
 	"v.io/v23/syncbase"
@@ -87,7 +88,13 @@ func LogReady(u *uistate.UIState) bool {
 	return logKeyValue(u.Service, u.Ctx, key, value)
 }
 
-// Note: The + is syntax used to replicate the way Croupier in Dart/Flutter writes keys.
+func LogPlayerNum(u *uistate.UIState) bool {
+	key := strconv.Itoa(u.GameID) + "/players/" + strconv.Itoa(util.UserID) + "/player_number"
+	value := strconv.Itoa(u.CurPlayerIndex)
+	return logKeyValue(u.Service, u.Ctx, key, value)
+}
+
+// Note: The syntax replicates the way Croupier in Dart/Flutter writes keys.
 func getKey(playerId int, u *uistate.UIState) string {
 	t := int(time.Now().UnixNano() / 1000000)
 	key := strconv.Itoa(u.GameID) + "/log/" + strconv.Itoa(t) + Dash + strconv.Itoa(playerId)

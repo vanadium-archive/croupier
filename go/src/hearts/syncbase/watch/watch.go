@@ -10,6 +10,7 @@
 package watch
 
 import (
+	"encoding/json"
 	"fmt"
 	"hearts/img/direction"
 	"hearts/img/reposition"
@@ -18,14 +19,15 @@ import (
 	"hearts/logic/card"
 	"hearts/syncbase/client"
 	"hearts/syncbase/gamelog"
+	"hearts/syncbase/util"
 	"strconv"
 	"strings"
 	"time"
 	"v.io/v23/syncbase/nosql"
 )
 
-func Update(u *uistate.UIState) {
-	stream, err := client.WatchData(u)
+func UpdateSettings(u *uistate.UIState) {
+	stream, err := client.WatchData(util.SettingsName, "users", u)
 	if err != nil {
 		fmt.Println("WatchData error:", err)
 	}
@@ -37,26 +39,76 @@ func Update(u *uistate.UIState) {
 				if err := c.Value(&value); err != nil {
 					fmt.Println("Value error:", err)
 				}
+				var valueMap map[string]interface{}
+				err := json.Unmarshal(value, &valueMap)
+				if err != nil {
+					fmt.Println("Unmarshal error:", err)
+				}
+				key := c.Row
+				fmt.Println(key, string(value))
+				userID, _ := strconv.Atoi(strings.Split(key, "/")[1])
+				u.UserData[userID] = valueMap
+			} else {
+				fmt.Println("Unexpected ChangeType: ", c.ChangeType)
+			}
+		}
+	}
+}
+
+func UpdateGame(u *uistate.UIState) {
+	stream, err := client.WatchData(util.LogName, "", u)
+	if err != nil {
+		fmt.Println("WatchData error:", err)
+	}
+	for {
+		if updateExists := stream.Advance(); updateExists {
+			c := stream.Change()
+			if c.ChangeType == nosql.PutChange {
+				key := c.Row
+				var value []byte
+				if err := c.Value(&value); err != nil {
+					fmt.Println("Value error:", err)
+				}
 				valueStr := string(value)
-				fmt.Println(valueStr)
-				updateType := strings.Split(valueStr, "|")[0]
-				switch updateType {
-				case gamelog.Deal:
-					go onDeal(valueStr, u)
-				case gamelog.Pass:
-					go onPass(valueStr, u)
-				case gamelog.Take:
-					go onTake(valueStr, u)
-				case gamelog.Play:
-					go onPlay(valueStr, u)
-				case gamelog.Ready:
-					go onReady(valueStr, u)
+				keyType := strings.Split(key, "/")[1]
+				switch keyType {
+				case "log":
+					updateType := strings.Split(valueStr, "|")[0]
+					switch updateType {
+					case gamelog.Deal:
+						onDeal(valueStr, u)
+					case gamelog.Pass:
+						onPass(valueStr, u)
+					case gamelog.Take:
+						onTake(valueStr, u)
+					case gamelog.Play:
+						onPlay(valueStr, u)
+					case gamelog.Ready:
+						onReady(valueStr, u)
+					}
+				case "players":
+					onPlayers(key, valueStr, u)
 				}
 			} else {
 				fmt.Println("Unexpected ChangeType: ", c.ChangeType)
 			}
 		}
-		fmt.Println(stream.Err())
+	}
+}
+
+func onPlayers(key, value string, u *uistate.UIState) {
+	userID, _ := strconv.Atoi(strings.Split(key, "/")[2])
+	playerNum, _ := strconv.Atoi(value)
+	u.PlayerData[playerNum] = u.UserData[userID]
+	user := u.UserData[userID]
+	if user != nil {
+		img := u.Texs[user["avatar"].(string)]
+		name := user["name"].(string)
+		u.CurTable.GetPlayers()[playerNum].SetIconImage(img)
+		u.CurTable.GetPlayers()[playerNum].SetName(name)
+	}
+	if u.CurView == uistate.Arrange {
+		view.LoadArrangeView(u)
 	}
 }
 

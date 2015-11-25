@@ -25,17 +25,64 @@ import (
 	"golang.org/x/mobile/exp/sprite"
 )
 
-// TODO(emshack): Flesh out Arrange view to actually arrange players
 func LoadArrangeView(u *uistate.UIState) {
 	u.CurView = uistate.Arrange
 	<-time.After(1 * time.Second)
 	resetAnims(u)
 	resetImgs(u)
 	resetScene(u)
-	buttonPos := coords.MakeVec((u.WindowSize.X-2*u.CardDim.X)/2, (u.WindowSize.Y-u.CardDim.Y)/2)
-	buttonDim := coords.MakeVec(2*u.CardDim.X, u.CardDim.Y)
-	buttonImage := u.Texs["Deal.png"]
-	u.Buttons = append(u.Buttons, texture.MakeImgWithoutAlt(buttonImage, buttonPos, buttonDim, u.Eng, u.Scene))
+	addHeader(u)
+	sitImg := u.Texs["SitSpot.png"]
+	watchImg := u.Texs["WatchSpot.png"]
+	arrangeBlockLength := u.WindowSize.X - 4*u.Padding
+	if u.WindowSize.Y < u.WindowSize.X {
+		arrangeBlockLength = u.WindowSize.Y - 4*u.Padding
+	}
+	arrangeDim := coords.MakeVec(arrangeBlockLength/3-4*u.Padding, arrangeBlockLength/3-4*u.Padding)
+	nilDim := coords.MakeVec(0, 0)
+	// player 0 seat
+	sitPos := coords.MakeVec((u.WindowSize.X-arrangeDim.X)/2, u.WindowSize.Y-arrangeDim.Y-2*u.Padding)
+	if u.PlayerData[0] == nil {
+		u.Buttons = append(u.Buttons, texture.MakeImgWithoutAlt(sitImg, sitPos, arrangeDim, u.Eng, u.Scene))
+	} else {
+		u.Buttons = append(u.Buttons, texture.MakeImgWithoutAlt(sitImg, sitPos, nilDim, u.Eng, u.Scene))
+		avatarKey := u.PlayerData[0]["avatar"].(string)
+		avatar := u.Texs[avatarKey]
+		u.BackgroundImgs = append(u.BackgroundImgs, texture.MakeImgWithoutAlt(avatar, sitPos, arrangeDim, u.Eng, u.Scene))
+	}
+	// player 1 seat
+	sitPos = coords.MakeVec((u.WindowSize.X-arrangeDim.X)/2-arrangeDim.X-2*u.Padding, u.WindowSize.Y-2*arrangeDim.Y-4*u.Padding)
+	if u.PlayerData[1] == nil {
+		u.Buttons = append(u.Buttons, texture.MakeImgWithoutAlt(sitImg, sitPos, arrangeDim, u.Eng, u.Scene))
+	} else {
+		u.Buttons = append(u.Buttons, texture.MakeImgWithoutAlt(sitImg, sitPos, nilDim, u.Eng, u.Scene))
+		avatarKey := u.PlayerData[1]["avatar"].(string)
+		avatar := u.Texs[avatarKey]
+		u.BackgroundImgs = append(u.BackgroundImgs, texture.MakeImgWithoutAlt(avatar, sitPos, arrangeDim, u.Eng, u.Scene))
+	}
+	// player 2 seat
+	sitPos = coords.MakeVec((u.WindowSize.X-arrangeDim.X-2*u.Padding)/2, u.WindowSize.Y-3*arrangeDim.Y-6*u.Padding)
+	if u.PlayerData[2] == nil {
+		u.Buttons = append(u.Buttons, texture.MakeImgWithoutAlt(sitImg, sitPos, arrangeDim, u.Eng, u.Scene))
+	} else {
+		u.Buttons = append(u.Buttons, texture.MakeImgWithoutAlt(sitImg, sitPos, nilDim, u.Eng, u.Scene))
+		avatarKey := u.PlayerData[2]["avatar"].(string)
+		avatar := u.Texs[avatarKey]
+		u.BackgroundImgs = append(u.BackgroundImgs, texture.MakeImgWithoutAlt(avatar, sitPos, arrangeDim, u.Eng, u.Scene))
+	}
+	// player 3 seat
+	sitPos = coords.MakeVec((u.WindowSize.X-arrangeDim.X)/2+arrangeDim.X+2*u.Padding, u.WindowSize.Y-2*arrangeDim.Y-4*u.Padding)
+	if u.PlayerData[3] == nil {
+		u.Buttons = append(u.Buttons, texture.MakeImgWithoutAlt(sitImg, sitPos, arrangeDim, u.Eng, u.Scene))
+	} else {
+		u.Buttons = append(u.Buttons, texture.MakeImgWithoutAlt(sitImg, sitPos, nilDim, u.Eng, u.Scene))
+		avatarKey := u.PlayerData[3]["avatar"].(string)
+		avatar := u.Texs[avatarKey]
+		u.BackgroundImgs = append(u.BackgroundImgs, texture.MakeImgWithoutAlt(avatar, sitPos, arrangeDim, u.Eng, u.Scene))
+	}
+	// table
+	watchPos := coords.MakeVec((u.WindowSize.X-arrangeDim.X)/2, u.WindowSize.Y-2*arrangeDim.Y-4*u.Padding)
+	u.Buttons = append(u.Buttons, texture.MakeImgWithoutAlt(watchImg, watchPos, arrangeDim, u.Eng, u.Scene))
 }
 
 // Waiting view: Displays the word "Waiting". To be displayed when players are waiting for a new round to be dealt
@@ -388,6 +435,7 @@ func LoadSplitView(reloading bool, u *uistate.UIState) {
 	}
 }
 
+// TODO(emshack): When go mobile implements sprite.engine.Unregister, use this instead
 func ChangePlayMessage(message string, u *uistate.UIState) {
 	// remove text and replace with message
 	var emptyTex sprite.SubTex
