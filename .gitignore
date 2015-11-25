@@ -27,3 +27,6 @@ go/src/golang.org
 *.js_
 *.js.deps
 *.js.map
+
+# Don't commit the generated shortcut commands file.
+shortcut_commands

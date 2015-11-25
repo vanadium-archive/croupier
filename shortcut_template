@@ -1,0 +1,10 @@
+--map-origin=http://flutter/=https://storage.googleapis.com/mojo/sky/shell/android-arm/fed101feb7db8790c2818798271d52957fbfd087/
+--url-mappings=mojo:flutter=http://flutter/flutter.mojo
+--debug
+--verbose
+--args-for=mojo:flutter --enable-checked-mode
+--enable-multiprocess
+--map-origin=https://mojo2.v.io=https://storage.googleapis.com/mojo_services/v23discovery/android/
+--args-for=https://mojo2.v.io/discovery.mojo host%DEVICE_ID% mdns
+--map-origin=https://mojo.v.io=https://storage.googleapis.com/mojo_services/syncbase/android/
+--args-for=https://mojo.v.io/syncbase_server.mojo --v=0 --logtostderr=true --root-dir=/data/data/org.chromium.mojo.shell/app_home/syncbase_data --v23.credentials=/sdcard/v23creds --v23.proxy=proxy %SYNCBASE_NAME_FLAG%

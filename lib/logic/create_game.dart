@@ -7,14 +7,17 @@ import 'hearts/hearts.dart' as hearts_impl;
 import 'proto/proto.dart' as proto_impl;
 import 'solitaire/solitaire.dart' as solitaire_impl;
 
-game_impl.Game createGame(game_impl.GameType gt, int pn, {int gameID}) {
+game_impl.Game createGame(game_impl.GameType gt, int pn,
+    {int gameID, bool isCreator}) {
   switch (gt) {
     case game_impl.GameType.Proto:
-      return new proto_impl.ProtoGame(pn, gameID: gameID);
+      return new proto_impl.ProtoGame(pn, gameID: gameID, isCreator: isCreator);
     case game_impl.GameType.Hearts:
-      return new hearts_impl.HeartsGame(pn, gameID: gameID);
+      return new hearts_impl.HeartsGame(pn,
+          gameID: gameID, isCreator: isCreator);
     case game_impl.GameType.Solitaire:
-      return new solitaire_impl.SolitaireGame(pn, gameID: gameID);
+      return new solitaire_impl.SolitaireGame(pn,
+          gameID: gameID, isCreator: isCreator);
     default:
       assert(false);
       return null;

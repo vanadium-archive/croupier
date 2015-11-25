@@ -149,10 +149,10 @@ class CroupierComponentState extends State<CroupierComponent> {
         return new Container(
             padding: new EdgeDims.only(top: ui.window.padding.top),
             child: new Column([
-              new FlatButton(
-                  child: new Text('Start Game'),
-                  onPressed: makeSetStateCallback(
-                      logic_croupier.CroupierState.PlayGame)),
+              new FlatButton(child: new Text('Start Game'), onPressed: () {
+                makeSetStateCallback(logic_croupier.CroupierState.PlayGame)();
+                config.croupier.game.startGameSignal();
+              }),
               new Grid(profileWidgets, maxChildExtent: 150.0),
               new FlatButton(
                   child: new Text('Back'),

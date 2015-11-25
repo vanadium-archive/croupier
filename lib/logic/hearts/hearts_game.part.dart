@@ -39,7 +39,7 @@ class HeartsGame extends Game {
 
   HeartsType viewType = HeartsType.Player;
 
-  HeartsPhase _phase = HeartsPhase.Deal;
+  HeartsPhase _phase = HeartsPhase.StartGame;
   HeartsPhase get phase => _phase;
   void set phase(HeartsPhase other) {
     print('setting phase from ${_phase} to ${other}');
@@ -65,10 +65,11 @@ class HeartsGame extends Game {
   List<int> scores = [0, 0, 0, 0];
   List<bool> ready;
 
-  HeartsGame(int playerNumber, {int gameID})
+  HeartsGame(int playerNumber, {int gameID, bool isCreator})
       : super.create(GameType.Hearts, new HeartsLog(), playerNumber, 16,
-            gameID: gameID) {
+            gameID: gameID, isCreator: isCreator) {
     resetGame();
+    unsetReady();
   }
 
   void resetGame() {
@@ -251,8 +252,13 @@ class HeartsGame extends Game {
   // Note that this will be called by the UI.
   // It won't be possible to set the readiness for other players, except via the GameLog.
   void setReadyUI() {
-    assert(phase == HeartsPhase.Score);
+    assert(phase == HeartsPhase.Score || phase == HeartsPhase.StartGame);
     gamelog.add(new HeartsCommand.ready(playerNumber));
+  }
+
+  @override
+  void startGameSignal() {
+    setReadyUI();
   }
 
   // Note that this will be called by the UI.
@@ -296,6 +302,18 @@ class HeartsGame extends Game {
   @override
   void triggerEvents() {
     switch (this.phase) {
+      case HeartsPhase.StartGame:
+        if (this.allReady) {
+          phase = HeartsPhase.Deal;
+          this.resetGame();
+
+          print('we are all ready. ${isCreator}');
+          // Only the creator should deal the cards once everyone is ready.
+          if (this.isCreator) {
+            this.dealCards();
+          }
+        }
+        return;
       case HeartsPhase.Deal:
         if (this.allDealt) {
           if (this.passTarget != null) {
@@ -354,6 +372,11 @@ class HeartsGame extends Game {
           this.roundNumber++;
           phase = HeartsPhase.Deal;
           this.resetGame();
+
+          // Only the creator should deal the cards once everyone is ready.
+          if (this.isCreator) {
+            this.dealCards();
+          }
         }
         return;
       default:

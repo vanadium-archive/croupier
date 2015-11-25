@@ -214,11 +214,11 @@ packages:
   syncbase:
     description: syncbase
     source: hosted
-    version: "0.0.15"
+    version: "0.0.16"
   test:
     description: test
     source: hosted
-    version: "0.12.5+2"
+    version: "0.12.6"
   typed_data:
     description: typed_data
     source: hosted

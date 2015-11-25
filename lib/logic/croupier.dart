@@ -112,7 +112,8 @@ class Croupier {
 
         // data should be the game id here.
         GameType gt = data as GameType;
-        game = cg.createGame(gt, 0); // Start as player 0 of whatever game type.
+        game = cg.createGame(gt, 0,
+            isCreator: true); // Start as player 0 of whatever game type.
 
         _advertiseFuture = settings_manager
             .createGameSyncgroup(gameTypeToString(gt), game.gameID)

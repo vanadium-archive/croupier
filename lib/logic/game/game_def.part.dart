@@ -76,6 +76,7 @@ typedef void NoArgCb();
 abstract class Game {
   final GameType gameType;
   String get gameTypeName; // abstract
+  final bool isCreator;
 
   final List<List<Card>> cardCollections = new List<List<Card>>();
   final List<Card> deck = new List<Card>.from(Card.All);
@@ -97,8 +98,9 @@ abstract class Game {
   // A super constructor, don't call this unless you're a subclass.
   Game.create(
       this.gameType, this.gamelog, this._playerNumber, int numCollections,
-      {int gameID})
-      : gameID = gameID ?? new math.Random().nextInt(0x00FFFFFF) {
+      {int gameID, bool isCreator})
+      : gameID = gameID ?? new math.Random().nextInt(0x00FFFFFF),
+        isCreator = isCreator ?? false {
     print("The gameID is ${gameID}");
     gamelog.setGame(this);
     for (int i = 0; i < numCollections; i++) {
@@ -139,4 +141,5 @@ abstract class Game {
   // UNIMPLEMENTED
   void move(Card card, List<Card> dest);
   void triggerEvents();
+  void startGameSignal();
 }

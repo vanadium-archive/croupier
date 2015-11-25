@@ -26,10 +26,10 @@ class SolitaireGame extends Game {
     _phase = other;
   }
 
-  SolitaireGame(int playerNumber, {int gameID})
+  SolitaireGame(int playerNumber, {int gameID, bool isCreator})
       : super.create(
             GameType.Solitaire, new SolitaireLog(), playerNumber, NUM_PILES,
-            gameID: gameID) {
+            gameID: gameID, isCreator: isCreator) {
     resetGame();
   }
 
@@ -341,4 +341,8 @@ class SolitaireGame extends Game {
 
   // TODO(alexfandrianto): Maybe wanted for debug; if not, remove.
   void jumpToScorePhaseDebug() {}
+
+  // TODO(alexfandrianto): This needs to be a signal to trigger a deal.
+  @override
+  void startGameSignal() {}
 }

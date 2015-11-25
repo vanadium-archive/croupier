@@ -42,7 +42,8 @@ ifeq ($(ANDROID), 1)
 	# If ANDROID is set to 1 exactly, then treat it like the first device.
 	# TODO(alexfandrianto): If we can do a better job of this, we won't have to
 	# special-case the first device.
-	SYNCBASE_FLAGS += --name=$(MOUNTTABLE)/$(NAME)
+	SYNCBASE_NAME_FLAG := --name=$(MOUNTTABLE)/$(NAME)
+	SYNCBASE_FLAGS += $(SYNCBASE_NAME_FLAG)
 endif
 
 # If this is not the first mojo shell, then you must reuse the devservers
@@ -62,11 +63,11 @@ endif
 export SYNCBASE_SERVER_URL := https://mojo.v.io/syncbase_server.mojo
 export DISCOVERY_SERVER_URL := https://mojo2.v.io/discovery.mojo
 MOJO_SHELL_FLAGS := --enable-multiprocess \
-	--map-origin="https://mojo2.v.io=$(DISCOVERY_MOJO_BIN_DIR)" --args-for="$(DISCOVERY_SERVER_URL) host$(ANDROID) mdns" \
+	--map-origin="https://mojo2.v.io=$(DISCOVERY_MOJO_BIN_DIR)" --args-for="$(DISCOVERY_SERVER_URL) host$(DEVICE_ID) mdns" \
 	--map-origin="https://mojo.v.io=$(SYNCBASE_MOJO_BIN_DIR)" --args-for="$(SYNCBASE_SERVER_URL) $(SYNCBASE_FLAGS)"
 
 ifdef ANDROID
-	MOJO_SHELL_FLAGS +=  --target-device $(DEVICE_ID)
+	TARGET_DEVICE_FLAG +=  --target-device $(DEVICE_ID)
 endif
 
 # Runs a sky app.
@@ -78,7 +79,8 @@ define RUN_SKY_APP
 	--mojo-path $(MOJO_DIR)/src \
 	--checked \
 	--mojo-debug \
-	-- $(MOJO_SHELL_FLAGS) \
+	-- $(TARGET_DEVICE_FLAG) \
+	$(MOJO_SHELL_FLAGS) \
 	$(REUSE_FLAG) \
 	--no-config-file
 endef
@@ -127,6 +129,38 @@ ifdef ANDROID
 	adb -s $(DEVICE_ID) push -p $(PWD)/creds $(ANDROID_CREDS_DIR)
 endif
 	$(call RUN_SKY_APP,$<)
+
+CROUPIER_SHORTCUT_NAME := Croupier
+CROUPIER_URL := mojo://storage.googleapis.com/mojo_services/croupier/croupier.flx
+CROUPIER_URL_TO_ICON := https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png
+MOJO_SHELL_CMD_PATH := /data/local/tmp/org.chromium.mojo.shell.cmd
+
+# Creates a shortcut on the phone that runs the hosted version of croupier.flx
+# Does nothing if ANDROID is not defined.
+define GENERATE_SHORTCUT_FILE
+	sed -e "s;%DEVICE_ID%;$1;g" -e "s;%SYNCBASE_NAME_FLAG%;$2;g" \
+	shortcut_template > shortcut_commands
+endef
+
+shortcut: env-check
+ifdef ANDROID
+	# Create the shortcut file.
+	$(call GENERATE_SHORTCUT_FILE,$(DEVICE_ID),$(SYNCBASE_NAME_FLAG))
+
+	# TODO(alexfandrianto): Mojo Shell only allows a single default command. This may prove problematic.
+	adb -s $(DEVICE_ID) push -p shortcut_commands $(MOJO_SHELL_CMD_PATH)
+	adb -s $(DEVICE_ID) shell chmod 555 $(MOJO_SHELL_CMD_PATH)
+
+	# TODO(alexfandrianto): Put this in Mojo shared instead.
+	$(MOJO_DIR)/src/mojo/devtools/common/mojo_run --android $(TARGET_DEVICE_FLAG) "mojo:shortcut $(CROUPIER_SHORTCUT_NAME) $(CROUPIER_URL) $(CROUPIER_URL_TO_ICON)"
+endif
+
+# Removes the shortcut data from Mojo shell.
+# TODO(alexfandrianto): Can we remove the shortcut icon?
+shortcut-remove: env-check
+ifdef ANDROID
+	adb -s $(DEVICE_ID) shell rm -f $(MOJO_SHELL_CMD_PATH)
+endif
 
 .PHONY: mock
 mock:

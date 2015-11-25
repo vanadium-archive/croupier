@@ -8,9 +8,9 @@ class ProtoGame extends Game {
   @override
   String get gameTypeName => "Proto";
 
-  ProtoGame(int playerNumber, {int gameID})
+  ProtoGame(int playerNumber, {int gameID, bool isCreator})
       : super.create(GameType.Proto, new ProtoLog(), playerNumber, 6,
-            gameID: gameID) {
+            gameID: gameID, isCreator: isCreator) {
     // playerNumber would be used in a real game, but I have to ignore it for debugging.
     // It would determine faceUp/faceDown status.faceDown
 
@@ -50,4 +50,7 @@ class ProtoGame extends Game {
 
   @override
   void triggerEvents() {}
+
+  @override
+  void startGameSignal() {}
 }

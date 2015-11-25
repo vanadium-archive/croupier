@@ -51,7 +51,9 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
         width: config.width,
         height: config.height,
         child: heartsWidget));
-    if (game.phase != HeartsPhase.Deal && game.phase != HeartsPhase.Score) {
+    if (game.phase != HeartsPhase.StartGame &&
+        game.phase != HeartsPhase.Deal &&
+        game.phase != HeartsPhase.Score) {
       List<int> visibleCardCollections = new List<int>();
       int playerNum = game.playerNumber;
       if (game.viewType == HeartsType.Player) {
@@ -241,6 +243,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     }
 
     switch (game.phase) {
+      case HeartsPhase.StartGame:
       case HeartsPhase.Deal:
         return showDeal();
       case HeartsPhase.Pass:
@@ -261,6 +264,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     HeartsGame game = config.game as HeartsGame;
     List<Widget> kids = new List<Widget>();
     switch (game.phase) {
+      case HeartsPhase.StartGame:
       case HeartsPhase.Deal:
         kids.add(new Text("DEAL PHASE"));
         kids.add(_makeButton('Deal', game.dealCards));
@@ -384,7 +388,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
         decoration: new BoxDecoration(backgroundColor: Colors.pink[500]),
         child: new Flex([
           new Text('Player ${game.playerNumber}'),
-          _makeButton('Deal', game.dealCards),
+          new Text('Waiting for Deal...'),
           _makeDebugButtons()
         ],
             direction: FlexDirection.vertical,

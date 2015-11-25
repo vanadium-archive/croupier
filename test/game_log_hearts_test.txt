@@ -1,3 +1,9 @@
+# Start Game
+Ready|2:END
+Ready|0:END
+Ready|3:END
+Ready|1:END
+
 # Deal
 Deal|0:classic h1:classic h2:classic h3:classic h4:classic h5:classic d6:classic d7:classic d8:classic d9:classic d10:classic dj:classic dq:classic dk:END
 Deal|1:classic d1:classic d2:classic d3:classic d4:classic d5:classic s6:classic s7:classic s8:classic s9:classic s10:classic sj:classic sq:classic sk:END

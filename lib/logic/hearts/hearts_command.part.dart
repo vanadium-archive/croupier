@@ -16,7 +16,7 @@ class HeartsCommand extends GameCommand {
   // The following constructors are used for the player generating the HeartsCommand.
   HeartsCommand.deal(int playerId, List<Card> cards)
       : super("Deal", computeDeal(playerId, cards),
-            simultaneity: SimulLevel.DEPENDENT);
+            simultaneity: SimulLevel.INDEPENDENT);
 
   HeartsCommand.pass(int senderId, List<Card> cards)
       : super("Pass", computePass(senderId, cards),
@@ -37,7 +37,7 @@ class HeartsCommand extends GameCommand {
   static SimulLevel computeSimul(String phase) {
     switch (phase) {
       case "Deal":
-        return SimulLevel.DEPENDENT;
+        return SimulLevel.INDEPENDENT;
       case "Pass":
         return SimulLevel.INDEPENDENT;
       case "Take":
@@ -164,7 +164,8 @@ class HeartsCommand extends GameCommand {
         if (game.hasGameEnded) {
           return false;
         }
-        if (game.phase != HeartsPhase.Score) {
+        if (game.phase != HeartsPhase.Score &&
+            game.phase != HeartsPhase.StartGame) {
           return false;
         }
         return true;
@@ -261,9 +262,10 @@ class HeartsCommand extends GameCommand {
           throw new StateError(
               "Game has already ended. Start a new one to play again.");
         }
-        if (game.phase != HeartsPhase.Score) {
+        if (game.phase != HeartsPhase.Score &&
+            game.phase != HeartsPhase.StartGame) {
           throw new StateError(
-              "Cannot process ready commands when not in Score phase");
+              "Cannot process ready commands when not in Score or StartGame phase");
         }
         int playerId = int.parse(parts[0]);
         game.setReady(playerId);
