@@ -162,7 +162,7 @@ test: packages
 clean:
 ifdef ANDROID
 	# Clean syncbase data dir.
-	adb -s $(DEVICE_ID) shell rm -rf $(APP_HOME_DIR)/syncbase_data
+	adb -s $(DEVICE_ID) shell run-as org.chromium.mojo.shell rm -rf $(APP_HOME_DIR)/syncbase_data
 endif
 	rm -f croupier.flx snapshot_blob.bin
 	rm -rf bin tmp

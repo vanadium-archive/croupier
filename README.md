@@ -1,14 +1,16 @@
 # Croupier
 
 Croupier is a Vanadium demo app of a general card playing game for multiple
-devices. The app combines Syncbase with Mojo and Flutter and in the near future,
-will also demonstrate P2P discovery and Syncgroup formation.
+devices. Croupier utilizes Syncbase and P2P Discovery as the foundations for
+game formation and state synchronization.
 
-Croupier's primary card game is Hearts, but it is only available in single-device
-form. More games will be added in the future.
+This repository contains two implementations of Croupier, one in Go and the
+other in Mojo and Flutter. As Croupier's primary card game is Hearts, the two
+sides are meant to interoperate with that game. The Flutter version also
+supports Solitaire and is built so that more games can be added in the future.
 
-In order to run the program, it is recommended to use Android devices. (Support
-for desktop is deprecated and will be removed soon.)
+Instructions for running the program with Flutter on Android follow.
+TODO(alexfandrianto): Add instructions for running the Go version.
 
 # Prerequisites
 
@@ -17,6 +19,12 @@ for desktop is deprecated and will be removed soon.)
 Currently, development is heavily tied to an existing installation of Mojo.
 Please ensure that your Mojo checkout is located at $MOJO_DIR and has built
 out/android_Debug. Instructions are available [here](https://github.com/domokit/mojo).
+
+## Flutter
+
+Development now also depends on the alpha branch of the Flutter repo. It is
+possible that the `pubspec.yaml` file will need to be modified to accomodate
+your installation of Flutter. Instructions are available [here](http://flutter.io/getting-started/).
 
 ## Dart
 
@@ -34,15 +42,26 @@ You may need to manually download a specific version of Dart. If so, visit their
 
 ## Vanadium
 
-A Vanadium installation is expected, since Croupier also depends on the
-https://github.com/vanadium/mojo.discovery project.
+A Vanadium installation is not required since Croupier pulls all of its
+Vanadium-related dependencies from pub.
 
 # Running Croupier
 
 ## Credentials
 
-Begin by creating your credentials. These are used to determine who can access
-your Syncbase instance. Note that running the following command will pop-up the
+There are two ways to get credentials. These are used to determine who can
+access your Syncbase instance. __You do not need to follow both instructions.__
+
+### On-Device OAuth Credentials
+
+One way to obtain them is through OAuth. When Syncbase is started on Android,
+it will ask you to select an account. You must have an account added on the
+Android device for this to work.
+
+### Test Credentials
+
+During tests, it may be more convenient to create test credentials locally and
+push them onto the phone. Note: running the following command will pop-up the
 standard `principal seekblessings` tab in order to obtain your approval to use
 OAuth.
 
@@ -50,7 +69,7 @@ OAuth.
 make creds
 ```
 
-__Any time you clean the credentials, you will need to obtain fresh credentials.__
+__If you clean the credentials, you will need to obtain fresh credentials.__
 
 ## Note on Multiple Devices
 
@@ -76,14 +95,9 @@ Start Croupier on your USB-debugging enabled Android device.
 ANDROID=1 make start
 ```
 
-Alternatively, use a different integer. Since the first device creates a syncgroup,
-it is recommended that you wait a short duration before starting up any other devices.
-
-Note: Some devices may limit the number of characters the `adb connect` command
-accepts. If this is the case, the app will not launch under `make start`. One
-workaround is to delete some non-critical lines in the Makefile, such as
-`--checked` and `--free-host-ports`.
-See https://github.com/vanadium/issues/issues/831
+Alternatively, use a different integer. Since the first device creates a
+syncbase instance that the others are mounted upon, it is recommended that this
+one is started before the other devices.
 
 ## Deleting Mojo Shell
 
@@ -99,14 +113,12 @@ Mojo Shell's data is insufficient.
 Due to some issues with mojo_shell, you may occasionally fail to start the
 program due to a used port. Follow the error's instructions and try again.
 
-Between builds of Mojo and Syncbase, you may wish to clean the app and database
-info (for rooted devices only) up.
+Between builds of Mojo and Syncbase, you may wish to clean up the app and
+database info.
 
 ```
 ANDROID=1 make clean
 ```
-
-For non-rooted devices, you can manually clear the data of the Mojo Shell app.
 
 You can also clean credentials instead:
 
