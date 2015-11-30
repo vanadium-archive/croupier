@@ -46,7 +46,7 @@ ifeq ($(ANDROID), 1)
 	SYNCBASE_FLAGS += $(SYNCBASE_NAME_FLAG)
 endif
 
-# If this is not the first mojo shell, then you must reuse the devservers
+# If this is not the first mojo shell, then you must reuse the dev servers
 # to avoid a "port in use" error.
 ifneq ($(shell fuser 31841/tcp),)
 	REUSE_FLAG := --reuse-servers
@@ -129,6 +129,12 @@ ifdef ANDROID
 	adb -s $(DEVICE_ID) push -p $(PWD)/creds $(ANDROID_CREDS_DIR)
 endif
 	$(call RUN_SKY_APP,$<)
+
+# Occasionally, mojo will leave some dev servers running on port 31841, which
+# prevents proper restarts. This rule cleans up the offending process.
+.PHONY: stop-mojo
+stop-mojo:
+	-fuser -k 31841/tcp
 
 CROUPIER_SHORTCUT_NAME := Croupier
 CROUPIER_URL := mojo://storage.googleapis.com/mojo_services/croupier/croupier.flx

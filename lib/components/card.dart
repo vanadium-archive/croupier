@@ -57,7 +57,7 @@ class ZCard extends widgets.StatefulComponent {
         animateEntrance = dataComponent.animateEntrance,
         z = dataComponent.z;
 
-  _ZCardState createState() => new _ZCardState();
+  ZCardState createState() => new ZCardState();
 }
 
 class Card extends widgets.StatefulComponent {
@@ -101,9 +101,15 @@ class Card extends widgets.StatefulComponent {
   // Check if the data between these Cards matches.
   // This isn't == since I don't want to override that and hashCode.
   bool isMatchWith(Card c) {
-    return c.card == card && c.faceUp == faceUp && c.width == width &&
-      c.height == height && c.rotation == rotation && c.useKey == useKey &&
-      c.visible == visible && c.animateEntrance == animateEntrance && c.z == z;
+    return c.card == card &&
+        c.faceUp == faceUp &&
+        c.width == width &&
+        c.height == height &&
+        c.rotation == rotation &&
+        c.useKey == useKey &&
+        c.visible == visible &&
+        c.animateEntrance == animateEntrance &&
+        c.z == z;
   }
 
   CardState createState() => new CardState();
@@ -121,7 +127,8 @@ class CardState extends widgets.State<Card> {
     widgets.Widget image = new widgets.Opacity(
         opacity: config.visible ? 1.0 : 0.0,
         child: new widgets.Transform(
-            child: _imageFromCard(config.card, config.faceUp, config.width, config.height),
+            child: _imageFromCard(
+                config.card, config.faceUp, config.width, config.height),
             transform:
                 new vector_math.Matrix4.identity().rotateZ(config.rotation),
             alignment: new FractionalOffset(0.5, 0.5)));
@@ -130,14 +137,15 @@ class CardState extends widgets.State<Card> {
   }
 }
 
-widgets.Widget _imageFromCard(logic_card.Card c, bool faceUp, double width, double height) {
+widgets.Widget _imageFromCard(
+    logic_card.Card c, bool faceUp, double width, double height) {
   // TODO(alexfandrianto): Instead of 'default', what if we were told which theme to use?
   String imageName =
       "images/default/${c.deck}/${faceUp ? 'up' : 'down'}/${c.identifier}.png";
   return new widgets.AssetImage(name: imageName, width: width, height: height);
 }
 
-class _ZCardState extends widgets.State<ZCard> {
+class ZCardState extends widgets.State<ZCard> {
   ValuePerformance<Point> _performance;
   List<
       Point> _pointQueue; // at least 1 longer than the current animation index.
@@ -215,6 +223,11 @@ class _ZCardState extends widgets.State<ZCard> {
     return _animationIndex < _pointQueue.length - 1;
   }
 
+  // Return the current animation position of the ZCard.
+  Point get localPosition {
+    return _performance.variable.value;
+  }
+
   void _tryAnimate() {
     // Let animations finish... (Is this a good idea?)
     if (!_performance.isAnimating && _needsAnimation()) {
@@ -231,7 +244,8 @@ class _ZCardState extends widgets.State<ZCard> {
 
   widgets.Widget build(widgets.BuildContext context) {
     widgets.Widget image = new widgets.Transform(
-        child: _imageFromCard(config.card, config.faceUp, config.width, config.height),
+        child: _imageFromCard(
+            config.card, config.faceUp, config.width, config.height),
         transform: new vector_math.Matrix4.identity().rotateZ(config.rotation),
         alignment: new FractionalOffset(0.5, 0.5));
 

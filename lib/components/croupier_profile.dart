@@ -2,9 +2,10 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-import '../logic/croupier_settings.dart' show CroupierSettings;
-
 import 'package:flutter/material.dart';
+
+import '../logic/croupier_settings.dart' show CroupierSettings;
+import '../styles/common.dart' as style;
 
 class CroupierProfileComponent extends StatelessComponent {
   final CroupierSettings settings;
@@ -14,7 +15,9 @@ class CroupierProfileComponent extends StatelessComponent {
     return new Container(
         decoration:
             new BoxDecoration(backgroundColor: new Color(settings.color)),
-        child: new Column(
-            [new AssetImage(name: CroupierSettings.makeAvatarUrl(settings.avatar)), new Text(settings.name)]));
+        child: new Column([
+          new AssetImage(name: CroupierSettings.makeAvatarUrl(settings.avatar)),
+          new Text(settings.name, style: style.Text.liveNow)
+        ]));
   }
 }

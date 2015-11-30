@@ -1,3 +1,10 @@
+name: croupier
+material-design-icons:
+  - name: action/build
+  - name: action/help
+  - name: action/settings
+  - name: navigation/arrow_back
+  - name: navigation/menu
 assets:
   - images/default/classic/down/c10.png
   - images/default/classic/down/c1.png

@@ -57,11 +57,16 @@ class ProtoGameComponentState extends GameComponentState<ProtoGameComponent> {
     });
   }
 
-  Widget _makeDebugButtons() => new Flex([
-        new Text('P${config.game.playerNumber}'),
-        _makeButton('Switch View', _switchPlayersCallback),
-        _makeButton('Quit', _quitGameCallback)
-      ]);
+  Widget _makeDebugButtons() {
+    if (config.game.debugMode == false) {
+      return new Flex([]);
+    }
+    return new Flex([
+      new Text('P${config.game.playerNumber}'),
+      _makeButton('Switch View', _switchPlayersCallback),
+      _makeButton('Quit', _quitGameCallback)
+    ]);
+  }
 
   void _switchPlayersCallback() {
     setState(() {

@@ -192,7 +192,10 @@ class CardCollectionComponentState extends State<CardCollectionComponent> {
                   opacity: 0.45,
                   child: emptyBackgroundImage == ""
                       ? null
-                      : new AssetImage(name: emptyBackgroundImage, fit: ImageFit.scaleDown, height: config.heightCard))));
+                      : new AssetImage(
+                          name: emptyBackgroundImage,
+                          fit: ImageFit.scaleDown,
+                          height: config.heightCard))));
     }
 
     double w = config.width ?? config.widthCard * 5;
@@ -269,19 +272,19 @@ class CardCollectionComponentState extends State<CardCollectionComponent> {
             decoration: new BoxDecoration(backgroundColor: Colors.white),
             child: new Stack(<Widget>[
               new Positioned(
-                  top: 0.0,
+                  top: 2 * _produceRowHeight + 2 * _whiteLineHeight,
                   child: _produceRow(ss,
                       emptyBackgroundImage: "images/suits/Spade.png")),
               new Positioned(
-                  top: _produceRowHeight + _whiteLineHeight,
+                  top: 3 * _produceRowHeight + 3 * _whiteLineHeight,
                   child: _produceRow(hs,
                       emptyBackgroundImage: "images/suits/Heart.png")),
               new Positioned(
-                  top: 2 * _produceRowHeight + 2 * _whiteLineHeight,
+                  top: 0.0,
                   child: _produceRow(cs,
                       emptyBackgroundImage: "images/suits/Club.png")),
               new Positioned(
-                  top: 3 * _produceRowHeight + 3 * _whiteLineHeight,
+                  top: _produceRowHeight + _whiteLineHeight,
                   child: _produceRow(ds,
                       emptyBackgroundImage: "images/suits/Diamond.png"))
             ]));

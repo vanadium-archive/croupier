@@ -3,10 +3,12 @@
 // license that can be found in the LICENSE file.
 
 import 'package:flutter/material.dart';
-import 'package:flutter/material.dart' show Colors;
 
 import 'logic/croupier.dart' show Croupier;
-import 'components/croupier.dart' show CroupierComponent;
+import 'components/settings_route.dart' show SettingsRoute;
+import 'components/debug_route.dart' show DebugRoute;
+import 'components/main_route.dart' show MainRoute;
+import 'styles/common.dart' as style;
 
 class CroupierApp extends StatefulComponent {
   CroupierApp();
@@ -23,21 +25,17 @@ class CroupierAppState extends State<CroupierApp> {
   }
 
   Widget build(BuildContext context) {
-    return new Container(
-        decoration: new BoxDecoration(
-            backgroundColor: const Color(0xFF6666FF), borderRadius: 5.0),
-        child: new DefaultTextStyle(
-            style: Theme.of(context).text.body1,
-            child: new CroupierComponent(this.croupier)));
+    return new MaterialApp(
+        title: 'Croupier',
+        routes: <String, RouteBuilder>{
+          "/": (RouteArguments args) => new MainRoute(croupier),
+          "/settings": (RouteArguments args) => new SettingsRoute(croupier),
+          "/debug": (RouteArguments args) => new DebugRoute(croupier)
+        },
+        theme: style.theme);
   }
 }
 
 void main() {
-  runApp(new MaterialApp(
-      title: 'Croupier',
-      routes: <String, RouteBuilder>{
-        "/": (RouteArguments args) => new CroupierApp()
-      },
-      theme: new ThemeData(
-          brightness: ThemeBrightness.light, primarySwatch: Colors.purple)));
+  runApp(new CroupierApp());
 }

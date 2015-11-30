@@ -10,14 +10,7 @@ import 'croupier_settings.dart' show CroupierSettings;
 import 'game/game.dart'
     show Game, GameType, GameStartData, stringToGameType, gameTypeToString;
 
-enum CroupierState {
-  Welcome,
-  Settings,
-  ChooseGame,
-  JoinGame,
-  ArrangePlayers,
-  PlayGame
-}
+enum CroupierState { Welcome, ChooseGame, JoinGame, ArrangePlayers, PlayGame }
 
 typedef void NoArgCb();
 
@@ -36,6 +29,8 @@ class Croupier {
   Future _scanFuture;
   Future _advertiseFuture;
 
+  bool debugMode = false; // whether to show debug buttons or not
+
   Croupier() {
     state = CroupierState.Welcome;
     settings_everyone = new Map<int, CroupierSettings>();
@@ -46,6 +41,9 @@ class Croupier {
 
     settings_manager.load().then((String csString) {
       settings = new CroupierSettings.fromJSONString(csString);
+      if (this.informUICb != null) {
+        this.informUICb();
+      }
       settings_manager.createSettingsSyncgroup(); // don't wait for this future.
     });
   }
@@ -98,11 +96,6 @@ class Croupier {
         // data should be empty.
         assert(data == null);
         break;
-      case CroupierState.Settings:
-        // data should be empty.
-        // All settings changes affect the croupier settings directly without changing app state.
-        assert(data == null);
-        break;
       case CroupierState.ChooseGame:
         if (data == null) {
           // Back button pressed.
@@ -112,7 +105,7 @@ class Croupier {
 
         // data should be the game id here.
         GameType gt = data as GameType;
-        game = cg.createGame(gt, 0,
+        game = cg.createGame(gt, 0, this.debugMode,
             isCreator: true); // Start as player 0 of whatever game type.
 
         _advertiseFuture = settings_manager
@@ -137,7 +130,8 @@ class Croupier {
 
         // data would probably be the game id again.
         GameStartData gsd = data as GameStartData;
-        game = cg.createGame(stringToGameType(gsd.type), gsd.playerNumber,
+        game = cg.createGame(
+            stringToGameType(gsd.type), gsd.playerNumber, this.debugMode,
             gameID: gsd.gameID); // Start as player 0 of whatever game type.
         String sgName;
         games_found.forEach((String name, GameStartData g) {
@@ -167,13 +161,6 @@ class Croupier {
         break;
       default:
         assert(false);
-    }
-
-    // TODO(alexfandrianto): We may want to have a splash screen or something
-    // when the user first loads the app. It takes a few seconds before the
-    // Syncbase tables are created.
-    if (settings == null) {
-      return; // you can't switch till the settings are present.
     }
 
     // A simplified way of clearing out the games and players found.

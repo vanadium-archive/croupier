@@ -12,6 +12,7 @@ import 'board.dart' show HeartsBoard;
 import 'card.dart' as component_card;
 import 'card_collection.dart'
     show CardCollectionComponent, DropType, CardCollectionOrientation, AcceptCb;
+import '../styles/common.dart' as style;
 
 import 'package:flutter/animation.dart';
 import 'package:flutter/material.dart';
@@ -61,7 +62,8 @@ abstract class GameComponentState<T extends GameComponent> extends State<T> {
 
   // A helper that subclasses might override to create buttons.
   Widget _makeButton(String text, NoArgCb callback) {
-    return new FlatButton(child: new Text(text), onPressed: callback);
+    return new FlatButton(
+        child: new Text(text, style: style.Text.liveNow), onPressed: callback);
   }
 
   @override
@@ -106,6 +108,25 @@ abstract class GameComponentState<T extends GameComponent> extends State<T> {
     }
   }
 
+  bool _isMoving(logic_card.Card c) {
+    CardAnimationData data = cardLevelMap[c];
+    RenderBox box = context.findRenderObject();
+    Point localOld =
+        data.oldPoint != null ? box.globalToLocal(data.oldPoint) : null;
+    Point localNew = box.globalToLocal(data.newPoint);
+
+    // We also need confirmation from the ZCard that we are moving.
+    component_card.GlobalCardKey zCardKey =
+        new component_card.GlobalCardKey(c, component_card.CardUIType.ZCARD);
+    component_card.ZCardState zCardKeyState = zCardKey.currentState;
+
+    // It is moving if there is an old position, the new one isn't equal to the
+    // old one, and the ZCard hasn't arrived at the new position yet.
+    return localOld != null &&
+        localOld != localNew &&
+        localNew != zCardKeyState?.localPosition;
+  }
+
   // Helper to build the card animation layer.
   // Note: This isn't a component because of its dependence on Widgets.
   Widget buildCardAnimationLayer(List<int> visibleCardCollections) {
@@ -117,9 +138,20 @@ abstract class GameComponentState<T extends GameComponent> extends State<T> {
 
     List<Widget> positionedCards = new List<Widget>();
 
-    // Sort the cards by z-index.
+    // Sort the cards by z-index. If a card is animating, it gets a z bonus.
     List<logic_card.Card> orderedKeys = cardLevelMap.keys.toList()
       ..sort((logic_card.Card a, logic_card.Card b) {
+        bool isMovingA = _isMoving(a);
+        bool isMovingB = _isMoving(b);
+
+        // Moving cards take much higher priority.
+        if (isMovingA && !isMovingB) {
+          return 1;
+        } else if (!isMovingA && isMovingB) {
+          return -1;
+        }
+
+        // If both are moving/non-moving, we break ties with the z-index.
         double diff = cardLevelMap[a].z - cardLevelMap[b].z;
         return diff.sign.toInt();
       });

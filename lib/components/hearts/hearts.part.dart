@@ -207,19 +207,25 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     });
   }
 
-  Widget _makeDebugButtons() => new Container(
-      width: config.width,
-      child: new Flex([
-        new Flexible(flex: 1, child: new Text('P${config.game.playerNumber}')),
-        new Flexible(
-            flex: 5,
-            child: _makeButton('Switch Player', _switchPlayersCallback)),
-        new Flexible(
-            flex: 5, child: _makeButton('Switch View', _switchViewCallback)),
-        new Flexible(
-            flex: 5, child: _makeButton('End Round', _endRoundDebugCallback)),
-        new Flexible(flex: 4, child: _makeButton('Quit', _quitGameCallback))
-      ]));
+  Widget _makeDebugButtons() {
+    if (config.game.debugMode == false) {
+      return new Flex([]);
+    }
+    return new Container(
+        width: config.width,
+        child: new Flex([
+          new Flexible(
+              flex: 1, child: new Text('P${config.game.playerNumber}')),
+          new Flexible(
+              flex: 5,
+              child: _makeButton('Switch Player', _switchPlayersCallback)),
+          new Flexible(
+              flex: 5, child: _makeButton('Switch View', _switchViewCallback)),
+          new Flexible(
+              flex: 5, child: _makeButton('End Round', _endRoundDebugCallback)),
+          new Flexible(flex: 4, child: _makeButton('Quit', _quitGameCallback))
+        ]));
+  }
 
   @override
   Widget _makeButton(String text, NoArgCb callback, {bool inactive: false}) {

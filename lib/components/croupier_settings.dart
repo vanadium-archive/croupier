@@ -31,9 +31,8 @@ Map<String, DialogType> dialogTypes = {
 class CroupierSettingsComponent extends StatefulComponent {
   final CroupierSettings settings;
   final SaveDataCb saveDataCb;
-  final NoArgCb backCb;
 
-  CroupierSettingsComponent(this.settings, this.saveDataCb, this.backCb);
+  CroupierSettingsComponent(this.settings, this.saveDataCb);
 
   CroupierSettingsComponentState createState() =>
       new CroupierSettingsComponentState();
@@ -61,18 +60,34 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
   }
 
   Widget _makeImageButton(String url, NoArgCb cb) {
-    return new FlatButton(child: new AssetImage(name: CroupierSettings.makeAvatarUrl(url)), onPressed: cb);
+    return new FlatButton(
+        child: new AssetImage(name: CroupierSettings.makeAvatarUrl(url)),
+        onPressed: cb);
   }
 
   Widget build(BuildContext context) {
+    return new Scaffold(
+        toolBar: _buildToolBar(), body: _buildSettingsPane(context));
+  }
+
+  Widget _buildToolBar() {
+    return new ToolBar(
+        left: new IconButton(
+            icon: "navigation/arrow_back",
+            onPressed: () => Navigator.of(context).pop()),
+        center: new Text("Settings"));
+  }
+
+  Widget _buildSettingsPane(BuildContext context) {
     List<Widget> w = new List<Widget>();
     w.add(_makeButtonRow(nameKey, new Text(config.settings.name)));
     w.add(_makeButtonRow(
         colorKey, _makeColoredRectangle(config.settings.color, "", null)));
     w.add(_makeButtonRow(
-        avatarKey, new AssetImage(name: CroupierSettings.makeAvatarUrl(config.settings.avatar))));
+        avatarKey,
+        new AssetImage(
+            name: CroupierSettings.makeAvatarUrl(config.settings.avatar))));
 
-    w.add(new FlatButton(child: new Text("Return"), onPressed: config.backCb));
     return new Column(w);
   }
 
