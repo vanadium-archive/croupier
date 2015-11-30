@@ -228,6 +228,9 @@ func AnimateInTake(u *uistate.UIState) {
 
 // Animation for the 'play' action, when app is in the hand view
 func AnimateHandCardPlay(ch chan bool, animCard *card.Card, u *uistate.UIState) {
+	for _, o := range u.Other {
+		BringNodeToFront(o.GetNode(), u)
+	}
 	imgs := []*staticimg.StaticImg{u.BackgroundImgs[0], u.DropTargets[0]}
 	for _, i := range imgs {
 		dims := i.GetDimensions()
@@ -254,7 +257,7 @@ func AnimateSplitCardPlay(c *card.Card, player int, quit chan bool, u *uistate.U
 	dropTarget := u.DropTargets[(player-u.CurPlayerIndex+u.NumPlayers)%u.NumPlayers]
 	toPos := dropTarget.GetCurrent()
 	toDim := dropTarget.GetDimensions()
-	texture.PopulateCardImage(c, u.Texs, u.Eng, u.Scene)
+	texture.PopulateCardImage(c, u)
 	switch player {
 	case (u.CurPlayerIndex + 1) % u.NumPlayers:
 		c.Move(coords.MakeVec(-toDim.X, 0), toDim, u.Eng)
@@ -341,13 +344,13 @@ func AnimateOutSplit(ch chan bool, u *uistate.UIState) {
 func determineDestination(animCard *card.Card, dir direction.Direction, windowSize *coords.Vec) *coords.Vec {
 	switch dir {
 	case direction.Right:
-		return coords.MakeVec(windowSize.X+2*animCard.GetDimensions().X, animCard.GetCurrent().Y)
+		return coords.MakeVec(animCard.GetCurrent().X+windowSize.X, animCard.GetCurrent().Y)
 	case direction.Left:
-		return coords.MakeVec(0-2*animCard.GetDimensions().X, animCard.GetCurrent().Y)
+		return coords.MakeVec(animCard.GetCurrent().X-windowSize.X, animCard.GetCurrent().Y)
 	case direction.Across:
-		return coords.MakeVec(animCard.GetCurrent().X, 0-2*animCard.GetDimensions().Y)
+		return coords.MakeVec(animCard.GetCurrent().X, animCard.GetCurrent().Y-windowSize.Y)
 	case direction.Down:
-		return coords.MakeVec(animCard.GetCurrent().X, windowSize.Y+2*animCard.GetDimensions().Y)
+		return coords.MakeVec(animCard.GetCurrent().X, animCard.GetCurrent().Y+windowSize.Y)
 	// Should not occur
 	default:
 		return coords.MakeVec(-1, -1)
@@ -356,6 +359,9 @@ func determineDestination(animCard *card.Card, dir direction.Direction, windowSi
 
 // Animation for when a trick is taken, when app is in the table view
 func AnimateTableCardTakeTrick(cards []*card.Card, dir direction.Direction, quit chan bool, u *uistate.UIState) {
+	for _, c := range cards {
+		BringNodeToFront(c.GetNode(), u)
+	}
 	for i, animCard := range cards {
 		destination := determineDestination(animCard, dir, u.WindowSize)
 		if i < len(cards)-1 {
@@ -519,6 +525,11 @@ func RemoveAnimChan(ch chan bool, u *uistate.UIState) {
 			return
 		}
 	}
+}
+
+func BringNodeToFront(n *sprite.Node, u *uistate.UIState) {
+	u.Scene.RemoveChild(n)
+	u.Scene.AppendChild(n)
 }
 
 func SwitchOnChan(animChan, quitChan chan bool, f func(), u *uistate.UIState) {

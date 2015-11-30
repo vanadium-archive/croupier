@@ -37,6 +37,12 @@ const (
 )
 
 const (
+	Avatar string = "avatar"
+	Name   string = "name"
+	Device string = "device"
+)
+
+const (
 	numPlayers    int     = 4
 	numSuits      int     = 4
 	cardSize      float32 = 35
@@ -88,7 +94,7 @@ type UIState struct {
 	GameID         int                            // used to differentiate between concurrent games
 	IsOwner        bool                           // true if this player is the game creator
 	UserData       map[int]map[string]interface{} // user data indexed by user ID
-	PlayerData     map[int]map[string]interface{} // user data indexed by player number
+	PlayerData     map[int]int                    // key = player number, value = user id
 	AnimChans      []chan bool                    // keeps track of all 'quit' channels in animations so their goroutines can be stopped
 	SGChan         chan bool                      // pass in a bool to stop advertising the syncgroup
 	ScanChan       chan bool                      // pass in a bool to stop scanning for syncgroups
@@ -119,9 +125,36 @@ func MakeUIState() *UIState {
 		Padding:        float32(5),
 		CurView:        None,
 		Done:           false,
-		Debug:          false,
-		UserData:       make(map[int]map[string]interface{}, 0),
-		PlayerData:     make(map[int]map[string]interface{}, 0),
+		Debug:          true,
+		UserData:       make(map[int]map[string]interface{}),
+		PlayerData:     make(map[int]int),
 		AnimChans:      make([]chan bool, 0),
 	}
+}
+
+func GetAvatar(playerNum int, u *UIState) sprite.SubTex {
+	blankTex := u.Texs["Heart.png"]
+	userID := u.PlayerData[playerNum]
+	if u.UserData[userID][Avatar] == nil {
+		return blankTex
+	}
+	return u.Texs[u.UserData[userID][Avatar].(string)]
+}
+
+func GetName(playerNum int, u *UIState) string {
+	emptyString := ""
+	userID := u.PlayerData[playerNum]
+	if u.UserData[userID][Name] == nil {
+		return emptyString
+	}
+	return u.UserData[userID][Name].(string)
+}
+
+func GetDevice(playerNum int, u *UIState) sprite.SubTex {
+	blankTex := u.Texs["laptop.png"]
+	userID := u.PlayerData[playerNum]
+	if u.UserData[userID][Device] == nil {
+		return blankTex
+	}
+	return u.Texs[u.UserData[userID][Device].(string)]
 }

@@ -99,14 +99,14 @@ func UpdateGame(u *uistate.UIState) {
 func onPlayers(key, value string, u *uistate.UIState) {
 	userID, _ := strconv.Atoi(strings.Split(key, "/")[2])
 	playerNum, _ := strconv.Atoi(value)
-	u.PlayerData[playerNum] = u.UserData[userID]
-	user := u.UserData[userID]
-	if user != nil {
-		img := u.Texs[user["avatar"].(string)]
-		name := user["name"].(string)
-		u.CurTable.GetPlayers()[playerNum].SetIconImage(img)
-		u.CurTable.GetPlayers()[playerNum].SetName(name)
-	}
+	u.PlayerData[playerNum] = userID
+	// user := u.UserData[userID]
+	// if user != nil {
+	// 	img := u.Texs[user["avatar"].(string)]
+	// 	name := user["name"].(string)
+	// 	u.CurTable.GetPlayers()[playerNum].SetIconImage(img)
+	// 	u.CurTable.GetPlayers()[playerNum].SetName(name)
+	// }
 	if u.CurView == uistate.Arrange {
 		view.LoadArrangeView(u)
 	}
@@ -260,7 +260,7 @@ func onPlay(value string, u *uistate.UIState) {
 			view.LoadScoreView(roundScores, winners, u)
 		} else if trickOver {
 			if u.CurPlayerIndex != recipient {
-				message := u.CurTable.GetPlayers()[recipient].GetName() + "'s trick"
+				message := uistate.GetName(recipient, u) + "'s trick"
 				view.ChangePlayMessage(message, u)
 				<-time.After(1 * time.Second)
 				view.LoadPlayView(u)

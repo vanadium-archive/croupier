@@ -7,40 +7,33 @@
 package player
 
 import (
-	"golang.org/x/mobile/exp/sprite"
 	"hearts/logic/card"
 )
 
 // Returns a player instance with playerIndex equal to index
-func NewPlayer(index int, name string, iconTex, deviceTex sprite.SubTex) *Player {
+func NewPlayer(index int) *Player {
 	return &Player{
-		hand:              nil,
-		tricks:            make([]*card.Card, 0),
-		score:             0,
-		playerIndex:       index,
-		playerName:        name,
-		playerIconImage:   iconTex,
-		playerDeviceImage: deviceTex,
-		donePassing:       false,
-		doneTaking:        false,
-		doneScoring:       false,
+		hand:        nil,
+		tricks:      make([]*card.Card, 0),
+		score:       0,
+		playerIndex: index,
+		donePassing: false,
+		doneTaking:  false,
+		doneScoring: false,
 	}
 }
 
 type Player struct {
-	hand              []*card.Card
-	passedFrom        []*card.Card
-	passedTo          []*card.Card
-	tricks            []*card.Card
-	score             int
-	playerIndex       int
-	playerName        string
-	playerIconImage   sprite.SubTex
-	playerDeviceImage sprite.SubTex
-	donePassing       bool
-	doneTaking        bool
-	donePlaying       bool
-	doneScoring       bool
+	hand        []*card.Card
+	passedFrom  []*card.Card
+	passedTo    []*card.Card
+	tricks      []*card.Card
+	score       int
+	playerIndex int
+	donePassing bool
+	doneTaking  bool
+	donePlaying bool
+	doneScoring bool
 }
 
 // Returns the hand of p
@@ -66,18 +59,6 @@ func (p *Player) GetScore() int {
 // Returns the playerIndex of p
 func (p *Player) GetPlayerIndex() int {
 	return p.playerIndex
-}
-
-func (p *Player) GetName() string {
-	return p.playerName
-}
-
-func (p *Player) GetIconImage() sprite.SubTex {
-	return p.playerIconImage
-}
-
-func (p *Player) GetDeviceImage() sprite.SubTex {
-	return p.playerDeviceImage
 }
 
 // Returns true if p has finished the pass phase of the current round
@@ -117,18 +98,6 @@ func (p *Player) RemoveFromHand(card *card.Card) {
 // Sets hand of p in one chunk of cards
 func (p *Player) SetHand(cards []*card.Card) {
 	p.hand = cards
-}
-
-func (p *Player) SetName(name string) {
-	p.playerName = name
-}
-
-func (p *Player) SetIconImage(image sprite.SubTex) {
-	p.playerIconImage = image
-}
-
-func (p *Player) SetDeviceImage(image sprite.SubTex) {
-	p.playerDeviceImage = image
 }
 
 // Sets passedTo of p to cards

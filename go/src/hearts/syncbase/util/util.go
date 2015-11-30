@@ -10,10 +10,10 @@ const (
 	// switch back to my mountpoint with the following code:
 	MountPoint = "users/emshack@google.com"
 	//MountPoint        = "/192.168.86.254:8101"
-	UserID            = 123
+	UserID            = 1223
 	UserColor         = 16777215
-	UserAvatar        = "Club.png"
-	UserName          = "Croupier Go Player (the blue)"
+	UserAvatar        = "player1.jpeg"
+	UserName          = "EmilyS"
 	SBName            = "syncbase"
 	AppName           = "app"
 	DbName            = "db"

@@ -18,11 +18,8 @@ import (
 // Returns a table instance with player set length numPlayers
 func InitializeGame(numPlayers int, texs map[string]sprite.SubTex) *Table {
 	players := make([]*player.Player, 0)
-	names := []string{"YoungSeok", "Dan", "Emily", "Ross"}
-	iconImages := []sprite.SubTex{texs["player0.jpeg"], texs["player1.jpeg"], texs["player2.jpeg"], texs["player3.jpeg"]}
-	deviceImages := []sprite.SubTex{texs["laptopIcon.png"], texs["watchIcon.png"], texs["tabletIcon.png"], texs["phoneIcon.png"]}
 	for i := 0; i < numPlayers; i++ {
-		players = append(players, player.NewPlayer(i, names[i], iconImages[i], deviceImages[i]))
+		players = append(players, player.NewPlayer(i))
 	}
 	t := makeTable(players)
 	t.GenerateClassicCards()

@@ -24,7 +24,7 @@ import (
 )
 
 // Given a card object, populates it with its image
-func PopulateCardImage(c *card.Card, texs map[string]sprite.SubTex, eng sprite.Engine, scene *sprite.Node) {
+func PopulateCardImage(c *card.Card, u *uistate.UIState) {
 	var texKey string
 	switch c.GetSuit() {
 	case card.Club:
@@ -49,11 +49,11 @@ func PopulateCardImage(c *card.Card, texs map[string]sprite.SubTex, eng sprite.E
 		texKey += strconv.Itoa(int(c.GetFace()))
 	}
 	texKey += ".png"
-	n := MakeNode(eng, scene)
-	eng.SetSubTex(n, texs[texKey])
+	n := MakeNode(u)
+	u.Eng.SetSubTex(n, u.Texs[texKey])
 	c.SetNode(n)
-	c.SetImage(texs[texKey])
-	c.SetBack(texs["BakuSquare.png"])
+	c.SetImage(u.Texs[texKey])
+	c.SetBack(u.Texs["BakuSquare.png"])
 }
 
 // Returns array of textures which make up a string
@@ -117,9 +117,9 @@ func MakeStringImgLeftAlign(input, color, altColor string,
 		dims := subTexDims.DividedBy(scaler)
 		var textImg *staticimg.StaticImg
 		if len(altTexs) == 0 {
-			textImg = MakeImgWithoutAlt(img, start, dims, u.Eng, u.Scene)
+			textImg = MakeImgWithoutAlt(img, start, dims, u)
 		} else {
-			textImg = MakeImgWithAlt(img, altTexs[i], start, dims, displayColor, u.Eng, u.Scene)
+			textImg = MakeImgWithAlt(img, altTexs[i], start, dims, displayColor, u)
 		}
 		allImgs = append(allImgs, textImg)
 		start = coords.MakeVec(start.X+dims.X, start.Y)
@@ -156,9 +156,9 @@ func MakeStringImgRightAlign(input, color, altColor string,
 		end = coords.MakeVec(end.X-dims.X, end.Y)
 		var textImg *staticimg.StaticImg
 		if len(altTexs) == 0 {
-			textImg = MakeImgWithoutAlt(img, end, dims, u.Eng, u.Scene)
+			textImg = MakeImgWithoutAlt(img, end, dims, u)
 		} else {
-			textImg = MakeImgWithAlt(img, altTexs[i], end, dims, displayColor, u.Eng, u.Scene)
+			textImg = MakeImgWithAlt(img, altTexs[i], end, dims, displayColor, u)
 		}
 		allImgs = append(allImgs, textImg)
 	}
@@ -187,31 +187,24 @@ func MakeStringImgCenterAlign(input, color, altColor string,
 }
 
 // Returns a new StaticImg instance with desired image and dimensions
-func MakeImgWithoutAlt(t sprite.SubTex,
-	current, dim *coords.Vec,
-	eng sprite.Engine,
-	scene *sprite.Node) *staticimg.StaticImg {
-	n := MakeNode(eng, scene)
-	eng.SetSubTex(n, t)
+func MakeImgWithoutAlt(t sprite.SubTex, current, dim *coords.Vec, u *uistate.UIState) *staticimg.StaticImg {
+	n := MakeNode(u)
+	u.Eng.SetSubTex(n, t)
 	s := staticimg.MakeStaticImg()
 	s.SetNode(n)
 	s.SetImage(t)
 	s.SetInitial(current)
-	s.Move(current, dim, eng)
+	s.Move(current, dim, u.Eng)
 	return s
 }
 
 // Returns a new StaticImg instance with desired image and dimensions
 // Also includes an alternate image. If displayImage is true, image will be displayed. Else, alt will be displayed.
-func MakeImgWithAlt(t, alt sprite.SubTex,
-	current, dim *coords.Vec,
-	displayImage bool,
-	eng sprite.Engine,
-	scene *sprite.Node) *staticimg.StaticImg {
-	s := MakeImgWithoutAlt(t, current, dim, eng, scene)
+func MakeImgWithAlt(t, alt sprite.SubTex, current, dim *coords.Vec, displayImage bool, u *uistate.UIState) *staticimg.StaticImg {
+	s := MakeImgWithoutAlt(t, current, dim, u)
 	s.SetAlt(alt)
 	if !displayImage {
-		eng.SetSubTex(s.GetNode(), alt)
+		u.Eng.SetSubTex(s.GetNode(), alt)
 		s.SetDisplayingImage(false)
 	} else {
 		s.SetDisplayingImage(true)
@@ -318,9 +311,9 @@ func LoadTextures(eng sprite.Engine) map[string]sprite.SubTex {
 
 // Returns a new sprite node
 // NOTE: Currently, this is a public method, as it is useful in testing. Eventually it should be made private.
-func MakeNode(eng sprite.Engine, scene *sprite.Node) *sprite.Node {
+func MakeNode(u *uistate.UIState) *sprite.Node {
 	n := &sprite.Node{}
-	eng.Register(n)
-	scene.AppendChild(n)
+	u.Eng.Register(n)
+	u.Scene.AppendChild(n)
 	return n
 }
