@@ -136,9 +136,25 @@ endif
 stop-mojo:
 	-fuser -k 31841/tcp
 
+APP_ICON := $(PWD)/images/croupier_icon.png
+APP_FLX_FILE := $(PWD)/croupier.flx
+SYNCBASE_MOJO_DIR := $(PWD)/packages/syncbase/mojo_services
+DISCOVERY_MOJO_DIR := $(PWD)/packages/v23discovery/mojo_services
+GS_BUCKET_PATH := gs://mojo_services
+
+.PHONY: deploy
+deploy: build
+	gsutil cp $(APP_ICON) $(GS_BUCKET_PATH)/croupier
+	gsutil cp $(APP_FLX_FILE) $(GS_BUCKET_PATH)/croupier
+	gsutil cp -r $(SYNCBASE_MOJO_DIR) $(GS_BUCKET_PATH)/syncbase
+	gsutil cp -r $(DISCOVERY_MOJO_DIR) $(GS_BUCKET_PATH)/v23discovery
+	gsutil -m acl set -R -a public-read $(GS_BUCKET_PATH)/croupier
+	gsutil -m acl set -R -a public-read $(GS_BUCKET_PATH)/syncbase
+	gsutil -m acl set -R -a public-read $(GS_BUCKET_PATH)/v23discovery
+
 CROUPIER_SHORTCUT_NAME := Croupier
 CROUPIER_URL := mojo://storage.googleapis.com/mojo_services/croupier/croupier.flx
-CROUPIER_URL_TO_ICON := https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png
+CROUPIER_URL_TO_ICON := https://storage.googleapis.com/mojo_services/croupier/croupier_icon.png
 MOJO_SHELL_CMD_PATH := /data/local/tmp/org.chromium.mojo.shell.cmd
 
 # Creates a shortcut on the phone that runs the hosted version of croupier.flx

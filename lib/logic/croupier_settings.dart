@@ -21,7 +21,7 @@ class CroupierSettings {
 
   CroupierSettings.placeholder() {
     userID = 0;
-    avatar = "";
+    avatar = "Heart.png";
     name = "Loading...";
     color = 0xcfcccccc;
   }
@@ -94,7 +94,11 @@ class RandomSettings {
     'Club.png',
     'Diamond.png',
     'Heart.png',
-    'Spade.png'
+    'Spade.png',
+    'player0.jpeg',
+    'player1.jpeg',
+    'player2.jpeg',
+    'player3.jpeg',
   ];
   static final List names = [
     'Anne',

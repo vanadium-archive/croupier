@@ -254,10 +254,7 @@ class HeartsGame extends Game {
   // It won't be possible to set the readiness for other players, except via the GameLog.
   void setReadyUI() {
     assert(phase == HeartsPhase.Score || phase == HeartsPhase.StartGame);
-    //gamelog.add(new HeartsCommand.ready(playerNumber));
-    for (int i = 0; i < 4; i++) {
-      gamelog.add(new HeartsCommand.ready(i));
-    }
+    gamelog.add(new HeartsCommand.ready(playerNumber));
   }
 
   @override
