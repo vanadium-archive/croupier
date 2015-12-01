@@ -4,7 +4,11 @@
 
 library game_component;
 
+import 'dart:math' as math;
+
 import '../logic/card.dart' as logic_card;
+import '../logic/croupier.dart' show Croupier;
+import '../logic/croupier_settings.dart' show CroupierSettings;
 import '../logic/game/game.dart' show Game, GameType;
 import '../logic/hearts/hearts.dart' show HeartsGame, HeartsPhase, HeartsType;
 import '../logic/solitaire/solitaire.dart' show SolitaireGame, SolitairePhase;
@@ -12,6 +16,7 @@ import 'board.dart' show HeartsBoard;
 import 'card.dart' as component_card;
 import 'card_collection.dart'
     show CardCollectionComponent, DropType, CardCollectionOrientation, AcceptCb;
+import 'croupier_profile.dart' show CroupierProfileComponent;
 import '../styles/common.dart' as style;
 
 import 'package:flutter/animation.dart';
@@ -25,12 +30,13 @@ part 'solitaire/solitaire.part.dart';
 typedef void NoArgCb();
 
 abstract class GameComponent extends StatefulComponent {
-  final Game game;
+  final Croupier croupier;
+  Game get game => croupier.game;
   final NoArgCb gameEndCallback;
   final double width;
   final double height;
 
-  GameComponent(this.game, this.gameEndCallback, {this.width, this.height});
+  GameComponent(this.croupier, this.gameEndCallback, {this.width, this.height});
 }
 
 abstract class GameComponentState<T extends GameComponent> extends State<T> {
@@ -69,11 +75,11 @@ abstract class GameComponentState<T extends GameComponent> extends State<T> {
   @override
   Widget build(BuildContext context); // still UNIMPLEMENTED
 
-  void _cardLevelMapProcessAllVisible(List<int> visibleCardCollections) {
+  void _cardLevelMapProcessAllVisible(List<int> visibleCardCollectionIndexes) {
     Game game = config.game;
 
-    for (int i = 0; i < visibleCardCollections.length; i++) {
-      int index = visibleCardCollections[i];
+    for (int i = 0; i < visibleCardCollectionIndexes.length; i++) {
+      int index = visibleCardCollectionIndexes[i];
       for (int j = 0; j < game.cardCollections[index].length; j++) {
         _cardLevelMapProcess(game.cardCollections[index][j]);
       }
@@ -129,11 +135,11 @@ abstract class GameComponentState<T extends GameComponent> extends State<T> {
 
   // Helper to build the card animation layer.
   // Note: This isn't a component because of its dependence on Widgets.
-  Widget buildCardAnimationLayer(List<int> visibleCardCollections) {
+  Widget buildCardAnimationLayer(List<int> visibleCardCollectionIndexes) {
     // It's possible that some cards need to be moved after this build.
     // If so, we can catch it in the next frame.
     scheduler.requestPostFrameCallback((Duration d) {
-      _cardLevelMapProcessAllVisible(visibleCardCollections);
+      _cardLevelMapProcessAllVisible(visibleCardCollectionIndexes);
     });
 
     List<Widget> positionedCards = new List<Widget>();
@@ -158,7 +164,7 @@ abstract class GameComponentState<T extends GameComponent> extends State<T> {
 
     orderedKeys.forEach((logic_card.Card c) {
       // Don't show a card if it isn't part of a visible collection.
-      if (!visibleCardCollections.contains(config.game.findCard(c))) {
+      if (!visibleCardCollectionIndexes.contains(config.game.findCard(c))) {
         cardLevelMap.remove(c); // It is an old card, which we can clean up.
         return;
       }
@@ -188,17 +194,17 @@ abstract class GameComponentState<T extends GameComponent> extends State<T> {
   }
 }
 
-GameComponent createGameComponent(Game game, NoArgCb gameEndCallback,
+GameComponent createGameComponent(Croupier croupier, NoArgCb gameEndCallback,
     {double width, double height}) {
-  switch (game.gameType) {
+  switch (croupier.game.gameType) {
     case GameType.Proto:
-      return new ProtoGameComponent(game, gameEndCallback,
+      return new ProtoGameComponent(croupier, gameEndCallback,
           width: width, height: height);
     case GameType.Hearts:
-      return new HeartsGameComponent(game, gameEndCallback,
+      return new HeartsGameComponent(croupier, gameEndCallback,
           width: width, height: height);
     case GameType.Solitaire:
-      return new SolitaireGameComponent(game, gameEndCallback,
+      return new SolitaireGameComponent(croupier, gameEndCallback,
           width: width, height: height);
     default:
       // We're probably not ready to serve the other games yet.

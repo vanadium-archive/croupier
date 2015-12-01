@@ -144,10 +144,12 @@ void main() {
       // Now, update the score, modifying game.scores.
       game.updateScore();
       expect(game.scores, equals([4, 8, 14, 0]));
+      expect(game.deltaScores, equals([4, 8, 14, 0]));
 
       // Do it again.
       game.updateScore();
       expect(game.scores, equals([8, 16, 28, 0]));
+      expect(game.deltaScores, equals([4, 8, 14, 0]));
 
       // Shoot the moon!
       game.cardCollections[HeartsGame.PLAYER_A_TRICK] = <Card>[];
@@ -156,6 +158,7 @@ void main() {
       game.cardCollections[HeartsGame.PLAYER_D_TRICK] = Card.All;
       game.updateScore();
       expect(game.scores, equals([34, 42, 54, 0]));
+      expect(game.deltaScores, equals([26, 26, 26, 0]));
     });
   });
 
@@ -391,6 +394,7 @@ void main() {
 
       // Check score to ensure it matches the expectation.
       expect(game.scores, equals([21, 3, 2, 0]));
+      expect(game.deltaScores, equals([21, 3, 2, 0]));
 
       // Score consists of 4 ready commands.
       runCommand();
@@ -435,6 +439,7 @@ void main() {
             2 + 26 + 26 + 26,
             0 + 26 + 26 + 26
           ]));
+      expect(game.deltaScores, equals([0, 26, 26, 26]));
       expect(game.hasGameEnded, isFalse);
 
       // 5th round: 4 deal, 4 pass, 4 take, 52 play. Game is over, so no ready phase.
@@ -449,6 +454,7 @@ void main() {
             2 + 26 + 26 + 26 + 26,
             0 + 26 + 26 + 26 + 26
           ]));
+      expect(game.deltaScores, equals([0, 26, 26, 26]));
       expect(game.hasGameEnded,
           isTrue); // assumes game ends after about 100 points.
     });

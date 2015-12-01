@@ -13,6 +13,12 @@ class Text {
   static final TextStyle liveNow =
       new TextStyle(fontSize: 12.0, color: theme.accentColor);
   static final TextStyle error = new TextStyle(color: errorTextColor);
+  static final TextStyle hugeStyle = new TextStyle(fontSize: 32.0);
+  static final TextStyle hugeRedStyle =
+      new TextStyle(fontSize: 32.0, color: errorTextColor);
+  static final TextStyle largeStyle = new TextStyle(fontSize: 24.0);
+  static final TextStyle largeRedStyle =
+      new TextStyle(fontSize: 24.0, color: errorTextColor);
 }
 
 class Size {

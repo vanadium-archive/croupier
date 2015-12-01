@@ -120,23 +120,23 @@ packages:
   mojo:
     description: mojo
     source: hosted
-    version: "0.4.3"
+    version: "0.4.5"
   mojo_apptest:
     description: mojo_apptest
     source: hosted
-    version: "0.2.8"
+    version: "0.2.9"
   mojo_sdk:
     description: mojo_sdk
     source: hosted
-    version: "0.2.2"
+    version: "0.2.4"
   mojo_services:
     description: mojo_services
     source: hosted
-    version: "0.4.5"
+    version: "0.4.7"
   mojom:
     description: mojom
     source: hosted
-    version: "0.2.8"
+    version: "0.2.9"
   mustache4dart:
     description: mustache4dart
     source: hosted
@@ -186,11 +186,11 @@ packages:
   sky_engine:
     description: sky_engine
     source: hosted
-    version: "0.0.57"
+    version: "0.0.65"
   sky_services:
     description: sky_services
     source: hosted
-    version: "0.0.57"
+    version: "0.0.65"
   source_map_stack_trace:
     description: source_map_stack_trace
     source: hosted
@@ -218,7 +218,7 @@ packages:
   test:
     description: test
     source: hosted
-    version: "0.12.6"
+    version: "0.12.5+2"
   typed_data:
     description: typed_data
     source: hosted

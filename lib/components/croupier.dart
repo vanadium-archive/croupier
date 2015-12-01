@@ -149,7 +149,7 @@ class CroupierComponentState extends State<CroupierComponent> {
       case logic_croupier.CroupierState.PlayGame:
         return new Container(
             padding: new EdgeDims.only(top: ui.window.padding.top),
-            child: component_game.createGameComponent(config.croupier.game, () {
+            child: component_game.createGameComponent(config.croupier, () {
               config.croupier.game.quit();
               makeSetStateCallback(logic_croupier.CroupierState.Welcome)();
             },

@@ -5,8 +5,9 @@
 part of game_component;
 
 class HeartsGameComponent extends GameComponent {
-  HeartsGameComponent(Game game, NoArgCb cb, {double width, double height})
-      : super(game, cb, width: width, height: height);
+  HeartsGameComponent(Croupier croupier, NoArgCb cb,
+      {double width, double height})
+      : super(croupier, cb, width: width, height: height);
 
   HeartsGameComponentState createState() => new HeartsGameComponentState();
 }
@@ -51,25 +52,30 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
         width: config.width,
         height: config.height,
         child: heartsWidget));
+    List<int> visibleCardCollectionIndexes = new List<int>();
     if (game.phase != HeartsPhase.StartGame &&
         game.phase != HeartsPhase.Deal &&
         game.phase != HeartsPhase.Score) {
-      List<int> visibleCardCollections = new List<int>();
       int playerNum = game.playerNumber;
       if (game.viewType == HeartsType.Player) {
         switch (game.phase) {
           case HeartsPhase.Pass:
-            visibleCardCollections.add(HeartsGame.OFFSET_PASS + playerNum);
-            visibleCardCollections.add(HeartsGame.OFFSET_HAND + playerNum);
+            visibleCardCollectionIndexes
+                .add(HeartsGame.OFFSET_PASS + playerNum);
+            visibleCardCollectionIndexes
+                .add(HeartsGame.OFFSET_HAND + playerNum);
             break;
           case HeartsPhase.Take:
-            visibleCardCollections
+            visibleCardCollectionIndexes
                 .add(HeartsGame.OFFSET_PASS + game.takeTarget);
-            visibleCardCollections.add(HeartsGame.OFFSET_HAND + playerNum);
+            visibleCardCollectionIndexes
+                .add(HeartsGame.OFFSET_HAND + playerNum);
             break;
           case HeartsPhase.Play:
-            visibleCardCollections.add(HeartsGame.OFFSET_HAND + playerNum);
-            visibleCardCollections.add(HeartsGame.OFFSET_PLAY + playerNum);
+            visibleCardCollectionIndexes
+                .add(HeartsGame.OFFSET_HAND + playerNum);
+            visibleCardCollectionIndexes
+                .add(HeartsGame.OFFSET_PLAY + playerNum);
             break;
           default:
             break;
@@ -77,13 +83,13 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
       } else {
         // A board will need to see these things.
         for (int i = 0; i < 4; i++) {
-          visibleCardCollections.add(HeartsGame.OFFSET_PLAY + i);
-          visibleCardCollections.add(HeartsGame.OFFSET_PASS + i);
-          visibleCardCollections.add(HeartsGame.OFFSET_HAND + i);
+          visibleCardCollectionIndexes.add(HeartsGame.OFFSET_PLAY + i);
+          visibleCardCollectionIndexes.add(HeartsGame.OFFSET_PASS + i);
+          visibleCardCollectionIndexes.add(HeartsGame.OFFSET_HAND + i);
         }
       }
-      children.add(this.buildCardAnimationLayer(visibleCardCollections));
     }
+    children.add(this.buildCardAnimationLayer(visibleCardCollectionIndexes));
 
     return new Container(
         width: config.width, height: config.height, child: new Stack(children));
@@ -363,6 +369,16 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
         justifyContent: FlexJustifyContent.spaceBetween);
   }
 
+  Widget _getProfileComponent(int playerNumber) {
+    int userID = config.croupier.userIDFromPlayerNumber(playerNumber);
+
+    CroupierSettings cs; // If cs is null, a placeholder is used instead.
+    if (userID != null) {
+      cs = config.croupier.settings_everyone[userID];
+    }
+    return new CroupierProfileComponent(cs);
+  }
+
   Widget showScore() {
     HeartsGame game = config.game as HeartsGame;
 
@@ -375,16 +391,60 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
       w = _makeButton('Ready?', game.setReadyUI);
     }
 
-    return new Container(
-        decoration: new BoxDecoration(backgroundColor: Colors.pink[500]),
+    bool isTall = MediaQuery.of(context).orientation == Orientation.portrait;
+    FlexDirection crossDirection =
+        isTall ? FlexDirection.horizontal : FlexDirection.vertical;
+    FlexDirection mainDirection =
+        isTall ? FlexDirection.vertical : FlexDirection.horizontal;
+    TextStyle bigStyle = isTall ? style.Text.hugeStyle : style.Text.largeStyle;
+    TextStyle bigRedStyle =
+        isTall ? style.Text.hugeRedStyle : style.Text.largeRedStyle;
+
+    List<Widget> scores = new List<Widget>();
+    scores.add(new Flexible(
         child: new Flex([
-          new Text('Player ${game.playerNumber}'),
-          // TODO(alexfandrianto): we want to show round by round, deltas too, don't we?
-          new Text('${game.scores}'),
-          w,
-          _makeButton("Return to Lobby", _quitGameCallback),
-          _makeDebugButtons()
-        ], direction: FlexDirection.vertical));
+          new Flexible(
+              child: new Center(child: new Text("Score:", style: bigStyle)),
+              flex: 1),
+          new Flexible(
+              child: new Center(child: new Text("Round", style: bigStyle)),
+              flex: 1),
+          new Flexible(
+              child: new Center(child: new Text("Total", style: bigStyle)),
+              flex: 1)
+        ], direction: crossDirection),
+        flex: 1));
+    for (int i = 0; i < 4; i++) {
+      bool isMaxForRound =
+          game.deltaScores.reduce(math.max) == game.deltaScores[i];
+      bool isMaxOverall = game.scores.reduce(math.max) == game.scores[i];
+
+      TextStyle deltaStyle = isMaxForRound ? bigRedStyle : bigStyle;
+      TextStyle scoreStyle = isMaxOverall ? bigRedStyle : bigStyle;
+
+      scores.add(new Flexible(
+          child: new Flex([
+            new Flexible(child: _getProfileComponent(i), flex: 1),
+            new Flexible(
+                child: new Center(
+                    child:
+                        new Text("${game.deltaScores[i]}", style: deltaStyle)),
+                flex: 1),
+            new Flexible(
+                child: new Center(
+                    child: new Text("${game.scores[i]}", style: scoreStyle)),
+                flex: 1)
+          ], direction: crossDirection),
+          flex: 2));
+    }
+    return new Column([
+      new Flexible(child: new Flex(scores, direction: mainDirection), flex: 5),
+      new Flexible(
+          child: new Row([w, _makeButton("Return to Lobby", _quitGameCallback)],
+              justifyContent: FlexJustifyContent.spaceAround),
+          flex: 1),
+      new Flexible(child: new Row([_makeDebugButtons()]), flex: 1)
+    ]);
   }
 
   Widget showDeal() {

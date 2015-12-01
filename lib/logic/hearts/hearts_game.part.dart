@@ -63,6 +63,7 @@ class HeartsGame extends Game {
 
   // Used by the score screen to track scores and see which players are ready to continue to the next round.
   List<int> scores = [0, 0, 0, 0];
+  List<int> deltaScores = [0, 0, 0, 0];
   List<bool> ready;
 
   HeartsGame(int playerNumber, {int gameID, bool isCreator})
@@ -443,11 +444,14 @@ class HeartsGame extends Game {
   }
 
   void updateScore() {
+    // Clear out delta scores.
+    deltaScores = [0, 0, 0, 0];
+
     // Count up points and check if someone shot the moon.
     int shotMoon = null;
     for (int i = 0; i < 4; i++) {
       int delta = computeScore(i);
-      this.scores[i] += delta;
+      this.deltaScores[i] = delta;
       if (delta == 26) {
         // Shot the moon!
         shotMoon = i;
@@ -458,11 +462,16 @@ class HeartsGame extends Game {
     if (shotMoon != null) {
       for (int i = 0; i < 4; i++) {
         if (shotMoon == i) {
-          this.scores[i] -= 26;
+          this.deltaScores[i] -= 26;
         } else {
-          this.scores[i] += 26;
+          this.deltaScores[i] += 26;
         }
       }
+    }
+
+    // Finally, apply deltaScores to scores. Preserve deltaScores for the UI.
+    for (int i = 0; i < 4; i++) {
+      this.scores[i] += this.deltaScores[i];
     }
   }
 

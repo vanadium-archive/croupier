@@ -5,8 +5,9 @@
 part of game_component;
 
 class ProtoGameComponent extends GameComponent {
-  ProtoGameComponent(Game game, NoArgCb cb, {double width, double height})
-      : super(game, cb, width: width, height: height);
+  ProtoGameComponent(Croupier croupier, NoArgCb cb,
+      {double width, double height})
+      : super(croupier, cb, width: width, height: height);
 
   ProtoGameComponentState createState() => new ProtoGameComponentState();
 }

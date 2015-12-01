@@ -5,8 +5,9 @@
 part of game_component;
 
 class SolitaireGameComponent extends GameComponent {
-  SolitaireGameComponent(Game game, NoArgCb cb, {double width, double height})
-      : super(game, cb, width: width, height: height);
+  SolitaireGameComponent(Croupier croupier, NoArgCb cb,
+      {double width, double height})
+      : super(croupier, cb, width: width, height: height);
 
   SolitaireGameComponentState createState() =>
       new SolitaireGameComponentState();
@@ -31,10 +32,10 @@ class SolitaireGameComponentState
         child: solitaireWidget));
     if (game.phase == SolitairePhase.Play) {
       // All cards are visible.
-      List<int> visibleCardCollections =
+      List<int> visibleCardCollectionIndexes =
           game.cardCollections.asMap().keys.toList();
 
-      children.add(this.buildCardAnimationLayer(visibleCardCollections));
+      children.add(this.buildCardAnimationLayer(visibleCardCollectionIndexes));
     }
 
     return new Container(

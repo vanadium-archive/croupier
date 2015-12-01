@@ -70,6 +70,12 @@ class Croupier {
     }
   }
 
+  int userIDFromPlayerNumber(int playerNumber) {
+    return players_found.keys.firstWhere(
+        (int user) => players_found[user] == playerNumber,
+        orElse: () => null);
+  }
+
   void _updatePlayerFoundCb(String playerID, String playerNum) {
     int id = int.parse(playerID);
     if (playerNum == null) {
