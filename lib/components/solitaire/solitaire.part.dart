@@ -151,7 +151,7 @@ class SolitaireGameComponentState
           heightCard: cardSize,
           dragChildren: true,
           useKeys: true),
-      new InkWell(
+      new GestureDetector(
           child: new CardCollectionComponent(
               game.cardCollections[SolitaireGame.OFFSET_DRAW],
               false,
@@ -164,7 +164,7 @@ class SolitaireGameComponentState
 
     List<Widget> row2 = new List<Widget>();
     for (int i = 0; i < 7; i++) {
-      row2.add(new InkWell(
+      row2.add(new GestureDetector(
           child: new CardCollectionComponent(
               game.cardCollections[SolitaireGame.OFFSET_DOWN + i],
               false,

@@ -2,15 +2,19 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-import 'card_collection.dart'
-    show CardCollectionComponent, CardCollectionOrientation;
-import '../logic/card.dart' as logic_card;
-import '../logic/game/game.dart' show Game, GameType;
-import '../logic/hearts/hearts.dart' show HeartsGame;
-
-import 'dart:math' as math;
+import 'dart:async';
 
 import 'package:flutter/material.dart';
+
+import '../logic/card.dart' as logic_card;
+import '../logic/croupier.dart' show Croupier;
+import '../logic/croupier_settings.dart' show CroupierSettings;
+import '../logic/game/game.dart' show Game, GameType, NoArgCb;
+import '../logic/hearts/hearts.dart' show HeartsGame;
+import 'card.dart' as component_card;
+import 'card_collection.dart'
+    show CardCollectionComponent, CardCollectionOrientation;
+import 'croupier_profile.dart' show CroupierProfileComponent;
 
 const double defaultBoardHeight = 400.0;
 const double defaultBoardWidth = 400.0;
@@ -21,7 +25,7 @@ const double defaultCardWidth = 40.0;
 /// While other Widgets may be drawn to accomodate space, a Board is meant to
 /// consume a specific amount of space on the screen, which allows for more
 /// control when positioning elements within the Board's area.
-abstract class Board extends StatelessComponent {
+abstract class Board extends StatefulComponent {
   final Game game;
   final double _height;
   final double _width;
@@ -44,158 +48,257 @@ abstract class Board extends StatelessComponent {
 /// The HeartsBoard represents the Hearts table view, which shows the number of
 /// cards each player has, and the cards they are currently playing.
 class HeartsBoard extends Board {
-  HeartsBoard(HeartsGame game,
+  final Croupier croupier;
+  final NoArgCb trueSetState;
+
+  HeartsBoard(Croupier croupier, this.trueSetState,
       {double height, double width, double cardHeight, double cardWidth})
-      : super(game,
+      : super(croupier.game,
             height: height,
             width: width,
             cardHeight: cardHeight,
-            cardWidth: cardWidth);
+            cardWidth: cardWidth),
+        croupier = croupier {
+    assert(this.game is HeartsGame);
+  }
+
+  HeartsBoardState createState() => new HeartsBoardState();
+}
+
+class HeartsBoardState extends State<HeartsBoard> {
+  bool trickTaking = false;
+  List<List<logic_card.Card>> playedCards = new List<List<logic_card.Card>>(4);
+
+  static const int SHOW_TRICK_DURATION = 750; // ms
+
+  @override
+  void initState() {
+    super.initState();
+
+    _fillPlayedCards();
+  }
+
+  // Make copies of the played cards.
+  void _fillPlayedCards() {
+    for (int i = 0; i < 4; i++) {
+      playedCards[i] = new List<logic_card.Card>.from(
+          config.game.cardCollections[i + HeartsGame.OFFSET_PLAY]);
+    }
+  }
+
+  // If there were 3 played cards before and now there are 0...
+  bool _detectTrick() {
+    HeartsGame game = config.game;
+    int lastNumPlayed = playedCards.where((List<logic_card.Card> list) {
+      return list.length > 0;
+    }).length;
+    return lastNumPlayed == 3 && game.numPlayed == 0;
+  }
+
+  // Make a copy of the missing played card.
+  void _fillMissingPlayedCard() {
+    HeartsGame game = config.game;
+    List<logic_card.Card> trickPile =
+        game.cardCollections[game.lastTrickTaker + HeartsGame.OFFSET_TRICK];
+
+    // Find the index of the missing play card.
+    int missing;
+    for (int j = 0; j < 4; j++) {
+      if (playedCards[j].length == 0) {
+        missing = j;
+        break;
+      }
+    }
+
+    // Use the trickPile to get this card.
+    playedCards[missing] = <logic_card.Card>[
+      trickPile[trickPile.length - 4 + missing]
+    ];
+  }
 
   Widget build(BuildContext context) {
-    List<Widget> pile = new List<Widget>();
-
-    _addHandsToPile(pile);
-    _addProfilesToPile(pile);
-    _addPlaysToPile(pile);
+    if (!trickTaking) {
+      if (_detectTrick()) {
+        trickTaking = true;
+        _fillMissingPlayedCard();
+        // Unfortunately, ZCards are drawn on the game layer,
+        // so instead of setState, we must use trueSetState.
+        new Future.delayed(const Duration(milliseconds: SHOW_TRICK_DURATION),
+            () {
+          trickTaking = false;
+          config.trueSetState();
+        });
+      } else {
+        _fillPlayedCards();
+      }
+    }
 
     return new Container(
-        height: this.height, width: this.width, child: new Stack(pile));
+        height: config.height,
+        width: config.width,
+        child: new Stack([
+          new Positioned(top: 0.0, left: 0.0, child: _buildBoardLayout()),
+          new Positioned(
+              top: config.height * 1.5,
+              left: (config.width - config.cardWidth) / 2,
+              child: _buildTrick(0)), // bottom
+          new Positioned(
+              top: (config.height - config.cardHeight) / 2,
+              left: config.width * -0.5,
+              child: _buildTrick(1)), // left
+          new Positioned(
+              top: config.height * -0.5,
+              left: (config.width - config.cardWidth) / 2,
+              child: _buildTrick(2)), // top
+          new Positioned(
+              top: (config.height - config.cardHeight) / 2,
+              left: config.width * 1.5,
+              child: _buildTrick(3)) // right
+        ]));
   }
 
-  // Show the hands of each player (facedown) around the perimeter of the board.
-  void _addHandsToPile(List<Widget> pile) {
-    HeartsGame game = this.game;
+  Widget _buildBoardLayout() {
+    return new Container(
+        height: config.height,
+        width: config.width,
+        child: new Column([
+          new Flexible(child: _buildPlayer(2), flex: 5),
+          new Flexible(
+              child: new Row([
+                new Flexible(child: _buildPlayer(1), flex: 3),
+                new Flexible(child: _buildCenterCards(), flex: 4),
+                new Flexible(child: _buildPlayer(3), flex: 3)
+              ],
+                  alignItems: FlexAlignItems.center,
+                  justifyContent: FlexJustifyContent.spaceAround),
+              flex: 9),
+          new Flexible(child: _buildPlayer(0), flex: 5)
+        ],
+            alignItems: FlexAlignItems.center,
+            justifyContent: FlexJustifyContent.spaceAround));
+  }
 
-    for (int i = 0; i < 4; i++) {
-      List<logic_card.Card> cards =
-          game.cardCollections[i + HeartsGame.OFFSET_HAND];
-      CardCollectionOrientation ori = i % 2 == 0
-          ? CardCollectionOrientation.horz
-          : CardCollectionOrientation.vert;
+  Widget _buildPlayer(int playerNumber) {
+    bool wide = (config.width >= config.height);
 
-      bool wide = (this.width >= this.height);
-      double smallerSide = wide ? this.height : this.width;
-      double sizeRatio = 0.60;
-      double cccSize = sizeRatio * smallerSide;
+    List<Widget> widgets = [
+      _getProfile(playerNumber, wide),
+      _getHand(playerNumber),
+      _getPass(playerNumber)
+    ];
 
-      CardCollectionComponent ccc = new CardCollectionComponent(
-          cards, false, ori,
-          width: i % 2 == 0 ? cccSize : null,
-          height: i % 2 != 0 ? cccSize : null,
-          rotation: -math.PI / 2 * i,
-          useKeys: true);
-      Widget w;
-      switch (i) {
-        case 2:
-          w = new Positioned(
-              top: 0.0, left: (this.width - cccSize) / 2.0, child: ccc);
-          break;
-        case 3:
-          w = new Positioned(
-              top: (this.height - cccSize) / 2.0, left: 0.0, child: ccc);
-          break;
-        case 0:
-          w = new Positioned(
-              // TODO(alexfandrianto): 1.7 is a magic number, but it just looks right somehow.
-              // This could be due to the margins from each card collection.
-              top: this.height - 1.7 * this.cardHeight,
-              left: (this.width - cccSize) / 2.0,
-              child: ccc);
-          break;
-        case 1:
-          w = new Positioned(
-              top: (this.height - cccSize) / 2.0,
-              left: this.width - 1.7 * this.cardWidth,
-              child: ccc);
-          break;
-        default:
-          assert(false);
-      }
-      pile.add(w);
+    if (playerNumber % 2 == 0) {
+      return new Row(widgets,
+          alignItems: FlexAlignItems.center,
+          justifyContent: FlexJustifyContent.center);
+    } else {
+      return new Column(widgets,
+          alignItems: FlexAlignItems.center,
+          justifyContent: FlexJustifyContent.center);
     }
   }
 
-  // Create and add Player Profile widgets to the board.
-  void _addProfilesToPile(List<Widget> pile) {
-    // TODO(alexfandrianto): Show player profiles.
-    // I need to access each player's CroupierSettings here.
+  Widget _getProfile(int playerNumber, bool isWide) {
+    int userID = config.croupier.userIDFromPlayerNumber(playerNumber);
+
+    bool isMini = isWide && config.cardHeight * 2 > config.height * 0.25;
+
+    CroupierSettings cs; // If cs is null, a placeholder is used instead.
+    if (userID != null) {
+      cs = config.croupier.settings_everyone[userID];
+    }
+    return new CroupierProfileComponent(
+        settings: cs, height: config.height * 0.15, isMini: isMini);
   }
 
-  // Add 4 play slots. If the board is wider than it is tall, we need to have
-  // A flat diamond (where the center 2 cards are stacked on top of each other).
-  // If the board is taller than it is wide, then we want a tall diamond. The
-  // center 2 cards should be horizontally adjacent.
-  // TODO(alexfandrianto): Once I get the player profile settings, I can set
-  // the background color of each play slot.
-  void _addPlaysToPile(List<Widget> pile) {
-    HeartsGame game = this.game;
+  Widget _getHand(int playerNumber) {
+    double sizeRatio = 0.30;
+    double cccSize = sizeRatio * config.width;
 
-    for (int i = 0; i < 4; i++) {
-      List<logic_card.Card> cards =
-          game.cardCollections[i + HeartsGame.OFFSET_PLAY];
+    return new CardCollectionComponent(
+        config.game.cardCollections[playerNumber + HeartsGame.OFFSET_HAND],
+        false,
+        CardCollectionOrientation.horz,
+        width: cccSize,
+        widthCard: config.cardWidth,
+        heightCard: config.cardHeight,
+        useKeys: true);
+  }
 
-      double MARGIN = 10.0;
-      CardCollectionComponent ccc = new CardCollectionComponent(
-          cards, true, CardCollectionOrientation.show1,
-          width: this.cardWidth,
-          widthCard: this.cardWidth,
-          height: this.cardHeight,
-          heightCard: this.cardHeight,
-          rotation: -math.PI / 2 * i,
-          useKeys: true);
-      Widget w;
+  Widget _getPass(int playerNumber) {
+    double sizeRatio = 0.10;
+    double cccSize = sizeRatio * config.width;
 
-      double left02 = (this.width - this.cardWidth) / 2;
-      double top13 = (this.height - this.cardHeight) / 2.0;
+    HeartsGame game = config.game;
+    return new CardCollectionComponent(
+        game.cardCollections[
+            game.getTakeTarget(playerNumber) + HeartsGame.OFFSET_PASS],
+        false,
+        CardCollectionOrientation.horz,
+        backgroundColor: Colors.grey[300],
+        width: cccSize,
+        widthCard: config.cardWidth / 2,
+        heightCard: config.cardHeight / 2,
+        useKeys: true);
+  }
 
-      double baseTop = (this.height - (this.cardHeight * 2 + MARGIN)) / 2;
-      double baseLeft = (this.width - (this.cardWidth * 2 + MARGIN)) / 2;
-      double dHeight = (this.cardHeight + MARGIN) / 2;
-      double dWidth = (this.cardWidth + MARGIN) / 2;
+  Widget _buildCenterCards() {
+    bool wide = (config.width >= config.height);
 
-      if (this.width >= this.height) {
-        switch (i) {
-          case 2:
-            w = new Positioned(top: baseTop, left: left02, child: ccc);
-            break;
-          case 3:
-            w = new Positioned(top: top13, left: baseLeft - dWidth, child: ccc);
-            break;
-          case 0:
-            w = new Positioned(
-                top: baseTop + dHeight * 2, left: left02, child: ccc);
-            break;
-          case 1:
-            w = new Positioned(
-                top: top13, left: baseLeft + dWidth * 3, child: ccc);
-            break;
-          default:
-            assert(false);
-        }
-      } else {
-        switch (i) {
-          case 2:
-            w = new Positioned(
-                top: baseTop - dHeight, left: left02, child: ccc);
-            break;
-          case 3:
-            w = new Positioned(top: top13, left: baseLeft, child: ccc);
-            break;
-          case 0:
-            w = new Positioned(
-                top: baseTop + dHeight * 3, left: left02, child: ccc);
-            break;
-          case 1:
-            w = new Positioned(
-                top: top13, left: baseLeft + dHeight * 2, child: ccc);
-            break;
-          default:
-            assert(false);
-        }
-      }
-
-      pile.add(w);
+    if (wide) {
+      return new Row([
+        _buildCenterCard(1),
+        new Column([_buildCenterCard(2), _buildCenterCard(0)],
+            alignItems: FlexAlignItems.center,
+            justifyContent: FlexJustifyContent.spaceAround),
+        _buildCenterCard(3)
+      ],
+          alignItems: FlexAlignItems.center,
+          justifyContent: FlexJustifyContent.spaceAround);
+    } else {
+      return new Column([
+        _buildCenterCard(2),
+        new Row([_buildCenterCard(1), _buildCenterCard(3)],
+            alignItems: FlexAlignItems.center,
+            justifyContent: FlexJustifyContent.spaceAround),
+        _buildCenterCard(0)
+      ],
+          alignItems: FlexAlignItems.center,
+          justifyContent: FlexJustifyContent.spaceAround);
     }
+  }
+
+  Widget _buildCenterCard(int playerNumber) {
+    HeartsGame game = config.game;
+    List<logic_card.Card> cards =
+        game.cardCollections[playerNumber + HeartsGame.OFFSET_PLAY];
+    if (trickTaking) {
+      cards = playedCards[playerNumber];
+    }
+
+    return new CardCollectionComponent(
+        cards, true, CardCollectionOrientation.show1,
+        widthCard: config.cardWidth * 1.25,
+        heightCard: config.cardHeight * 1.25,
+        backgroundColor:
+            game.whoseTurn == playerNumber ? Colors.blue[500] : null,
+        useKeys: true);
+  }
+
+  Widget _buildTrick(int playerNumber) {
+    HeartsGame game = config.game;
+    List<logic_card.Card> cards =
+        game.cardCollections[playerNumber + HeartsGame.OFFSET_TRICK];
+    // If took trick, exclude the last 4 cards for the trick taking animation.
+    if (trickTaking && playerNumber == game.lastTrickTaker) {
+      cards = new List.from(cards.sublist(0, cards.length - 4));
+    }
+
+    return new CardCollectionComponent(
+        cards, true, CardCollectionOrientation.show1,
+        widthCard: config.cardWidth,
+        heightCard: config.cardHeight,
+        useKeys: true,
+        animationType: component_card.CardAnimationType.LONG);
   }
 }

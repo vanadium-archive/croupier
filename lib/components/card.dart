@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-import '../logic/card.dart' as logic_card;
-
 import 'dart:async';
 
 import 'package:flutter/animation.dart';
@@ -11,7 +9,9 @@ import 'package:flutter/material.dart' as widgets;
 import 'package:flutter/rendering.dart';
 import 'package:vector_math/vector_math_64.dart' as vector_math;
 
-enum CardAnimationType { NONE, OLD_TO_NEW, IN_TOP }
+import '../logic/card.dart' as logic_card;
+
+enum CardAnimationType { NONE, NORMAL, LONG }
 
 enum CardUIType { CARD, ZCARD }
 
@@ -40,7 +40,7 @@ class ZCard extends widgets.StatefulComponent {
   final double width;
   final double height;
   final double rotation;
-  final bool animateEntrance;
+  final CardAnimationType animationType;
   final double z;
 
   // These points are in local coordinates.
@@ -54,7 +54,7 @@ class ZCard extends widgets.StatefulComponent {
         width = dataComponent.width ?? 40.0,
         height = dataComponent.height ?? 40.0,
         rotation = dataComponent.rotation,
-        animateEntrance = dataComponent.animateEntrance,
+        animationType = dataComponent.animationType,
         z = dataComponent.z;
 
   ZCardState createState() => new ZCardState();
@@ -68,7 +68,7 @@ class Card extends widgets.StatefulComponent {
   final double rotation;
   final bool useKey;
   final bool visible;
-  final bool animateEntrance;
+  final CardAnimationType animationType;
   final double z;
 
   Card(logic_card.Card card, this.faceUp,
@@ -77,9 +77,10 @@ class Card extends widgets.StatefulComponent {
       this.rotation: 0.0,
       bool useKey: false,
       this.visible: true,
-      this.animateEntrance: true,
+      CardAnimationType animationType,
       this.z})
-      : card = card,
+      : animationType = animationType ?? CardAnimationType.NONE,
+        card = card,
         width = width ?? 40.0,
         height = height ?? 40.0,
         useKey = useKey,
@@ -94,7 +95,7 @@ class Card extends widgets.StatefulComponent {
         rotation: rotation,
         useKey: false,
         visible: visible ?? this.visible,
-        animateEntrance: false,
+        animationType: CardAnimationType.NONE,
         z: z);
   }
 
@@ -108,7 +109,7 @@ class Card extends widgets.StatefulComponent {
         c.rotation == rotation &&
         c.useKey == useKey &&
         c.visible == visible &&
-        c.animateEntrance == animateEntrance &&
+        c.animationType == animationType &&
         c.z == z;
   }
 
@@ -168,7 +169,7 @@ class ZCardState extends widgets.State<ZCard> {
     _pointQueue.add(config.endingPosition);
     _performance = new ValuePerformance<Point>(
         variable: new AnimatedValue<Point>(Point.origin, curve: Curves.ease),
-        duration: const Duration(milliseconds: 250));
+        duration: this.animationDuration);
     _performance.addStatusListener((PerformanceStatus status) {
       if (status == PerformanceStatus.completed) {
         _animationIndex++;
@@ -181,6 +182,20 @@ class ZCardState extends widgets.State<ZCard> {
     if (!_cardUpdateScheduled) {
       _cardUpdateScheduled = true;
       scheduleMicrotask(_updatePosition);
+    }
+  }
+
+  Duration get animationDuration {
+    switch (config.animationType) {
+      case CardAnimationType.NONE:
+        return const Duration(milliseconds: 0);
+      case CardAnimationType.NORMAL:
+        return const Duration(milliseconds: 250);
+      case CardAnimationType.LONG:
+        return const Duration(milliseconds: 750);
+      default:
+        print(config.animationType);
+        assert(false);
     }
   }
 
@@ -206,7 +221,8 @@ class ZCardState extends widgets.State<ZCard> {
   void _updatePosition() {
     _cardUpdateScheduled =
         false; // allow the next attempt to schedule _updatePosition to succeed.
-    if (!config.animateEntrance || _pointQueue.length == 1) {
+    if (config.animationType == CardAnimationType.NONE ||
+        _pointQueue.length == 1) {
       Point endingLocation = config.endingPosition;
       _performance.variable
         ..begin = endingLocation
@@ -238,6 +254,7 @@ class ZCardState extends widgets.State<ZCard> {
         ..value = startingLocation
         ..end = endingLocation;
       _performance.progress = 0.0;
+      _performance.duration = this.animationDuration;
       _performance.play();
     }
   }

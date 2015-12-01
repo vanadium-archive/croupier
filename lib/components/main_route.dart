@@ -19,7 +19,28 @@ class MainRoute extends StatefulComponent {
 }
 
 class MainRouteState extends State<MainRoute> {
+  @override
+  void initState() {
+    super.initState();
+    // Croupier (logic) needs this in case of syncbase watch updates.
+    config.croupier.informUICb = _informUICb;
+  }
+
+  void _informUICb() {
+    if (this.mounted) {
+      setState(() {});
+    }
+  }
+
   Widget build(BuildContext context) {
+    // TODO(alexfandrianto): A better way to do this is to show the splash
+    // screen while the Store is initializing.
+    // https://github.com/vanadium/issues/issues/958
+    if (config.croupier.settings == null) {
+      print("Splash screen side");
+      return _buildSplashScreen();
+    }
+    print("Scaffold side");
     return new Scaffold(
         key: _scaffoldKey,
         toolBar: new ToolBar(
@@ -27,6 +48,13 @@ class MainRouteState extends State<MainRoute> {
                 new IconButton(icon: "navigation/menu", onPressed: _showDrawer),
             center: new Text('Croupier')),
         body: new Material(child: new CroupierComponent(config.croupier)));
+  }
+
+  // TODO(alexfandrianto): Can we do better than this?
+  Widget _buildSplashScreen() {
+    return new Container(
+        decoration: style.Box.liveNow,
+        child: new Text("Loading Croupier...", style: style.Text.titleStyle));
   }
 
   void _showDrawer() {

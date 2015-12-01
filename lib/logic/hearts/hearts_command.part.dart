@@ -229,7 +229,7 @@ class HeartsCommand extends GameCommand {
               "Cannot process take commands when not in Take phase");
         }
         int takerId = int.parse(parts[0]);
-        int senderPile = game._getTakeTarget(takerId) + HeartsGame.OFFSET_PASS;
+        int senderPile = game.getTakeTarget(takerId) + HeartsGame.OFFSET_PASS;
         List<Card> handT = game.cardCollections[takerId];
         List<Card> handS = game.cardCollections[senderPile];
         handT.addAll(handS);

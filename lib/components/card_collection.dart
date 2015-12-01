@@ -44,6 +44,7 @@ class CardCollectionComponent extends StatefulComponent {
   final Color _altColor;
   final double rotation; // This angle is in radians.
   final bool useKeys; // If set, every Card created in this collection will be keyed.
+  final component_card.CardAnimationType animationType;
 
   DropType get acceptType => _acceptType ?? DropType.none;
   Color get backgroundColor => _backgroundColor ?? Colors.grey[500];
@@ -61,7 +62,8 @@ class CardCollectionComponent extends StatefulComponent {
       Color backgroundColor,
       Color altColor,
       this.rotation: 0.0,
-      this.useKeys: false})
+      this.useKeys: false,
+      this.animationType: component_card.CardAnimationType.NORMAL})
       : _acceptType = acceptType,
         _backgroundColor = backgroundColor,
         _altColor = altColor;
@@ -311,7 +313,8 @@ class CardCollectionComponentState extends State<CardCollectionComponent> {
           visible:
               !config.useKeys, // TODO(alexfandrianto): Is there a case where you want an invisible card and a key?
           useKey: config.useKeys,
-          z: 0.0 + i);
+          z: 0.0 + i,
+          animationType: config.animationType);
 
       cardComponents.add(c);
     }

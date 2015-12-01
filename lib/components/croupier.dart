@@ -24,19 +24,6 @@ class CroupierComponent extends StatefulComponent {
 }
 
 class CroupierComponentState extends State<CroupierComponent> {
-  @override
-  void initState() {
-    super.initState();
-    // TODO(alexfandrianto): ui.window.size.width and ui.window.size.height?
-
-    // Croupier (logic) needs this in case of syncbase watch updates.
-    config.croupier.informUICb = _informUICb;
-  }
-
-  void _informUICb() {
-    setState(() {});
-  }
-
   NoArgCb makeSetStateCallback(logic_croupier.CroupierState s,
       [var data = null]) {
     return () => setState(() {
@@ -45,13 +32,6 @@ class CroupierComponentState extends State<CroupierComponent> {
   }
 
   Widget build(BuildContext context) {
-    // TODO(alexfandrianto): A better way to do this is to show the splash
-    // screen while the Store is initializing.
-    // https://github.com/vanadium/issues/issues/958
-    if (config.croupier.settings == null) {
-      return _buildSplashScreen();
-    }
-
     switch (config.croupier.state) {
       case logic_croupier.CroupierState.Welcome:
         // in which we show them a UI to start a new game, join a game, or change some settings.
@@ -101,12 +81,11 @@ class CroupierComponentState extends State<CroupierComponent> {
             .forEach((String _, logic_game.GameStartData gsd) {
           CroupierSettings cs = config.croupier.settings_everyone[gsd.ownerID];
           // cs could be null if this settings data hasn't synced yet.
-          if (cs != null) {
-            profileWidgets.add(new FlatButton(
-                child: new CroupierProfileComponent(cs),
-                onPressed: makeSetStateCallback(
-                    logic_croupier.CroupierState.ArrangePlayers, gsd)));
-          }
+          // If so, a placeholder is shown instead.
+          profileWidgets.add(new GestureDetector(
+              child: new CroupierProfileComponent(settings: cs),
+              onTap: makeSetStateCallback(
+                  logic_croupier.CroupierState.ArrangePlayers, gsd)));
         });
         // in which players wait for game invitations to arrive.
         return new Container(
@@ -127,9 +106,8 @@ class CroupierComponentState extends State<CroupierComponent> {
         config.croupier.players_found.forEach((int userID, _) {
           CroupierSettings cs = config.croupier.settings_everyone[userID];
           // cs could be null if this settings data hasn't synced yet.
-          if (cs != null) {
-            profileWidgets.add(new CroupierProfileComponent(cs));
-          }
+          // If so, a placeholder is shown instead.
+          profileWidgets.add(new CroupierProfileComponent(settings: cs));
         });
 
         // TODO(alexfandrianto): You can only start the game once there are enough players.
@@ -159,11 +137,5 @@ class CroupierComponentState extends State<CroupierComponent> {
         assert(false);
         return null;
     }
-  }
-
-  // TODO(alexfandrianto): Can we do better than this?
-  Widget _buildSplashScreen() {
-    return new Container(
-        child: new Text("Loading Croupier...", style: style.Text.titleStyle));
   }
 }

@@ -86,6 +86,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
           visibleCardCollectionIndexes.add(HeartsGame.OFFSET_PLAY + i);
           visibleCardCollectionIndexes.add(HeartsGame.OFFSET_PASS + i);
           visibleCardCollectionIndexes.add(HeartsGame.OFFSET_HAND + i);
+          visibleCardCollectionIndexes.add(HeartsGame.OFFSET_TRICK + i);
         }
       }
     }
@@ -278,19 +279,11 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     switch (game.phase) {
       case HeartsPhase.StartGame:
       case HeartsPhase.Deal:
-        kids.add(new Text("DEAL PHASE"));
-        kids.add(_makeButton('Deal', game.dealCards));
+        kids.add(new Text("Waiting for Deal..."));
         break;
       case HeartsPhase.Pass:
-        kids.add(new Text("PASS PHASE"));
-        kids.add(showBoard());
-        break;
       case HeartsPhase.Take:
-        kids.add(new Text("TAKE PHASE"));
-        kids.add(showBoard());
-        break;
       case HeartsPhase.Play:
-        kids.add(new Text("PLAY PHASE"));
         kids.add(showBoard());
         break;
       case HeartsPhase.Score:
@@ -305,8 +298,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
   }
 
   Widget showBoard() {
-    HeartsGame game = config.game;
-    return new HeartsBoard(game,
+    return new HeartsBoard(config.croupier, this.update,
         width: config.width, height: 0.80 * config.height);
   }
 
@@ -376,7 +368,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     if (userID != null) {
       cs = config.croupier.settings_everyone[userID];
     }
-    return new CroupierProfileComponent(cs);
+    return new CroupierProfileComponent(settings: cs);
   }
 
   Widget showScore() {

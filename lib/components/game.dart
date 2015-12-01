@@ -6,22 +6,22 @@ library game_component;
 
 import 'dart:math' as math;
 
+import 'package:flutter/animation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+
 import '../logic/card.dart' as logic_card;
 import '../logic/croupier.dart' show Croupier;
 import '../logic/croupier_settings.dart' show CroupierSettings;
 import '../logic/game/game.dart' show Game, GameType;
 import '../logic/hearts/hearts.dart' show HeartsGame, HeartsPhase, HeartsType;
 import '../logic/solitaire/solitaire.dart' show SolitaireGame, SolitairePhase;
+import '../styles/common.dart' as style;
 import 'board.dart' show HeartsBoard;
 import 'card.dart' as component_card;
 import 'card_collection.dart'
     show CardCollectionComponent, DropType, CardCollectionOrientation, AcceptCb;
 import 'croupier_profile.dart' show CroupierProfileComponent;
-import '../styles/common.dart' as style;
-
-import 'package:flutter/animation.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 
 part 'hearts/hearts.part.dart';
 part 'proto/proto.part.dart';
@@ -56,7 +56,9 @@ abstract class GameComponentState<T extends GameComponent> extends State<T> {
   // This callback is used to force the UI to draw when state changes occur
   // outside of the UIs control (e.g., synced data).
   void update() {
-    setState(() {});
+    if (this.mounted) {
+      setState(() {});
+    }
   }
 
   // A helper that most subclasses use in order to quit their respective games.

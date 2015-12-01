@@ -3,6 +3,7 @@
 // license that can be found in the LICENSE file.
 
 import 'package:flutter/material.dart';
+import 'dart:async';
 
 import 'logic/croupier.dart' show Croupier;
 import 'components/settings_route.dart' show SettingsRoute;
@@ -37,5 +38,10 @@ class CroupierAppState extends State<CroupierApp> {
 }
 
 void main() {
-  runApp(new CroupierApp());
+  // TODO(alexfandrianto): Perhaps my app will run better if I initialize more
+  // things here instead of in Croupier. I added this 500 ms delay because the
+  // tablet was sometimes not rendering without it (repainting too early?).
+  new Future.delayed(const Duration(milliseconds: 500), () {
+    runApp(new CroupierApp());
+  });
 }

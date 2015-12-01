@@ -19,6 +19,13 @@ class CroupierSettings {
     _randomInitialization();
   }
 
+  CroupierSettings.placeholder() {
+    userID = 0;
+    avatar = "";
+    name = "Loading...";
+    color = 0xcfcccccc;
+  }
+
   CroupierSettings.fromJSONString(String json) {
     var data = JSON.decode(json);
     userID = data["userID"];
