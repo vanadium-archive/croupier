@@ -114,9 +114,9 @@ func CreateTables(u *uistate.UIState) {
 	settingsTable.Put(u.Ctx, fmt.Sprintf("users/%d/settings", util.UserID), value)
 }
 
-// Creates a new set of gamelog and game settings syncgroups
-func CreateSyncgroups(ch chan string, u *uistate.UIState) {
-	fmt.Println("Creating Syncgroup")
+// Creates a new gamelog syncgroup
+func CreateLogSyncgroup(ch chan string, u *uistate.UIState) {
+	fmt.Println("Creating Log Syncgroup")
 	u.IsOwner = true
 	// Generate random gameID information to advertise this game
 	gameID := rand.Intn(1000000)
@@ -163,9 +163,25 @@ func CreateSyncgroups(ch chan string, u *uistate.UIState) {
 		u.GameID = gameID
 		ch <- logSGName
 	}
-	// Create game settings syncgroup
+}
+
+// Creates a new user settings syncgroup
+func CreateSettingsSyncgroup(ch chan string, u *uistate.UIState) {
+	fmt.Println("Creating Settings Syncgroup")
+	allAccess := access.AccessList{In: []security.BlessingPattern{"..."}}
+	permissions := access.Permissions{
+		"Admin":   allAccess,
+		"Write":   allAccess,
+		"Read":    allAccess,
+		"Resolve": allAccess,
+		"Debug":   allAccess,
+	}
+	tables := []string{util.MountPoint + "/croupier"}
+	myInfoCreator := wire.SyncgroupMemberInfo{8, true}
+	app := u.Service.App(util.AppName)
+	db := app.NoSQLDatabase(util.DbName, nil)
 	settingsSGName := fmt.Sprintf("%s/croupier/%s/%%%%sync/discovery-%d", util.MountPoint, util.SBName, util.UserID)
-	settingsPref := wire.TableRow{util.SettingsName, ""}
+	settingsPref := wire.TableRow{util.SettingsName, fmt.Sprintf("users/%d", util.UserID)}
 	settingsPrefs := []wire.TableRow{settingsPref}
 	settingsSpec := wire.SyncgroupSpec{
 		Description: "croupier syncgroup",
@@ -175,7 +191,7 @@ func CreateSyncgroups(ch chan string, u *uistate.UIState) {
 		IsPrivate:   false,
 	}
 	settingsSG := db.Syncgroup(settingsSGName)
-	err = settingsSG.Create(u.Ctx, settingsSpec, myInfoCreator)
+	err := settingsSG.Create(u.Ctx, settingsSpec, myInfoCreator)
 	if err != nil {
 		fmt.Println("SYNCGROUP CREATE ERROR: ", err)
 		ch <- ""

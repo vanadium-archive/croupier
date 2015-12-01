@@ -55,7 +55,7 @@ func LoadArrangeView(u *uistate.UIState) {
 		u.Buttons = append(u.Buttons, texture.MakeImgWithoutAlt(sitImg, sitPos, arrangeDim, u))
 	} else {
 		u.Buttons = append(u.Buttons, texture.MakeImgWithoutAlt(sitImg, sitPos, nilDim, u))
-		avatar := uistate.GetAvatar(0, u)
+		avatar := uistate.GetAvatar(1, u)
 		u.BackgroundImgs = append(u.BackgroundImgs, texture.MakeImgWithoutAlt(avatar, sitPos, arrangeDim, u))
 	}
 	// player 2 seat
@@ -64,7 +64,7 @@ func LoadArrangeView(u *uistate.UIState) {
 		u.Buttons = append(u.Buttons, texture.MakeImgWithoutAlt(sitImg, sitPos, arrangeDim, u))
 	} else {
 		u.Buttons = append(u.Buttons, texture.MakeImgWithoutAlt(sitImg, sitPos, nilDim, u))
-		avatar := uistate.GetAvatar(0, u)
+		avatar := uistate.GetAvatar(2, u)
 		u.BackgroundImgs = append(u.BackgroundImgs, texture.MakeImgWithoutAlt(avatar, sitPos, arrangeDim, u))
 	}
 	// player 3 seat
@@ -73,7 +73,7 @@ func LoadArrangeView(u *uistate.UIState) {
 		u.Buttons = append(u.Buttons, texture.MakeImgWithoutAlt(sitImg, sitPos, arrangeDim, u))
 	} else {
 		u.Buttons = append(u.Buttons, texture.MakeImgWithoutAlt(sitImg, sitPos, nilDim, u))
-		avatar := uistate.GetAvatar(0, u)
+		avatar := uistate.GetAvatar(3, u)
 		u.BackgroundImgs = append(u.BackgroundImgs, texture.MakeImgWithoutAlt(avatar, sitPos, arrangeDim, u))
 	}
 	// table

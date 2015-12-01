@@ -85,19 +85,16 @@ func WatchData(tableName, prefix string, u *uistate.UIState) (nosql.WatchStream,
 	return db.Watch(u.Ctx, tableName, prefix, resumeMarker)
 }
 
-// Joins a set of gamelog and game settings syncgroups
-// TODO(emshack): After joining a syncgroup, advertise user settings data
-func JoinSyncgroups(ch chan bool, logName, settingsName string, u *uistate.UIState) {
-	fmt.Println("Joining syncgroup")
+// Joins gamelog syncgroup
+func JoinLogSyncgroup(ch chan bool, logName string, u *uistate.UIState) {
+	fmt.Println("Joining gamelog syncgroup")
 	u.IsOwner = false
 	app := u.Service.App(util.AppName)
 	db := app.NoSQLDatabase(util.DbName, nil)
 	logSg := db.Syncgroup(logName)
-	settingsSg := db.Syncgroup(settingsName)
 	myInfoJoiner := wire.SyncgroupMemberInfo{8, false}
 	_, err := logSg.Join(u.Ctx, myInfoJoiner)
-	_, err2 := settingsSg.Join(u.Ctx, myInfoJoiner)
-	if err != nil || err2 != nil {
+	if err != nil {
 		fmt.Println("SYNCGROUP JOIN ERROR: ", err)
 		ch <- false
 	} else {
@@ -106,6 +103,23 @@ func JoinSyncgroups(ch chan bool, logName, settingsName string, u *uistate.UISta
 		tmp := strings.Split(logName, "-")
 		gameID, _ := strconv.Atoi(tmp[len(tmp)-1])
 		u.GameID = gameID
+		ch <- true
+	}
+}
+
+// Joins player settings syncgroup
+func JoinSettingsSyncgroup(ch chan bool, settingsName string, u *uistate.UIState) {
+	fmt.Println("Joining user settings syncgroup")
+	app := u.Service.App(util.AppName)
+	db := app.NoSQLDatabase(util.DbName, nil)
+	settingsSg := db.Syncgroup(settingsName)
+	myInfoJoiner := wire.SyncgroupMemberInfo{8, false}
+	_, err := settingsSg.Join(u.Ctx, myInfoJoiner)
+	if err != nil {
+		fmt.Println("SYNCGROUP JOIN ERROR: ", err)
+		ch <- false
+	} else {
+		fmt.Println("Syncgroup joined")
 		ch <- true
 	}
 }

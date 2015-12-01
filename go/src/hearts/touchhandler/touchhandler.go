@@ -106,12 +106,15 @@ func beginClickDiscovery(t touch.Event, u *uistate.UIState) {
 	buttonList := findClickedButton(t, u)
 	if len(buttonList) > 0 {
 		if buttonList[0] == u.Buttons[0] {
-			ch := make(chan string)
-			go server.CreateSyncgroups(ch, u)
-			gameStartData := <-ch
-			logName := <-ch
-			settingsName := <-ch
+			logCh := make(chan string)
+			settingsCh := make(chan string)
+			go server.CreateLogSyncgroup(logCh, u)
+			go server.CreateSettingsSyncgroup(settingsCh, u)
+			gameStartData := <-logCh
+			logName := <-logCh
+			settingsName := <-settingsCh
 			if logName != "" && settingsName != "" {
+				gamelog.LogSettingsName(settingsName, u)
 				u.ScanChan <- true
 				u.ScanChan = nil
 				u.SGChan = make(chan bool)
@@ -121,11 +124,20 @@ func beginClickDiscovery(t touch.Event, u *uistate.UIState) {
 		} else {
 			for _, b := range u.Buttons {
 				if buttonList[0] == b {
-					joinDone := make(chan bool)
+					joinLogDone := make(chan bool)
+					joinSettingsDone := make(chan bool)
 					settingsAddr := b.GetInfo()[0]
 					logAddr := b.GetInfo()[1]
-					go client.JoinSyncgroups(joinDone, logAddr, settingsAddr, u)
-					if success := <-joinDone; success {
+					go client.JoinLogSyncgroup(joinLogDone, logAddr, u)
+					go client.JoinSettingsSyncgroup(joinSettingsDone, settingsAddr, u)
+					<-joinSettingsDone
+					if success := <-joinLogDone; success {
+						settingsCh := make(chan string)
+						go server.CreateSettingsSyncgroup(settingsCh, u)
+						sgName := <-settingsCh
+						if sgName != "" {
+							gamelog.LogSettingsName(sgName, u)
+						}
 						u.ScanChan <- true
 						u.ScanChan = nil
 						view.LoadArrangeView(u)
@@ -150,7 +162,9 @@ func beginClickArrange(t touch.Event, u *uistate.UIState) {
 			gamelog.LogReady(u)
 		}
 		gamelog.LogPlayerNum(u)
-		view.LoadWaitingView(u)
+		if !u.CurTable.AllReadyForNewRound() {
+			view.LoadWaitingView(u)
+		}
 	}
 }
 

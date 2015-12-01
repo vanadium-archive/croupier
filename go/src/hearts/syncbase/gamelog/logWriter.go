@@ -94,6 +94,11 @@ func LogPlayerNum(u *uistate.UIState) bool {
 	return logKeyValue(u.Service, u.Ctx, key, value)
 }
 
+func LogSettingsName(name string, u *uistate.UIState) bool {
+	key := strconv.Itoa(u.GameID) + "/players/" + strconv.Itoa(util.UserID) + "/settings_sg"
+	return logKeyValue(u.Service, u.Ctx, key, name)
+}
+
 // Note: The syntax replicates the way Croupier in Dart/Flutter writes keys.
 func getKey(playerId int, u *uistate.UIState) string {
 	t := int(time.Now().UnixNano() / 1000000)

@@ -45,7 +45,6 @@ func UpdateSettings(u *uistate.UIState) {
 					fmt.Println("Unmarshal error:", err)
 				}
 				key := c.Row
-				fmt.Println(key, string(value))
 				userID, _ := strconv.Atoi(strings.Split(key, "/")[1])
 				u.UserData[userID] = valueMap
 			} else {
@@ -70,6 +69,7 @@ func UpdateGame(u *uistate.UIState) {
 					fmt.Println("Value error:", err)
 				}
 				valueStr := string(value)
+				fmt.Println(valueStr)
 				keyType := strings.Split(key, "/")[1]
 				switch keyType {
 				case "log":
@@ -87,7 +87,13 @@ func UpdateGame(u *uistate.UIState) {
 						onReady(valueStr, u)
 					}
 				case "players":
-					onPlayers(key, valueStr, u)
+					switch strings.Split(key, "/")[3] {
+					case "player_number":
+						onPlayerNum(key, valueStr, u)
+					case "settings_sg":
+						onSettings(key, valueStr, u)
+					}
+
 				}
 			} else {
 				fmt.Println("Unexpected ChangeType: ", c.ChangeType)
@@ -96,20 +102,19 @@ func UpdateGame(u *uistate.UIState) {
 	}
 }
 
-func onPlayers(key, value string, u *uistate.UIState) {
+func onPlayerNum(key, value string, u *uistate.UIState) {
 	userID, _ := strconv.Atoi(strings.Split(key, "/")[2])
 	playerNum, _ := strconv.Atoi(value)
 	u.PlayerData[playerNum] = userID
-	// user := u.UserData[userID]
-	// if user != nil {
-	// 	img := u.Texs[user["avatar"].(string)]
-	// 	name := user["name"].(string)
-	// 	u.CurTable.GetPlayers()[playerNum].SetIconImage(img)
-	// 	u.CurTable.GetPlayers()[playerNum].SetName(name)
-	// }
-	if u.CurView == uistate.Arrange {
+	if u.CurView == uistate.Arrange && !u.CurTable.AllReadyForNewRound() {
 		view.LoadArrangeView(u)
 	}
+}
+
+func onSettings(key, value string, u *uistate.UIState) {
+	joinDone := make(chan bool)
+	go client.JoinSettingsSyncgroup(joinDone, value, u)
+	<-joinDone
 }
 
 func onDeal(value string, u *uistate.UIState) {
