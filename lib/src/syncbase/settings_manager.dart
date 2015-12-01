@@ -136,8 +136,12 @@ class SettingsManager {
     int id = await _getUserID();
 
     _cc.createSyncgroup(
-        _cc.makeSyncgroupName(await _syncSuffix()), util.tableNameSettings,
+        await _mySettingsSyncgroupName(), util.tableNameSettings,
         prefix: this._settingsDataKey(id));
+  }
+
+  Future<String> _mySettingsSyncgroupName() async {
+    return _cc.makeSyncgroupName(await _syncSettingsSuffix());
   }
 
   // This watch method ensures that any changes are propagated to the caller.
@@ -164,11 +168,20 @@ class SettingsManager {
 
       if (this.updatePlayerFoundCallback != null) {
         String playerID = _getPartFromBack(key, "/", 1);
-        this.updatePlayerFoundCallback(playerID, value);
-
-        // Also, you should be sure to join this person's syncgroup.
-        _cc.joinSyncgroup(
-            _cc.makeSyncgroupName(await _syncSuffix(int.parse(playerID))));
+        String type = _getPartFromBack(key, "/", 0);
+        switch (type) {
+          case "player_number":
+            // Update the player number for this player.
+            this.updatePlayerFoundCallback(playerID, value);
+            break;
+          case "settings_sg":
+            // Join this player's settings syncgroup.
+            _cc.joinSyncgroup(_cc.makeSyncgroupName(value));
+            break;
+          default:
+            print("Unexpected key: ${key} with value ${value}");
+            assert(false);
+        }
       }
     }
   }
@@ -193,6 +206,9 @@ class SettingsManager {
     await gameTable
         .row("${gameID}/players/${id}/player_number")
         .put(UTF8.encode("0"));
+    await gameTable
+        .row("${gameID}/players/{$id}/settings_sg")
+        .put(UTF8.encode(await _mySettingsSyncgroupName()));
 
     logic_game.GameStartData gsd =
         new logic_game.GameStartData(type, 0, gameID, id);
@@ -260,14 +276,14 @@ class SettingsManager {
 
   // Someone who wants to join a game should advertise their presence.
   Future advertiseSettings(logic_game.GameStartData gsd) async {
-    String suffix = await _syncSuffix();
+    String settingsSuffix = await _syncSettingsSuffix();
     String gameSuffix = util.syncgameSuffix("${gsd.gameID}");
     return _cc.discoveryClient.advertise(
         _discoverySettingsKey,
         DiscoveryClient.serviceMaker(
             interfaceName: util.discoveryInterfaceName,
             attrs: <String, String>{
-              util.syncgameSettingsAttr: _cc.makeSyncgroupName(suffix),
+              util.syncgameSettingsAttr: _cc.makeSyncgroupName(settingsSuffix),
               util.syncgameGameStartDataAttr: gsd.toJSONString()
             },
             addrs: <String>[_cc.makeSyncgroupName(gameSuffix)]));
@@ -285,7 +301,7 @@ class SettingsManager {
     return int.parse(result);
   }
 
-  Future<String> _syncSuffix([int userID]) async {
+  Future<String> _syncSettingsSuffix([int userID]) async {
     int id = userID;
     if (id == null) {
       id = await _getUserID();

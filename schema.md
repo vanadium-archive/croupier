@@ -14,6 +14,7 @@ For advertising and setting up the game:
 <game_id>/type = <game_type>
 <game_id>/owner = <user_id>
 <game_id>/players/<user_id>/player_number = <player_number>
+<game_id>/players/<user_id>/settings_sg = <settings_syncgroup_name>
 
 For the game log writer:
 <game_id>/log/<timestamp>-<player_id> = <command_string>
