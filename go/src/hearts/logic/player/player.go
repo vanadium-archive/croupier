@@ -51,6 +51,12 @@ func (p *Player) GetPassedFrom() []*card.Card {
 	return p.passedFrom
 }
 
+// Returns the number of tricks p has taken
+// Assumes each trick is 4 cards
+func (p *Player) GetNumTricks() int {
+	return len(p.tricks) / 4
+}
+
 // Returns the score of p
 func (p *Player) GetScore() int {
 	return p.score

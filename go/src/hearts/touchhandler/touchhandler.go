@@ -150,6 +150,8 @@ func beginClickDiscovery(t touch.Event, u *uistate.UIState) {
 	}
 }
 
+//&& u.PlayerData[u.CurPlayerIndex] == 0
+
 func beginClickArrange(t touch.Event, u *uistate.UIState) {
 	buttonList := findClickedButton(t, u)
 	if len(buttonList) > 0 {
