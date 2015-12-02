@@ -10,6 +10,8 @@ import '../logic/croupier.dart' as logic_croupier;
 import '../logic/croupier_settings.dart' show CroupierSettings;
 import '../logic/game/game.dart' as logic_game;
 import '../styles/common.dart' as style;
+import 'croupier_game_advertisement.dart'
+    show CroupierGameAdvertisementComponent;
 import 'croupier_profile.dart' show CroupierProfileComponent;
 import 'game.dart' as component_game;
 
@@ -75,32 +77,34 @@ class CroupierComponentState extends State<CroupierComponent> {
                       logic_croupier.CroupierState.Welcome))
             ], direction: FlexDirection.vertical));
       case logic_croupier.CroupierState.JoinGame:
-        // A stateful view, first showing the players that can be seen creating a game.
-        List<Widget> profileWidgets = new List<Widget>();
+        // A stateful view, showing the game ads discovered.
+        List<Widget> gameAdWidgets = new List<Widget>();
+        if (config.croupier.games_found.length == 0) {
+          gameAdWidgets.add(
+              new Text("Looking for Games...", style: style.Text.titleStyle));
+        } else {
+          gameAdWidgets
+              .add(new Text("Available Games", style: style.Text.titleStyle));
+        }
+
         config.croupier.games_found
             .forEach((String _, logic_game.GameStartData gsd) {
           CroupierSettings cs = config.croupier.settings_everyone[gsd.ownerID];
-          // cs could be null if this settings data hasn't synced yet.
-          // If so, a placeholder is shown instead.
-          profileWidgets.add(new GestureDetector(
-              child: new CroupierProfileComponent(settings: cs),
+          gameAdWidgets.add(new CroupierGameAdvertisementComponent(gsd,
               onTap: makeSetStateCallback(
-                  logic_croupier.CroupierState.ArrangePlayers, gsd)));
+                  logic_croupier.CroupierState.ArrangePlayers, gsd),
+              settings: cs));
         });
+
+        gameAdWidgets.add(new FlatButton(
+            child: new Text('Back', style: style.Text.subtitleStyle),
+            onPressed:
+                makeSetStateCallback(logic_croupier.CroupierState.Welcome)));
+
         // in which players wait for game invitations to arrive.
         return new Container(
             padding: new EdgeDims.only(top: ui.window.padding.top),
-            child: new Column([
-              profileWidgets.length == 0
-                  ? new Text("Looking for Games...",
-                      style: style.Text.titleStyle)
-                  : new Text("Available Games", style: style.Text.titleStyle),
-              new Grid(profileWidgets, maxChildExtent: 150.0),
-              new FlatButton(
-                  child: new Text('Back', style: style.Text.subtitleStyle),
-                  onPressed: makeSetStateCallback(
-                      logic_croupier.CroupierState.Welcome))
-            ]));
+            child: new Column(gameAdWidgets));
       case logic_croupier.CroupierState.ArrangePlayers:
         List<Widget> profileWidgets = new List<Widget>();
         config.croupier.players_found.forEach((int userID, _) {

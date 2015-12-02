@@ -364,9 +364,7 @@ class SettingsScanHandler extends discovery.ScanHandler {
     // Looks like leave isn't actually implemented, so we can't do this.
     String addr = gameAddrs[instanceId];
     if (addr != null) {
-      List<String> parts = addr.split("-");
-      String gameID = parts[parts.length - 1];
-      updateGamesCallback(gameID, null);
+      updateGamesCallback(addr, null);
     }
     settingsAddrs.remove(instanceId);
     gameAddrs.remove(instanceId);
