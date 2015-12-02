@@ -14,6 +14,7 @@
 /// In the background, these values will be synced.
 /// When setting up a syncgroup, the userIDs are very important.
 
+import '../../settings/client.dart' as settings_client;
 import '../../logic/game/game.dart' as logic_game;
 import '../../logic/croupier_settings.dart' show CroupierSettings;
 import 'croupier_client.dart' show CroupierClient;
@@ -37,9 +38,12 @@ class SettingsManager {
   static const String _personalKey = "personal";
   static const String _settingsWatchSyncPrefix = "users";
 
-  SettingsManager(this.updateSettingsCallback, this.updateGamesCallback,
+  SettingsManager(
+      settings_client.AppSettings appSettings,
+      this.updateSettingsCallback,
+      this.updateGamesCallback,
       this.updatePlayerFoundCallback)
-      : _cc = new CroupierClient();
+      : _cc = new CroupierClient(appSettings);
 
   String _settingsDataKey(int userID) {
     return "${_settingsWatchSyncPrefix}/${userID}/settings";
@@ -176,7 +180,7 @@ class SettingsManager {
             break;
           case "settings_sg":
             // Join this player's settings syncgroup.
-            _cc.joinSyncgroup(_cc.makeSyncgroupName(value));
+            _cc.joinSyncgroup(value);
             break;
           default:
             print("Unexpected key: ${key} with value ${value}");
@@ -239,9 +243,12 @@ class SettingsManager {
 
     int id = await _getUserID();
     int playerNumber = fellowPlayers.length - 1;
-    gameTable
+    await gameTable
         .row("${gameID}/players/${id}/player_number")
         .put(UTF8.encode("${playerNumber}"));
+    await gameTable
+        .row("${gameID}/players/{$id}/settings_sg")
+        .put(UTF8.encode(await _mySettingsSyncgroupName()));
   }
 
   // When starting the settings manager, there may be settings already in the

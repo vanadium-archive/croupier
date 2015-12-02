@@ -67,7 +67,8 @@ class LogWriter {
 
   // The LogWriter takes a callback for watch updates, the list of users, and
   // the logPrefix to write at on table.
-  LogWriter(this.updateCallback, this.users) : _cc = new CroupierClient() {
+  LogWriter(this.updateCallback, this.users)
+      : _cc = new CroupierClient.singleton() {
     _prepareLog();
   }
 

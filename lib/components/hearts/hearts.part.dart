@@ -287,8 +287,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
         kids.add(showBoard());
         break;
       case HeartsPhase.Score:
-        kids.add(new Text("SCORE PHASE"));
-        break;
+        return showScore();
       default:
         assert(false);
         return null;

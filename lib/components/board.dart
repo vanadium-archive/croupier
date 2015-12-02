@@ -69,7 +69,7 @@ class HeartsBoardState extends State<HeartsBoard> {
   bool trickTaking = false;
   List<List<logic_card.Card>> playedCards = new List<List<logic_card.Card>>(4);
 
-  static const int SHOW_TRICK_DURATION = 750; // ms
+  static const int SHOW_TRICK_DURATION = 2000; // ms
 
   @override
   void initState() {

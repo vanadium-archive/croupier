@@ -194,8 +194,9 @@ class ZCardState extends widgets.State<ZCard> {
       case CardAnimationType.LONG:
         return const Duration(milliseconds: 750);
       default:
-        print(config.animationType);
+        print("Unexpected animation type: ${config.animationType}");
         assert(false);
+        return null;
     }
   }
 

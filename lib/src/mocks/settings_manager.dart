@@ -4,6 +4,7 @@
 
 import 'dart:async';
 
+import '../../settings/client.dart' as settings_client;
 import 'util.dart' as util;
 import '../../logic/game/game.dart' as logic_game;
 import '../../logic/croupier_settings.dart' show CroupierSettings;
@@ -13,8 +14,8 @@ class SettingsManager {
   final util.keyValueCallback updateGamesCallback;
   final util.keyValueCallback updatePlayerFoundCallback;
 
-  SettingsManager(this.updateCallback, this.updateGamesCallback,
-      this.updatePlayerFoundCallback);
+  SettingsManager(settings_client.AppSettings _, this.updateCallback,
+      this.updateGamesCallback, this.updatePlayerFoundCallback);
 
   Map<String, String> _data = new Map<String, String>();
 

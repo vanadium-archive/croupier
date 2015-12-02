@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+import '../../settings/client.dart' as settings_client;
 import 'discovery_client.dart' show DiscoveryClient;
 import 'util.dart' as util;
 
@@ -16,6 +17,7 @@ import 'package:syncbase/syncbase_client.dart' as sc;
 class CroupierClient {
   final sc.SyncbaseClient _syncbaseClient;
   final DiscoveryClient _discoveryClient;
+  final settings_client.AppSettings appSettings;
   static final String syncbaseServerUrl = Platform.environment[
           'SYNCBASE_SERVER_URL'] ??
       'https://mojo.v.io/syncbase_server.mojo';
@@ -24,12 +26,20 @@ class CroupierClient {
 
   // We want CroupierClient to be a singleton for simplicity purposes.
   // This prevents duplicate table/database creation.
-  static final CroupierClient _singleton = new CroupierClient._internal();
-  factory CroupierClient() {
+  // TODO(alexfandrianto): This is not a singleton if I give arguments.
+  // That means later runs will ignore the settings.
+  // https://github.com/vanadium/issues/issues/964
+  static CroupierClient _singleton;
+  factory CroupierClient(settings_client.AppSettings appSettings) {
+    _singleton ??= new CroupierClient._internal(appSettings);
+    return _singleton;
+  }
+  factory CroupierClient.singleton() {
+    assert(_singleton != null);
     return _singleton;
   }
 
-  CroupierClient._internal()
+  CroupierClient._internal(this.appSettings)
       : _syncbaseClient =
             new sc.SyncbaseClient(shell.connectToService, syncbaseServerUrl),
         _discoveryClient = new DiscoveryClient() {
@@ -102,7 +112,7 @@ class CroupierClient {
     }
 
     var myInfo = sc.SyncbaseClient.syncgroupMemberInfo(syncPriority: 3);
-    String mtName = util.mtAddr;
+    String mtName = this.appSettings.mounttable;
 
     sc.SyncbaseSyncgroup sg = await _getSyncgroup(sgName);
     var sgSpec = sc.SyncbaseClient.syncgroupSpec(
@@ -137,8 +147,8 @@ class CroupierClient {
 
   // Helper that converts a suffix to a syncgroup name.
   String makeSyncgroupName(String suffix) {
-    String mtName = util.mtAddr;
-    String sgPrefix = naming.join(mtName, util.sgPrefix);
+    String sgPrefix = util.makeSgPrefix(
+        this.appSettings.mounttable, this.appSettings.deviceID);
     String sgName = naming.join(sgPrefix, suffix);
     return sgName;
   }

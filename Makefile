@@ -26,7 +26,8 @@ ifdef ANDROID
 	# Location of mounttable on syncslides-alpha network.
 	MOUNTTABLE := /192.168.86.254:8101
 	# Name to mount under.
-	NAME := croupierAlex
+	SYNCBASE_NAME_FLAG := --name=$(MOUNTTABLE)/croupier-$(DEVICE_ID)
+	SYNCBASE_FLAGS += $(SYNCBASE_NAME_FLAG)
 
 	APP_HOME_DIR = /data/data/org.chromium.mojo.shell/app_home
 	ANDROID_CREDS_DIR := /sdcard/v23creds
@@ -35,16 +36,6 @@ ifdef ANDROID
 		--root-dir=$(APP_HOME_DIR)/syncbase_data \
 		--v23.credentials=$(ANDROID_CREDS_DIR) \
 		--v23.proxy=proxy
-
-	#--v23.namespace.root=$(MOUNTTABLE) \
-
-ifeq ($(ANDROID), 1)
-	# If ANDROID is set to 1 exactly, then treat it like the first device.
-	# TODO(alexfandrianto): If we can do a better job of this, we won't have to
-	# special-case the first device.
-	SYNCBASE_NAME_FLAG := --name=$(MOUNTTABLE)/$(NAME)
-	SYNCBASE_FLAGS += $(SYNCBASE_NAME_FLAG)
-endif
 
 # If this is not the first mojo shell, then you must reuse the dev servers
 # to avoid a "port in use" error.
@@ -119,10 +110,18 @@ build: croupier.flx
 croupier.flx: packages $(DART_LIB_FILES_ALL)
 	pub run flutter_tools -v build --manifest manifest.yaml --output-file $@
 
+SETTINGS_FILE := /sdcard/croupier_settings.json
+SETTINGS_JSON := {\"deviceID\": \"$(DEVICE_ID)\", \"mounttable\": \"$(MOUNTTABLE)\"}
+.PHONY: push-settings
+push-settings:
+ifdef ANDROID
+	adb -s $(DEVICE_ID) shell 'echo $(SETTINGS_JSON) > $(SETTINGS_FILE)'
+endif
+
 # Starts the app on the specified ANDROID device.
 # Don't forget to make creds first if they are not present.
 .PHONY: start
-start: croupier.flx env-check packages
+start: croupier.flx env-check packages push-settings
 ifdef ANDROID
 	# Make creds dir if it does not exist.
 	mkdir -p creds
@@ -164,7 +163,7 @@ define GENERATE_SHORTCUT_FILE
 	shortcut_template > shortcut_commands
 endef
 
-shortcut: env-check
+shortcut: env-check push-settings
 ifdef ANDROID
 	# Create the shortcut file.
 	$(call GENERATE_SHORTCUT_FILE,$(DEVICE_ID),$(SYNCBASE_NAME_FLAG))
@@ -217,8 +216,8 @@ test: packages
 .PHONY: clean
 clean:
 ifdef ANDROID
-	# Clean syncbase data dir.
 	adb -s $(DEVICE_ID) shell run-as org.chromium.mojo.shell rm -rf $(APP_HOME_DIR)/syncbase_data
+	adb -s $(DEVICE_ID) shell rm $(SETTINGS_FILE)
 endif
 	rm -f croupier.flx snapshot_blob.bin
 	rm -rf bin tmp

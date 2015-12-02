@@ -4,6 +4,7 @@
 
 import 'dart:async';
 
+import '../settings/client.dart' show AppSettings;
 import '../src/syncbase/settings_manager.dart' show SettingsManager;
 import 'create_game.dart' as cg;
 import 'croupier_settings.dart' show CroupierSettings;
@@ -15,6 +16,7 @@ enum CroupierState { Welcome, ChooseGame, JoinGame, ArrangePlayers, PlayGame }
 typedef void NoArgCb();
 
 class Croupier {
+  AppSettings appSettings;
   CroupierState state;
   SettingsManager settings_manager;
   CroupierSettings settings; // null, but loaded asynchronously.
@@ -31,12 +33,12 @@ class Croupier {
 
   bool debugMode = false; // whether to show debug buttons or not
 
-  Croupier() {
+  Croupier(this.appSettings) {
     state = CroupierState.Welcome;
     settings_everyone = new Map<int, CroupierSettings>();
     games_found = new Map<String, GameStartData>();
     players_found = new Map<int, int>();
-    settings_manager = new SettingsManager(
+    settings_manager = new SettingsManager(appSettings,
         _updateSettingsEveryoneCb, _updateGamesFoundCb, _updatePlayerFoundCb);
 
     settings_manager.load().then((String csString) {

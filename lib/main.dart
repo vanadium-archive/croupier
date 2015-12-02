@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 
+import 'settings/client.dart' as settings_client;
 import 'logic/croupier.dart' show Croupier;
 import 'components/settings_route.dart' show SettingsRoute;
 import 'components/debug_route.dart' show DebugRoute;
@@ -12,7 +13,8 @@ import 'components/main_route.dart' show MainRoute;
 import 'styles/common.dart' as style;
 
 class CroupierApp extends StatefulComponent {
-  CroupierApp();
+  settings_client.AppSettings appSettings;
+  CroupierApp(this.appSettings);
 
   CroupierAppState createState() => new CroupierAppState();
 }
@@ -22,7 +24,7 @@ class CroupierAppState extends State<CroupierApp> {
 
   void initState() {
     super.initState();
-    this.croupier = new Croupier();
+    this.croupier = new Croupier(config.appSettings);
   }
 
   Widget build(BuildContext context) {
@@ -41,7 +43,7 @@ void main() {
   // TODO(alexfandrianto): Perhaps my app will run better if I initialize more
   // things here instead of in Croupier. I added this 500 ms delay because the
   // tablet was sometimes not rendering without it (repainting too early?).
-  new Future.delayed(const Duration(milliseconds: 500), () {
-    runApp(new CroupierApp());
+  new Future.delayed(const Duration(milliseconds: 500), () async {
+    runApp(new CroupierApp(await settings_client.getSettings()));
   });
 }
