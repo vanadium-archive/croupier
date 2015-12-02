@@ -40,6 +40,8 @@ class Spacing {
 class Box {
   static final BoxDecoration liveNow = new BoxDecoration(
       border: new Border.all(color: theme.accentColor), borderRadius: 2.0);
+  static final BoxDecoration border =
+      new BoxDecoration(border: new Border.all(), borderRadius: 2.0);
 }
 
 ThemeData theme = new ThemeData(

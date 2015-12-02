@@ -199,14 +199,11 @@ class HeartsBoardState extends State<HeartsBoard> {
   }
 
   Widget _getProfile(int playerNumber, bool isWide) {
-    int userID = config.croupier.userIDFromPlayerNumber(playerNumber);
-
     bool isMini = isWide && config.cardHeight * 2 > config.height * 0.25;
 
-    CroupierSettings cs; // If cs is null, a placeholder is used instead.
-    if (userID != null) {
-      cs = config.croupier.settings_everyone[userID];
-    }
+    // If cs is null, a placeholder is used instead.
+    CroupierSettings cs =
+        config.croupier.settingsFromPlayerNumber(playerNumber);
     return new CroupierProfileComponent(
         settings: cs, height: config.height * 0.15, isMini: isMini);
   }

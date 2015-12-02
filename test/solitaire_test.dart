@@ -37,7 +37,7 @@ KeepGoingCb makeCommandReader(SolitaireGame game, String filename) {
 
 void main() {
   group("Initialization", () {
-    SolitaireGame game = new SolitaireGame(0);
+    SolitaireGame game = new SolitaireGame();
     test("Dealing", () {
       game.dealCardsUI(); // What we run when starting the game.
 
@@ -71,7 +71,7 @@ void main() {
   // We have a debug cheat button that lets you advance in the game.
   // After calling it once, it is forced to place cards up into the aces area.
   group("Cheat Command", () {
-    SolitaireGame game = new SolitaireGame(0);
+    SolitaireGame game = new SolitaireGame();
     game.dealCardsUI(); // Get the cards out there.
 
     test("Cheat Functionality", () {
@@ -91,7 +91,7 @@ void main() {
   });
 
   group("Check Endgame", () {
-    SolitaireGame game = new SolitaireGame(0);
+    SolitaireGame game = new SolitaireGame();
 
     test("Has not won pre-deal", () {
       expect(game.phase, equals(SolitairePhase.Deal));
@@ -135,7 +135,7 @@ void main() {
 
   // Run through a canonical game of Solitaire where the player doesn't win.
   group("Solitaire - Loss", () {
-    SolitaireGame game = new SolitaireGame(0);
+    SolitaireGame game = new SolitaireGame();
 
     // Note: This could have been a non-file (in-memory), but it's fine to use a file too.
     KeepGoingCb runCommand =
@@ -166,7 +166,7 @@ void main() {
 
   // Run through a canonical game of Solitaire where the player does win.
   group("Solitaire - Win", () {
-    SolitaireGame game = new SolitaireGame(0);
+    SolitaireGame game = new SolitaireGame();
 
     // Note: This could have been a non-file (in-memory), but it's fine to use a file too.
     KeepGoingCb runCommand =
@@ -198,7 +198,7 @@ void main() {
   group("Card Manipulation - Error Cases", () {
     test("Dealing - wrong phase", () {
       expect(() {
-        SolitaireGame game = new SolitaireGame(0);
+        SolitaireGame game = new SolitaireGame();
         game.phase = SolitairePhase.Score;
         game.gamelog
             .add(new SolitaireCommand.deal(new List<Card>.from(Card.All)));
@@ -206,7 +206,7 @@ void main() {
     });
     test("Dealing - fake cards", () {
       expect(() {
-        SolitaireGame game = new SolitaireGame(0);
+        SolitaireGame game = new SolitaireGame();
         game.gamelog.add(
             new SolitaireCommand.deal(<Card>[new Card("fake", "not real")]));
       }, throwsA(new isInstanceOf<StateError>()));
@@ -214,13 +214,13 @@ void main() {
     test("Dealing - wrong number of cards dealt", () {
       // 2x as many cards
       expect(() {
-        SolitaireGame game = new SolitaireGame(0);
+        SolitaireGame game = new SolitaireGame();
         game.gamelog.add(new SolitaireCommand.deal(
             new List<Card>.from(Card.All)..addAll(Card.All)));
       }, throwsA(new isInstanceOf<StateError>()));
       // missing cards
       expect(() {
-        SolitaireGame game = new SolitaireGame(0);
+        SolitaireGame game = new SolitaireGame();
         game.gamelog.add(new SolitaireCommand.deal(
             new List<Card>.from(Card.All.getRange(0, 40))));
       }, throwsA(new isInstanceOf<StateError>()));
@@ -245,7 +245,7 @@ void main() {
       Card s13 = Card.All[39 + 12];
 
       SolitaireGame _makeArbitrarySolitaireGame() {
-        SolitaireGame g = new SolitaireGame(0);
+        SolitaireGame g = new SolitaireGame();
 
         // Top row
         g.cardCollections[SolitaireGame.OFFSET_ACES].add(s2);
@@ -378,13 +378,13 @@ void main() {
     test("Playing - cannot flip", () {
       // Wrong phase.
       expect(() {
-        SolitaireGame game = new SolitaireGame(0);
+        SolitaireGame game = new SolitaireGame();
         game.gamelog.add(new SolitaireCommand.flip(3));
       }, throwsA(new isInstanceOf<StateError>()));
 
       // Bad index (low)
       expect(() {
-        SolitaireGame game = new SolitaireGame(0);
+        SolitaireGame game = new SolitaireGame();
 
         // Deal first.
         game.dealCardsUI();
@@ -398,7 +398,7 @@ void main() {
 
       // Bad index (high)
       expect(() {
-        SolitaireGame game = new SolitaireGame(0);
+        SolitaireGame game = new SolitaireGame();
 
         // Deal first.
         game.dealCardsUI();
@@ -412,7 +412,7 @@ void main() {
 
       // No down card to flip.
       expect(() {
-        SolitaireGame game = new SolitaireGame(0);
+        SolitaireGame game = new SolitaireGame();
 
         // Deal first.
         game.dealCardsUI();
@@ -427,7 +427,7 @@ void main() {
 
       // Up card is in the way.
       expect(() {
-        SolitaireGame game = new SolitaireGame(0);
+        SolitaireGame game = new SolitaireGame();
 
         // Deal first.
         game.dealCardsUI();
@@ -438,7 +438,7 @@ void main() {
       }, throwsA(new isInstanceOf<StateError>()));
 
       // This scenario should work though.
-      SolitaireGame game = new SolitaireGame(0);
+      SolitaireGame game = new SolitaireGame();
 
       // Deal. Clear away pile 1. Flip pile 1.
       game.dealCardsUI();
@@ -450,13 +450,13 @@ void main() {
     test("Playing - cannot draw", () {
       // Wrong phase.
       expect(() {
-        SolitaireGame game = new SolitaireGame(0);
+        SolitaireGame game = new SolitaireGame();
         game.gamelog.add(new SolitaireCommand.draw());
       }, throwsA(new isInstanceOf<StateError>()));
 
       // No draw cards remain.
       expect(() {
-        SolitaireGame game = new SolitaireGame(0);
+        SolitaireGame game = new SolitaireGame();
         game.dealCardsUI();
 
         // Remove all draw cards.
@@ -466,7 +466,7 @@ void main() {
       }, throwsA(new isInstanceOf<StateError>()));
 
       // But it should be fine to draw just after dealing.
-      SolitaireGame game = new SolitaireGame(0);
+      SolitaireGame game = new SolitaireGame();
 
       // Deal first.
       game.dealCardsUI();

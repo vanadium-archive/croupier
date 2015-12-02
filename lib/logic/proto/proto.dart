@@ -5,7 +5,8 @@
 library proto;
 
 import '../card.dart' show Card;
-import '../game/game.dart' show Game, GameType, GameCommand, GameLog;
+import '../game/game.dart'
+    show Game, GameArrangeData, GameType, GameCommand, GameLog;
 
 part 'proto_command.part.dart';
 part 'proto_game.part.dart';

@@ -12,7 +12,6 @@ import 'package:flutter/rendering.dart';
 
 import '../logic/card.dart' as logic_card;
 import '../logic/croupier.dart' show Croupier;
-import '../logic/croupier_settings.dart' show CroupierSettings;
 import '../logic/game/game.dart' show Game, GameType;
 import '../logic/hearts/hearts.dart' show HeartsGame, HeartsPhase, HeartsType;
 import '../logic/solitaire/solitaire.dart' show SolitaireGame, SolitairePhase;
@@ -212,6 +211,25 @@ GameComponent createGameComponent(Croupier croupier, NoArgCb gameEndCallback,
       // We're probably not ready to serve the other games yet.
       assert(false);
       return null;
+  }
+}
+
+abstract class GameArrangeComponent extends StatelessComponent {
+  final Croupier croupier;
+  final double width;
+  final double height;
+  GameArrangeComponent(this.croupier, {this.width, this.height});
+}
+
+GameArrangeComponent createGameArrangeComponent(Croupier croupier,
+    {double width, double height}) {
+  switch (croupier.game.gameType) {
+    case GameType.Hearts:
+      return new HeartsArrangeComponent(croupier, width: width, height: height);
+    default:
+      // We can't arrange this game.
+      throw new UnimplementedError(
+          "We cannot arrange the game type: ${croupier.game.gameType}");
   }
 }
 

@@ -66,8 +66,8 @@ class HeartsGame extends Game {
   List<int> deltaScores = [0, 0, 0, 0];
   List<bool> ready;
 
-  HeartsGame(int playerNumber, {int gameID, bool isCreator})
-      : super.create(GameType.Hearts, new HeartsLog(), playerNumber, 16,
+  HeartsGame({int gameID, bool isCreator})
+      : super.create(GameType.Hearts, new HeartsLog(), 16,
             gameID: gameID, isCreator: isCreator) {
     resetGame();
     unsetReady();
@@ -94,6 +94,8 @@ class HeartsGame extends Game {
     deal(PLAYER_C, forC);
     deal(PLAYER_D, forD);
   }
+
+  bool get isPlayer => this.playerNumber >= 0 && this.playerNumber < 4;
 
   int get passTarget {
     switch (roundNumber % 4) {
@@ -254,14 +256,29 @@ class HeartsGame extends Game {
   // It won't be possible to set the readiness for other players, except via the GameLog.
   void setReadyUI() {
     assert(phase == HeartsPhase.Score || phase == HeartsPhase.StartGame);
-    if (playerNumber >= 0 && playerNumber < 4) {
+    if (this.debugMode) {
+      // Debug Mode should pretend this device is all players.
+      for (int i = 0; i < 4; i++) {
+        gamelog.add(new HeartsCommand.ready(i));
+      }
+    } else if (this.isPlayer) {
       gamelog.add(new HeartsCommand.ready(playerNumber));
     }
   }
 
+  static final GameArrangeData _arrangeData =
+      new GameArrangeData(true, new Set.from([0, 1, 2, 3]));
+  GameArrangeData get gameArrangeData => _arrangeData;
+
   @override
   void startGameSignal() {
+    if (this.debugMode && this.playerNumber < 0) {
+      this.playerNumber = 0;
+    }
     setReadyUI();
+    if (!this.isPlayer) {
+      this.viewType = HeartsType.Board;
+    }
   }
 
   // Note that this will be called by the UI.

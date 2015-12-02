@@ -8,8 +8,12 @@ class ProtoGame extends Game {
   @override
   String get gameTypeName => "Proto";
 
-  ProtoGame(int playerNumber, {int gameID, bool isCreator})
-      : super.create(GameType.Proto, new ProtoLog(), playerNumber, 6,
+  static final GameArrangeData _arrangeData =
+      new GameArrangeData(false, new Set());
+  GameArrangeData get gameArrangeData => _arrangeData;
+
+  ProtoGame({int gameID, bool isCreator})
+      : super.create(GameType.Proto, new ProtoLog(), 6,
             gameID: gameID, isCreator: isCreator) {
     // playerNumber would be used in a real game, but I have to ignore it for debugging.
     // It would determine faceUp/faceDown status.faceDown

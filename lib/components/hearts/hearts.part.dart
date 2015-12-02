@@ -103,6 +103,9 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
         game.viewType = HeartsType.Board;
       } else {
         game.viewType = HeartsType.Player;
+        if (!game.isPlayer) {
+          game.playerNumber = 0; // avoid accidental red screen
+        }
       }
     });
   }
@@ -360,23 +363,13 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
         justifyContent: FlexJustifyContent.spaceBetween);
   }
 
-  Widget _getProfileComponent(int playerNumber) {
-    int userID = config.croupier.userIDFromPlayerNumber(playerNumber);
-
-    CroupierSettings cs; // If cs is null, a placeholder is used instead.
-    if (userID != null) {
-      cs = config.croupier.settings_everyone[userID];
-    }
-    return new CroupierProfileComponent(settings: cs);
-  }
-
   Widget showScore() {
     HeartsGame game = config.game as HeartsGame;
 
     Widget w;
     if (game.hasGameEnded) {
       w = new Text("Game Over!");
-    } else if (game.ready[game.playerNumber]) {
+    } else if (!game.isPlayer || game.ready[game.playerNumber]) {
       w = new Text("Waiting for other players...");
     } else {
       w = _makeButton('Ready?', game.setReadyUI);
@@ -415,7 +408,10 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
 
       scores.add(new Flexible(
           child: new Flex([
-            new Flexible(child: _getProfileComponent(i), flex: 1),
+            new Flexible(
+                child: new CroupierProfileComponent(
+                    settings: config.croupier.settingsFromPlayerNumber(i)),
+                flex: 1),
             new Flexible(
                 child: new Center(
                     child:
@@ -564,5 +560,79 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
 
     return _helpPassTake("Take", take1, take2, take3, playerCards, null,
         hasTaken ? null : _makeGameTakeCallback);
+  }
+}
+
+class HeartsArrangeComponent extends GameArrangeComponent {
+  HeartsArrangeComponent(Croupier croupier, {double width, double height})
+      : super(croupier, width: width, height: height);
+
+  bool get hasSat => croupier.game.playerNumber != null;
+
+  Widget build(BuildContext context) {
+    int numAtTable = croupier.players_found.values
+        .where((int playerNumber) => playerNumber == 4)
+        .length;
+
+    return new Container(
+        decoration: style.Box.liveNow,
+        height: height,
+        width: width,
+        child: new Column([
+          new Flexible(
+              flex: 1,
+              child: new Row(
+                  [_buildEmptySlot(), _buildSlot("Player", 2), _buildEmptySlot()],
+                  justifyContent: FlexJustifyContent.spaceAround,
+                  alignItems: FlexAlignItems.stretch)),
+          new Flexible(
+              flex: 1,
+              child: new Row([
+                _buildSlot("Player", 1),
+                _buildSlot("Table: ${numAtTable}", 4),
+                _buildSlot("Player", 3)
+              ],
+                  justifyContent: FlexJustifyContent.spaceAround,
+                  alignItems: FlexAlignItems.stretch)),
+          new Flexible(
+              flex: 1,
+              child: new Row(
+                  [_buildEmptySlot(), _buildSlot("Player", 0), _buildEmptySlot()],
+                  justifyContent: FlexJustifyContent.spaceAround,
+                  alignItems: FlexAlignItems.stretch))
+        ],
+            justifyContent: FlexJustifyContent.spaceAround,
+            alignItems: FlexAlignItems.stretch));
+  }
+
+  Widget _buildEmptySlot() {
+    return new Flexible(flex: 1, child: new Text(""));
+  }
+
+  Widget _buildSlot(String name, int index) {
+    NoArgCb onTap = () {
+      croupier.settings_manager.setPlayerNumber(croupier.game.gameID, index);
+    };
+    Widget slotWidget = new Text(name, style: style.Text.hugeStyle);
+
+    bool seatTaken =
+        index >= 0 && index < 4 && croupier.players_found.containsValue(index);
+    if (seatTaken) {
+      onTap = null;
+      slotWidget = new CroupierProfileComponent(
+          settings: croupier.settingsFromPlayerNumber(index));
+    } else if (hasSat) {
+      onTap = null;
+    }
+
+    return new Flexible(
+        flex: 1,
+        child: new GestureDetector(
+            child: new Card(
+                color: croupier.game.playerNumber == index
+                    ? style.theme.accentColor
+                    : null,
+                child: new Center(child: slotWidget)),
+            onTap: onTap));
   }
 }

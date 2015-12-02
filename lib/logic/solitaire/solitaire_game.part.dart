@@ -19,6 +19,10 @@ class SolitaireGame extends Game {
   static const OFFSET_DOWN = 6;
   static const OFFSET_UP = 13;
 
+  static final GameArrangeData _arrangeData =
+      new GameArrangeData(false, new Set());
+  GameArrangeData get gameArrangeData => _arrangeData;
+
   SolitairePhase _phase = SolitairePhase.Deal;
   SolitairePhase get phase => _phase;
   void set phase(SolitairePhase other) {
@@ -26,9 +30,8 @@ class SolitaireGame extends Game {
     _phase = other;
   }
 
-  SolitaireGame(int playerNumber, {int gameID, bool isCreator})
-      : super.create(
-            GameType.Solitaire, new SolitaireLog(), playerNumber, NUM_PILES,
+  SolitaireGame({int gameID, bool isCreator})
+      : super.create(GameType.Solitaire, new SolitaireLog(), NUM_PILES,
             gameID: gameID, isCreator: isCreator) {
     resetGame();
   }
@@ -342,7 +345,10 @@ class SolitaireGame extends Game {
   // TODO(alexfandrianto): Maybe wanted for debug; if not, remove.
   void jumpToScorePhaseDebug() {}
 
-  // TODO(alexfandrianto): This needs to be a signal to trigger a deal.
   @override
-  void startGameSignal() {}
+  void startGameSignal() {
+    if (this.isCreator) {
+      this.dealCardsUI();
+    }
+  }
 }

@@ -5,7 +5,8 @@
 library solitaire;
 
 import '../card.dart' show Card;
-import '../game/game.dart' show Game, GameType, GameCommand, GameLog;
+import '../game/game.dart'
+    show Game, GameArrangeData, GameType, GameCommand, GameLog;
 import '../../src/syncbase/log_writer.dart' show LogWriter, SimulLevel;
 
 part 'solitaire_command.part.dart';

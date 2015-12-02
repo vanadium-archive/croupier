@@ -10,7 +10,7 @@ import "dart:io";
 
 void main() {
   group("Initialization", () {
-    HeartsGame game = new HeartsGame(0);
+    HeartsGame game = new HeartsGame()..playerNumber = 0;
     game.phase = HeartsPhase.Deal;
     test("Dealing", () {
       game.dealCards(); // What the dealer actually runs to get cards to everybody.
@@ -101,7 +101,7 @@ void main() {
 
   // For this test, the cards may end up being duplicate or inconsistent.
   group("Scoring", () {
-    HeartsGame game = new HeartsGame(0);
+    HeartsGame game = new HeartsGame()..playerNumber = 0;
     test("Compute/Prepare Score", () {
       // In this situation, what's the score?
       game.cardCollections[HeartsGame.PLAYER_A_TRICK] = <Card>[
@@ -163,7 +163,7 @@ void main() {
   });
 
   group("Game Over", () {
-    HeartsGame game = new HeartsGame(0);
+    HeartsGame game = new HeartsGame()..playerNumber = 0;
 
     test("Has the game ended? Yes", () {
       // Check if the game has ended. Should be yes.
@@ -181,7 +181,7 @@ void main() {
   // performing a single action or set of actions.
   // Reads from a log, so we will go through logical game mechanics.
   group("Card Manipulation", () {
-    HeartsGame game = new HeartsGame(0);
+    HeartsGame game = new HeartsGame()..playerNumber = 0;
 
     // Note: This could have been a non-file (in-memory), but it's fine to use a file too.
     File file = new File("test/game_log_hearts_test.txt");
@@ -462,7 +462,7 @@ void main() {
 
   group("Card Manipulation - Error Cases", () {
     test("Dealing - too soon", () {
-      HeartsGame game = new HeartsGame(0);
+      HeartsGame game = new HeartsGame()..playerNumber = 0;
       expect(game.phase, HeartsPhase.StartGame);
       expect(() {
         game.gamelog.add(new HeartsCommand.deal(
@@ -470,7 +470,7 @@ void main() {
       }, throwsA(new isInstanceOf<StateError>()));
     });
     test("Dealing - wrong phase", () {
-      HeartsGame game = new HeartsGame(0);
+      HeartsGame game = new HeartsGame()..playerNumber = 0;
       game.phase = HeartsPhase.Score;
       expect(() {
         game.gamelog.add(new HeartsCommand.deal(
@@ -478,7 +478,7 @@ void main() {
       }, throwsA(new isInstanceOf<StateError>()));
     });
     test("Dealing - missing card", () {
-      HeartsGame game = new HeartsGame(0);
+      HeartsGame game = new HeartsGame()..playerNumber = 0;
       game.phase = HeartsPhase.Deal;
       expect(() {
         game.gamelog.add(
@@ -486,14 +486,14 @@ void main() {
       }, throwsA(new isInstanceOf<StateError>()));
     });
     test("Dealing - too many cards dealt", () {
-      HeartsGame game = new HeartsGame(0);
+      HeartsGame game = new HeartsGame()..playerNumber = 0;
       game.phase = HeartsPhase.Deal;
       expect(() {
         game.gamelog.add(new HeartsCommand.deal(
             0, new List<Card>.from(Card.All.getRange(0, 15))));
       }, throwsA(new isInstanceOf<StateError>()));
 
-      game = new HeartsGame(0);
+      game = new HeartsGame()..playerNumber = 0;
       game.phase = HeartsPhase.Deal;
       expect(() {
         game.gamelog.add(new HeartsCommand.deal(
@@ -503,7 +503,7 @@ void main() {
       }, throwsA(new isInstanceOf<StateError>()));
     });
     test("Passing - wrong phase", () {
-      HeartsGame game = new HeartsGame(0);
+      HeartsGame game = new HeartsGame()..playerNumber = 0;
       game.phase = HeartsPhase.Deal;
       game.gamelog.add(new HeartsCommand.deal(
           0, new List<Card>.from(Card.All.getRange(0, 13))));
@@ -513,7 +513,7 @@ void main() {
       }, throwsA(new isInstanceOf<StateError>()));
     });
     test("Passing - missing card", () {
-      HeartsGame game = new HeartsGame(0);
+      HeartsGame game = new HeartsGame()..playerNumber = 0;
       game.phase = HeartsPhase.Deal;
       game.gamelog.add(new HeartsCommand.deal(
           0, new List<Card>.from(Card.All.getRange(0, 13))));
@@ -524,7 +524,7 @@ void main() {
       }, throwsA(new isInstanceOf<StateError>()));
     });
     test("Passing - wrong number of cards", () {
-      HeartsGame game = new HeartsGame(0);
+      HeartsGame game = new HeartsGame()..playerNumber = 0;
       game.phase = HeartsPhase.Deal;
       game.gamelog.add(new HeartsCommand.deal(
           0, new List<Card>.from(Card.All.getRange(0, 13))));
@@ -534,7 +534,7 @@ void main() {
             0, new List<Card>.from(Card.All.getRange(0, 2))));
       }, throwsA(new isInstanceOf<StateError>()));
 
-      game = new HeartsGame(0);
+      game = new HeartsGame()..playerNumber = 0;
       game.phase = HeartsPhase.Deal;
       game.gamelog.add(new HeartsCommand.deal(
           0, new List<Card>.from(Card.All.getRange(0, 13))));
@@ -545,14 +545,14 @@ void main() {
       }, throwsA(new isInstanceOf<StateError>()));
     });
     test("Taking - wrong phase", () {
-      HeartsGame game = new HeartsGame(0);
+      HeartsGame game = new HeartsGame()..playerNumber = 0;
       game.phase = HeartsPhase.Deal;
       expect(() {
         game.gamelog.add(new HeartsCommand.take(3));
       }, throwsA(new isInstanceOf<StateError>()));
     });
     test("Playing - wrong phase", () {
-      HeartsGame game = new HeartsGame(0);
+      HeartsGame game = new HeartsGame()..playerNumber = 0;
       game.phase = HeartsPhase.Deal;
       game.gamelog.add(new HeartsCommand.deal(
           0, new List<Card>.from(Card.All.getRange(0, 13))));
@@ -561,7 +561,7 @@ void main() {
       }, throwsA(new isInstanceOf<StateError>()));
     });
     test("Playing - missing card", () {
-      HeartsGame game = new HeartsGame(0);
+      HeartsGame game = new HeartsGame()..playerNumber = 0;
       game.phase = HeartsPhase.Deal;
       game.gamelog.add(new HeartsCommand.deal(
           0, new List<Card>.from(Card.All.getRange(0, 13))));
@@ -571,7 +571,7 @@ void main() {
       }, throwsA(new isInstanceOf<StateError>()));
     });
     test("Playing - invalid card (not 2 of clubs as first card)", () {
-      HeartsGame game = new HeartsGame(0);
+      HeartsGame game = new HeartsGame()..playerNumber = 0;
       game.phase = HeartsPhase.Deal;
       game.gamelog.add(new HeartsCommand.deal(
           0, new List<Card>.from(Card.All.getRange(0, 13))));
@@ -584,7 +584,7 @@ void main() {
     test("Playing - invalid card (no penalty on first round)", () {
       // NOTE: It is actually possible to be forced to play a penalty card on round 1.
       // But the odds are miniscule, so this rule will be enforced.
-      HeartsGame game = new HeartsGame(0);
+      HeartsGame game = new HeartsGame()..playerNumber = 0;
       game.phase = HeartsPhase.Deal;
       game.gamelog.add(new HeartsCommand.deal(
           0, new List<Card>.from(Card.All.getRange(0, 13))));
@@ -603,7 +603,7 @@ void main() {
       }, throwsA(new isInstanceOf<StateError>()));
     });
     test("Playing - wrong turn", () {
-      HeartsGame game = new HeartsGame(0);
+      HeartsGame game = new HeartsGame()..playerNumber = 0;
       game.phase = HeartsPhase.Deal;
       game.gamelog.add(new HeartsCommand.deal(
           0, new List<Card>.from(Card.All.getRange(0, 13))));
@@ -621,7 +621,7 @@ void main() {
       }, throwsA(new isInstanceOf<StateError>()));
     });
     test("Playing - invalid card (suit mismatch)", () {
-      HeartsGame game = new HeartsGame(0);
+      HeartsGame game = new HeartsGame()..playerNumber = 0;
       game.phase = HeartsPhase.Deal;
       game.gamelog.add(new HeartsCommand.deal(
           0, new List<Card>.from(Card.All.getRange(0, 12))..add(Card.All[25])));
@@ -640,7 +640,7 @@ void main() {
       }, throwsA(new isInstanceOf<StateError>()));
     });
     test("Playing - invalid card (hearts not broken yet)", () {
-      HeartsGame game = new HeartsGame(0);
+      HeartsGame game = new HeartsGame()..playerNumber = 0;
       game.phase = HeartsPhase.Deal;
       game.gamelog.add(new HeartsCommand.deal(
           0, new List<Card>.from(Card.All.getRange(0, 12))..add(Card.All[38])));

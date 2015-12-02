@@ -7,7 +7,8 @@ library hearts;
 import 'dart:math' as math;
 
 import '../card.dart' show Card;
-import '../game/game.dart' show Game, GameType, GameCommand, GameLog;
+import '../game/game.dart'
+    show Game, GameArrangeData, GameType, GameCommand, GameLog;
 import '../../src/syncbase/log_writer.dart' show LogWriter, SimulLevel;
 
 part 'hearts_command.part.dart';

@@ -78,10 +78,21 @@ class Croupier {
         orElse: () => null);
   }
 
+  CroupierSettings settingsFromPlayerNumber(int playerNumber) {
+    int userID = userIDFromPlayerNumber(playerNumber);
+    if (userID != null) {
+      return settings_everyone[userID];
+    }
+    return null;
+  }
+
   void _updatePlayerFoundCb(String playerID, String playerNum) {
     int id = int.parse(playerID);
     if (playerNum == null) {
-      games_found.remove(id);
+      if (!players_found.containsKey(id)) {
+        // The player exists but has not sat down yet.
+        players_found[id] = null;
+      }
     } else {
       int playerNumber = int.parse(playerNum);
       players_found[id] = playerNumber;
@@ -113,8 +124,7 @@ class Croupier {
 
         // data should be the game id here.
         GameType gt = data as GameType;
-        game = cg.createGame(gt, 0, this.debugMode,
-            isCreator: true); // Start as player 0 of whatever game type.
+        game = cg.createGame(gt, this.debugMode, isCreator: true);
 
         _advertiseFuture = settings_manager
             .createGameSyncgroup(gameTypeToString(gt), game.gameID)
@@ -128,6 +138,7 @@ class Croupier {
         // Note that if we were in join game, we must have been scanning.
         _scanFuture.then((_) {
           settings_manager.stopScanSettings();
+          games_found.clear();
           _scanFuture = null;
         });
 
@@ -138,9 +149,8 @@ class Croupier {
 
         // data would probably be the game id again.
         GameStartData gsd = data as GameStartData;
-        game = cg.createGame(
-            stringToGameType(gsd.type), gsd.playerNumber, this.debugMode,
-            gameID: gsd.gameID); // Start as player 0 of whatever game type.
+        game = cg.createGame(stringToGameType(gsd.type), this.debugMode,
+            gameID: gsd.gameID);
         String sgName;
         games_found.forEach((String name, GameStartData g) {
           if (g == gsd) {
@@ -150,6 +160,10 @@ class Croupier {
         assert(sgName != null);
 
         settings_manager.joinGameSyncgroup(sgName, gsd.gameID);
+        players_found[gsd.ownerID] = null;
+        if (!game.gameArrangeData.needsArrangement) {
+          settings_manager.setPlayerNumber(gsd.gameID, 0);
+        }
         break;
       case CroupierState.ArrangePlayers:
         // Note that if we were arranging players, we might have been advertising.
@@ -174,8 +188,8 @@ class Croupier {
     // A simplified way of clearing out the games and players found.
     // They will need to be re-discovered in the future.
     if (nextState == CroupierState.Welcome) {
-      games_found = new Map<String, GameStartData>();
-      players_found = new Map<int, int>();
+      games_found.clear();
+      players_found.clear();
     } else if (nextState == CroupierState.JoinGame) {
       // Start scanning for games since that's what's next for you.
       _scanFuture =

@@ -69,11 +69,26 @@ class GameStartData {
   }
 }
 
+// GameArrangeData details what a game needs before beginning.
+class GameArrangeData {
+  final bool needsArrangement;
+  final Set<int> requiredPlayerNumbers;
+  GameArrangeData(this.needsArrangement, this.requiredPlayerNumbers);
+  bool canStart(Iterable<int> actualPlayerNumbers) {
+    // None of the required player numbers can be missing from the actual ones.
+    return !needsArrangement ||
+        !requiredPlayerNumbers.any((int i) {
+          return !actualPlayerNumbers.contains(i);
+        });
+  }
+}
+
 typedef void NoArgCb();
 
 /// A game consists of multiple decks and tracks a single deck of cards.
 /// It also handles events; when cards are dragged to and from decks.
 abstract class Game {
+  GameArrangeData get gameArrangeData;
   final GameType gameType;
   String get gameTypeName; // abstract
   final bool isCreator;
@@ -97,8 +112,7 @@ abstract class Game {
   NoArgCb updateCallback; // Used to inform components of when a change has occurred. This is especially important when something non-UI related changes what should be drawn.
 
   // A super constructor, don't call this unless you're a subclass.
-  Game.create(
-      this.gameType, this.gamelog, this._playerNumber, int numCollections,
+  Game.create(this.gameType, this.gamelog, int numCollections,
       {int gameID, bool isCreator})
       : gameID = gameID ?? new math.Random().nextInt(0x00FFFFFF),
         isCreator = isCreator ?? false {

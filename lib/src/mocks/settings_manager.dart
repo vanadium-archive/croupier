@@ -64,4 +64,8 @@ class SettingsManager {
   Future joinGameSyncgroup(String sgName, int gameID) {
     return new Future(() => null);
   }
+
+  Future setPlayerNumber(int gameID, int playerNumber) async {
+    return new Future(() => null);
+  }
 }

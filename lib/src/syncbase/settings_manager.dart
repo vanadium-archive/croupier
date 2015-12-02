@@ -181,6 +181,9 @@ class SettingsManager {
           case "settings_sg":
             // Join this player's settings syncgroup.
             _cc.joinSyncgroup(value);
+
+            // Also, signal that this player has been found.
+            this.updatePlayerFoundCallback(playerID, null);
             break;
           default:
             print("Unexpected key: ${key} with value ${value}");
@@ -208,10 +211,7 @@ class SettingsManager {
     int id = await _getUserID();
     await gameTable.row("${gameID}/owner").put(UTF8.encode("${id}"));
     await gameTable
-        .row("${gameID}/players/${id}/player_number")
-        .put(UTF8.encode("0"));
-    await gameTable
-        .row("${gameID}/players/{$id}/settings_sg")
+        .row("${gameID}/players/${id}/settings_sg")
         .put(UTF8.encode(await _mySettingsSyncgroupName()));
 
     logic_game.GameStartData gsd =
@@ -227,8 +227,8 @@ class SettingsManager {
 
   Future joinGameSyncgroup(String sgName, int gameID) async {
     print("Now joining game syncgroup at ${sgName} and ${gameID}");
-    sc.SyncbaseSyncgroup sg = await _cc.joinSyncgroup(sgName);
 
+    await _cc.joinSyncgroup(sgName);
     sc.SyncbaseDatabase db = await _cc.createDatabase();
     sc.SyncbaseTable gameTable = await _cc.createTable(db, util.tableNameGames);
 
@@ -237,18 +237,20 @@ class SettingsManager {
         util.syncgamePrefix(gameID) + "/players", UTF8.encode("now"));
     _startWatchPlayers(watchStream); // Don't wait for this future.
 
-    // Also write yourself to the table as player |NUM_PLAYERS - 1|
-    Map<String, sc.SyncgroupMemberInfo> fellowPlayers = await sg.getMembers();
-    print("I have found! ${fellowPlayers} ${fellowPlayers.length}");
+    int id = await _getUserID();
+    await gameTable
+        .row("${gameID}/players/${id}/settings_sg")
+        .put(UTF8.encode(await _mySettingsSyncgroupName()));
+  }
+
+  Future setPlayerNumber(int gameID, int playerNumber) async {
+    sc.SyncbaseDatabase db = await _cc.createDatabase();
+    sc.SyncbaseTable gameTable = await _cc.createTable(db, util.tableNameGames);
 
     int id = await _getUserID();
-    int playerNumber = fellowPlayers.length - 1;
     await gameTable
         .row("${gameID}/players/${id}/player_number")
         .put(UTF8.encode("${playerNumber}"));
-    await gameTable
-        .row("${gameID}/players/{$id}/settings_sg")
-        .put(UTF8.encode(await _mySettingsSyncgroupName()));
   }
 
   // When starting the settings manager, there may be settings already in the
