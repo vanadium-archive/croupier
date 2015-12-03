@@ -168,6 +168,7 @@ func AnimateTableCardTake(cards []*card.Card, p *player.Player, quit chan bool, 
 
 // Animation for the 'play' action, when app is in the table view
 func AnimateTableCardPlay(animCard *card.Card, playerInt int, quit chan bool, u *uistate.UIState) {
+	BringNodeToFront(animCard.GetNode(), u)
 	destination := u.DropTargets[playerInt]
 	destinationPos := destination.GetCurrent()
 	destinationDim := destination.GetDimensions()

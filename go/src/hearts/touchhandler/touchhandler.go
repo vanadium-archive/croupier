@@ -150,7 +150,8 @@ func beginClickDiscovery(t touch.Event, u *uistate.UIState) {
 	}
 }
 
-//&& u.PlayerData[u.CurPlayerIndex] == 0
+// If players cannot sit in more than one spot, replace the line 5 ahead of this one with the following line:
+// if len(buttonList) > 0 && u.PlayerData[u.CurPlayerIndex] == 0 {
 
 func beginClickArrange(t touch.Event, u *uistate.UIState) {
 	buttonList := findClickedButton(t, u)

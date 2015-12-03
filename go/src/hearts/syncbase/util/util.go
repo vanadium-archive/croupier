@@ -10,14 +10,14 @@ const (
 	// switch back to my mountpoint with the following code:
 	MountPoint = "users/emshack@google.com"
 	//MountPoint        = "/192.168.86.254:8101"
-	UserID            = 12355
+	UserID            = 23876
 	UserColor         = 16777215
 	UserAvatar        = "player0.jpeg"
-	UserName          = "Em"
+	UserName          = "Ewen"
 	SBName            = "syncbase"
 	AppName           = "app"
 	DbName            = "db"
 	LogName           = "games"
 	SettingsName      = "table_settings"
-	CroupierInterface = "CroupierSettingsAndGameEmily"
+	CroupierInterface = "CroupierSettingsAndGame"
 )

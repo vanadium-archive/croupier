@@ -154,8 +154,14 @@ func onPass(value string, u *uistate.UIState) {
 		u.AnimChans = append(u.AnimChans, quit)
 		reposition.AnimateTableCardPass(curCards, receivingPlayer, quit, u)
 		reposition.SetTableDropColors(u)
-	} else if u.CurView == uistate.Take && u.CurPlayerIndex == receivingPlayer {
-		view.LoadTakeView(u)
+	} else if u.CurView == uistate.Take {
+		if u.SequentialPhases {
+			if u.CurTable.AllDonePassing() {
+				view.LoadTakeView(u)
+			}
+		} else if u.CurPlayerIndex == receivingPlayer {
+			view.LoadTakeView(u)
+		}
 	} else if u.CurView == uistate.Play && u.CurTable.AllDonePassing() {
 		view.LoadPlayView(u)
 	}
@@ -170,7 +176,19 @@ func onTake(value string, u *uistate.UIState) {
 		p.AddToHand(c)
 	}
 	u.CurTable.GetPlayers()[playerInt].SetDoneTaking(true)
-	if p.HasTwoOfClubs() {
+	if u.SequentialPhases {
+		if u.CurTable.AllDoneTaking() {
+			for _, player := range u.CurTable.GetPlayers() {
+				if player.HasTwoOfClubs() {
+					u.CurTable.SetFirstPlayer(player.GetPlayerIndex())
+				}
+			}
+			// UI
+			if u.CurView == uistate.Play {
+				view.LoadPlayView(u)
+			}
+		}
+	} else if p.HasTwoOfClubs() {
 		u.CurTable.SetFirstPlayer(p.GetPlayerIndex())
 		// UI
 		if u.CurView == uistate.Play && u.CurPlayerIndex != playerInt {

@@ -37,7 +37,7 @@ func makeTable(p []*player.Player) *Table {
 		heartsBroken: false,
 		firstTrick:   true,
 		winCondition: 100,
-		dir:          direction.None,
+		dir:          direction.Right,
 	}
 }
 
@@ -193,10 +193,20 @@ func (t *Table) AllDoneDealing() bool {
 	return true
 }
 
-// Returns true if all players have taken the cards passed to them
+// Returns true if all players have passed cards
 func (t *Table) AllDonePassing() bool {
 	for _, p := range t.players {
 		if !p.GetDonePassing() {
+			return false
+		}
+	}
+	return true
+}
+
+// Returns true if all players have taken the cards passed to them
+func (t *Table) AllDoneTaking() bool {
+	for _, p := range t.players {
+		if !p.GetDoneTaking() {
 			return false
 		}
 	}

@@ -72,65 +72,67 @@ type UIState struct {
 	NumPlayers  int
 	NumSuits    int
 	// the following variables are used for sizing and positioning specifications
-	CardSize       float32
-	CardScaler     float32
-	TopPadding     float32
-	BottomPadding  float32
-	WindowSize     *coords.Vec // windowSize is in Pt
-	CardDim        *coords.Vec
-	TableCardDim   *coords.Vec
-	PlayerIconDim  *coords.Vec
-	PixelsPerPt    float32
-	Overlap        *coords.Vec
-	Padding        float32
-	CurView        View                     // the screen currently being shown to the user
-	CurTable       *table.Table             // the table of the current game
-	Done           bool                     // true if the app has been quit
-	Texs           map[string]sprite.SubTex // map of all loaded images
-	CurPlayerIndex int                      // the player number of this player
-	Ctx            *context.T
-	Service        syncbase.Service
-	Debug          bool                           // true if debugging, adds extra functionality to switch between players
-	Shutdown       func()                         // used to shut down a v23.Init()
-	GameID         int                            // used to differentiate between concurrent games
-	IsOwner        bool                           // true if this player is the game creator
-	UserData       map[int]map[string]interface{} // user data indexed by user ID
-	PlayerData     map[int]int                    // key = player number, value = user id
-	AnimChans      []chan bool                    // keeps track of all 'quit' channels in animations so their goroutines can be stopped
-	SGChan         chan bool                      // pass in a bool to stop advertising the syncgroup
-	ScanChan       chan bool                      // pass in a bool to stop scanning for syncgroups
+	CardSize         float32
+	CardScaler       float32
+	TopPadding       float32
+	BottomPadding    float32
+	WindowSize       *coords.Vec // windowSize is in Pt
+	CardDim          *coords.Vec
+	TableCardDim     *coords.Vec
+	PlayerIconDim    *coords.Vec
+	PixelsPerPt      float32
+	Overlap          *coords.Vec
+	Padding          float32
+	CurView          View                     // the screen currently being shown to the user
+	CurTable         *table.Table             // the table of the current game
+	Done             bool                     // true if the app has been quit
+	Texs             map[string]sprite.SubTex // map of all loaded images
+	CurPlayerIndex   int                      // the player number of this player
+	Ctx              *context.T
+	Service          syncbase.Service
+	Debug            bool                           // true if debugging, adds extra functionality to switch between players
+	SequentialPhases bool                           // true if trying to match Croupier Flutter Pass -> Take -> Play phase system
+	Shutdown         func()                         // used to shut down a v23.Init()
+	GameID           int                            // used to differentiate between concurrent games
+	IsOwner          bool                           // true if this player is the game creator
+	UserData         map[int]map[string]interface{} // user data indexed by user ID
+	PlayerData       map[int]int                    // key = player number, value = user id
+	AnimChans        []chan bool                    // keeps track of all 'quit' channels in animations so their goroutines can be stopped
+	SGChan           chan bool                      // pass in a bool to stop advertising the syncgroup
+	ScanChan         chan bool                      // pass in a bool to stop scanning for syncgroups
 }
 
 func MakeUIState() *UIState {
 	return &UIState{
-		StartTime:      time.Now(),
-		Cards:          make([]*card.Card, 0),
-		TableCards:     make([]*card.Card, 0),
-		BackgroundImgs: make([]*staticimg.StaticImg, 0),
-		EmptySuitImgs:  make([]*staticimg.StaticImg, 0),
-		DropTargets:    make([]*staticimg.StaticImg, 0),
-		Buttons:        make([]*staticimg.StaticImg, 0),
-		Other:          make([]*staticimg.StaticImg, 0),
-		ModText:        make([]*staticimg.StaticImg, 0),
-		LastMouseXY:    coords.MakeVec(-1, -1),
-		NumPlayers:     numPlayers,
-		NumSuits:       numSuits,
-		CardSize:       cardSize,
-		CardScaler:     cardScaler,
-		TopPadding:     topPadding,
-		BottomPadding:  bottomPadding,
-		WindowSize:     coords.MakeVec(-1, -1),
-		CardDim:        coords.MakeVec(cardSize, cardSize),
-		TableCardDim:   coords.MakeVec(cardSize*cardScaler, cardSize*cardScaler),
-		PlayerIconDim:  coords.MakeVec(2*cardSize/3, 2*cardSize/3),
-		Overlap:        coords.MakeVec(3*cardSize*cardScaler/4, 3*cardSize*cardScaler/4),
-		Padding:        float32(5),
-		CurView:        None,
-		Done:           false,
-		Debug:          true,
-		UserData:       make(map[int]map[string]interface{}),
-		PlayerData:     make(map[int]int),
-		AnimChans:      make([]chan bool, 0),
+		StartTime:        time.Now(),
+		Cards:            make([]*card.Card, 0),
+		TableCards:       make([]*card.Card, 0),
+		BackgroundImgs:   make([]*staticimg.StaticImg, 0),
+		EmptySuitImgs:    make([]*staticimg.StaticImg, 0),
+		DropTargets:      make([]*staticimg.StaticImg, 0),
+		Buttons:          make([]*staticimg.StaticImg, 0),
+		Other:            make([]*staticimg.StaticImg, 0),
+		ModText:          make([]*staticimg.StaticImg, 0),
+		LastMouseXY:      coords.MakeVec(-1, -1),
+		NumPlayers:       numPlayers,
+		NumSuits:         numSuits,
+		CardSize:         cardSize,
+		CardScaler:       cardScaler,
+		TopPadding:       topPadding,
+		BottomPadding:    bottomPadding,
+		WindowSize:       coords.MakeVec(-1, -1),
+		CardDim:          coords.MakeVec(cardSize, cardSize),
+		TableCardDim:     coords.MakeVec(cardSize*cardScaler, cardSize*cardScaler),
+		PlayerIconDim:    coords.MakeVec(2*cardSize/3, 2*cardSize/3),
+		Overlap:          coords.MakeVec(3*cardSize*cardScaler/4, 3*cardSize*cardScaler/4),
+		Padding:          float32(5),
+		CurView:          None,
+		Done:             false,
+		Debug:            true,
+		SequentialPhases: true,
+		UserData:         make(map[int]map[string]interface{}),
+		PlayerData:       make(map[int]int),
+		AnimChans:        make([]chan bool, 0),
 	}
 }
 

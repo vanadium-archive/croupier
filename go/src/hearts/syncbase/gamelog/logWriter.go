@@ -8,6 +8,7 @@
 package gamelog
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
@@ -101,8 +102,8 @@ func LogSettingsName(name string, u *uistate.UIState) bool {
 
 // Note: The syntax replicates the way Croupier in Dart/Flutter writes keys.
 func getKey(playerId int, u *uistate.UIState) string {
-	t := int(time.Now().UnixNano() / 1000000)
-	key := strconv.Itoa(u.GameID) + "/log/" + strconv.Itoa(t) + Dash + strconv.Itoa(playerId)
+	t := time.Now().UnixNano() / 1000000
+	key := fmt.Sprintf("%d/log/%d%s%d", u.GameID, t, Dash, playerId)
 	return key
 }
 

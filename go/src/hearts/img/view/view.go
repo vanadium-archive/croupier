@@ -36,7 +36,7 @@ func LoadArrangeView(u *uistate.UIState) {
 	watchImg := u.Texs["WatchSpot.png"]
 	arrangeBlockLength := u.WindowSize.X - 4*u.Padding - u.CardDim.X
 	if u.WindowSize.Y < u.WindowSize.X {
-		arrangeBlockLength = u.WindowSize.Y - 4*u.Padding - u.CardDim.Y
+		arrangeBlockLength = u.WindowSize.Y - u.CardDim.Y
 	}
 	arrangeDim := coords.MakeVec(arrangeBlockLength/3-4*u.Padding, arrangeBlockLength/3-4*u.Padding)
 	// player 0 seat
@@ -96,7 +96,7 @@ func LoadTableView(u *uistate.UIState) {
 	resetAnims(u)
 	resetImgs(u)
 	resetScene(u)
-	scaler := float32(4)
+	scaler := float32(6)
 	maxWidth := 4 * u.TableCardDim.X
 	// adding four drop targets for trick
 	dropTargetImage := u.Texs["trickDrop.png"]
@@ -185,7 +185,7 @@ func LoadTableView(u *uistate.UIState) {
 			texture.MakeImgWithoutAlt(playerIconImage, playerIconPos, u.PlayerIconDim, u))
 	}
 	// player 0's name
-	center := coords.MakeVec(playerIconX+u.PlayerIconDim.X/2, playerIconY-30)
+	center := coords.MakeVec(playerIconX+u.PlayerIconDim.X/2, playerIconY-15)
 	name := uistate.GetName(0, u)
 	textImgs := texture.MakeStringImgCenterAlign(name, "", "", true, center, scaler, maxWidth, u)
 	for _, img := range textImgs {
@@ -213,7 +213,7 @@ func LoadTableView(u *uistate.UIState) {
 			texture.MakeImgWithoutAlt(playerIconImage, playerIconPos, u.PlayerIconDim, u))
 	}
 	// player 1's name
-	start := coords.MakeVec(playerIconX, playerIconY-30)
+	start := coords.MakeVec(playerIconX, playerIconY-15)
 	name = uistate.GetName(1, u)
 	textImgs = texture.MakeStringImgLeftAlign(name, "", "", true, start, scaler, maxWidth, u)
 	for _, img := range textImgs {
@@ -237,7 +237,7 @@ func LoadTableView(u *uistate.UIState) {
 			texture.MakeImgWithoutAlt(playerIconImage, playerIconPos, u.PlayerIconDim, u))
 	}
 	// player 2's name
-	center = coords.MakeVec(playerIconX+u.PlayerIconDim.X/2, playerIconY+u.PlayerIconDim.Y+5)
+	center = coords.MakeVec(playerIconX+u.PlayerIconDim.X/2, playerIconY+u.PlayerIconDim.Y)
 	name = uistate.GetName(2, u)
 	textImgs = texture.MakeStringImgCenterAlign(name, "", "", true, center, scaler, maxWidth, u)
 	for _, img := range textImgs {
@@ -264,7 +264,7 @@ func LoadTableView(u *uistate.UIState) {
 			texture.MakeImgWithoutAlt(playerIconImage, playerIconPos, u.PlayerIconDim, u))
 	}
 	// player 3's name
-	end := coords.MakeVec(playerIconX+u.PlayerIconDim.X, playerIconY-30)
+	end := coords.MakeVec(playerIconX+u.PlayerIconDim.X, playerIconY-15)
 	name = uistate.GetName(3, u)
 	textImgs = texture.MakeStringImgRightAlign(name, "", "", true, end, scaler, maxWidth, u)
 	for _, img := range textImgs {
@@ -387,8 +387,14 @@ func LoadPlayView(u *uistate.UIState) {
 		addDebugBar(u)
 	}
 	// animate in play slot if relevant
-	if u.CurTable.WhoseTurn() == u.CurPlayerIndex && u.CurTable.AllDonePassing() {
-		reposition.AnimateInPlay(u)
+	if u.CurTable.WhoseTurn() == u.CurPlayerIndex {
+		if u.SequentialPhases {
+			if u.CurTable.AllDoneTaking() {
+				reposition.AnimateInPlay(u)
+			}
+		} else if u.CurTable.AllDonePassing() {
+			reposition.AnimateInPlay(u)
+		}
 	}
 }
 
@@ -452,11 +458,11 @@ func addArrangePlayer(player int, arrangeDim *coords.Vec, arrangeBlockLength flo
 		name := uistate.GetName(player, u)
 		var center *coords.Vec
 		if player == 2 {
-			center = coords.MakeVec(sitPos.X+arrangeDim.X/2, sitPos.Y-u.Padding-20)
+			center = coords.MakeVec(sitPos.X+arrangeDim.X/2, sitPos.Y-u.Padding-10)
 		} else {
-			center = coords.MakeVec(sitPos.X+arrangeDim.X/2, sitPos.Y+arrangeDim.Y+u.Padding)
+			center = coords.MakeVec(sitPos.X+arrangeDim.X/2, sitPos.Y+arrangeDim.Y)
 		}
-		scaler := float32(4)
+		scaler := float32(6)
 		maxWidth := arrangeDim.X
 		textImgs := texture.MakeStringImgCenterAlign(name, "", "", true, center, scaler, maxWidth, u)
 		for _, text := range textImgs {
@@ -558,7 +564,7 @@ func addSplitViewPlayerIcons(beforeSplitAnimation bool, u *uistate.UIState) {
 func getTurnText(u *uistate.UIState) string {
 	var turnText string
 	playerTurnNum := u.CurTable.WhoseTurn()
-	if playerTurnNum == -1 || !u.CurTable.AllDonePassing() {
+	if playerTurnNum == -1 || !u.CurTable.AllDonePassing() || (u.SequentialPhases && !u.CurTable.AllDoneTaking()) {
 		turnText = "Waiting for other players"
 	} else if playerTurnNum == u.CurPlayerIndex {
 		turnText = "Your turn"
@@ -653,7 +659,12 @@ func addGrayPassBar(u *uistate.UIState) {
 
 func addGrayTakeBar(u *uistate.UIState) {
 	passedCards := u.CurTable.GetPlayers()[u.CurPlayerIndex].GetPassedTo()
-	display := len(passedCards) == 0
+	var display bool
+	if u.SequentialPhases {
+		display = !u.CurTable.AllDonePassing()
+	} else {
+		display = len(passedCards) == 0
+	}
 	// adding gray bar
 	grayBarImg := u.Texs["RoundedRectangle-Gray.png"]
 	grayBarAlt := u.Texs["RoundedRectangle-LBlue.png"]
@@ -698,7 +709,14 @@ func addGrayTakeBar(u *uistate.UIState) {
 }
 
 func moveTakeCards(u *uistate.UIState) {
-	passedCards := u.CurTable.GetPlayers()[u.CurPlayerIndex].GetPassedTo()
+	passedCards := make([]*card.Card, 0)
+	if u.SequentialPhases {
+		if u.CurTable.AllDonePassing() {
+			passedCards = append(passedCards, u.CurTable.GetPlayers()[u.CurPlayerIndex].GetPassedTo()...)
+		}
+	} else {
+		passedCards = append(passedCards, u.CurTable.GetPlayers()[u.CurPlayerIndex].GetPassedTo()...)
+	}
 	if len(passedCards) > 0 {
 		topOfHand := u.WindowSize.Y - 5*(u.CardDim.Y+u.Padding) - (2 * u.Padding / 5) - u.BottomPadding
 		numCards := float32(3)
@@ -724,7 +742,7 @@ func SetNumTricksTable(u *uistate.UIState) {
 	}
 	u.Other = make([]*staticimg.StaticImg, 0)
 	// set new num tricks
-	scaler := float32(4)
+	scaler := float32(7)
 	for i, d := range u.DropTargets {
 		dropTargetDimensions := d.GetDimensions()
 		dropTargetPos := d.GetCurrent()
@@ -738,16 +756,16 @@ func SetNumTricksTable(u *uistate.UIState) {
 			var textImgs []*staticimg.StaticImg
 			switch i {
 			case 0:
-				tCenter := coords.MakeVec(dropTargetPos.X+dropTargetDimensions.X/2, dropTargetPos.Y+dropTargetDimensions.Y+u.Padding)
+				tCenter := coords.MakeVec(dropTargetPos.X+dropTargetDimensions.X/2, dropTargetPos.Y+dropTargetDimensions.Y)
 				textImgs = texture.MakeStringImgCenterAlign(strconv.Itoa(numTricks)+trickText, "", "", true, tCenter, scaler, tMax, u)
 			case 1:
-				tRight := coords.MakeVec(dropTargetPos.X-u.Padding, dropTargetPos.Y+dropTargetDimensions.Y/2-10)
+				tRight := coords.MakeVec(dropTargetPos.X-2, dropTargetPos.Y+dropTargetDimensions.Y/2-5)
 				textImgs = texture.MakeStringImgRightAlign(strconv.Itoa(numTricks)+trickText, "", "", true, tRight, scaler, tMax, u)
 			case 2:
-				tCenter := coords.MakeVec(dropTargetPos.X+dropTargetDimensions.X/2, dropTargetPos.Y-u.Padding-20)
+				tCenter := coords.MakeVec(dropTargetPos.X+dropTargetDimensions.X/2, dropTargetPos.Y-12)
 				textImgs = texture.MakeStringImgCenterAlign(strconv.Itoa(numTricks)+trickText, "", "", true, tCenter, scaler, tMax, u)
 			case 3:
-				tLeft := coords.MakeVec(dropTargetPos.X+dropTargetDimensions.X+u.Padding, dropTargetPos.Y+dropTargetDimensions.Y/2-10)
+				tLeft := coords.MakeVec(dropTargetPos.X+dropTargetDimensions.X+2, dropTargetPos.Y+dropTargetDimensions.Y/2-5)
 				textImgs = texture.MakeStringImgLeftAlign(strconv.Itoa(numTricks)+trickText, "", "", true, tLeft, scaler, tMax, u)
 			}
 			for _, text := range textImgs {
@@ -785,6 +803,7 @@ func SetNumTricksHand(u *uistate.UIState) {
 		}
 	}
 	if u.CurView == uistate.Split {
+		topOfHand := u.WindowSize.Y - 5*(u.CardDim.Y+u.Padding) - (2 * u.Padding / 5) - u.BottomPadding
 		for i, d := range u.DropTargets {
 			dropTargetDimensions := d.GetDimensions()
 			dropTargetPos := d.GetCurrent()
@@ -794,20 +813,30 @@ func SetNumTricksHand(u *uistate.UIState) {
 				if numTricks == 1 {
 					trickText = " trick"
 				}
-				tMax := dropTargetDimensions.Y
+				tMax := dropTargetDimensions.Y - u.Padding
 				var textImgs []*staticimg.StaticImg
 				switch i {
 				case 0:
-					tCenter := coords.MakeVec(dropTargetPos.X+dropTargetDimensions.X/2, dropTargetPos.Y+dropTargetDimensions.Y+u.Padding)
-					textImgs = texture.MakeStringImgCenterAlign(strconv.Itoa(numTricks)+trickText, "", "", true, tCenter, scaler, tMax, u)
+					if topOfHand < u.TopPadding+4*u.CardDim.Y {
+						tLeft := coords.MakeVec(dropTargetPos.X+dropTargetDimensions.X+2, dropTargetPos.Y+dropTargetDimensions.Y-15)
+						textImgs = texture.MakeStringImgLeftAlign(strconv.Itoa(numTricks)+trickText, "", "", true, tLeft, scaler, tMax, u)
+					} else {
+						tCenter := coords.MakeVec(dropTargetPos.X+dropTargetDimensions.X/2, dropTargetPos.Y+dropTargetDimensions.Y+u.Padding)
+						textImgs = texture.MakeStringImgCenterAlign(strconv.Itoa(numTricks)+trickText, "", "", true, tCenter, scaler, tMax, u)
+					}
 				case 1:
-					tRight := coords.MakeVec(dropTargetPos.X-u.Padding, dropTargetPos.Y+dropTargetDimensions.Y/2-10)
+					tRight := coords.MakeVec(dropTargetPos.X-2, dropTargetPos.Y+dropTargetDimensions.Y/2-5)
 					textImgs = texture.MakeStringImgRightAlign(strconv.Itoa(numTricks)+trickText, "", "", true, tRight, scaler, tMax, u)
 				case 2:
-					tCenter := coords.MakeVec(dropTargetPos.X+dropTargetDimensions.X/2, dropTargetPos.Y-u.Padding-20)
-					textImgs = texture.MakeStringImgCenterAlign(strconv.Itoa(numTricks)+trickText, "", "", true, tCenter, scaler, tMax, u)
+					if topOfHand < u.TopPadding+4*u.CardDim.Y {
+						tLeft := coords.MakeVec(dropTargetPos.X+dropTargetDimensions.X+2, dropTargetPos.Y)
+						textImgs = texture.MakeStringImgLeftAlign(strconv.Itoa(numTricks)+trickText, "", "", true, tLeft, scaler, tMax, u)
+					} else {
+						tCenter := coords.MakeVec(dropTargetPos.X+dropTargetDimensions.X/2, dropTargetPos.Y-u.Padding-10)
+						textImgs = texture.MakeStringImgCenterAlign(strconv.Itoa(numTricks)+trickText, "", "", true, tCenter, scaler, tMax, u)
+					}
 				case 3:
-					tLeft := coords.MakeVec(dropTargetPos.X+dropTargetDimensions.X+u.Padding, dropTargetPos.Y+dropTargetDimensions.Y/2-10)
+					tLeft := coords.MakeVec(dropTargetPos.X+dropTargetDimensions.X+2, dropTargetPos.Y+dropTargetDimensions.Y/2-5)
 					textImgs = texture.MakeStringImgLeftAlign(strconv.Itoa(numTricks)+trickText, "", "", true, tLeft, scaler, tMax, u)
 				}
 				for _, text := range textImgs {
