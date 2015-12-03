@@ -151,13 +151,12 @@ class ZCardState extends widgets.State<ZCard> {
   List<
       Point> _pointQueue; // at least 1 longer than the current animation index.
   int _animationIndex;
-  bool _cardUpdateScheduled = false;
 
   @override
   void initState() {
     super.initState();
     _initialize();
-    scheduleUpdatePosition();
+    _updatePosition();
   }
 
   void _initialize() {
@@ -178,13 +177,6 @@ class ZCardState extends widgets.State<ZCard> {
     });
   }
 
-  void scheduleUpdatePosition() {
-    if (!_cardUpdateScheduled) {
-      _cardUpdateScheduled = true;
-      scheduleMicrotask(_updatePosition);
-    }
-  }
-
   Duration get animationDuration {
     switch (config.animationType) {
       case CardAnimationType.NONE:
@@ -200,8 +192,6 @@ class ZCardState extends widgets.State<ZCard> {
     }
   }
 
-  // These microtasks are being scheduled on every build change.
-  // Theoretically, this is too often, but to be safe, it is also good to do it.
   @override
   void didUpdateConfig(ZCard oldConfig) {
     if (config.key != oldConfig.key) {
@@ -215,13 +205,11 @@ class ZCardState extends widgets.State<ZCard> {
         });
       }
     }
-    scheduleUpdatePosition();
+    _updatePosition();
   }
 
   // A callback that sets up the animation from point a to point b.
   void _updatePosition() {
-    _cardUpdateScheduled =
-        false; // allow the next attempt to schedule _updatePosition to succeed.
     if (config.animationType == CardAnimationType.NONE ||
         _pointQueue.length == 1) {
       Point endingLocation = config.endingPosition;
