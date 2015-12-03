@@ -64,6 +64,7 @@ type UIState struct {
 	DropTargets    []*staticimg.StaticImg
 	Buttons        []*staticimg.StaticImg
 	Other          []*staticimg.StaticImg
+	ModText        []*staticimg.StaticImg
 	CurCard        *card.Card           // the card that is currently clicked on
 	CurImg         *staticimg.StaticImg // the image that is currently clicked on
 	// lastMouseXY is in Px: divide by pixelsPerPt to get Pt
@@ -110,6 +111,7 @@ func MakeUIState() *UIState {
 		DropTargets:    make([]*staticimg.StaticImg, 0),
 		Buttons:        make([]*staticimg.StaticImg, 0),
 		Other:          make([]*staticimg.StaticImg, 0),
+		ModText:        make([]*staticimg.StaticImg, 0),
 		LastMouseXY:    coords.MakeVec(-1, -1),
 		NumPlayers:     numPlayers,
 		NumSuits:       numSuits,

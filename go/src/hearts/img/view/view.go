@@ -25,6 +25,7 @@ import (
 	"golang.org/x/mobile/exp/sprite"
 )
 
+// Arrange view: For seating players
 func LoadArrangeView(u *uistate.UIState) {
 	u.CurView = uistate.Arrange
 	<-time.After(1 * time.Second)
@@ -32,52 +33,22 @@ func LoadArrangeView(u *uistate.UIState) {
 	resetImgs(u)
 	resetScene(u)
 	addHeader(u)
-	sitImg := u.Texs["SitSpot.png"]
 	watchImg := u.Texs["WatchSpot.png"]
-	arrangeBlockLength := u.WindowSize.X - 4*u.Padding
+	arrangeBlockLength := u.WindowSize.X - 4*u.Padding - u.CardDim.X
 	if u.WindowSize.Y < u.WindowSize.X {
-		arrangeBlockLength = u.WindowSize.Y - 4*u.Padding
+		arrangeBlockLength = u.WindowSize.Y - 4*u.Padding - u.CardDim.Y
 	}
 	arrangeDim := coords.MakeVec(arrangeBlockLength/3-4*u.Padding, arrangeBlockLength/3-4*u.Padding)
-	nilDim := coords.MakeVec(0, 0)
 	// player 0 seat
-	sitPos := coords.MakeVec((u.WindowSize.X-arrangeDim.X)/2, u.WindowSize.Y-arrangeDim.Y-2*u.Padding)
-	if u.PlayerData[0] == 0 {
-		u.Buttons = append(u.Buttons, texture.MakeImgWithoutAlt(sitImg, sitPos, arrangeDim, u))
-	} else {
-		u.Buttons = append(u.Buttons, texture.MakeImgWithoutAlt(sitImg, sitPos, nilDim, u))
-		avatar := uistate.GetAvatar(0, u)
-		u.BackgroundImgs = append(u.BackgroundImgs, texture.MakeImgWithoutAlt(avatar, sitPos, arrangeDim, u))
-	}
+	addArrangePlayer(0, arrangeDim, arrangeBlockLength, u)
 	// player 1 seat
-	sitPos = coords.MakeVec((u.WindowSize.X-arrangeDim.X)/2-arrangeDim.X-2*u.Padding, u.WindowSize.Y-2*arrangeDim.Y-4*u.Padding)
-	if u.PlayerData[1] == 0 {
-		u.Buttons = append(u.Buttons, texture.MakeImgWithoutAlt(sitImg, sitPos, arrangeDim, u))
-	} else {
-		u.Buttons = append(u.Buttons, texture.MakeImgWithoutAlt(sitImg, sitPos, nilDim, u))
-		avatar := uistate.GetAvatar(1, u)
-		u.BackgroundImgs = append(u.BackgroundImgs, texture.MakeImgWithoutAlt(avatar, sitPos, arrangeDim, u))
-	}
+	addArrangePlayer(1, arrangeDim, arrangeBlockLength, u)
 	// player 2 seat
-	sitPos = coords.MakeVec((u.WindowSize.X-arrangeDim.X)/2, u.WindowSize.Y-3*arrangeDim.Y-6*u.Padding)
-	if u.PlayerData[2] == 0 {
-		u.Buttons = append(u.Buttons, texture.MakeImgWithoutAlt(sitImg, sitPos, arrangeDim, u))
-	} else {
-		u.Buttons = append(u.Buttons, texture.MakeImgWithoutAlt(sitImg, sitPos, nilDim, u))
-		avatar := uistate.GetAvatar(2, u)
-		u.BackgroundImgs = append(u.BackgroundImgs, texture.MakeImgWithoutAlt(avatar, sitPos, arrangeDim, u))
-	}
+	addArrangePlayer(2, arrangeDim, arrangeBlockLength, u)
 	// player 3 seat
-	sitPos = coords.MakeVec((u.WindowSize.X-arrangeDim.X)/2+arrangeDim.X+2*u.Padding, u.WindowSize.Y-2*arrangeDim.Y-4*u.Padding)
-	if u.PlayerData[3] == 0 {
-		u.Buttons = append(u.Buttons, texture.MakeImgWithoutAlt(sitImg, sitPos, arrangeDim, u))
-	} else {
-		u.Buttons = append(u.Buttons, texture.MakeImgWithoutAlt(sitImg, sitPos, nilDim, u))
-		avatar := uistate.GetAvatar(3, u)
-		u.BackgroundImgs = append(u.BackgroundImgs, texture.MakeImgWithoutAlt(avatar, sitPos, arrangeDim, u))
-	}
+	addArrangePlayer(3, arrangeDim, arrangeBlockLength, u)
 	// table
-	watchPos := coords.MakeVec((u.WindowSize.X-arrangeDim.X)/2, u.WindowSize.Y-2*arrangeDim.Y-4*u.Padding)
+	watchPos := coords.MakeVec((u.WindowSize.X-arrangeDim.X)/2, (u.WindowSize.Y+arrangeBlockLength)/2-2*arrangeDim.Y-4*u.Padding)
 	u.Buttons = append(u.Buttons, texture.MakeImgWithoutAlt(watchImg, watchPos, arrangeDim, u))
 }
 
@@ -199,6 +170,8 @@ func LoadTableView(u *uistate.UIState) {
 		dropCard.Move(dropTargetPos, dropTargetDimensions, u.Eng)
 		u.Cards = append(u.Cards, dropCard)
 	}
+	// number of tricks each player has taken
+	SetNumTricksTable(u)
 	// adding 4 player icons, text, and device icons
 	playerIconImage := uistate.GetAvatar(0, u)
 	playerIconX := (u.WindowSize.X - u.PlayerIconDim.X) / 2
@@ -302,7 +275,7 @@ func LoadTableView(u *uistate.UIState) {
 	deviceIconPos = coords.MakeVec(playerIconPos.X-deviceIconDim.X, playerIconPos.Y+u.PlayerIconDim.Y-deviceIconDim.Y)
 	u.BackgroundImgs = append(u.BackgroundImgs,
 		texture.MakeImgWithoutAlt(deviceIconImage, deviceIconPos, deviceIconDim, u))
-	//adding cards
+	// adding cards
 	for _, p := range u.CurTable.GetPlayers() {
 		// cards in hand
 		hand := p.GetHand()
@@ -409,6 +382,7 @@ func LoadPlayView(u *uistate.UIState) {
 	addPlaySlot(u)
 	addHand(u)
 	addPlayHeader(getTurnText(u), false, u)
+	SetNumTricksHand(u)
 	if u.Debug {
 		addDebugBar(u)
 	}
@@ -425,6 +399,7 @@ func LoadSplitView(reloading bool, u *uistate.UIState) {
 	resetScene(u)
 	addPlayHeader(getTurnText(u), !reloading, u)
 	addSplitViewPlayerIcons(!reloading, u)
+	SetNumTricksHand(u)
 	addHand(u)
 	if u.Debug {
 		addDebugBar(u)
@@ -435,17 +410,59 @@ func LoadSplitView(reloading bool, u *uistate.UIState) {
 	}
 }
 
-// TODO(emshack): When go mobile implements sprite.engine.Unregister, use this instead
 func ChangePlayMessage(message string, u *uistate.UIState) {
 	// remove text and replace with message
-	var emptyTex sprite.SubTex
 	for _, img := range u.Other {
-		u.Eng.SetSubTex(img.GetNode(), emptyTex)
+		u.Scene.RemoveChild(img.GetNode())
 	}
-	u.Eng.SetSubTex(u.Buttons[0].GetNode(), emptyTex)
+	u.Scene.RemoveChild(u.Buttons[0].GetNode())
 	u.Other = make([]*staticimg.StaticImg, 0)
 	u.Buttons = make([]*staticimg.StaticImg, 0)
 	addPlayHeader(message, false, u)
+	for _, img := range u.Other {
+		reposition.BringNodeToFront(img.GetNode(), u)
+	}
+	for _, img := range u.Buttons {
+		reposition.BringNodeToFront(img.GetNode(), u)
+	}
+	for _, img := range u.ModText {
+		reposition.BringNodeToFront(img.GetNode(), u)
+	}
+}
+
+func addArrangePlayer(player int, arrangeDim *coords.Vec, arrangeBlockLength float32, u *uistate.UIState) {
+	sitImg := u.Texs["SitSpot.png"]
+	var sitPos *coords.Vec
+	switch player {
+	case 0:
+		sitPos = coords.MakeVec((u.WindowSize.X-arrangeDim.X)/2, (u.WindowSize.Y+arrangeBlockLength)/2-arrangeDim.Y-2*u.Padding)
+	case 1:
+		sitPos = coords.MakeVec((u.WindowSize.X-arrangeDim.X)/2-arrangeDim.X-2*u.Padding, (u.WindowSize.Y+arrangeBlockLength)/2-2*arrangeDim.Y-4*u.Padding)
+	case 2:
+		sitPos = coords.MakeVec((u.WindowSize.X-arrangeDim.X)/2, (u.WindowSize.Y+arrangeBlockLength)/2-3*arrangeDim.Y-6*u.Padding)
+	case 3:
+		sitPos = coords.MakeVec((u.WindowSize.X-arrangeDim.X)/2+arrangeDim.X+2*u.Padding, (u.WindowSize.Y+arrangeBlockLength)/2-2*arrangeDim.Y-4*u.Padding)
+	}
+	if u.PlayerData[player] == 0 {
+		u.Buttons = append(u.Buttons, texture.MakeImgWithoutAlt(sitImg, sitPos, arrangeDim, u))
+	} else {
+		u.Buttons = append(u.Buttons, texture.MakeImgWithoutAlt(sitImg, sitPos, coords.MakeVec(0, 0), u))
+		avatar := uistate.GetAvatar(player, u)
+		u.BackgroundImgs = append(u.BackgroundImgs, texture.MakeImgWithoutAlt(avatar, sitPos, arrangeDim, u))
+		name := uistate.GetName(player, u)
+		var center *coords.Vec
+		if player == 2 {
+			center = coords.MakeVec(sitPos.X+arrangeDim.X/2, sitPos.Y-u.Padding-20)
+		} else {
+			center = coords.MakeVec(sitPos.X+arrangeDim.X/2, sitPos.Y+arrangeDim.Y+u.Padding)
+		}
+		scaler := float32(4)
+		maxWidth := arrangeDim.X
+		textImgs := texture.MakeStringImgCenterAlign(name, "", "", true, center, scaler, maxWidth, u)
+		for _, text := range textImgs {
+			u.BackgroundImgs = append(u.BackgroundImgs, text)
+		}
+	}
 }
 
 func addSplitViewPlayerIcons(beforeSplitAnimation bool, u *uistate.UIState) {
@@ -700,6 +717,107 @@ func moveTakeCards(u *uistate.UIState) {
 	}
 }
 
+func SetNumTricksTable(u *uistate.UIState) {
+	// remove old num tricks
+	for _, img := range u.Other {
+		u.Scene.RemoveChild(img.GetNode())
+	}
+	u.Other = make([]*staticimg.StaticImg, 0)
+	// set new num tricks
+	scaler := float32(4)
+	for i, d := range u.DropTargets {
+		dropTargetDimensions := d.GetDimensions()
+		dropTargetPos := d.GetCurrent()
+		numTricks := u.CurTable.GetPlayers()[i].GetNumTricks()
+		if numTricks > 0 {
+			trickText := " tricks"
+			if numTricks == 1 {
+				trickText = " trick"
+			}
+			tMax := dropTargetDimensions.Y
+			var textImgs []*staticimg.StaticImg
+			switch i {
+			case 0:
+				tCenter := coords.MakeVec(dropTargetPos.X+dropTargetDimensions.X/2, dropTargetPos.Y+dropTargetDimensions.Y+u.Padding)
+				textImgs = texture.MakeStringImgCenterAlign(strconv.Itoa(numTricks)+trickText, "", "", true, tCenter, scaler, tMax, u)
+			case 1:
+				tRight := coords.MakeVec(dropTargetPos.X-u.Padding, dropTargetPos.Y+dropTargetDimensions.Y/2-10)
+				textImgs = texture.MakeStringImgRightAlign(strconv.Itoa(numTricks)+trickText, "", "", true, tRight, scaler, tMax, u)
+			case 2:
+				tCenter := coords.MakeVec(dropTargetPos.X+dropTargetDimensions.X/2, dropTargetPos.Y-u.Padding-20)
+				textImgs = texture.MakeStringImgCenterAlign(strconv.Itoa(numTricks)+trickText, "", "", true, tCenter, scaler, tMax, u)
+			case 3:
+				tLeft := coords.MakeVec(dropTargetPos.X+dropTargetDimensions.X+u.Padding, dropTargetPos.Y+dropTargetDimensions.Y/2-10)
+				textImgs = texture.MakeStringImgLeftAlign(strconv.Itoa(numTricks)+trickText, "", "", true, tLeft, scaler, tMax, u)
+			}
+			for _, text := range textImgs {
+				u.Other = append(u.Other, text)
+			}
+		}
+	}
+}
+
+func SetNumTricksHand(u *uistate.UIState) {
+	// remove old num tricks
+	for _, img := range u.ModText {
+		u.Scene.RemoveChild(img.GetNode())
+	}
+	u.ModText = make([]*staticimg.StaticImg, 0)
+	// set new num tricks
+	b := u.Buttons[0]
+	center := coords.MakeVec(u.Padding+b.GetDimensions().X/2, b.GetCurrent().Y-3*u.Padding)
+	scaler := float32(4)
+	max := b.GetDimensions().Y
+	numTricks := u.CurTable.GetPlayers()[u.CurPlayerIndex].GetNumTricks()
+	if numTricks > 0 {
+		trickText := "tricks"
+		if numTricks == 1 {
+			trickText = "trick"
+		}
+		numImgs := texture.MakeStringImgCenterAlign(strconv.Itoa(numTricks), "DBlue", "DBlue", true, center, scaler, max, u)
+		for _, text := range numImgs {
+			u.ModText = append(u.ModText, text)
+		}
+		center = coords.MakeVec(center.X, center.Y+15)
+		textImgs := texture.MakeStringImgCenterAlign(trickText, "DBlue", "DBlue", true, center, scaler, max, u)
+		for _, text := range textImgs {
+			u.ModText = append(u.ModText, text)
+		}
+	}
+	if u.CurView == uistate.Split {
+		for i, d := range u.DropTargets {
+			dropTargetDimensions := d.GetDimensions()
+			dropTargetPos := d.GetCurrent()
+			numTricks := u.CurTable.GetPlayers()[(u.CurPlayerIndex+i)%u.NumPlayers].GetNumTricks()
+			if numTricks > 0 {
+				trickText := " tricks"
+				if numTricks == 1 {
+					trickText = " trick"
+				}
+				tMax := dropTargetDimensions.Y
+				var textImgs []*staticimg.StaticImg
+				switch i {
+				case 0:
+					tCenter := coords.MakeVec(dropTargetPos.X+dropTargetDimensions.X/2, dropTargetPos.Y+dropTargetDimensions.Y+u.Padding)
+					textImgs = texture.MakeStringImgCenterAlign(strconv.Itoa(numTricks)+trickText, "", "", true, tCenter, scaler, tMax, u)
+				case 1:
+					tRight := coords.MakeVec(dropTargetPos.X-u.Padding, dropTargetPos.Y+dropTargetDimensions.Y/2-10)
+					textImgs = texture.MakeStringImgRightAlign(strconv.Itoa(numTricks)+trickText, "", "", true, tRight, scaler, tMax, u)
+				case 2:
+					tCenter := coords.MakeVec(dropTargetPos.X+dropTargetDimensions.X/2, dropTargetPos.Y-u.Padding-20)
+					textImgs = texture.MakeStringImgCenterAlign(strconv.Itoa(numTricks)+trickText, "", "", true, tCenter, scaler, tMax, u)
+				case 3:
+					tLeft := coords.MakeVec(dropTargetPos.X+dropTargetDimensions.X+u.Padding, dropTargetPos.Y+dropTargetDimensions.Y/2-10)
+					textImgs = texture.MakeStringImgLeftAlign(strconv.Itoa(numTricks)+trickText, "", "", true, tLeft, scaler, tMax, u)
+				}
+				for _, text := range textImgs {
+					u.ModText = append(u.ModText, text)
+				}
+			}
+		}
+	}
+}
+
 func addPassDrops(u *uistate.UIState) {
 	// adding blue background banner for drop targets
 	topOfHand := u.WindowSize.Y - 5*(u.CardDim.Y+u.Padding) - (2 * u.Padding / 5) - u.BottomPadding
@@ -914,7 +1032,7 @@ func resetImgs(u *uistate.UIState) {
 	u.DropTargets = make([]*staticimg.StaticImg, 0)
 	u.Buttons = make([]*staticimg.StaticImg, 0)
 	u.Other = make([]*staticimg.StaticImg, 0)
-	u.CurCard = nil
+	u.ModText = make([]*staticimg.StaticImg, 0)
 }
 
 func resetScene(u *uistate.UIState) {

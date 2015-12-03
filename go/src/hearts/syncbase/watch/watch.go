@@ -231,6 +231,7 @@ func onPlay(value string, u *uistate.UIState) {
 			quit := make(chan bool)
 			u.AnimChans = append(u.AnimChans, quit)
 			reposition.AnimateTableCardTakeTrick(trickCards, trickDir, quit, u)
+			view.SetNumTricksTable(u)
 		}
 	} else if u.CurView == uistate.Split {
 		if roundOver {
@@ -267,11 +268,11 @@ func onPlay(value string, u *uistate.UIState) {
 			if u.CurPlayerIndex != recipient {
 				message := uistate.GetName(recipient, u) + "'s trick"
 				view.ChangePlayMessage(message, u)
-				<-time.After(1 * time.Second)
+				<-time.After(2 * time.Second)
 				view.LoadPlayView(u)
 			} else {
 				view.ChangePlayMessage("Your trick", u)
-				<-time.After(1 * time.Second)
+				<-time.After(2 * time.Second)
 				view.LoadPlayView(u)
 			}
 		} else if u.CurPlayerIndex != playerInt {

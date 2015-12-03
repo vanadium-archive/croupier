@@ -7,6 +7,8 @@
 package reposition
 
 import (
+	"time"
+
 	"hearts/img/coords"
 	"hearts/img/direction"
 	"hearts/img/staticimg"
@@ -231,6 +233,12 @@ func AnimateHandCardPlay(ch chan bool, animCard *card.Card, u *uistate.UIState) 
 	for _, o := range u.Other {
 		BringNodeToFront(o.GetNode(), u)
 	}
+	for _, img := range u.Buttons {
+		BringNodeToFront(img.GetNode(), u)
+	}
+	for _, img := range u.ModText {
+		BringNodeToFront(img.GetNode(), u)
+	}
 	imgs := []*staticimg.StaticImg{u.BackgroundImgs[0], u.DropTargets[0]}
 	for _, i := range imgs {
 		dims := i.GetDimensions()
@@ -291,6 +299,16 @@ func AnimateInSplit(u *uistate.UIState) {
 		to := coords.MakeVec(from.X, from.Y+topOfBanner)
 		AnimateImageNoChannel(img, to, img.GetDimensions(), u)
 	}
+	for _, img := range u.ModText {
+		from := img.GetCurrent()
+		var to *coords.Vec
+		if from.Y < 0 {
+			to = coords.MakeVec(from.X, from.Y+topOfBanner)
+		} else {
+			to = coords.MakeVec(from.X, from.Y+topOfBanner-10)
+		}
+		AnimateImageNoChannel(img, to, img.GetDimensions(), u)
+	}
 	for i, img := range bannerImgs {
 		from := img.GetCurrent()
 		to := coords.MakeVec(from.X, from.Y+topOfBanner-10)
@@ -323,6 +341,16 @@ func AnimateOutSplit(ch chan bool, u *uistate.UIState) {
 	for _, img := range tableImgs {
 		from := img.GetCurrent()
 		to := coords.MakeVec(from.X, from.Y-topOfBanner)
+		AnimateImageNoChannel(img, to, img.GetDimensions(), u)
+	}
+	for _, img := range u.ModText {
+		from := img.GetCurrent()
+		var to *coords.Vec
+		if from.Y < topOfBanner {
+			to = coords.MakeVec(from.X, from.Y-topOfBanner)
+		} else {
+			to = coords.MakeVec(from.X, from.Y-topOfBanner+10)
+		}
 		AnimateImageNoChannel(img, to, img.GetDimensions(), u)
 	}
 	for i, img := range bannerImgs {
@@ -359,6 +387,7 @@ func determineDestination(animCard *card.Card, dir direction.Direction, windowSi
 
 // Animation for when a trick is taken, when app is in the table view
 func AnimateTableCardTakeTrick(cards []*card.Card, dir direction.Direction, quit chan bool, u *uistate.UIState) {
+	<-time.After(2 * time.Second)
 	for _, c := range cards {
 		BringNodeToFront(c.GetNode(), u)
 	}
