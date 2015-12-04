@@ -7,7 +7,7 @@
 // the syncgroup and updating the game state and UI display as a result
 // of any changes that come along.
 
-package watch
+package sync
 
 import (
 	"encoding/json"
@@ -17,9 +17,6 @@ import (
 	"hearts/img/uistate"
 	"hearts/img/view"
 	"hearts/logic/card"
-	"hearts/syncbase/client"
-	"hearts/syncbase/gamelog"
-	"hearts/syncbase/util"
 	"strconv"
 	"strings"
 	"time"
@@ -27,7 +24,7 @@ import (
 )
 
 func UpdateSettings(u *uistate.UIState) {
-	stream, err := client.WatchData(util.SettingsName, "users", u)
+	stream, err := WatchData(SettingsName, "users", u)
 	if err != nil {
 		fmt.Println("WatchData error:", err)
 	}
@@ -47,15 +44,34 @@ func UpdateSettings(u *uistate.UIState) {
 				key := c.Row
 				userID, _ := strconv.Atoi(strings.Split(key, "/")[1])
 				u.UserData[userID] = valueMap
+				for _, v := range u.PlayerData {
+					if v == userID {
+						switch u.CurView {
+						case uistate.Arrange:
+							view.LoadArrangeView(u)
+						case uistate.Table:
+							view.LoadTableView(u)
+						case uistate.Pass:
+							view.LoadPassView(u)
+						case uistate.Take:
+							view.LoadTakeView(u)
+						case uistate.Play:
+							view.LoadPlayView(u)
+						case uistate.Split:
+							view.LoadSplitView(true, u)
+						}
+					}
+				}
 			} else {
 				fmt.Println("Unexpected ChangeType: ", c.ChangeType)
 			}
 		}
 	}
-}
+} 
 
 func UpdateGame(u *uistate.UIState) {
-	stream, err := client.WatchData(util.LogName, "", u)
+	stream, err := WatchData(LogName, fmt.Sprintf("%d", u.GameID), u)
+	fmt.Println("STARTING WATCH FOR GAME", u.GameID)
 	if err != nil {
 		fmt.Println("WatchData error:", err)
 	}
@@ -69,21 +85,23 @@ func UpdateGame(u *uistate.UIState) {
 					fmt.Println("Value error:", err)
 				}
 				valueStr := string(value)
-				fmt.Println(valueStr)
+				fmt.Println(key, valueStr)
 				keyType := strings.Split(key, "/")[1]
+				gameID := strings.Split(key, "/")[0]
+				fmt.Println("GAME ID:", gameID)
 				switch keyType {
 				case "log":
 					updateType := strings.Split(valueStr, "|")[0]
 					switch updateType {
-					case gamelog.Deal:
+					case Deal:
 						onDeal(valueStr, u)
-					case gamelog.Pass:
+					case Pass:
 						onPass(valueStr, u)
-					case gamelog.Take:
+					case Take:
 						onTake(valueStr, u)
-					case gamelog.Play:
+					case Play:
 						onPlay(valueStr, u)
-					case gamelog.Ready:
+					case Ready:
 						onReady(valueStr, u)
 					}
 				case "players":
@@ -106,14 +124,14 @@ func onPlayerNum(key, value string, u *uistate.UIState) {
 	userID, _ := strconv.Atoi(strings.Split(key, "/")[2])
 	playerNum, _ := strconv.Atoi(value)
 	u.PlayerData[playerNum] = userID
-	if u.CurView == uistate.Arrange && !u.CurTable.AllReadyForNewRound() {
+	if u.CurView == uistate.Arrange {
 		view.LoadArrangeView(u)
 	}
 }
 
 func onSettings(key, value string, u *uistate.UIState) {
 	joinDone := make(chan bool)
-	go client.JoinSettingsSyncgroup(joinDone, value, u)
+	go JoinSettingsSyncgroup(joinDone, value, u)
 	<-joinDone
 }
 
@@ -307,18 +325,24 @@ func onReady(value string, u *uistate.UIState) {
 	// logic
 	playerInt, _ := parsePlayerAndCards(value, u)
 	u.CurTable.GetPlayers()[playerInt].SetDoneScoring(true)
-	if u.CurTable.AllReadyForNewRound() && u.IsOwner {
-		newHands := u.CurTable.Deal()
-		success := gamelog.LogDeal(u, u.CurPlayerIndex, newHands)
-		for !success {
-			success = gamelog.LogDeal(u, u.CurPlayerIndex, newHands)
-		}
-	}
 	// UI
-	if u.CurTable.AllReadyForNewRound() {
-		if u.SGChan != nil {
-			u.SGChan <- true
-			u.SGChan = nil
+	if u.CurTable.AllReadyForNewRound() && u.IsOwner {
+		if u.CurView == uistate.Arrange {
+			b := u.Buttons[5]
+			if !b.GetDisplayingImage() {
+				u.Eng.SetSubTex(b.GetNode(), b.GetImage())
+				b.SetDisplayingImage(true)
+			}
+			if u.SGChan != nil {
+				u.SGChan <- true
+				u.SGChan = nil
+			}
+		} else if u.CurView == uistate.Score {
+			newHands := u.CurTable.Deal()
+			successDeal := LogDeal(u, u.CurPlayerIndex, newHands)
+			for !successDeal {
+				successDeal = LogDeal(u, u.CurPlayerIndex, newHands)
+			}
 		}
 	}
 }

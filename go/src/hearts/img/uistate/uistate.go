@@ -128,11 +128,12 @@ func MakeUIState() *UIState {
 		Padding:          float32(5),
 		CurView:          None,
 		Done:             false,
-		Debug:            true,
+		Debug:            false,
 		SequentialPhases: true,
 		UserData:         make(map[int]map[string]interface{}),
 		PlayerData:       make(map[int]int),
 		AnimChans:        make([]chan bool, 0),
+		CurPlayerIndex:   -1,
 	}
 }
 

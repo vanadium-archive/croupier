@@ -18,9 +18,7 @@ import (
 	"hearts/img/uistate"
 	"hearts/img/view"
 	"hearts/logic/card"
-	"hearts/syncbase/client"
-	"hearts/syncbase/gamelog"
-	"hearts/syncbase/server"
+	"hearts/sync"
 )
 
 func OnTouch(t touch.Event, u *uistate.UIState) {
@@ -108,17 +106,17 @@ func beginClickDiscovery(t touch.Event, u *uistate.UIState) {
 		if buttonList[0] == u.Buttons[0] {
 			logCh := make(chan string)
 			settingsCh := make(chan string)
-			go server.CreateLogSyncgroup(logCh, u)
-			go server.CreateSettingsSyncgroup(settingsCh, u)
+			go sync.CreateLogSyncgroup(logCh, u)
+			go sync.CreateSettingsSyncgroup(settingsCh, u)
 			gameStartData := <-logCh
 			logName := <-logCh
 			settingsName := <-settingsCh
 			if logName != "" && settingsName != "" {
-				gamelog.LogSettingsName(settingsName, u)
+				sync.LogSettingsName(settingsName, u)
 				u.ScanChan <- true
 				u.ScanChan = nil
 				u.SGChan = make(chan bool)
-				go server.Advertise(logName, settingsName, gameStartData, u.SGChan, u.Ctx)
+				go sync.Advertise(logName, settingsName, gameStartData, u.SGChan, u.Ctx)
 				view.LoadArrangeView(u)
 			}
 		} else {
@@ -128,15 +126,15 @@ func beginClickDiscovery(t touch.Event, u *uistate.UIState) {
 					joinSettingsDone := make(chan bool)
 					settingsAddr := b.GetInfo()[0]
 					logAddr := b.GetInfo()[1]
-					go client.JoinLogSyncgroup(joinLogDone, logAddr, u)
-					go client.JoinSettingsSyncgroup(joinSettingsDone, settingsAddr, u)
+					go sync.JoinLogSyncgroup(joinLogDone, logAddr, u)
+					go sync.JoinSettingsSyncgroup(joinSettingsDone, settingsAddr, u)
 					<-joinSettingsDone
 					if success := <-joinLogDone; success {
 						settingsCh := make(chan string)
-						go server.CreateSettingsSyncgroup(settingsCh, u)
+						go sync.CreateSettingsSyncgroup(settingsCh, u)
 						sgName := <-settingsCh
 						if sgName != "" {
-							gamelog.LogSettingsName(sgName, u)
+							sync.LogSettingsName(sgName, u)
 						}
 						u.ScanChan <- true
 						u.ScanChan = nil
@@ -150,23 +148,31 @@ func beginClickDiscovery(t touch.Event, u *uistate.UIState) {
 	}
 }
 
-// If players cannot sit in more than one spot, replace the line 5 ahead of this one with the following line:
-// if len(buttonList) > 0 && u.PlayerData[u.CurPlayerIndex] == 0 {
-
 func beginClickArrange(t touch.Event, u *uistate.UIState) {
 	buttonList := findClickedButton(t, u)
 	if len(buttonList) > 0 {
 		for i, b := range u.Buttons {
 			if buttonList[0] == b {
-				u.CurPlayerIndex = i
+				if i == 5 {
+					if b.GetDisplayingImage() {
+						successStart := sync.LogGameStart(u)
+						for !successStart {
+							successStart = sync.LogGameStart(u)
+						}
+						newHands := u.CurTable.Deal()
+						successDeal := sync.LogDeal(u, u.CurPlayerIndex, newHands)
+						for !successDeal {
+							successDeal = sync.LogDeal(u, u.CurPlayerIndex, newHands)
+						}
+					}
+				} else if u.CurPlayerIndex < 0 {
+					u.CurPlayerIndex = i
+					if u.CurPlayerIndex >= 0 && u.CurPlayerIndex < u.NumPlayers {
+						sync.LogReady(u)
+					}
+					sync.LogPlayerNum(u)
+				}
 			}
-		}
-		if u.CurPlayerIndex >= 0 && u.CurPlayerIndex < u.NumPlayers {
-			gamelog.LogReady(u)
-		}
-		gamelog.LogPlayerNum(u)
-		if !u.CurTable.AllReadyForNewRound() {
-			view.LoadWaitingView(u)
 		}
 	}
 }
@@ -469,9 +475,9 @@ func endClickSplit(t touch.Event, c *card.Card, u *uistate.UIState) {
 func beginClickScore(t touch.Event, u *uistate.UIState) {
 	buttonList := findClickedButton(t, u)
 	if len(buttonList) > 0 {
-		success := gamelog.LogReady(u)
+		success := sync.LogReady(u)
 		for !success {
-			gamelog.LogReady(u)
+			sync.LogReady(u)
 		}
 		view.LoadWaitingView(u)
 	}
@@ -515,9 +521,9 @@ func passCards(ch chan bool, playerId int, u *uistate.UIState) bool {
 	if !u.CurTable.ValidPass(cardsPassed) || u.CurTable.GetPlayers()[playerId].GetDonePassing() {
 		return false
 	}
-	success := gamelog.LogPass(u, cardsPassed)
+	success := sync.LogPass(u, cardsPassed)
 	for !success {
-		success = gamelog.LogPass(u, cardsPassed)
+		success = sync.LogPass(u, cardsPassed)
 	}
 	// UI component
 	pullTab := u.Buttons[0]
@@ -541,9 +547,9 @@ func takeCards(ch chan bool, playerId int, u *uistate.UIState) bool {
 	if len(passedCards) != 3 {
 		return false
 	}
-	success := gamelog.LogTake(u)
+	success := sync.LogTake(u)
 	for !success {
-		success = gamelog.LogTake(u)
+		success = sync.LogTake(u)
 	}
 	reposition.AnimateHandCardTake(ch, u.Other, u)
 	return true
@@ -572,9 +578,9 @@ func playCard(ch chan bool, playerId int, u *uistate.UIState) string {
 		return err
 	}
 	u.DropTargets[0].SetCardHere(nil)
-	success := gamelog.LogPlay(u, c)
+	success := sync.LogPlay(u, c)
 	for !success {
-		success = gamelog.LogPlay(u, c)
+		success = sync.LogPlay(u, c)
 	}
 	// no animation when in split view
 	if u.CurView == uistate.Play {

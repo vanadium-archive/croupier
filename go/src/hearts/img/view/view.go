@@ -34,7 +34,7 @@ func LoadArrangeView(u *uistate.UIState) {
 	resetScene(u)
 	addHeader(u)
 	watchImg := u.Texs["WatchSpot.png"]
-	arrangeBlockLength := u.WindowSize.X - 4*u.Padding - u.CardDim.X
+	arrangeBlockLength := u.WindowSize.X - 4*u.Padding
 	if u.WindowSize.Y < u.WindowSize.X {
 		arrangeBlockLength = u.WindowSize.Y - u.CardDim.Y
 	}
@@ -50,6 +50,14 @@ func LoadArrangeView(u *uistate.UIState) {
 	// table
 	watchPos := coords.MakeVec((u.WindowSize.X-arrangeDim.X)/2, (u.WindowSize.Y+arrangeBlockLength)/2-2*arrangeDim.Y-4*u.Padding)
 	u.Buttons = append(u.Buttons, texture.MakeImgWithoutAlt(watchImg, watchPos, arrangeDim, u))
+	if u.IsOwner {
+		startImg := u.Texs["StartBlue.png"]
+		startAlt := u.Texs["StartGray.png"]
+		startDim := coords.MakeVec(2*u.CardDim.X, u.CardDim.Y)
+		startPos := u.WindowSize.MinusVec(startDim).Minus(u.BottomPadding)
+		display := u.CurTable.AllReadyForNewRound()
+		u.Buttons = append(u.Buttons, texture.MakeImgWithAlt(startImg, startAlt, startPos, startDim, display, u))
+	}
 }
 
 // Waiting view: Displays the word "Waiting". To be displayed when players are waiting for a new round to be dealt
@@ -652,7 +660,7 @@ func addGrayPassBar(u *uistate.UIState) {
 	altColor := "LBlue"
 	center := coords.MakeVec(u.WindowSize.X/2, u.TopPadding+5)
 	scaler := float32(3)
-	maxWidth := grayBarDim.X
+	maxWidth := grayBarDim.X - 2*u.Padding
 	nameImgs := texture.MakeStringImgCenterAlign(name, color, altColor, true, center, scaler, maxWidth, u)
 	u.Other = append(u.Other, nameImgs...)
 }
@@ -695,7 +703,7 @@ func addGrayTakeBar(u *uistate.UIState) {
 	awaitingAltColor := "None"
 	center := coords.MakeVec(u.WindowSize.X/2, 20-u.WindowSize.Y)
 	scaler := float32(3)
-	maxWidth := grayBarDim.X
+	maxWidth := grayBarDim.X - 2*u.Padding
 	u.Other = append(u.Other,
 		texture.MakeStringImgCenterAlign(name, color, nameAltColor, display, center, scaler, maxWidth, u)...)
 	center = coords.MakeVec(center.X, center.Y+30)

@@ -21,10 +21,7 @@ import (
 	"hearts/img/uistate"
 	"hearts/img/view"
 	"hearts/logic/table"
-	"hearts/syncbase/client"
-	"hearts/syncbase/server"
-	"hearts/syncbase/util"
-	"hearts/syncbase/watch"
+	"hearts/sync"
 	"hearts/touchhandler"
 
 	"golang.org/x/mobile/app"
@@ -89,7 +86,7 @@ func onStart(glctx gl.Context, u *uistate.UIState) {
 	ctx, shutdown := v23.Init()
 	u.Shutdown = shutdown
 	u.Ctx = ctx
-	u.Service = syncbase.NewService(util.MountPoint + "/croupier/" + util.SBName)
+	u.Service = syncbase.NewService(sync.MountPoint + "/croupier/" + sync.SBName)
 	namespace := v23.GetNamespace(u.Ctx)
 	allAccess := access.AccessList{In: []security.BlessingPattern{"..."}}
 	permissions := access.Permissions{
@@ -99,23 +96,26 @@ func onStart(glctx gl.Context, u *uistate.UIState) {
 		"Resolve": allAccess,
 		"Debug":   allAccess,
 	}
-	namespace.SetPermissions(u.Ctx, util.MountPoint, permissions, "")
-	namespace.SetPermissions(u.Ctx, util.MountPoint+"/croupier", permissions, "")
+	namespace.SetPermissions(u.Ctx, sync.MountPoint, permissions, "")
+	namespace.SetPermissions(u.Ctx, sync.MountPoint+"/croupier", permissions, "")
 	u.Service.SetPermissions(u.Ctx, permissions, "")
 	u.Images = glutil.NewImages(glctx)
-	fps = debug.NewFPS(u.Images)
+	if u.Debug {
+		fps = debug.NewFPS(u.Images)
+	}
 	u.Eng = glsprite.Engine(u.Images)
 	u.Texs = texture.LoadTextures(u.Eng)
 	u.CurTable = table.InitializeGame(u.NumPlayers, u.Texs)
-	server.CreateTables(u)
+	sync.CreateTables(u)
 	// Create watch stream to update game state based on Syncbase updates
-	go watch.UpdateGame(u)
-	go watch.UpdateSettings(u)
+	go sync.UpdateSettings(u)
 }
 
 func onStop(u *uistate.UIState) {
 	u.Eng.Release()
-	fps.Release()
+	if u.Debug {
+		fps.Release()
+	}
 	u.Images.Release()
 	u.Done = true
 	u.Shutdown()
@@ -125,12 +125,14 @@ func onPaint(glctx gl.Context, sz size.Event, u *uistate.UIState) {
 	if u.CurView == uistate.None {
 		discChan := make(chan []string)
 		u.ScanChan = make(chan bool)
-		go client.ScanForSG(discChan, u.Ctx, u.ScanChan)
+		go sync.ScanForSG(discChan, u.Ctx, u.ScanChan)
 		view.LoadDiscoveryView(discChan, u)
 	}
 	glctx.ClearColor(1, 1, 1, 1)
 	glctx.Clear(gl.COLOR_BUFFER_BIT)
 	now := clock.Time(time.Since(u.StartTime) * 60 / time.Second)
 	u.Eng.Render(u.Scene, now, sz)
-	fps.Draw(sz)
+	if u.Debug {
+		fps.Draw(sz)
+	}
 }

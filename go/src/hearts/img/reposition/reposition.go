@@ -214,18 +214,15 @@ func AnimateInTake(u *uistate.UIState) {
 	passedCards := u.CurTable.GetPlayers()[u.CurPlayerIndex].GetPassedTo()
 	for _, i := range imgs {
 		dims := i.GetDimensions()
-		var to *coords.Vec
-		if passedCards == nil {
-			to = coords.MakeVec(i.GetCurrent().X, i.GetCurrent().Y+u.WindowSize.Y)
-		} else {
-			to = coords.MakeVec(i.GetCurrent().X, i.GetCurrent().Y+u.WindowSize.Y)
-		}
+		to := coords.MakeVec(i.GetCurrent().X, i.GetCurrent().Y+u.WindowSize.Y)
 		AnimateImageNoChannel(i, to, dims, u)
 	}
-	for _, c := range passedCards {
-		dims := c.GetDimensions()
-		to := coords.MakeVec(c.GetCurrent().X, c.GetCurrent().Y+u.WindowSize.Y)
-		animateCardNoChannel(c, to, dims, u)
+	if !u.SequentialPhases || u.CurTable.AllDonePassing() {
+		for _, c := range passedCards {
+			dims := c.GetDimensions()
+			to := coords.MakeVec(c.GetCurrent().X, c.GetCurrent().Y+u.WindowSize.Y)
+			animateCardNoChannel(c, to, dims, u)
+		}
 	}
 }
 

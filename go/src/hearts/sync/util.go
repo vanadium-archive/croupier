@@ -4,17 +4,17 @@
 
 // util.go stores constants relevant to the syncbase hierarchy
 
-package util
+package sync
 
 const (
 	// switch back to my mountpoint with the following code:
-	MountPoint = "users/emshack@google.com"
-	//MountPoint        = "/192.168.86.254:8101"
-	UserID            = 23876
+	//MountPoint = "users/emshack@google.com"
+	MountPoint        = "/192.168.86.254:8101"
+	UserID            = 2222
 	UserColor         = 16777215
-	UserAvatar        = "player0.jpeg"
-	UserName          = "Ewen"
-	SBName            = "syncbase"
+	UserAvatar        = "player1.jpeg"
+	UserName          = "Bob"
+	SBName            = "syncbase1"
 	AppName           = "app"
 	DbName            = "db"
 	LogName           = "games"

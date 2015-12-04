@@ -5,7 +5,7 @@
 // gamelog handles creating the appropriately formatted key and value strings to write to the game log in syncbase
 // a description of the log syntax can be found here: https://docs.google.com/document/d/1uZc9EQ2-F6CjJjGkj7VWvJNFklKGsFGQSVHtpEiJUlQ
 
-package gamelog
+package sync
 
 import (
 	"fmt"
@@ -14,8 +14,6 @@ import (
 
 	"hearts/img/uistate"
 	"hearts/logic/card"
-	"hearts/syncbase/server"
-	"hearts/syncbase/util"
 
 	"v.io/v23/context"
 	"v.io/v23/syncbase"
@@ -90,14 +88,20 @@ func LogReady(u *uistate.UIState) bool {
 }
 
 func LogPlayerNum(u *uistate.UIState) bool {
-	key := strconv.Itoa(u.GameID) + "/players/" + strconv.Itoa(util.UserID) + "/player_number"
+	key := fmt.Sprintf("%d/players/%d/player_number", u.GameID, UserID)
 	value := strconv.Itoa(u.CurPlayerIndex)
 	return logKeyValue(u.Service, u.Ctx, key, value)
 }
 
 func LogSettingsName(name string, u *uistate.UIState) bool {
-	key := strconv.Itoa(u.GameID) + "/players/" + strconv.Itoa(util.UserID) + "/settings_sg"
+	key := fmt.Sprintf("%d/players/%d/settings_sg", u.GameID, UserID)
 	return logKeyValue(u.Service, u.Ctx, key, name)
+}
+
+func LogGameStart(u *uistate.UIState) bool {
+	key := fmt.Sprintf("%d/status", u.GameID)
+	value := "RUNNING"
+	return logKeyValue(u.Service, u.Ctx, key, value)
 }
 
 // Note: The syntax replicates the way Croupier in Dart/Flutter writes keys.
@@ -108,5 +112,5 @@ func getKey(playerId int, u *uistate.UIState) string {
 }
 
 func logKeyValue(service syncbase.Service, ctx *context.T, key, value string) bool {
-	return server.AddKeyValue(service, ctx, key, value)
+	return AddKeyValue(service, ctx, key, value)
 }
