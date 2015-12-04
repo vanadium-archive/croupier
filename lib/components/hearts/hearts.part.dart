@@ -612,6 +612,9 @@ class HeartsArrangeComponent extends GameArrangeComponent {
   Widget _buildSlot(String name, int index) {
     NoArgCb onTap = () {
       croupier.settings_manager.setPlayerNumber(croupier.game.gameID, index);
+      HeartsGame game = croupier.game;
+      game.playerNumber = index;
+      game.setReadyUI();
     };
     Widget slotWidget = new Text(name, style: style.Text.hugeStyle);
 
@@ -632,7 +635,7 @@ class HeartsArrangeComponent extends GameArrangeComponent {
                 color: croupier.game.playerNumber == index
                     ? style.theme.accentColor
                     : null,
-                child: new Center(child: slotWidget)),
+                child: slotWidget),
             onTap: onTap));
   }
 }

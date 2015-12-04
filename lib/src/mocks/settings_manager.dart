@@ -13,9 +13,14 @@ class SettingsManager {
   final util.keyValueCallback updateCallback;
   final util.keyValueCallback updateGamesCallback;
   final util.keyValueCallback updatePlayerFoundCallback;
+  final util.keyValueCallback updateGameStatusCallback;
 
-  SettingsManager(settings_client.AppSettings _, this.updateCallback,
-      this.updateGamesCallback, this.updatePlayerFoundCallback);
+  SettingsManager(
+      settings_client.AppSettings _,
+      this.updateCallback,
+      this.updateGamesCallback,
+      this.updatePlayerFoundCallback,
+      this.updateGameStatusCallback);
 
   Map<String, String> _data = new Map<String, String>();
 
@@ -66,6 +71,10 @@ class SettingsManager {
   }
 
   Future setPlayerNumber(int gameID, int playerNumber) async {
+    return new Future(() => null);
+  }
+
+  Future setGameStatus(int gameID, String status) async {
     return new Future(() => null);
   }
 }

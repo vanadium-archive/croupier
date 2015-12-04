@@ -3,6 +3,7 @@ material-design-icons:
   - name: action/build
   - name: action/help
   - name: action/settings
+  - name: av/play_arrow
   - name: navigation/arrow_back
   - name: navigation/menu
 assets:

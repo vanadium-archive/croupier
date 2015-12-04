@@ -127,7 +127,7 @@ class RandomSettings {
 
   // Return a random user id.
   static int get userID {
-    return new math.Random().nextInt(0xffffffff);
+    return new math.Random().nextInt(0xffffff);
   }
 
   // Return a random image name.

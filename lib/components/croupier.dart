@@ -108,13 +108,7 @@ class CroupierComponentState extends State<CroupierComponent> {
       case logic_croupier.CroupierState.ArrangePlayers:
         return new Container(
             padding: new EdgeDims.only(top: ui.window.padding.top),
-            child: new Column([
-              _buildArrangePlayers(),
-              new FlatButton(
-                  child: new Text('Back'),
-                  onPressed: makeSetStateCallback(
-                      logic_croupier.CroupierState.Welcome))
-            ]));
+            child: _buildArrangePlayers());
       case logic_croupier.CroupierState.PlayGame:
         return new Container(
             padding: new EdgeDims.only(top: ui.window.padding.top),
@@ -134,16 +128,23 @@ class CroupierComponentState extends State<CroupierComponent> {
   // shown if the person has not sat down yet.
   Widget _buildPlayerProfiles(bool needsArrangement) {
     List<Widget> profileWidgets = new List<Widget>();
+    double size = 125.0;
     config.croupier.players_found.forEach((int userID, int playerNumber) {
       if (!needsArrangement || playerNumber == null) {
         CroupierSettings cs = config.croupier.settings_everyone[userID];
         // cs could be null if this settings data hasn't synced yet.
         // If so, a placeholder is shown instead.
-        profileWidgets.add(new CroupierProfileComponent(settings: cs));
+        profileWidgets.add(new CroupierProfileComponent(
+            settings: cs, height: size, width: size));
       }
     });
 
-    return new Grid(profileWidgets, maxChildExtent: 120.0);
+    if (needsArrangement) {
+      return new ScrollableViewport(
+          child: new Row(profileWidgets),
+          scrollDirection: ScrollDirection.horizontal);
+    }
+    return new Grid(profileWidgets, maxChildExtent: size);
   }
 
   Widget _buildArrangePlayers() {
@@ -152,34 +153,60 @@ class CroupierComponentState extends State<CroupierComponent> {
     logic_game.GameArrangeData gad = config.croupier.game.gameArrangeData;
     Iterable<int> playerNumbers = config.croupier.players_found.values;
 
+    allWidgets.add(new Flexible(
+        flex: 0,
+        child: new Row([
+          new Text("${config.croupier.game.gameTypeName}",
+              style: style.Text.hugeStyle)
+        ], justifyContent: FlexJustifyContent.spaceAround)));
+
+    // Then show the profile widgets of those who have joined the game.
+    allWidgets.add(new Flexible(flex: 0, child: new Text("Player List")));
+    allWidgets.add(new Flexible(
+        flex: 1, child: _buildPlayerProfiles(gad.needsArrangement)));
+
+    if (gad.needsArrangement) {
+      // Games that need arrangement can show their game arrange component.
+      allWidgets.add(component_game.createGameArrangeComponent(config.croupier,
+          width: ui.window.size.width, height: ui.window.size.height / 2));
+    }
+
     // Allow games that can start with these players to begin.
     // Debug Mode should also go through.
-    NoArgCb onPressed;
+    NoArgCb startCb;
     if (gad.canStart(playerNumbers) || config.croupier.debugMode) {
-      onPressed = () {
-        makeSetStateCallback(logic_croupier.CroupierState.PlayGame)();
+      startCb = () {
+        config.croupier.settings_manager
+            .setGameStatus(config.croupier.game.gameID, "RUNNING");
 
         // Since playerNumber starts out as null, we should set it to -1 if
         // the person pressed Start Game without sitting.
         if (config.croupier.game.playerNumber == null) {
           config.croupier.game.playerNumber = -1;
         }
-        config.croupier.game.startGameSignal();
       };
     }
-
-    // Always include the Start Game Button.
-    allWidgets.add(
-        new FlatButton(child: new Text('Start Game'), onPressed: onPressed));
-
-    // Games that need arrangement can show their game arrange component.
-    if (gad.needsArrangement) {
-      allWidgets.add(component_game.createGameArrangeComponent(config.croupier,
-          width: ui.window.size.width, height: ui.window.size.height / 2));
+    if (config.croupier.game.isCreator) {
+      allWidgets.add(new Flexible(
+          flex: 0,
+          child: new Row([
+            new Container(
+                decoration: new BoxDecoration(
+                    backgroundColor: startCb != null
+                        ? style.theme.accentColor
+                        : Colors.grey[300]),
+                padding: new EdgeDims.all(10.0),
+                child: new FlatButton(
+                    child: new Text("Start Game", style: style.Text.hugeStyle),
+                    onPressed: startCb))
+          ], justifyContent: FlexJustifyContent.spaceAround)));
     }
-
-    // Then show the profile widgets of those who have joined the game.
-    allWidgets.add(_buildPlayerProfiles(gad.needsArrangement));
+    allWidgets.add(new Flexible(
+        flex: 0,
+        child: new FlatButton(
+            child: new Text('Back'),
+            onPressed:
+                makeSetStateCallback(logic_croupier.CroupierState.Welcome))));
 
     return new Column(allWidgets);
   }

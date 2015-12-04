@@ -275,7 +275,6 @@ class HeartsGame extends Game {
     if (this.debugMode && this.playerNumber < 0) {
       this.playerNumber = 0;
     }
-    setReadyUI();
     if (!this.isPlayer) {
       this.viewType = HeartsType.Board;
     }

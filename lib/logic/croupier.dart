@@ -38,8 +38,12 @@ class Croupier {
     settings_everyone = new Map<int, CroupierSettings>();
     games_found = new Map<String, GameStartData>();
     players_found = new Map<int, int>();
-    settings_manager = new SettingsManager(appSettings,
-        _updateSettingsEveryoneCb, _updateGamesFoundCb, _updatePlayerFoundCb);
+    settings_manager = new SettingsManager(
+        appSettings,
+        _updateSettingsEveryoneCb,
+        _updateGamesFoundCb,
+        _updatePlayerFoundCb,
+        _updateGameStatusCb);
 
     settings_manager.load().then((String csString) {
       settings = new CroupierSettings.fromJSONString(csString);
@@ -101,6 +105,22 @@ class Croupier {
       if (id == settings.userID) {
         game.playerNumber = playerNumber;
       }
+    }
+    if (this.informUICb != null) {
+      this.informUICb();
+    }
+  }
+
+  void _updateGameStatusCb(String statusKey, String newStatus) {
+    switch (newStatus) {
+      case "RUNNING":
+        if (state == CroupierState.ArrangePlayers) {
+          game.startGameSignal();
+          state = CroupierState.PlayGame;
+        }
+        break;
+      default:
+        print("Ignoring new status: ${newStatus}");
     }
     if (this.informUICb != null) {
       this.informUICb();
@@ -190,6 +210,7 @@ class Croupier {
     if (nextState == CroupierState.Welcome) {
       games_found.clear();
       players_found.clear();
+      game = null;
     } else if (nextState == CroupierState.JoinGame) {
       // Start scanning for games since that's what's next for you.
       _scanFuture =

@@ -13,6 +13,7 @@ participated in. The schema is as follows:
 For advertising and setting up the game:
 <game_id>/type = <game_type>
 <game_id>/owner = <user_id>
+<game_id>/status = [null|RUNNING]
 <game_id>/players/<user_id>/player_number = <player_number>
 <game_id>/players/<user_id>/settings_sg = <settings_syncgroup_name>
 
