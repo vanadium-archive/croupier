@@ -21,6 +21,9 @@ const String sgSuffixGame = 'gaming';
 
 const String discoveryInterfaceName = 'CroupierSettingsAndGame';
 
+const String settingsPersonalKey = "personal";
+const String settingsWatchSyncPrefix = "users";
+
 typedef void NoArgCb();
 typedef void keyValueCallback(String key, String value);
 
@@ -44,3 +47,56 @@ String syncgamePrefix(int gameID) {
 
 const String syncgameSettingsAttr = "settings_sgname";
 const String syncgameGameStartDataAttr = "game_start_data";
+
+const String separator = "/";
+
+String gameIDFromGameKey(String gameKey) {
+  List<String> parts = gameKey.split(separator);
+  return parts[0];
+}
+
+String playerUpdateTypeFromPlayerKey(String playerKey) {
+  return _getPartFromBack(playerKey, 0);
+}
+
+String playerIDFromPlayerKey(String playerKey) {
+  return _getPartFromBack(playerKey, 1);
+}
+
+String gameOwnerKey(int gameID) {
+  return "${gameID}/owner";
+}
+
+String gameTypeKey(int gameID) {
+  return "${gameID}/type";
+}
+
+String gameStatusKey(int gameID) {
+  return "${gameID}/status";
+}
+
+String playerSettingsKeyFromData(int gameID, int userID) {
+  return "${gameID}/players/${userID}/settings_sg";
+}
+
+String playerNumberKeyFromData(int gameID, int userID) {
+  return "${gameID}/players/${userID}/player_number";
+}
+
+bool isSettingsKey(String key) {
+  return key.indexOf(settingsWatchSyncPrefix) == 0 && key.endsWith("/settings");
+}
+
+String settingsDataKeyFromUserID(int userID) {
+  return "${settingsWatchSyncPrefix}/${userID}/settings";
+}
+
+String userIDFromSettingsDataKey(String dataKey) {
+  List<String> parts = dataKey.split("/");
+  return parts[parts.length - 2];
+}
+
+String _getPartFromBack(String input, int indexFromLast) {
+  List<String> parts = input.split(separator);
+  return parts[parts.length - 1 - indexFromLast];
+}

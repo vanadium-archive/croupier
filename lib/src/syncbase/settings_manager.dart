@@ -35,9 +35,7 @@ class SettingsManager {
   final CroupierClient _cc;
   sc.SyncbaseTable tb;
 
-  static const String _discoverySettingsKey = "settings";
-  static const String _personalKey = "personal";
-  static const String _settingsWatchSyncPrefix = "users";
+  static const String _discoveryGameAdKey = "discovery-game-ad";
 
   SettingsManager(
       settings_client.AppSettings appSettings,
@@ -46,15 +44,6 @@ class SettingsManager {
       this.updatePlayerFoundCallback,
       this.updateGameStatusCallback)
       : _cc = new CroupierClient(appSettings);
-
-  String _settingsDataKey(int userID) {
-    return "${_settingsWatchSyncPrefix}/${userID}/settings";
-  }
-
-  String _settingsDataKeyUserID(String dataKey) {
-    List<String> parts = dataKey.split("/");
-    return parts[parts.length - 2];
-  }
 
   Future _prepareSettingsTable() async {
     if (tb != null) {
@@ -65,8 +54,8 @@ class SettingsManager {
     tb = await _cc.createTable(db, util.tableNameSettings);
 
     // Start to watch the stream for the shared settings table.
-    Stream<sc.WatchChange> watchStream = db.watch(
-        util.tableNameSettings, _settingsWatchSyncPrefix, UTF8.encode("now"));
+    Stream<sc.WatchChange> watchStream = db.watch(util.tableNameSettings,
+        util.settingsWatchSyncPrefix, UTF8.encode("now"));
     _startWatchSettings(watchStream); // Don't wait for this future.
     _loadSettings(tb); // Don't wait for this future.
   }
@@ -84,7 +73,7 @@ class SettingsManager {
       await this.save(settings.userID, jsonStr);
       return jsonStr;
     } else {
-      return await _tryReadData(tb, this._settingsDataKey(userID));
+      return await _tryReadData(tb, util.settingsDataKeyFromUserID(userID));
     }
   }
 
@@ -104,8 +93,10 @@ class SettingsManager {
     util.log('SettingsManager.save');
     await _prepareSettingsTable();
 
-    await tb.row(_personalKey).put(UTF8.encode("${userID}"));
-    await tb.row(this._settingsDataKey(userID)).put(UTF8.encode(jsonString));
+    await tb.row(util.settingsPersonalKey).put(UTF8.encode("${userID}"));
+    await tb
+        .row(util.settingsDataKeyFromUserID(userID))
+        .put(UTF8.encode(jsonString));
   }
 
   // This watch method ensures that any changes are propagated to the caller.
@@ -132,7 +123,7 @@ class SettingsManager {
       }
 
       if (this.updateSettingsCallback != null) {
-        this.updateSettingsCallback(_settingsDataKeyUserID(key), value);
+        this.updateSettingsCallback(util.userIDFromSettingsDataKey(key), value);
       }
     }
   }
@@ -143,7 +134,7 @@ class SettingsManager {
 
     _cc.createSyncgroup(
         await _mySettingsSyncgroupName(), util.tableNameSettings,
-        prefix: this._settingsDataKey(id));
+        prefix: util.settingsDataKeyFromUserID(id));
   }
 
   Future<String> _mySettingsSyncgroupName() async {
@@ -175,19 +166,18 @@ class SettingsManager {
 
       if (key.indexOf("/players") != -1) {
         if (this.updatePlayerFoundCallback != null) {
-          String playerID = _getPartFromBack(key, "/", 1);
-          String type = _getPartFromBack(key, "/", 0);
+          String type = util.playerUpdateTypeFromPlayerKey(key);
           switch (type) {
             case "player_number":
               // Update the player number for this player.
-              this.updatePlayerFoundCallback(playerID, value);
+              this.updatePlayerFoundCallback(key, value);
               break;
             case "settings_sg":
               // Join this player's settings syncgroup.
               _cc.joinSyncgroup(value);
 
               // Also, signal that this player has been found.
-              this.updatePlayerFoundCallback(playerID, null);
+              this.updatePlayerFoundCallback(key, null);
               break;
             default:
               print("Unexpected key: ${key} with value ${value}");
@@ -215,12 +205,12 @@ class SettingsManager {
 
     print("Now writing to some rows of ${gameID}");
     // Start up the table and write yourself as player 0.
-    await gameTable.row("${gameID}/type").put(UTF8.encode("${type}"));
+    await gameTable.row(util.gameTypeKey(gameID)).put(UTF8.encode("${type}"));
 
     int id = await _getUserID();
-    await gameTable.row("${gameID}/owner").put(UTF8.encode("${id}"));
+    await gameTable.row(util.gameOwnerKey(gameID)).put(UTF8.encode("${id}"));
     await gameTable
-        .row("${gameID}/players/${id}/settings_sg")
+        .row(util.playerSettingsKeyFromData(gameID, id))
         .put(UTF8.encode(await _mySettingsSyncgroupName()));
 
     logic_game.GameStartData gsd =
@@ -249,7 +239,7 @@ class SettingsManager {
 
     int id = await _getUserID();
     await gameTable
-        .row("${gameID}/players/${id}/settings_sg")
+        .row(util.playerSettingsKeyFromData(gameID, id))
         .put(UTF8.encode(await _mySettingsSyncgroupName()));
   }
 
@@ -259,7 +249,7 @@ class SettingsManager {
 
     int id = await _getUserID();
     await gameTable
-        .row("${gameID}/players/${id}/player_number")
+        .row(util.playerNumberKeyFromData(gameID, id))
         .put(UTF8.encode("${playerNumber}"));
   }
 
@@ -267,19 +257,19 @@ class SettingsManager {
     sc.SyncbaseDatabase db = await _cc.createDatabase();
     sc.SyncbaseTable gameTable = await _cc.createTable(db, util.tableNameGames);
 
-    await gameTable.row("${gameID}/status").put(UTF8.encode(status));
+    await gameTable.row(util.gameStatusKey(gameID)).put(UTF8.encode(status));
   }
 
   // When starting the settings manager, there may be settings already in the
   // store. Make sure to load those.
   Future _loadSettings(sc.SyncbaseTable tb) async {
     tb
-        .scan(new sc.RowRange.prefix(_settingsWatchSyncPrefix))
+        .scan(new sc.RowRange.prefix(util.settingsWatchSyncPrefix))
         .forEach((sc.KeyValue kv) {
-      if (kv.key.endsWith("/settings")) {
+      if (util.isSettingsKey(kv.key)) {
         // Then we can process the value as if it were settings data.
         this.updateSettingsCallback(
-            _settingsDataKeyUserID(kv.key), UTF8.decode(kv.value));
+            util.userIDFromSettingsDataKey(kv.key), UTF8.decode(kv.value));
       }
     });
   }
@@ -292,12 +282,12 @@ class SettingsManager {
   Future scanSettings() async {
     SettingsScanHandler ssh =
         new SettingsScanHandler(_cc, this.updateGamesCallback);
-    return _cc.discoveryClient.scan(_discoverySettingsKey,
+    return _cc.discoveryClient.scan(_discoveryGameAdKey,
         'v.InterfaceName="${util.discoveryInterfaceName}"', ssh);
   }
 
   Future stopScanSettings() {
-    return _cc.discoveryClient.stopScan(_discoverySettingsKey);
+    return _cc.discoveryClient.stopScan(_discoveryGameAdKey);
   }
 
   // Someone who wants to join a game should advertise their presence.
@@ -305,7 +295,7 @@ class SettingsManager {
     String settingsSuffix = await _syncSettingsSuffix();
     String gameSuffix = util.syncgameSuffix("${gsd.gameID}");
     return _cc.discoveryClient.advertise(
-        _discoverySettingsKey,
+        _discoveryGameAdKey,
         DiscoveryClient.serviceMaker(
             interfaceName: util.discoveryInterfaceName,
             attrs: <String, String>{
@@ -316,11 +306,11 @@ class SettingsManager {
   }
 
   Future stopAdvertiseSettings() {
-    return _cc.discoveryClient.stopAdvertise(_discoverySettingsKey);
+    return _cc.discoveryClient.stopAdvertise(_discoveryGameAdKey);
   }
 
   Future<int> _getUserID() async {
-    String result = await _tryReadData(tb, _personalKey);
+    String result = await _tryReadData(tb, util.settingsPersonalKey);
     if (result == null) {
       return null;
     }
@@ -335,11 +325,6 @@ class SettingsManager {
 
     return "${util.sgSuffix}-${id}";
   }
-}
-
-String _getPartFromBack(String input, String separator, int indexFromLast) {
-  List<String> parts = input.split(separator);
-  return parts[parts.length - 1 - indexFromLast];
 }
 
 // Implementation of the ScanHandler for Settings information.

@@ -3,3 +3,11 @@
 // license that can be found in the LICENSE file.
 
 typedef void keyValueCallback(String key, String value);
+
+String gameIDFromGameKey(String gameKey) {
+  return null;
+}
+
+String playerIDFromPlayerKey(String playerKey) {
+  return null;
+}

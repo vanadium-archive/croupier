@@ -278,6 +278,10 @@ class HeartsGame extends Game {
     if (!this.isPlayer) {
       this.viewType = HeartsType.Board;
     }
+    // Only the creator should deal the cards once everyone is ready.
+    if (this.isCreator) {
+      this.dealCards();
+    }
   }
 
   // Note that this will be called by the UI.
@@ -327,10 +331,6 @@ class HeartsGame extends Game {
           this.resetGame();
 
           print('we are all ready. ${isCreator}');
-          // Only the creator should deal the cards once everyone is ready.
-          if (this.isCreator) {
-            this.dealCards();
-          }
         }
         return;
       case HeartsPhase.Deal:

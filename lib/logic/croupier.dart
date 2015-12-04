@@ -6,6 +6,7 @@ import 'dart:async';
 
 import '../settings/client.dart' show AppSettings;
 import '../src/syncbase/settings_manager.dart' show SettingsManager;
+import '../src/syncbase/util.dart' as sync_util;
 import 'create_game.dart' as cg;
 import 'croupier_settings.dart' show CroupierSettings;
 import 'game/game.dart'
@@ -90,7 +91,12 @@ class Croupier {
     return null;
   }
 
-  void _updatePlayerFoundCb(String playerID, String playerNum) {
+  void _updatePlayerFoundCb(String playerKey, String playerNum) {
+    String gameIDStr = sync_util.gameIDFromGameKey(playerKey);
+    if (game == null || game.gameID != int.parse(gameIDStr)) {
+      return; // ignore
+    }
+    String playerID = sync_util.playerIDFromPlayerKey(playerKey);
     int id = int.parse(playerID);
     if (playerNum == null) {
       if (!players_found.containsKey(id)) {
@@ -112,11 +118,15 @@ class Croupier {
   }
 
   void _updateGameStatusCb(String statusKey, String newStatus) {
+    String gameIDStr = sync_util.gameIDFromGameKey(statusKey);
+    if (game == null || game.gameID != int.parse(gameIDStr)) {
+      return; // ignore
+    }
     switch (newStatus) {
       case "RUNNING":
         if (state == CroupierState.ArrangePlayers) {
           game.startGameSignal();
-          state = CroupierState.PlayGame;
+          setState(CroupierState.PlayGame, null);
         }
         break;
       default:
@@ -194,12 +204,12 @@ class Croupier {
           });
         }
 
+        // The signal to start or quit is not anything special.
         // data should be empty.
-        // All rearrangements affect the Game's player number without changing app state.
+        assert(data == null);
         break;
       case CroupierState.PlayGame:
         // data should be empty.
-        // The signal to start really isn't anything special.
         break;
       default:
         assert(false);
