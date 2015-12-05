@@ -176,17 +176,6 @@ class LogWriter {
       await _writeData(propKey, proposalData);
       proposalsKnown[propKey] = proposalData;
 
-      // TODO(alexfandrianto): Remove when we have 4 players going at once.
-      // For quick development purposes, we may wish to keep this block.
-      // FAKE: Do some bonus work. Where "everyone else" accepts the proposal.
-      // Normally, one would rely on watch and the syncgroup peers to do this.
-      /*for (int i = 0; i < users.length; i++) {
-        if (users[i] != associatedUser) {
-          // DO NOT AWAIT HERE. It must be done "asynchronously".
-          _writeData(_proposalKey(users[i]), proposalData);
-        }
-      }*/
-
       return;
     }
     await _writeData(key, value);
@@ -194,26 +183,16 @@ class LogWriter {
 
   // Helper that writes data to the "store" and calls the update callback.
   Future _writeData(String key, String value) async {
-    var row = tb.row("${this.logPrefix}/${key}");
+    var row = tb.row(_rowKey(key));
     await row.put(UTF8.encode(value));
   }
 
-  /*
-  // _readData could be helpful eventually, but it's not needed yet.
-  Future<String> _readData(String key) async {
-    var row = tb.row("${this.logPrefix}/${key}");
-    if (!(await row.exists())) {
-      print("${key} did not exist");
-      return null;
-    }
-    var getBytes = await row.get();
-
-    return UTF8.decode(getBytes);
+  String _rowKey(String key) {
+    return "${this.logPrefix}/${key}";
   }
-  */
 
   Future _deleteData(String key) async {
-    var row = tb.row(key);
+    var row = tb.row(_rowKey(key));
     await row.delete();
   }
 
