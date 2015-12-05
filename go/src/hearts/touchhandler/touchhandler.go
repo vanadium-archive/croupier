@@ -22,6 +22,11 @@ import (
 )
 
 func OnTouch(t touch.Event, u *uistate.UIState) {
+	if t.Type == touch.TypeBegin {
+		u.ViewOnTouch = u.CurView
+	} else if u.CurView != u.ViewOnTouch {
+		return
+	}
 	switch u.CurView {
 	case uistate.Discovery:
 		switch t.Type {
@@ -459,16 +464,10 @@ func endClickSplit(t touch.Event, c *card.Card, u *uistate.UIState) {
 			removeCardFromTarget(c, u)
 			// add card back to hand
 			reposition.ResetCardPosition(c, u.Eng)
-			reposition.RealignSuit(c.GetSuit(), c.GetInitial().Y, u)
-		} else {
-			reposition.RealignSuit(c.GetSuit(), c.GetInitial().Y, u)
 		}
 	} else {
-		// check to see if card was removed from a drop target
-		removeCardFromTarget(c, u)
 		// add card back to hand
 		reposition.ResetCardPosition(c, u.Eng)
-		reposition.RealignSuit(c.GetSuit(), c.GetInitial().Y, u)
 	}
 }
 

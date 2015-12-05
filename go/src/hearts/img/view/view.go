@@ -29,7 +29,7 @@ import (
 func LoadArrangeView(u *uistate.UIState) {
 	u.CurView = uistate.Arrange
 	<-time.After(1 * time.Second)
-	resetAnims(u)
+	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)
 	addHeader(u)
@@ -63,7 +63,7 @@ func LoadArrangeView(u *uistate.UIState) {
 // Waiting view: Displays the word "Waiting". To be displayed when players are waiting for a new round to be dealt
 // TODO(emshack): Integrate this with Arrange view and Score view so that a separate screen is not necessary
 func LoadWaitingView(u *uistate.UIState) {
-	resetAnims(u)
+	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)
 	center := u.WindowSize.DividedBy(2)
@@ -78,7 +78,7 @@ func LoadWaitingView(u *uistate.UIState) {
 // Discovery view: Displays a menu of possible games to join
 func LoadDiscoveryView(discChan chan []string, u *uistate.UIState) {
 	u.CurView = uistate.Discovery
-	resetAnims(u)
+	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)
 	newGameImg := u.Texs["NewGame.png"]
@@ -101,7 +101,7 @@ func LoadDiscoveryView(discChan chan []string, u *uistate.UIState) {
 // Table View: Displays the table. Intended for public devices
 func LoadTableView(u *uistate.UIState) {
 	u.CurView = uistate.Table
-	resetAnims(u)
+	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)
 	scaler := float32(6)
@@ -124,6 +124,7 @@ func LoadTableView(u *uistate.UIState) {
 	dropCard := u.CurTable.GetTrick()[0]
 	if dropCard != nil {
 		texture.PopulateCardImage(dropCard, u)
+		dropCard.SetInitial(dropTargetPos)
 		dropCard.Move(dropTargetPos, dropTargetDimensions, u.Eng)
 		u.Cards = append(u.Cards, dropCard)
 	}
@@ -141,6 +142,7 @@ func LoadTableView(u *uistate.UIState) {
 	dropCard = u.CurTable.GetTrick()[1]
 	if dropCard != nil {
 		texture.PopulateCardImage(dropCard, u)
+		dropCard.SetInitial(dropTargetPos)
 		dropCard.Move(dropTargetPos, dropTargetDimensions, u.Eng)
 		u.Cards = append(u.Cards, dropCard)
 	}
@@ -158,6 +160,7 @@ func LoadTableView(u *uistate.UIState) {
 	dropCard = u.CurTable.GetTrick()[2]
 	if dropCard != nil {
 		texture.PopulateCardImage(dropCard, u)
+		dropCard.SetInitial(dropTargetPos)
 		dropCard.Move(dropTargetPos, dropTargetDimensions, u.Eng)
 		u.Cards = append(u.Cards, dropCard)
 	}
@@ -175,6 +178,7 @@ func LoadTableView(u *uistate.UIState) {
 	dropCard = u.CurTable.GetTrick()[3]
 	if dropCard != nil {
 		texture.PopulateCardImage(dropCard, u)
+		dropCard.SetInitial(dropTargetPos)
 		dropCard.Move(dropTargetPos, dropTargetDimensions, u.Eng)
 		u.Cards = append(u.Cards, dropCard)
 	}
@@ -313,6 +317,7 @@ func LoadTableView(u *uistate.UIState) {
 				texture.PopulateCardImage(c, u)
 				c.SetBackDisplay(u.Eng)
 				pos := reposition.DetermineTablePassPosition(c, i, p.GetPlayerIndex(), u)
+				c.SetInitial(pos)
 				c.Move(pos, u.TableCardDim, u.Eng)
 				u.TableCards = append(u.TableCards, c)
 			}
@@ -340,7 +345,7 @@ func LoadPassOrTakeOrPlay(u *uistate.UIState) {
 // Score View: Shows current player standings at the end of every round, including the end of the game
 func LoadScoreView(roundScores, winners []int, u *uistate.UIState) {
 	u.CurView = uistate.Score
-	resetAnims(u)
+	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)
 	addHeader(u)
@@ -352,7 +357,7 @@ func LoadScoreView(roundScores, winners []int, u *uistate.UIState) {
 // Pass View: Shows player's hand and allows them to pass cards
 func LoadPassView(u *uistate.UIState) {
 	u.CurView = uistate.Pass
-	resetAnims(u)
+	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)
 	addHeader(u)
@@ -367,7 +372,7 @@ func LoadPassView(u *uistate.UIState) {
 // Take View: Shows player's hand and allows them to take the cards that have been passed to them
 func LoadTakeView(u *uistate.UIState) {
 	u.CurView = uistate.Take
-	resetAnims(u)
+	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)
 	addHeader(u)
@@ -384,7 +389,7 @@ func LoadTakeView(u *uistate.UIState) {
 // Play View: Shows player's hand and allows them to play cards
 func LoadPlayView(u *uistate.UIState) {
 	u.CurView = uistate.Play
-	resetAnims(u)
+	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)
 	addPlaySlot(u)
@@ -408,7 +413,7 @@ func LoadPlayView(u *uistate.UIState) {
 
 func LoadSplitView(reloading bool, u *uistate.UIState) {
 	u.CurView = uistate.Split
-	resetAnims(u)
+	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)
 	addPlayHeader(getTurnText(u), !reloading, u)
@@ -503,6 +508,7 @@ func addSplitViewPlayerIcons(beforeSplitAnimation bool, u *uistate.UIState) {
 	dropCard := u.CurTable.GetTrick()[u.CurPlayerIndex]
 	if dropCard != nil {
 		texture.PopulateCardImage(dropCard, u)
+		dropCard.SetInitial(dropTargetPos)
 		dropCard.Move(dropTargetPos, dropTargetDimensions, u.Eng)
 		u.TableCards = append(u.TableCards, dropCard)
 	}
@@ -523,6 +529,7 @@ func addSplitViewPlayerIcons(beforeSplitAnimation bool, u *uistate.UIState) {
 	dropCard = u.CurTable.GetTrick()[(u.CurPlayerIndex+1)%len(u.CurTable.GetPlayers())]
 	if dropCard != nil {
 		texture.PopulateCardImage(dropCard, u)
+		dropCard.SetInitial(dropTargetPos)
 		dropCard.Move(dropTargetPos, dropTargetDimensions, u.Eng)
 		u.TableCards = append(u.TableCards, dropCard)
 	}
@@ -543,6 +550,7 @@ func addSplitViewPlayerIcons(beforeSplitAnimation bool, u *uistate.UIState) {
 	dropCard = u.CurTable.GetTrick()[(u.CurPlayerIndex+2)%len(u.CurTable.GetPlayers())]
 	if dropCard != nil {
 		texture.PopulateCardImage(dropCard, u)
+		dropCard.SetInitial(dropTargetPos)
 		dropCard.Move(dropTargetPos, dropTargetDimensions, u.Eng)
 		u.TableCards = append(u.TableCards, dropCard)
 	}
@@ -563,6 +571,7 @@ func addSplitViewPlayerIcons(beforeSplitAnimation bool, u *uistate.UIState) {
 	dropCard = u.CurTable.GetTrick()[(u.CurPlayerIndex+3)%len(u.CurTable.GetPlayers())]
 	if dropCard != nil {
 		texture.PopulateCardImage(dropCard, u)
+		dropCard.SetInitial(dropTargetPos)
 		dropCard.Move(dropTargetPos, dropTargetDimensions, u.Eng)
 		u.TableCards = append(u.TableCards, dropCard)
 	}
@@ -1079,13 +1088,6 @@ func resetScene(u *uistate.UIState) {
 		{1, 0, 0},
 		{0, 1, 0},
 	})
-}
-
-func resetAnims(u *uistate.UIState) {
-	for _, ch := range u.AnimChans {
-		ch <- true
-	}
-	u.AnimChans = make([]chan bool, 0)
 }
 
 func addDebugBar(u *uistate.UIState) {

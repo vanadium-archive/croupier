@@ -84,6 +84,15 @@ func WatchData(tableName, prefix string, u *uistate.UIState) (nosql.WatchStream,
 	return db.Watch(u.Ctx, tableName, prefix, resumeMarker)
 }
 
+// Returns a scanstream of the data in the table
+func ScanData(tableName, prefix string, u *uistate.UIState) nosql.ScanStream {
+	app := u.Service.App(AppName)
+	db := app.NoSQLDatabase(DbName, nil)
+	table := db.Table(tableName)
+	rowRange := nosql.Range(prefix, "")
+	return table.Scan(u.Ctx, rowRange)
+}
+
 // Joins gamelog syncgroup
 func JoinLogSyncgroup(ch chan bool, logName string, u *uistate.UIState) {
 	fmt.Println("Joining gamelog syncgroup")

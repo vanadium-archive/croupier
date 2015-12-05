@@ -119,6 +119,7 @@ func CreateLogSyncgroup(ch chan string, u *uistate.UIState) {
 	u.IsOwner = true
 	// Generate random gameID information to advertise this game
 	gameID := rand.Intn(1000000)
+	u.GameID = gameID
 	gameMap := make(map[string]interface{})
 	gameMap["type"] = "Hearts"
 	gameMap["playerNumber"] = 0
@@ -139,7 +140,7 @@ func CreateLogSyncgroup(ch chan string, u *uistate.UIState) {
 		"Resolve": allAccess,
 		"Debug":   allAccess,
 	}
-	logPref := wire.TableRow{LogName, ""}
+	logPref := wire.TableRow{LogName, fmt.Sprintf("%d", u.GameID)}
 	logPrefs := []wire.TableRow{logPref}
 	tables := []string{MountPoint + "/croupier"}
 	logSpec := wire.SyncgroupSpec{
@@ -156,10 +157,16 @@ func CreateLogSyncgroup(ch chan string, u *uistate.UIState) {
 	err = logSG.Create(u.Ctx, logSpec, myInfoCreator)
 	if err != nil {
 		fmt.Println("SYNCGROUP CREATE ERROR: ", err)
-		ch <- ""
+		fmt.Println("JOINING INSTEAD...")
+		_, err2 := logSG.Join(u.Ctx, myInfoCreator)
+		if err2 != nil {
+			fmt.Println("SYNCGROUP JOIN ERROR: ", err2)
+			ch <- ""
+		} else {
+			ch <- logSGName
+		}
 	} else {
 		fmt.Println("Syncgroup created")
-		u.GameID = gameID
 		go UpdateGame(u)
 		ch <- logSGName
 	}
@@ -194,7 +201,14 @@ func CreateSettingsSyncgroup(ch chan string, u *uistate.UIState) {
 	err := settingsSG.Create(u.Ctx, settingsSpec, myInfoCreator)
 	if err != nil {
 		fmt.Println("SYNCGROUP CREATE ERROR: ", err)
-		ch <- ""
+		fmt.Println("JOINING INSTEAD...")
+		_, err2 := settingsSG.Join(u.Ctx, myInfoCreator)
+		if err2 != nil {
+			fmt.Println("SYNCGROUP JOIN ERROR: ", err2)
+			ch <- ""
+		} else {
+			ch <- settingsSGName
+		}
 	} else {
 		fmt.Println("Syncgroup created")
 		ch <- settingsSGName

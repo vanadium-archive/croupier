@@ -24,6 +24,19 @@ import (
 )
 
 func UpdateSettings(u *uistate.UIState) {
+	scanner := ScanData(SettingsName, "users", u)
+	for {
+		if updateExists := scanner.Advance(); updateExists {
+			key := scanner.Key()
+			var value []byte
+			if err := scanner.Value(&value); err != nil {
+				fmt.Println("Value error:", err)
+			}
+			handleSettingsUpdate(key, value, u)
+		} else {
+			break
+		}
+	}
 	stream, err := WatchData(SettingsName, "users", u)
 	if err != nil {
 		fmt.Println("WatchData error:", err)
@@ -32,42 +45,46 @@ func UpdateSettings(u *uistate.UIState) {
 		if updateExists := stream.Advance(); updateExists {
 			c := stream.Change()
 			if c.ChangeType == nosql.PutChange {
+				key := c.Row
 				var value []byte
 				if err := c.Value(&value); err != nil {
 					fmt.Println("Value error:", err)
 				}
-				var valueMap map[string]interface{}
-				err := json.Unmarshal(value, &valueMap)
-				if err != nil {
-					fmt.Println("Unmarshal error:", err)
-				}
-				key := c.Row
-				userID, _ := strconv.Atoi(strings.Split(key, "/")[1])
-				u.UserData[userID] = valueMap
-				for _, v := range u.PlayerData {
-					if v == userID {
-						switch u.CurView {
-						case uistate.Arrange:
-							view.LoadArrangeView(u)
-						case uistate.Table:
-							view.LoadTableView(u)
-						case uistate.Pass:
-							view.LoadPassView(u)
-						case uistate.Take:
-							view.LoadTakeView(u)
-						case uistate.Play:
-							view.LoadPlayView(u)
-						case uistate.Split:
-							view.LoadSplitView(true, u)
-						}
-					}
-				}
+				handleSettingsUpdate(key, value, u)
 			} else {
 				fmt.Println("Unexpected ChangeType: ", c.ChangeType)
 			}
 		}
 	}
-} 
+}
+
+func handleSettingsUpdate(key string, value []byte, u *uistate.UIState) {
+	var valueMap map[string]interface{}
+	err := json.Unmarshal(value, &valueMap)
+	if err != nil {
+		fmt.Println("Unmarshal error:", err)
+	}
+	userID, _ := strconv.Atoi(strings.Split(key, "/")[1])
+	u.UserData[userID] = valueMap
+	for _, v := range u.PlayerData {
+		if v == userID {
+			switch u.CurView {
+			case uistate.Arrange:
+				view.LoadArrangeView(u)
+			case uistate.Table:
+				view.LoadTableView(u)
+			case uistate.Pass:
+				view.LoadPassView(u)
+			case uistate.Take:
+				view.LoadTakeView(u)
+			case uistate.Play:
+				view.LoadPlayView(u)
+			case uistate.Split:
+				view.LoadSplitView(true, u)
+			}
+		}
+	}
+}
 
 func UpdateGame(u *uistate.UIState) {
 	stream, err := WatchData(LogName, fmt.Sprintf("%d", u.GameID), u)
@@ -87,8 +104,6 @@ func UpdateGame(u *uistate.UIState) {
 				valueStr := string(value)
 				fmt.Println(key, valueStr)
 				keyType := strings.Split(key, "/")[1]
-				gameID := strings.Split(key, "/")[0]
-				fmt.Println("GAME ID:", gameID)
 				switch keyType {
 				case "log":
 					updateType := strings.Split(valueStr, "|")[0]

@@ -84,6 +84,7 @@ type UIState struct {
 	Overlap          *coords.Vec
 	Padding          float32
 	CurView          View                     // the screen currently being shown to the user
+	ViewOnTouch      View                     // the view at the beginning of a touch action
 	CurTable         *table.Table             // the table of the current game
 	Done             bool                     // true if the app has been quit
 	Texs             map[string]sprite.SubTex // map of all loaded images
