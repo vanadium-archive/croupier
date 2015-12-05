@@ -6,8 +6,8 @@ part of game_component;
 
 class SolitaireGameComponent extends GameComponent {
   SolitaireGameComponent(Croupier croupier, NoArgCb cb,
-      {double width, double height})
-      : super(croupier, cb, width: width, height: height);
+      {Key key, double width, double height})
+      : super(croupier, cb, key: key, width: width, height: height);
 
   SolitaireGameComponentState createState() =>
       new SolitaireGameComponentState();

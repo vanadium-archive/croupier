@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-import 'dart:async';
-
 import 'package:flutter/animation.dart';
 import 'package:flutter/material.dart' as widgets;
 import 'package:flutter/rendering.dart';
@@ -184,7 +182,7 @@ class ZCardState extends widgets.State<ZCard> {
       case CardAnimationType.NORMAL:
         return const Duration(milliseconds: 250);
       case CardAnimationType.LONG:
-        return const Duration(milliseconds: 750);
+        return const Duration(milliseconds: 1500);
       default:
         print("Unexpected animation type: ${config.animationType}");
         assert(false);
@@ -218,6 +216,7 @@ class ZCardState extends widgets.State<ZCard> {
         ..value = endingLocation
         ..end = endingLocation;
       _performance.progress = 0.0;
+      _animationIndex = _pointQueue.length - 1;
       return;
     }
 

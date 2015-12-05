@@ -6,8 +6,8 @@ part of game_component;
 
 class HeartsGameComponent extends GameComponent {
   HeartsGameComponent(Croupier croupier, NoArgCb cb,
-      {double width, double height})
-      : super(croupier, cb, width: width, height: height);
+      {Key key, double width, double height})
+      : super(croupier, cb, key: key, width: width, height: height);
 
   HeartsGameComponentState createState() => new HeartsGameComponentState();
 }
@@ -18,11 +18,62 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
   List<logic_card.Card> passingCards3 = new List<logic_card.Card>();
 
   HeartsType _lastViewType;
+  bool _showSplitView = false;
+  bool trickTaking = false;
+  List<List<logic_card.Card>> playedCards = new List<List<logic_card.Card>>(4);
+
+  static const int SHOW_TRICK_DURATION = 2000; // ms
 
   @override
   void initState() {
     super.initState();
+
+    // If someone sat at the table, they would have the value 4.
+    // If nobody sat at the table, then we should show the split view.
+    if (!config.croupier.players_found.values.contains(4)) {
+      _showSplitView = true;
+    }
     _reset();
+
+    _fillPlayedCards();
+  }
+
+  // Make copies of the played cards.
+  void _fillPlayedCards() {
+    for (int i = 0; i < 4; i++) {
+      playedCards[i] = new List<logic_card.Card>.from(
+          config.game.cardCollections[i + HeartsGame.OFFSET_PLAY]);
+    }
+  }
+
+  // If there were 3 played cards before and now there are 0...
+  bool _detectTrick() {
+    HeartsGame game = config.game;
+    int lastNumPlayed = playedCards.where((List<logic_card.Card> list) {
+      return list.length > 0;
+    }).length;
+    return lastNumPlayed == 3 && game.numPlayed == 0;
+  }
+
+  // Make a copy of the missing played card.
+  void _fillMissingPlayedCard() {
+    HeartsGame game = config.game;
+    List<logic_card.Card> trickPile =
+        game.cardCollections[game.lastTrickTaker + HeartsGame.OFFSET_TRICK];
+
+    // Find the index of the missing play card.
+    int missing;
+    for (int j = 0; j < 4; j++) {
+      if (playedCards[j].length == 0) {
+        missing = j;
+        break;
+      }
+    }
+
+    // Use the trickPile to get this card.
+    playedCards[missing] = <logic_card.Card>[
+      trickPile[trickPile.length - 4 + missing]
+    ];
   }
 
   @override
@@ -72,10 +123,17 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
                 .add(HeartsGame.OFFSET_HAND + playerNum);
             break;
           case HeartsPhase.Play:
-            visibleCardCollectionIndexes
-                .add(HeartsGame.OFFSET_HAND + playerNum);
-            visibleCardCollectionIndexes
-                .add(HeartsGame.OFFSET_PLAY + playerNum);
+            for (int i = 0; i < 4; i++) {
+              if (_showSplitView || i == playerNum) {
+                visibleCardCollectionIndexes.add(HeartsGame.OFFSET_PLAY + i);
+              }
+              if (_showSplitView) {
+                visibleCardCollectionIndexes
+                    .add(HeartsGame.OFFSET_HAND + playerNum);
+                visibleCardCollectionIndexes.add(HeartsGame.OFFSET_TRICK + i);
+              }
+            }
+
             break;
           default:
             break;
@@ -173,6 +231,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
       try {
         HeartsGame game = config.game as HeartsGame;
         game.passCards(_combinePassing());
+        game.debugString = null;
       } catch (e) {
         print("You can't do that! ${e.toString()}");
         config.game.debugString = e.toString();
@@ -190,6 +249,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
         _clearPassing();
         HeartsGame game = config.game as HeartsGame;
         game.takeCards();
+        game.debugString = null;
       } catch (e) {
         print("You can't do that! ${e.toString()}");
         config.game.debugString = e.toString();
@@ -203,6 +263,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
       String reason = game.canPlay(game.playerNumber, card);
       if (reason == null) {
         game.move(card, dest);
+        game.debugString = null;
       } else {
         print("You can't do that! ${reason}");
         game.debugString = reason;
@@ -214,6 +275,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     setState(() {
       HeartsGame game = config.game as HeartsGame;
       game.jumpToScorePhaseDebug();
+      game.debugString = null;
     });
   }
 
@@ -300,63 +362,132 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
   }
 
   Widget showBoard() {
-    return new HeartsBoard(config.croupier, this.update,
-        width: config.width, height: 0.80 * config.height);
+    return new HeartsBoard(config.croupier,
+        width: config.width,
+        height: 0.80 * config.height,
+        trickTaking: trickTaking,
+        playedCards: playedCards);
+  }
+
+  String _getName(int playerNumber) {
+    return config.croupier.settingsFromPlayerNumber(playerNumber)?.name;
+  }
+
+  String _getStatus() {
+    HeartsGame game = config.game;
+
+    // Who's turn is it?
+    String name = _getName(game.whoseTurn) ?? "Player ${game.whoseTurn}";
+    String status =
+        game.whoseTurn == game.playerNumber ? "Your turn" : "${name}'s turn";
+
+    // Override if someone is taking a trick.
+    if (this.trickTaking) {
+      String trickTaker =
+          _getName(game.lastTrickTaker) ?? "Player ${game.lastTrickTaker}";
+      status = "${trickTaker}'s trick";
+    }
+
+    // Override if there is a debug string.
+    if (config.game.debugString != null) {
+      status = config.game.debugString;
+    }
+
+    return status;
+  }
+
+  Widget _buildStatusBar() {
+    return new Container(
+        padding: new EdgeDims.all(10.0),
+        decoration:
+            new BoxDecoration(backgroundColor: style.theme.primaryColor),
+        child: new Row([
+          new Text(_getStatus(), style: style.Text.largeStyle),
+          new IconButton(icon: "action/swap_vert", onPressed: () {
+            setState(() {
+              _showSplitView = !_showSplitView;
+            });
+          })
+        ], justifyContent: FlexJustifyContent.spaceBetween));
+  }
+
+  Widget _buildFullMiniBoard() {
+    return new Container(
+        width: config.width * 0.5,
+        height: config.height * 0.25,
+        child: new HeartsBoard(config.croupier,
+            width: config.width * 0.5,
+            height: config.height * 0.25,
+            cardWidth: config.height * 0.1,
+            cardHeight: config.height * 0.1,
+            isMini: true,
+            gameAcceptCallback: _makeGameMoveCallback,
+            trickTaking: trickTaking,
+            playedCards: playedCards));
   }
 
   Widget showPlay() {
     HeartsGame game = config.game as HeartsGame;
+    int p = game.playerNumber;
 
     List<Widget> cardCollections = new List<Widget>();
 
-    // Note that this shouldn't normally be shown.
-    // Since this is a duplicate card collection, it will not have keyed cards.
-    List<Widget> plays = new List<Widget>();
-    for (int i = 0; i < 4; i++) {
-      plays.add(new CardCollectionComponent(
-          game.cardCollections[i + HeartsGame.OFFSET_PLAY],
-          true,
-          CardCollectionOrientation.show1,
-          width: config.width));
+    if (_showSplitView) {
+      if (!trickTaking) {
+        if (_detectTrick()) {
+          trickTaking = true;
+          _fillMissingPlayedCard();
+          // Unfortunately, ZCards are drawn on the game layer,
+          // so instead of setState, we must use trueSetState.
+          new Future.delayed(const Duration(milliseconds: SHOW_TRICK_DURATION),
+              () {
+            setState(() {
+              trickTaking = false;
+            });
+          });
+        } else {
+          _fillPlayedCards();
+        }
+      }
+      cardCollections.add(new Container(
+          decoration:
+              new BoxDecoration(backgroundColor: style.theme.primaryColor),
+          child: new Column([_buildFullMiniBoard(), _buildStatusBar()])));
+    } else {
+      Widget playArea = new Container(
+          decoration: new BoxDecoration(backgroundColor: Colors.teal[500]),
+          width: config.width,
+          child: new Center(
+              child: new CardCollectionComponent(
+                  game.cardCollections[p + HeartsGame.OFFSET_PLAY],
+                  true,
+                  CardCollectionOrientation.show1,
+                  useKeys: true,
+                  animationType: component_card.CardAnimationType.NONE,
+                  acceptCallback: _makeGameMoveCallback,
+                  acceptType:
+                      p == game.whoseTurn ? DropType.card : DropType.none,
+                  backgroundColor:
+                      p == game.whoseTurn ? Colors.white : Colors.grey[500],
+                  altColor: p == game.whoseTurn
+                      ? Colors.grey[200]
+                      : Colors.grey[600])));
+
+      cardCollections.add(new Container(
+          decoration:
+              new BoxDecoration(backgroundColor: style.theme.primaryColor),
+          child: new Column([_buildStatusBar(), playArea])));
     }
-    cardCollections.add(new Container(
-        decoration: new BoxDecoration(backgroundColor: Colors.teal[600]),
-        width: config.width,
-        child:
-            new Flex(plays, justifyContent: FlexJustifyContent.spaceAround)));
-
-    int p = game.playerNumber;
-
-    Widget playArea = new Container(
-        decoration: new BoxDecoration(backgroundColor: Colors.teal[500]),
-        width: config.width,
-        child: new Center(
-            child: new CardCollectionComponent(
-                game.cardCollections[p + HeartsGame.OFFSET_PLAY],
-                true,
-                CardCollectionOrientation.show1,
-                useKeys: true,
-                acceptCallback: _makeGameMoveCallback,
-                acceptType: p == game.whoseTurn ? DropType.card : DropType.none,
-                width: config.width,
-                backgroundColor:
-                    p == game.whoseTurn ? Colors.white : Colors.grey[500],
-                altColor: p == game.whoseTurn
-                    ? Colors.grey[200]
-                    : Colors.grey[600])));
-    cardCollections.add(playArea);
 
     List<logic_card.Card> cards = game.cardCollections[p];
     CardCollectionComponent c = new CardCollectionComponent(
         cards, game.playerNumber == p, CardCollectionOrientation.suit,
-        dragChildren: game.whoseTurn == p,
+        dragChildren: true, // Can drag, but may not have anywhere to drop
         comparator: _compareCards,
         width: config.width,
-        useKeys: true);
+        useKeys: _showSplitView);
     cardCollections.add(c); // flex
 
-    cardCollections.add(new Text("Player ${game.whoseTurn}'s turn"));
-    cardCollections.add(new Text(game.debugString));
     cardCollections.add(_makeDebugButtons());
 
     return new Column(cardCollections,
@@ -372,7 +503,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     } else if (!game.isPlayer || game.ready[game.playerNumber]) {
       w = new Text("Waiting for other players...");
     } else {
-      w = _makeButton('Ready?', game.setReadyUI);
+      w = _makeButton('New Round', game.setReadyUI);
     }
 
     bool isTall = MediaQuery.of(context).orientation == Orientation.portrait;
@@ -456,8 +587,6 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
       List<logic_card.Card> hand,
       AcceptCb cb,
       NoArgCb buttoncb) {
-    HeartsGame game = config.game as HeartsGame;
-
     bool draggable = (cb != null);
     bool completed = (buttoncb == null);
 
@@ -487,12 +616,8 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
         altColor: Colors.grey[700],
         useKeys: true);
 
-    return new Column(<Widget>[
-      topArea,
-      handArea,
-      new Text(game.debugString),
-      _makeDebugButtons()
-    ], justifyContent: FlexJustifyContent.spaceBetween);
+    return new Column(<Widget>[topArea, handArea, _makeDebugButtons()],
+        justifyContent: FlexJustifyContent.spaceBetween);
   }
 
   Widget _topCardWidget(List<logic_card.Card> cards, AcceptCb cb) {

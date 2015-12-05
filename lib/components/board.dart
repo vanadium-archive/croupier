@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 
 import '../logic/card.dart' as logic_card;
@@ -11,9 +9,10 @@ import '../logic/croupier.dart' show Croupier;
 import '../logic/croupier_settings.dart' show CroupierSettings;
 import '../logic/game/game.dart' show Game, GameType, NoArgCb;
 import '../logic/hearts/hearts.dart' show HeartsGame;
+import '../styles/common.dart' as style;
 import 'card.dart' as component_card;
 import 'card_collection.dart'
-    show CardCollectionComponent, CardCollectionOrientation;
+    show CardCollectionComponent, CardCollectionOrientation, DropType, AcceptCb;
 import 'croupier_profile.dart' show CroupierProfileComponent;
 
 const double defaultBoardHeight = 400.0;
@@ -49,10 +48,20 @@ abstract class Board extends StatefulComponent {
 /// cards each player has, and the cards they are currently playing.
 class HeartsBoard extends Board {
   final Croupier croupier;
-  final NoArgCb trueSetState;
+  final bool isMini;
+  final AcceptCb gameAcceptCallback;
+  final bool trickTaking;
+  final List<List<logic_card.Card>> playedCards;
 
-  HeartsBoard(Croupier croupier, this.trueSetState,
-      {double height, double width, double cardHeight, double cardWidth})
+  HeartsBoard(Croupier croupier,
+      {double height,
+      double width,
+      double cardHeight,
+      double cardWidth,
+      this.isMini: false,
+      this.gameAcceptCallback,
+      this.trickTaking,
+      this.playedCards})
       : super(croupier.game,
             height: height,
             width: width,
@@ -66,95 +75,120 @@ class HeartsBoard extends Board {
 }
 
 class HeartsBoardState extends State<HeartsBoard> {
-  bool trickTaking = false;
-  List<List<logic_card.Card>> playedCards = new List<List<logic_card.Card>>(4);
-
-  static const int SHOW_TRICK_DURATION = 2000; // ms
-
-  @override
-  void initState() {
-    super.initState();
-
-    _fillPlayedCards();
-  }
-
-  // Make copies of the played cards.
-  void _fillPlayedCards() {
-    for (int i = 0; i < 4; i++) {
-      playedCards[i] = new List<logic_card.Card>.from(
-          config.game.cardCollections[i + HeartsGame.OFFSET_PLAY]);
-    }
-  }
-
-  // If there were 3 played cards before and now there are 0...
-  bool _detectTrick() {
-    HeartsGame game = config.game;
-    int lastNumPlayed = playedCards.where((List<logic_card.Card> list) {
-      return list.length > 0;
-    }).length;
-    return lastNumPlayed == 3 && game.numPlayed == 0;
-  }
-
-  // Make a copy of the missing played card.
-  void _fillMissingPlayedCard() {
-    HeartsGame game = config.game;
-    List<logic_card.Card> trickPile =
-        game.cardCollections[game.lastTrickTaker + HeartsGame.OFFSET_TRICK];
-
-    // Find the index of the missing play card.
-    int missing;
-    for (int j = 0; j < 4; j++) {
-      if (playedCards[j].length == 0) {
-        missing = j;
-        break;
-      }
-    }
-
-    // Use the trickPile to get this card.
-    playedCards[missing] = <logic_card.Card>[
-      trickPile[trickPile.length - 4 + missing]
-    ];
-  }
-
   Widget build(BuildContext context) {
-    if (!trickTaking) {
-      if (_detectTrick()) {
-        trickTaking = true;
-        _fillMissingPlayedCard();
-        // Unfortunately, ZCards are drawn on the game layer,
-        // so instead of setState, we must use trueSetState.
-        new Future.delayed(const Duration(milliseconds: SHOW_TRICK_DURATION),
-            () {
-          trickTaking = false;
-          config.trueSetState();
-        });
-      } else {
-        _fillPlayedCards();
-      }
-    }
-
     return new Container(
         height: config.height,
         width: config.width,
         child: new Stack([
-          new Positioned(top: 0.0, left: 0.0, child: _buildBoardLayout()),
           new Positioned(
-              top: config.height * 1.5,
+              top: 0.0,
+              left: 0.0,
+              child: config.isMini
+                  ? _buildMiniBoardLayout()
+                  : _buildBoardLayout()),
+          new Positioned(
+              top: config.height * 5.5,
               left: (config.width - config.cardWidth) / 2,
-              child: _buildTrick(0)), // bottom
+              child: _buildTrick(
+                  config.isMini ? rotateByGamePlayerNumber(0) : 0)), // bottom
           new Positioned(
               top: (config.height - config.cardHeight) / 2,
-              left: config.width * -0.5,
-              child: _buildTrick(1)), // left
+              left: config.width * -4.5,
+              child: _buildTrick(
+                  config.isMini ? rotateByGamePlayerNumber(1) : 1)), // left
           new Positioned(
-              top: config.height * -0.5,
+              top: config.height * -4.5,
               left: (config.width - config.cardWidth) / 2,
-              child: _buildTrick(2)), // top
+              child: _buildTrick(
+                  config.isMini ? rotateByGamePlayerNumber(2) : 2)), // top
           new Positioned(
               top: (config.height - config.cardHeight) / 2,
-              left: config.width * 1.5,
-              child: _buildTrick(3)) // right
+              left: config.width * 5.5,
+              child: _buildTrick(
+                  config.isMini ? rotateByGamePlayerNumber(3) : 3)) // right
         ]));
+  }
+
+  int rotateByGamePlayerNumber(int i) {
+    return (i + config.game.playerNumber) % 4;
+  }
+
+  Widget _buildMiniBoardLayout() {
+    return new Container(
+        height: config.height,
+        width: config.width,
+        child: new Center(
+            child: new Row([
+          new Flexible(
+              flex: 1,
+              child: new Center(
+                  child: _buildAvatarSlotCombo(rotateByGamePlayerNumber(1)))),
+          new Flexible(
+              flex: 1,
+              child: new Column([
+                new Flexible(
+                    flex: 1,
+                    child: _buildAvatarSlotCombo(rotateByGamePlayerNumber(2))),
+                new Flexible(
+                    flex: 1,
+                    child: _buildAvatarSlotCombo(rotateByGamePlayerNumber(0)))
+              ])),
+          new Flexible(
+              flex: 1,
+              child: new Center(
+                  child: _buildAvatarSlotCombo(rotateByGamePlayerNumber(3))))
+        ])));
+  }
+
+  Widget _buildAvatarSlotCombo(int playerNumber) {
+    HeartsGame game = config.game as HeartsGame;
+    int p = game.playerNumber;
+
+    List<Widget> items = new List<Widget>();
+    bool isMe = playerNumber == p;
+    bool isPlayerTurn = playerNumber == game.whoseTurn && !config.trickTaking;
+
+    List<logic_card.Card> showCard =
+        game.cardCollections[playerNumber + HeartsGame.OFFSET_PLAY];
+
+    if (config.trickTaking) {
+      showCard = config.playedCards[playerNumber];
+    }
+
+    items.add(new Positioned(
+        top: 0.0,
+        left: 0.0,
+        child: new CardCollectionComponent(
+            showCard, true, CardCollectionOrientation.show1,
+            useKeys: true,
+            animationType: component_card.CardAnimationType.NONE,
+            acceptCallback: config.gameAcceptCallback,
+            acceptType: isMe && isPlayerTurn ? DropType.card : DropType.none,
+            widthCard: config.cardWidth - 6.0,
+            heightCard: config.cardHeight - 6.0,
+            backgroundColor:
+                isPlayerTurn ? style.theme.accentColor : Colors.grey[500],
+            altColor: isPlayerTurn ? Colors.grey[200] : Colors.grey[600])));
+
+    bool hasPlayed =
+        game.cardCollections[playerNumber + HeartsGame.OFFSET_PLAY].length > 0;
+    if (!hasPlayed) {
+      items.add(new Positioned(
+          top: 0.0,
+          left: 0.0,
+          child: new IgnorePointer(
+              child: new CroupierProfileComponent(
+                  settings:
+                      config.croupier.settingsFromPlayerNumber(playerNumber),
+                  height: config.cardHeight,
+                  width: config.cardWidth,
+                  isMini: true))));
+    }
+
+    return new Container(
+        width: config.cardWidth,
+        height: config.cardHeight,
+        child: new Stack(items));
   }
 
   Widget _buildBoardLayout() {
@@ -269,32 +303,35 @@ class HeartsBoardState extends State<HeartsBoard> {
     HeartsGame game = config.game;
     List<logic_card.Card> cards =
         game.cardCollections[playerNumber + HeartsGame.OFFSET_PLAY];
-    if (trickTaking) {
-      cards = playedCards[playerNumber];
+    if (config.trickTaking) {
+      cards = config.playedCards[playerNumber];
     }
 
-    return new CardCollectionComponent(
-        cards, true, CardCollectionOrientation.show1,
-        widthCard: config.cardWidth * 1.25,
-        heightCard: config.cardHeight * 1.25,
-        backgroundColor:
-            game.whoseTurn == playerNumber ? Colors.blue[500] : null,
-        useKeys: true);
+    return new Container(
+        decoration: game.whoseTurn == playerNumber ? style.Box.liveNow : null,
+        child: new CardCollectionComponent(
+            cards, true, CardCollectionOrientation.show1,
+            widthCard: config.cardWidth * 2,
+            heightCard: config.cardHeight * 2,
+            useKeys: true));
   }
 
   Widget _buildTrick(int playerNumber) {
     HeartsGame game = config.game;
+
     List<logic_card.Card> cards =
         game.cardCollections[playerNumber + HeartsGame.OFFSET_TRICK];
     // If took trick, exclude the last 4 cards for the trick taking animation.
-    if (trickTaking && playerNumber == game.lastTrickTaker) {
+    if (config.trickTaking && playerNumber == game.lastTrickTaker) {
       cards = new List.from(cards.sublist(0, cards.length - 4));
     }
 
+    double sizeFactor = config.isMini ? 1.0 : 2.0;
+
     return new CardCollectionComponent(
         cards, true, CardCollectionOrientation.show1,
-        widthCard: config.cardWidth,
-        heightCard: config.cardHeight,
+        widthCard: config.cardWidth * sizeFactor,
+        heightCard: config.cardHeight * sizeFactor,
         useKeys: true,
         animationType: component_card.CardAnimationType.LONG);
   }

@@ -107,7 +107,7 @@ abstract class Game {
   }
 
   bool debugMode = false;
-  String debugString = 'hello?';
+  String debugString;
 
   NoArgCb updateCallback; // Used to inform components of when a change has occurred. This is especially important when something non-UI related changes what should be drawn.
 

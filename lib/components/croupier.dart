@@ -17,6 +17,8 @@ import 'game.dart' as component_game;
 
 typedef void NoArgCb();
 
+GlobalObjectKey _gameKey = new GlobalObjectKey("CroupierGameKey");
+
 class CroupierComponent extends StatefulComponent {
   final logic_croupier.Croupier croupier;
 
@@ -117,7 +119,8 @@ class CroupierComponentState extends State<CroupierComponent> {
               makeSetStateCallback(logic_croupier.CroupierState.Welcome)();
             },
                 width: ui.window.size.width,
-                height: ui.window.size.height - ui.window.padding.top));
+                height: ui.window.size.height - ui.window.padding.top,
+                key: _gameKey));
       default:
         assert(false);
         return null;
