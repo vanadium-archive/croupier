@@ -4,6 +4,7 @@ material-design-icons:
   - name: action/help
   - name: action/settings
   - name: av/play_arrow
+  - name: action/swap_vert
   - name: navigation/arrow_back
   - name: navigation/menu
 assets:

@@ -5,6 +5,7 @@
 library game_component;
 
 import 'dart:math' as math;
+import 'dart:async';
 
 import 'package:flutter/animation.dart';
 import 'package:flutter/material.dart';
@@ -35,7 +36,9 @@ abstract class GameComponent extends StatefulComponent {
   final double width;
   final double height;
 
-  GameComponent(this.croupier, this.gameEndCallback, {this.width, this.height});
+  GameComponent(this.croupier, this.gameEndCallback,
+      {Key key, this.width, this.height})
+      : super(key: key);
 }
 
 abstract class GameComponentState<T extends GameComponent> extends State<T> {
@@ -167,6 +170,7 @@ abstract class GameComponentState<T extends GameComponent> extends State<T> {
       // Don't show a card if it isn't part of a visible collection.
       if (!visibleCardCollectionIndexes.contains(config.game.findCard(c))) {
         cardLevelMap.remove(c); // It is an old card, which we can clean up.
+        assert(!cardLevelMap.containsKey(c));
         return;
       }
 
@@ -196,17 +200,17 @@ abstract class GameComponentState<T extends GameComponent> extends State<T> {
 }
 
 GameComponent createGameComponent(Croupier croupier, NoArgCb gameEndCallback,
-    {double width, double height}) {
+    {Key key, double width, double height}) {
   switch (croupier.game.gameType) {
     case GameType.Proto:
       return new ProtoGameComponent(croupier, gameEndCallback,
-          width: width, height: height);
+          key: key, width: width, height: height);
     case GameType.Hearts:
       return new HeartsGameComponent(croupier, gameEndCallback,
-          width: width, height: height);
+          key: key, width: width, height: height);
     case GameType.Solitaire:
       return new SolitaireGameComponent(croupier, gameEndCallback,
-          width: width, height: height);
+          key: key, width: width, height: height);
     default:
       // We're probably not ready to serve the other games yet.
       assert(false);

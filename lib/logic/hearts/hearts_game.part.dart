@@ -415,13 +415,10 @@ class HeartsGame extends Game {
       return "It is not Player ${player}'s turn.";
     }
     if (trickNumber == 0 && this.numPlayed == 0 && c != TWO_OF_CLUBS) {
-      return "Player ${player} must play the two of clubs.";
-    }
-    if (trickNumber == 0 && isPenaltyCard(c)) {
-      return "Cannot play a penalty card on the first round of Hearts.";
+      return "You must play the 2 of Clubs";
     }
     if (this.numPlayed == 0 && isHeartsCard(c) && !heartsBroken) {
-      return "Cannot lead with a heart when the suit has not been broken yet.";
+      return "Hearts have not been broken";
     }
     if (this.leadingCard != null) {
       String leadingSuit = getCardSuit(this.leadingCard);
@@ -429,8 +426,11 @@ class HeartsGame extends Game {
       if (this.numPlayed >= 1 &&
           leadingSuit != otherSuit &&
           hasSuit(player, leadingSuit)) {
-        return "Must follow with a ${leadingSuit}.";
+        return "You must follow suit";
       }
+    }
+    if (trickNumber == 0 && isPenaltyCard(c)) {
+      return "No penalty cards on 1st trick";
     }
     return null;
   }
