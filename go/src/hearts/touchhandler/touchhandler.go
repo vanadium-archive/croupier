@@ -375,14 +375,14 @@ func beginClickPlay(t touch.Event, u *uistate.UIState) {
 	buttonList := findClickedButton(t, u)
 	if len(buttonList) > 0 {
 		if u.Debug {
-			if u.Buttons[0] == buttonList[0] {
+			if u.Buttons[0] == buttonList[0] && !u.SwitchingViews {
 				view.LoadSplitView(false, u)
 			} else if u.Buttons[1] == buttonList[0] {
 				view.LoadTableView(u)
 			} else if u.Buttons[2] == buttonList[0] {
 				view.LoadPassOrTakeOrPlay(u)
 			}
-		} else {
+		} else if !u.SwitchingViews {
 			view.LoadSplitView(false, u)
 		}
 	}
@@ -425,13 +425,17 @@ func beginClickSplit(t touch.Event, u *uistate.UIState) {
 	buttonList := findClickedButton(t, u)
 	if len(buttonList) > 0 {
 		if u.Debug {
-			if u.Buttons[0] == buttonList[0] {
+			if u.Buttons[0] == buttonList[0] && !u.SwitchingViews {
 				ch := make(chan bool)
+				u.SwitchingViews = true
 				reposition.AnimateOutSplit(ch, u)
 				quit := make(chan bool)
 				u.AnimChans = append(u.AnimChans, quit)
 				go func() {
-					onDone := func() { view.LoadPlayView(u) }
+					onDone := func() {
+						u.SwitchingViews = false
+						view.LoadPlayView(u)
+					}
 					reposition.SwitchOnChan(ch, quit, onDone, u)
 				}()
 			} else if u.Buttons[1] == buttonList[0] {
@@ -439,13 +443,17 @@ func beginClickSplit(t touch.Event, u *uistate.UIState) {
 			} else if u.Buttons[2] == buttonList[0] {
 				view.LoadPassOrTakeOrPlay(u)
 			}
-		} else {
+		} else if !u.SwitchingViews {
 			ch := make(chan bool)
+			u.SwitchingViews = true
 			reposition.AnimateOutSplit(ch, u)
 			quit := make(chan bool)
 			u.AnimChans = append(u.AnimChans, quit)
 			go func() {
-				onDone := func() { view.LoadPlayView(u) }
+				onDone := func() {
+					u.SwitchingViews = false
+					view.LoadPlayView(u)
+				}
 				reposition.SwitchOnChan(ch, quit, onDone, u)
 			}()
 		}

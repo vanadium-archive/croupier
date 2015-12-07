@@ -93,6 +93,7 @@ type UIState struct {
 	Service          syncbase.Service
 	Debug            bool                           // true if debugging, adds extra functionality to switch between players
 	SequentialPhases bool                           // true if trying to match Croupier Flutter Pass -> Take -> Play phase system
+	SwitchingViews   bool                           // true if currently animating between play and split views
 	Shutdown         func()                         // used to shut down a v23.Init()
 	GameID           int                            // used to differentiate between concurrent games
 	IsOwner          bool                           // true if this player is the game creator
@@ -131,6 +132,7 @@ func MakeUIState() *UIState {
 		Done:             false,
 		Debug:            false,
 		SequentialPhases: true,
+		SwitchingViews:   false,
 		UserData:         make(map[int]map[string]interface{}),
 		PlayerData:       make(map[int]int),
 		AnimChans:        make([]chan bool, 0),

@@ -425,7 +425,15 @@ func LoadSplitView(reloading bool, u *uistate.UIState) {
 	}
 	reposition.SetSplitDropColors(u)
 	if !reloading {
-		reposition.AnimateInSplit(u)
+		ch := make(chan bool)
+		quit := make(chan bool)
+		u.AnimChans = append(u.AnimChans, quit)
+		u.SwitchingViews = true
+		reposition.AnimateInSplit(ch, u)
+		go func() {
+			onDone := func() { u.SwitchingViews = false }
+			reposition.SwitchOnChan(ch, quit, onDone, u)
+		}()
 	}
 }
 
@@ -617,11 +625,12 @@ func addPlayHeader(message string, beforeSplitAnimation bool, u *uistate.UIState
 	u.Other = append(u.Other,
 		texture.MakeImgWithoutAlt(headerImage, headerPos, headerDimensions, u))
 	// adding pull tab
-	pullTabImage := u.Texs["HorizontalPullTab.png"]
+	pullTabImage := u.Texs["Visibility.png"]
+	pullTabAlt := u.Texs["VisibilityOff.png"]
 	pullTabDim := u.CardDim.DividedBy(2)
 	pullTabPos := headerPos.PlusVec(headerDimensions).MinusVec(pullTabDim).Minus(u.Padding)
 	u.Buttons = append(u.Buttons,
-		texture.MakeImgWithoutAlt(pullTabImage, pullTabPos, pullTabDim, u))
+		texture.MakeImgWithAlt(pullTabImage, pullTabAlt, pullTabPos, pullTabDim, !beforeSplitAnimation, u))
 	// adding text
 	color := "DBlue"
 	scaler := float32(4)
