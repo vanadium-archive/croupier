@@ -101,37 +101,41 @@ func UpdateGame(u *uistate.UIState) {
 				if err := c.Value(&value); err != nil {
 					fmt.Println("Value error:", err)
 				}
-				valueStr := string(value)
-				fmt.Println(key, valueStr)
-				keyType := strings.Split(key, "/")[1]
-				switch keyType {
-				case "log":
-					updateType := strings.Split(valueStr, "|")[0]
-					switch updateType {
-					case Deal:
-						onDeal(valueStr, u)
-					case Pass:
-						onPass(valueStr, u)
-					case Take:
-						onTake(valueStr, u)
-					case Play:
-						onPlay(valueStr, u)
-					case Ready:
-						onReady(valueStr, u)
-					}
-				case "players":
-					switch strings.Split(key, "/")[3] {
-					case "player_number":
-						onPlayerNum(key, valueStr, u)
-					case "settings_sg":
-						onSettings(key, valueStr, u)
-					}
-
-				}
+				handleGameUpdate(key, value, u)
 			} else {
 				fmt.Println("Unexpected ChangeType: ", c.ChangeType)
 			}
 		}
+	}
+}
+
+func handleGameUpdate(key string, value []byte, u *uistate.UIState) {
+	valueStr := string(value)
+	fmt.Println(key, valueStr)
+	keyType := strings.Split(key, "/")[1]
+	switch keyType {
+	case "log":
+		updateType := strings.Split(valueStr, "|")[0]
+		switch updateType {
+		case Deal:
+			go onDeal(valueStr, u)
+		case Pass:
+			go onPass(valueStr, u)
+		case Take:
+			go onTake(valueStr, u)
+		case Play:
+			go onPlay(valueStr, u)
+		case Ready:
+			go onReady(valueStr, u)
+		}
+	case "players":
+		switch strings.Split(key, "/")[3] {
+		case "player_number":
+			onPlayerNum(key, valueStr, u)
+		case "settings_sg":
+			onSettings(key, valueStr, u)
+		}
+
 	}
 }
 

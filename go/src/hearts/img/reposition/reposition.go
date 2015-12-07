@@ -277,8 +277,7 @@ func AnimateSplitCardPlay(c *card.Card, player int, quit chan bool, u *uistate.U
 	SwitchOnChan(ch, quit, func() {}, u)
 }
 
-func AnimateInSplit(u *uistate.UIState) {
-	ResetAnims(u)
+func AnimateInSplit(ch chan bool, u *uistate.UIState) {
 	topOfBanner := u.WindowSize.Y - 4*u.CardDim.Y - 5*u.Padding - u.BottomPadding - 40
 	tableImgs := make([]*staticimg.StaticImg, 0)
 	bannerImgs := make([]*staticimg.StaticImg, 0)
@@ -315,7 +314,7 @@ func AnimateInSplit(u *uistate.UIState) {
 			oldDim := img.GetDimensions()
 			newDim := coords.MakeVec(oldDim.X, oldDim.Y-10)
 			newTo := coords.MakeVec(to.X, to.Y+10)
-			AnimateImageNoChannel(img, newTo, newDim, u)
+			animateImageMovement(ch, img, newTo, newDim, u)
 		} else {
 			AnimateImageNoChannel(img, to, img.GetDimensions(), u)
 		}
@@ -323,7 +322,6 @@ func AnimateInSplit(u *uistate.UIState) {
 }
 
 func AnimateOutSplit(ch chan bool, u *uistate.UIState) {
-	ResetAnims(u)
 	topOfBanner := u.WindowSize.Y - 4*u.CardDim.Y - 5*u.Padding - u.BottomPadding - 40
 	tableImgs := make([]*staticimg.StaticImg, 0)
 	bannerImgs := make([]*staticimg.StaticImg, 0)
@@ -577,5 +575,6 @@ func ResetAnims(u *uistate.UIState) {
 	for _, ch := range u.AnimChans {
 		ch <- true
 	}
+	u.SwitchingViews = false
 	u.AnimChans = make([]chan bool, 0)
 }
