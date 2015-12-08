@@ -2,17 +2,18 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-import '../../settings/client.dart' as settings_client;
-import 'discovery_client.dart' show DiscoveryClient;
-import 'util.dart' as util;
-
 import 'dart:async';
+import 'dart:convert' show UTF8;
 import 'dart:io' show Platform;
 
-import 'package:v23discovery/discovery.dart' as discovery;
 import 'package:flutter/services.dart' show shell;
 import 'package:syncbase/src/naming/util.dart' as naming;
 import 'package:syncbase/syncbase_client.dart' as sc;
+import 'package:v23discovery/discovery.dart' as discovery;
+
+import '../../settings/client.dart' as settings_client;
+import 'discovery_client.dart' show DiscoveryClient;
+import 'util.dart' as util;
 
 class CroupierClient {
   final sc.SyncbaseClient _syncbaseClient;
@@ -75,22 +76,21 @@ class CroupierClient {
     return db;
   }
 
-  Completer _tableLock;
-
-  // TODO(alexfandrianto): Try not to call this twice at the same time.
-  // That would lead to very race-y behavior.
+  // Use Table Lock to sort out multiple calls to createTable.
+  Map<String, Completer<sc.SyncbaseTable>> _tableLock =
+      new Map<String, Completer<sc.SyncbaseTable>>();
   Future<sc.SyncbaseTable> createTable(
       sc.SyncbaseDatabase db, String tableName) async {
-    if (_tableLock != null) {
-      await _tableLock.future;
+    if (_tableLock[tableName] != null) {
+      return _tableLock[tableName].future;
     }
-    _tableLock = new Completer();
-    var table = db.table(tableName);
+    _tableLock[tableName] = new Completer<sc.SyncbaseTable>();
+    sc.SyncbaseTable table = db.table(tableName);
     if (!(await table.exists())) {
       await table.create(util.openPerms);
     }
     util.log('CroupierClient: ${tableName} is ready');
-    _tableLock.complete();
+    _tableLock[tableName].complete(table);
     return table;
   }
 
@@ -151,6 +151,92 @@ class CroupierClient {
         this.appSettings.mounttable, this.appSettings.deviceID);
     String sgName = naming.join(sgPrefix, suffix);
     return sgName;
+  }
+
+  // Creates a watch stream that lets you watch a bunch of updates.
+  // In order to guarantee that you see everything, it also scans the whole
+  // table and sorts the watch updates (if asked).
+  // Finally, the return value is a completer that when completed stops
+  // listening to the watch stream.
+  Future<StreamSubscription<sc.WatchChange>> watchEverything(
+      sc.SyncbaseDatabase db,
+      String tbName,
+      String prefix,
+      util.asyncKeyValueCallback onChange,
+      {Comparator<sc.WatchChange> sorter}) async {
+    util.log('Watching for changes on ${tbName}:${prefix}...');
+
+    // For safety, be certain that the syncbase table at tbName exists.
+    await createTable(db, tbName);
+
+    // In order to safely read all watch updates, we have to do a scan first.
+    // See https://github.com/vanadium/issues/issues/917
+    sc.SyncbaseBatchDatabase sbdb =
+        await db.beginBatch(sc.SyncbaseClient.batchOptions(readOnly: true));
+    List<int> resumeMarker;
+    try {
+      resumeMarker = await sbdb.getResumeMarker();
+
+      sc.SyncbaseTable tb = sbdb.table(tbName);
+
+      await tb
+          .scan(new sc.RowRange.prefix(prefix))
+          .forEach((sc.KeyValue kv) async {
+        String key = kv.key;
+        String value = UTF8.decode(kv.value);
+        print("Scan found ${key}, ${value}");
+        await onChange(key, value, true);
+      });
+    } finally {
+      await sbdb.abort();
+    }
+
+    // Now we can start watching from the batch's resume marker.
+    Stream<sc.WatchChange> watchStream = db.watch(tbName, prefix, resumeMarker);
+
+    // This list will queue up the changes of a watch batch sequence.
+    List<sc.WatchChange> watchSequence = new List<sc.WatchChange>();
+
+    // Define a change handler that will be applied whenever a WatchChange
+    // arrives on the watchStream.
+    _handleChange(sc.WatchChange wc) async {
+      // Accumulate the WatchChange's in watchSequence.
+      watchSequence.add(wc);
+      if (wc.continued) {
+        // Since there are more WatchChange's to collect, do not act yet.
+        return;
+      } else {
+        // 1. Possibly sort the watchSequence by the optional sorter function.
+        if (sorter != null) {
+          watchSequence.sort(sorter);
+        }
+
+        // 2. Then run through each value in order.
+        watchSequence.forEach((sc.WatchChange _w) async {
+          String key = _w.rowKey;
+          String value;
+          switch (_w.changeType) {
+            case sc.WatchChangeTypes.put:
+              value = UTF8.decode(_w.valueBytes);
+              break;
+            case sc.WatchChangeTypes.delete:
+              value = null;
+              break;
+            default:
+              assert(false);
+          }
+
+          print("Watch found ${key}, ${value}");
+          await onChange(key, value, false);
+        });
+
+        // 3. Then clear the watchSequence.
+        watchSequence.clear();
+      }
+    }
+
+    // Start listening on the watch stream using the change handler.
+    return watchStream.listen((sc.WatchChange wc) => _handleChange(wc));
   }
 }
 

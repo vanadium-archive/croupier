@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+import 'dart:async';
 import 'package:syncbase/syncbase_client.dart' show Perms, SyncbaseClient;
 
 const String appName = 'app';
@@ -26,6 +27,7 @@ const String settingsWatchSyncPrefix = "users";
 
 typedef void NoArgCb();
 typedef void keyValueCallback(String key, String value);
+typedef Future asyncKeyValueCallback(String key, String value, bool duringScan);
 
 const String openPermsJson =
     '{"Admin":{"In":["..."]},"Write":{"In":["..."]},"Read":{"In":["..."]},"Resolve":{"In":["..."]},"Debug":{"In":["..."]}}';

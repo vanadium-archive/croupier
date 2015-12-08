@@ -54,10 +54,14 @@ class SettingsManager {
     tb = await _cc.createTable(db, util.tableNameSettings);
 
     // Start to watch the stream for the shared settings table.
-    Stream<sc.WatchChange> watchStream = db.watch(util.tableNameSettings,
-        util.settingsWatchSyncPrefix, UTF8.encode("now"));
-    _startWatchSettings(watchStream); // Don't wait for this future.
-    _loadSettings(tb); // Don't wait for this future.
+    await _cc.watchEverything(db, util.tableNameSettings,
+        util.settingsWatchSyncPrefix, _onSettingsChange);
+  }
+
+  // In the case of the settings manager, we're checking for any changes to
+  // any person's Croupier Settings.
+  Future _onSettingsChange(String key, String value, bool duringScan) async {
+    this.updateSettingsCallback(util.userIDFromSettingsDataKey(key), value);
   }
 
   // Guaranteed to be called when the program starts.
@@ -99,35 +103,6 @@ class SettingsManager {
         .put(UTF8.encode(jsonString));
   }
 
-  // This watch method ensures that any changes are propagated to the caller.
-  // In the case of the settings manager, we're checking for any changes to
-  // any person's Croupier Settings.
-  Future _startWatchSettings(Stream<sc.WatchChange> watchStream) async {
-    util.log('Settings watching for changes...');
-    // This stream never really ends, so I guess we'll watch forever.
-    await for (sc.WatchChange wc in watchStream) {
-      assert(wc.tableName == util.tableNameSettings);
-      util.log('Watch Key: ${wc.rowKey}');
-      util.log('Watch Value ${UTF8.decode(wc.valueBytes)}');
-      String key = wc.rowKey;
-      String value;
-      switch (wc.changeType) {
-        case sc.WatchChangeTypes.put:
-          value = UTF8.decode(wc.valueBytes);
-          break;
-        case sc.WatchChangeTypes.delete:
-          value = null;
-          break;
-        default:
-          assert(false);
-      }
-
-      if (this.updateSettingsCallback != null) {
-        this.updateSettingsCallback(util.userIDFromSettingsDataKey(key), value);
-      }
-    }
-  }
-
   // Best called after load(), to ensure that there are settings in the table.
   Future createSettingsSyncgroup() async {
     int id = await _getUserID();
@@ -141,53 +116,32 @@ class SettingsManager {
     return _cc.makeSyncgroupName(await _syncSettingsSuffix());
   }
 
-  // This watch method ensures that any changes are propagated to the caller.
-  // In this case, we're forwarding any player changes to the Croupier logic.
-  // We also catch the game status signals.
-  Future _startWatchGame(Stream<sc.WatchChange> watchStream) async {
-    util.log('Game watching for changes...');
-    // This stream never really ends, so I guess we'll watch forever.
-    await for (sc.WatchChange wc in watchStream) {
-      assert(wc.tableName == util.tableNameGames);
-      util.log('Watch Key: ${wc.rowKey}');
-      util.log('Watch Value ${UTF8.decode(wc.valueBytes)}');
-      String key = wc.rowKey;
-      String value;
-      switch (wc.changeType) {
-        case sc.WatchChangeTypes.put:
-          value = UTF8.decode(wc.valueBytes);
-          break;
-        case sc.WatchChangeTypes.delete:
-          value = null;
-          break;
-        default:
-          assert(false);
+  // Forward any player changes and game status signals to Croupier's logic.
+  // TODO(alexfandrianto): This also watches the log (but doesn't process it.
+  Future _onGameChange(String key, String value, bool duringScan) async {
+    if (key.indexOf("/players") != -1) {
+      if (this.updatePlayerFoundCallback != null) {
+        String type = util.playerUpdateTypeFromPlayerKey(key);
+        switch (type) {
+          case "player_number":
+            // Update the player number for this player.
+            this.updatePlayerFoundCallback(key, value);
+            break;
+          case "settings_sg":
+            // Join this player's settings syncgroup.
+            _cc.joinSyncgroup(value);
+
+            // Also, signal that this player has been found.
+            this.updatePlayerFoundCallback(key, null);
+            break;
+          default:
+            print("Unexpected key: ${key} with value ${value}");
+            assert(false);
+        }
       }
-
-      if (key.indexOf("/players") != -1) {
-        if (this.updatePlayerFoundCallback != null) {
-          String type = util.playerUpdateTypeFromPlayerKey(key);
-          switch (type) {
-            case "player_number":
-              // Update the player number for this player.
-              this.updatePlayerFoundCallback(key, value);
-              break;
-            case "settings_sg":
-              // Join this player's settings syncgroup.
-              _cc.joinSyncgroup(value);
-
-              // Also, signal that this player has been found.
-              this.updatePlayerFoundCallback(key, null);
-              break;
-            default:
-              print("Unexpected key: ${key} with value ${value}");
-              assert(false);
-          }
-        }
-      } else if (key.indexOf("/status") != -1) {
-        if (this.updateGameStatusCallback != null) {
-          this.updateGameStatusCallback(key, value);
-        }
+    } else if (key.indexOf("/status") != -1) {
+      if (this.updateGameStatusCallback != null) {
+        this.updateGameStatusCallback(key, value);
       }
     }
   }
@@ -199,9 +153,8 @@ class SettingsManager {
     sc.SyncbaseTable gameTable = await _cc.createTable(db, util.tableNameGames);
 
     // Watch for the players in the game.
-    Stream<sc.WatchChange> watchStream = db.watch(
-        util.tableNameGames, util.syncgamePrefix(gameID), UTF8.encode("now"));
-    _startWatchGame(watchStream); // Don't wait for this future.
+    await _cc.watchEverything(
+        db, util.tableNameGames, util.syncgamePrefix(gameID), _onGameChange);
 
     print("Now writing to some rows of ${gameID}");
     // Start up the table and write yourself as player 0.
@@ -231,9 +184,8 @@ class SettingsManager {
     sc.SyncbaseTable gameTable = await _cc.createTable(db, util.tableNameGames);
 
     // Watch for the players in the game.
-    Stream<sc.WatchChange> watchStream = db.watch(
-        util.tableNameGames, util.syncgamePrefix(gameID), UTF8.encode("now"));
-    _startWatchGame(watchStream); // Don't wait for this future.
+    await _cc.watchEverything(
+        db, util.tableNameGames, util.syncgamePrefix(gameID), _onGameChange);
 
     await _cc.joinSyncgroup(sgName);
 
@@ -258,20 +210,6 @@ class SettingsManager {
     sc.SyncbaseTable gameTable = await _cc.createTable(db, util.tableNameGames);
 
     await gameTable.row(util.gameStatusKey(gameID)).put(UTF8.encode(status));
-  }
-
-  // When starting the settings manager, there may be settings already in the
-  // store. Make sure to load those.
-  Future _loadSettings(sc.SyncbaseTable tb) async {
-    tb
-        .scan(new sc.RowRange.prefix(util.settingsWatchSyncPrefix))
-        .forEach((sc.KeyValue kv) {
-      if (util.isSettingsKey(kv.key)) {
-        // Then we can process the value as if it were settings data.
-        this.updateSettingsCallback(
-            util.userIDFromSettingsDataKey(kv.key), UTF8.decode(kv.value));
-      }
-    });
   }
 
   // TODO(alexfandrianto): It is possible that the more efficient way of

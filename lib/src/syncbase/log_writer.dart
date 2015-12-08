@@ -41,9 +41,9 @@ class LogWriter {
   // Affects read/write/watch locations of the log writer.
   String logPrefix = ''; // This is usually set to <game_id>/log
 
-  // An internal boolean that should be set to true when watching and reset to
-  // false once watch should be turned off.
-  bool _watching = false;
+  // An internal StreamSubscription that should be canceled once we are done
+  // watching on this log.
+  StreamSubscription<WatchChange> _watchSubscription;
 
   // When a proposal is made (or received), this flag is set to true.
   // Once a consensus has been reached, this is set to false again.
@@ -81,74 +81,18 @@ class LogWriter {
     tb = await _cc.createTable(db, tbName);
 
     // Start to watch the stream.
-    Stream<WatchChange> watchStream =
-        db.watch(tbName, this.logPrefix, UTF8.encode("now"));
-    _startWatch(watchStream); // Don't wait for this future.
+    this._watchSubscription = await _cc.watchEverything(
+        db, tbName, this.logPrefix, _onChange,
+        sorter: (WatchChange a, WatchChange b) {
+      return a.rowKey.compareTo(b.rowKey);
+    });
   }
 
-  Future _startWatch(Stream<WatchChange> watchStream) async {
-    util.log('watching for changes...');
-    _watching = true;
-
-    List<WatchChange> watchSequence = new List<WatchChange>();
-
-    // This stream never really ends, so it will watch forever.
-    // https://github.com/vanadium/issues/issues/833
-    // To break out of the watch handler, we can use the _watching flag.
-    // However, the for loop will only break on the watch update after _watching
-    // is set to false.
-    await for (WatchChange wc in watchStream) {
-      if (!this._watching) {
-        break;
-      }
-
-      // Accumulate the WatchChange's in watchSequence.
-      watchSequence.add(wc);
-      if (wc.continued) {
-        // Since there are more WatchChange's to collect, do not act yet.
-        continue;
-      } else {
-        // 1. Sort the watchSequence by timestamp.
-        // Note: The rowKeys for the logPrefix can be sorted this way.
-        // It should not matter if proposals gets mixed up with writes.
-        watchSequence.sort((WatchChange a, WatchChange b) {
-          return a.rowKey.compareTo(b.rowKey);
-        });
-
-        // 2. Then run through each value in order.
-        watchSequence.forEach((WatchChange w) {
-          _handleWatchChange(w);
-        });
-
-        // 3. Then clear the watchSequence.
-        watchSequence.clear();
-      }
-    }
-  }
-
-  Future _handleWatchChange(WatchChange wc) async {
-    assert(wc.tableName == tbName);
-    util.log('Watch Key: ${wc.rowKey}');
-    util.log('Watch Value ${UTF8.decode(wc.valueBytes)}');
-    String key = wc.rowKey.replaceFirst("${this.logPrefix}/", "");
-    if (key == wc.rowKey) {
-      print("Lacks prefix '${this.logPrefix}/', skipping...");
-      return;
-    }
-    String value;
-    switch (wc.changeType) {
-      case WatchChangeTypes.put:
-        value = UTF8.decode(wc.valueBytes);
-        break;
-      case WatchChangeTypes.delete:
-        value = null;
-        break;
-      default:
-        assert(false);
-    }
+  Future _onChange(String rowKey, String value, bool duringScan) async {
+    String key = rowKey.replaceFirst("${this.logPrefix}/", "");
 
     if (_isProposalKey(key)) {
-      if (value != null && !_acceptedProposals.contains(key)) {
+      if (value != null && !_acceptedProposals.contains(key) && !duringScan) {
         await _receiveProposal(key, value);
       }
     } else {
@@ -158,7 +102,10 @@ class LogWriter {
   }
 
   void close() {
-    this._watching = false;
+    if (this._watchSubscription != null) {
+      this._watchSubscription.cancel();
+      this._watchSubscription = null;
+    }
   }
 
   Future write(SimulLevel s, String value) async {

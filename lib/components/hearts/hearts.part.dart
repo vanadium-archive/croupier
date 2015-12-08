@@ -92,6 +92,24 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
       _reset();
     }
 
+    // Set the trickTaking flag on each build.
+    if (!trickTaking) {
+      if (_detectTrick()) {
+        trickTaking = true;
+        _fillMissingPlayedCard();
+        // Unfortunately, ZCards are drawn on the game layer,
+        // so instead of setState, we must use trueSetState.
+        new Future.delayed(const Duration(milliseconds: SHOW_TRICK_DURATION),
+            () {
+          setState(() {
+            trickTaking = false;
+          });
+        });
+      } else {
+        _fillPlayedCards();
+      }
+    }
+
     // Hearts Widget
     Widget heartsWidget = new Container(
         decoration: new BoxDecoration(backgroundColor: Colors.grey[300]),
@@ -433,22 +451,6 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     List<Widget> cardCollections = new List<Widget>();
 
     if (_showSplitView) {
-      if (!trickTaking) {
-        if (_detectTrick()) {
-          trickTaking = true;
-          _fillMissingPlayedCard();
-          // Unfortunately, ZCards are drawn on the game layer,
-          // so instead of setState, we must use trueSetState.
-          new Future.delayed(const Duration(milliseconds: SHOW_TRICK_DURATION),
-              () {
-            setState(() {
-              trickTaking = false;
-            });
-          });
-        } else {
-          _fillPlayedCards();
-        }
-      }
       cardCollections.add(new Container(
           decoration:
               new BoxDecoration(backgroundColor: style.theme.primaryColor),

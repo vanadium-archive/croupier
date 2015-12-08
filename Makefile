@@ -34,8 +34,7 @@ ifdef ANDROID
 
 	SYNCBASE_FLAGS += --logtostderr=true \
 		--root-dir=$(APP_HOME_DIR)/syncbase_data \
-		--v23.credentials=$(ANDROID_CREDS_DIR) \
-		--v23.proxy=proxy
+		--v23.credentials=$(ANDROID_CREDS_DIR)
 
 # If this is not the first mojo shell, then you must reuse the dev servers
 # to avoid a "port in use" error.
