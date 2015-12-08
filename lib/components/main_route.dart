@@ -37,10 +37,8 @@ class MainRouteState extends State<MainRoute> {
     // screen while the Store is initializing.
     // https://github.com/vanadium/issues/issues/958
     if (config.croupier.settings == null) {
-      print("Splash screen side");
       return _buildSplashScreen();
     }
-    print("Scaffold side");
     return new Scaffold(
         key: _scaffoldKey,
         toolBar: new ToolBar(

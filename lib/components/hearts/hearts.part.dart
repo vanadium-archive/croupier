@@ -609,9 +609,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
 
     Widget handArea = new CardCollectionComponent(
         hand, true, CardCollectionOrientation.suit,
-        acceptCallback: cb,
         dragChildren: draggable,
-        acceptType: draggable ? DropType.card : null,
         comparator: _compareCards,
         width: config.width,
         backgroundColor: Colors.grey[500],
@@ -626,8 +624,8 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     Widget ccc = new CardCollectionComponent(
         cards, true, CardCollectionOrientation.show1,
         acceptCallback: cb,
-        dragChildren: cb != null,
         acceptType: cb != null ? DropType.card : null,
+        animationType: component_card.CardAnimationType.NONE,
         backgroundColor: Colors.white,
         altColor: Colors.grey[200],
         useKeys: true);
