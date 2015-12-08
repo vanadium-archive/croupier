@@ -50,9 +50,22 @@ class MainRouteState extends State<MainRoute> {
 
   // TODO(alexfandrianto): Can we do better than this?
   Widget _buildSplashScreen() {
-    return new Container(
-        decoration: style.Box.liveNow,
-        child: new Text("Loading Croupier...", style: style.Text.titleStyle));
+    var stack = new Stack([
+      new AssetImage(name: 'images/splash/background.png', fit: ImageFit.cover),
+      new Row([
+        new AssetImage(
+            name: 'images/splash/flutter.png', width: style.Size.splashLogo),
+        new AssetImage(
+            name: 'images/splash/vanadium.png', width: style.Size.splashLogo)
+      ], justifyContent: FlexJustifyContent.center),
+      new Container(
+          child: new Row(
+              [new Text('Loading Croupier...', style: style.Text.splash)],
+              alignItems: FlexAlignItems.end,
+              justifyContent: FlexJustifyContent.center),
+          padding: style.Spacing.normalPadding)
+    ]);
+    return stack;
   }
 
   void _showDrawer() {

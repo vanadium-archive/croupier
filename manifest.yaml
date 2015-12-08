@@ -231,3 +231,6 @@ assets:
   - images/avatars/player1.jpeg
   - images/avatars/player2.jpeg
   - images/avatars/player3.jpeg
+  - images/splash/background.png
+  - images/splash/flutter.png
+  - images/splash/vanadium.png
