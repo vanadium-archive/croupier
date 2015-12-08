@@ -261,11 +261,14 @@ class HeartsBoardState extends State<HeartsBoard> {
     double cccSize = sizeRatio * config.width;
 
     HeartsGame game = config.game;
+    List<logic_card.Card> cardsToTake = [];
+    int takeTarget = game.getTakeTarget(playerNumber);
+    if (takeTarget != null) {
+      cardsToTake = game.cardCollections[
+          game.getTakeTarget(playerNumber) + HeartsGame.OFFSET_PASS];
+    }
     return new CardCollectionComponent(
-        game.cardCollections[
-            game.getTakeTarget(playerNumber) + HeartsGame.OFFSET_PASS],
-        false,
-        CardCollectionOrientation.horz,
+        cardsToTake, false, CardCollectionOrientation.horz,
         backgroundColor: Colors.grey[300],
         width: cccSize,
         widthCard: config.cardWidth / 2,
