@@ -283,7 +283,7 @@ func AnimateInSplit(ch chan bool, u *uistate.UIState) {
 	bannerImgs := make([]*staticimg.StaticImg, 0)
 	cards := make([]*card.Card, 0)
 	bannerImgs = append(bannerImgs, u.Other...)
-	bannerImgs = append(bannerImgs, u.Buttons[0])
+	bannerImgs = append(bannerImgs, u.Buttons["toggleSplit"])
 	tableImgs = append(tableImgs, u.DropTargets...)
 	tableImgs = append(tableImgs, u.BackgroundImgs[:u.NumPlayers]...)
 	cards = append(cards, u.TableCards...)
@@ -327,7 +327,7 @@ func AnimateOutSplit(ch chan bool, u *uistate.UIState) {
 	bannerImgs := make([]*staticimg.StaticImg, 0)
 	cards := make([]*card.Card, 0)
 	bannerImgs = append(bannerImgs, u.Other...)
-	bannerImgs = append(bannerImgs, u.Buttons[0])
+	bannerImgs = append(bannerImgs, u.Buttons["toggleSplit"])
 	tableImgs = append(tableImgs, u.DropTargets...)
 	tableImgs = append(tableImgs, u.BackgroundImgs[:u.NumPlayers]...)
 	cards = append(cards, u.TableCards...)
@@ -555,14 +555,19 @@ func RemoveAnimChan(ch chan bool, u *uistate.UIState) {
 }
 
 func BringNodeToFront(n *sprite.Node, u *uistate.UIState) {
-	u.Scene.RemoveChild(n)
-	u.Scene.AppendChild(n)
+	if n.Parent == u.Scene {
+		u.Scene.RemoveChild(n)
+	}
+	if n.Parent != u.Scene {
+		u.Scene.AppendChild(n)
+	}
 }
 
 func SwitchOnChan(animChan, quitChan chan bool, f func(), u *uistate.UIState) {
 	select {
 	case <-quitChan:
 		RemoveAnimChan(quitChan, u)
+		f()
 		return
 	case <-animChan:
 		RemoveAnimChan(quitChan, u)

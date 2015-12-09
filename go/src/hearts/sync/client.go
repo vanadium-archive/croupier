@@ -8,10 +8,9 @@ package sync
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
 
 	"hearts/img/uistate"
+	"hearts/img/view"
 
 	"v.io/v23/context"
 	"v.io/v23/discovery"
@@ -24,7 +23,7 @@ import (
 )
 
 // Searches for new syncgroups being advertised, sends found syncgroups to sgChan
-func ScanForSG(sgChan chan []string, ctx *context.T, quit chan bool) {
+func ScanForSG(ctx *context.T, quit chan bool, u *uistate.UIState) {
 	mdns, err := mdns.New("")
 	if err != nil {
 		ctx.Fatalf("Plugin failed: %v", err)
@@ -40,10 +39,13 @@ loop:
 	for {
 		select {
 		case update := <-ch:
-			sgNames := GetSG(instances, update)
-			if sgNames != nil {
-				sgChan <- sgNames
+			key, discStruct := GetSG(instances, update, u)
+			if discStruct != nil {
+				settingsAddr := discStruct.SettingsAddr
+				JoinSettingsSyncgroup(settingsAddr, u)
+				u.DiscGroups[key] = discStruct
 			}
+			view.LoadDiscoveryView(u)
 		case <-signals.ShutdownOnSignals(ctx):
 			break loop
 		case <-quit:
@@ -53,25 +55,28 @@ loop:
 }
 
 // Returns the addresses of any discovered syncgroups that contain croupier game information
-func GetSG(instances map[string]string, update discovery.Update) []string {
-	switch u := update.(type) {
+func GetSG(instances map[string]string, update discovery.Update, u *uistate.UIState) (string, *uistate.DiscStruct) {
+	switch uType := update.(type) {
 	case discovery.UpdateFound:
-		found := u.Value
+		found := uType.Value
 		instances[string(found.Service.InstanceId)] = found.Service.InstanceName
 		fmt.Printf("Discovered %q: Instance=%x, Interface=%q, Addrs=%v\n", found.Service.InstanceName, found.Service.InstanceId, found.Service.InterfaceName, found.Service.Addrs)
 		if found.Service.InterfaceName == CroupierInterface {
-			return []string{found.Service.Attrs["settings_sgname"], found.Service.Addrs[0]}
+			key := found.Service.InstanceId
+			ds := uistate.MakeDiscStruct(found.Service.Attrs["settings_sgname"], found.Service.Addrs[0], found.Service.Attrs["game_start_data"])
+			return key, ds
 		}
 	case discovery.UpdateLost:
-		lost := u.Value
+		lost := uType.Value
 		name, ok := instances[string(lost.InstanceId)]
 		if !ok {
 			name = "unknown"
 		}
 		delete(instances, string(lost.InstanceId))
+		u.DiscGroups[lost.InstanceId] = nil
 		fmt.Printf("Lost %q: Instance=%x\n", name, lost.InstanceId)
 	}
-	return nil
+	return "", nil
 }
 
 // Returns a watchstream of the data in the table
@@ -107,17 +112,15 @@ func JoinLogSyncgroup(ch chan bool, logName string, u *uistate.UIState) {
 		ch <- false
 	} else {
 		fmt.Println("Syncgroup joined")
-		// Set UIState GameID
-		tmp := strings.Split(logName, "-")
-		gameID, _ := strconv.Atoi(tmp[len(tmp)-1])
-		u.GameID = gameID
-		go UpdateGame(u)
+		if u.LogSG != logName {
+			resetGame(logName, false, u)
+		}
 		ch <- true
 	}
 }
 
 // Joins player settings syncgroup
-func JoinSettingsSyncgroup(ch chan bool, settingsName string, u *uistate.UIState) {
+func JoinSettingsSyncgroup(settingsName string, u *uistate.UIState) {
 	fmt.Println("Joining user settings syncgroup")
 	app := u.Service.App(AppName)
 	db := app.NoSQLDatabase(DbName, nil)
@@ -126,10 +129,8 @@ func JoinSettingsSyncgroup(ch chan bool, settingsName string, u *uistate.UIState
 	_, err := settingsSg.Join(u.Ctx, myInfoJoiner)
 	if err != nil {
 		fmt.Println("SYNCGROUP JOIN ERROR: ", err)
-		ch <- false
 	} else {
 		fmt.Println("Syncgroup joined")
-		ch <- true
 	}
 }
 

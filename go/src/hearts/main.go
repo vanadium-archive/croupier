@@ -123,10 +123,9 @@ func onStop(u *uistate.UIState) {
 
 func onPaint(glctx gl.Context, sz size.Event, u *uistate.UIState) {
 	if u.CurView == uistate.None {
-		discChan := make(chan []string)
 		u.ScanChan = make(chan bool)
-		go sync.ScanForSG(discChan, u.Ctx, u.ScanChan)
-		view.LoadDiscoveryView(discChan, u)
+		go sync.ScanForSG(u.Ctx, u.ScanChan, u)
+		view.LoadDiscoveryView(u)
 	}
 	glctx.ClearColor(1, 1, 1, 1)
 	glctx.Clear(gl.COLOR_BUFFER_BIT)

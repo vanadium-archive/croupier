@@ -10,6 +10,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"strconv"
+	"strings"
 
 	"hearts/img/uistate"
 
@@ -167,7 +169,9 @@ func CreateLogSyncgroup(ch chan string, u *uistate.UIState) {
 		}
 	} else {
 		fmt.Println("Syncgroup created")
-		go UpdateGame(u)
+		if logSGName != u.LogSG {
+			resetGame(logSGName, true, u)
+		}
 		ch <- logSGName
 	}
 }
@@ -213,4 +217,16 @@ func CreateSettingsSyncgroup(ch chan string, u *uistate.UIState) {
 		fmt.Println("Syncgroup created")
 		ch <- settingsSGName
 	}
+}
+
+func resetGame(logName string, creator bool, u *uistate.UIState) {
+	u.PlayerData = make(map[int]int)
+	u.CurPlayerIndex = -1
+	u.LogSG = logName
+	if !creator {
+		tmp := strings.Split(logName, "-")
+		gameID, _ := strconv.Atoi(tmp[len(tmp)-1])
+		u.GameID = gameID
+	}
+	go UpdateGame(u)
 }

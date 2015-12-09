@@ -13,11 +13,11 @@ const (
 	UserID            = 4444
 	UserColor         = 16777215
 	UserAvatar        = "player3.jpeg"
-	UserName          = "Dan"
+	UserName          = "D"
 	SBName            = "syncbase3"
 	AppName           = "app"
 	DbName            = "db"
 	LogName           = "games"
 	SettingsName      = "table_settings"
-	CroupierInterface = "CroupierSettingsAndGameEmily"
+	CroupierInterface = "CroupierSettingsAndGame"
 )

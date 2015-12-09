@@ -8,6 +8,8 @@
 package uistate
 
 import (
+	"encoding/json"
+	"fmt"
 	"time"
 
 	"hearts/img/coords"
@@ -62,7 +64,7 @@ type UIState struct {
 	BackgroundImgs []*staticimg.StaticImg
 	EmptySuitImgs  []*staticimg.StaticImg
 	DropTargets    []*staticimg.StaticImg
-	Buttons        []*staticimg.StaticImg
+	Buttons        map[string]*staticimg.StaticImg
 	Other          []*staticimg.StaticImg
 	ModText        []*staticimg.StaticImg
 	CurCard        *card.Card           // the card that is currently clicked on
@@ -91,6 +93,7 @@ type UIState struct {
 	CurPlayerIndex   int                      // the player number of this player
 	Ctx              *context.T
 	Service          syncbase.Service
+	LogSG            string                         // name of the game log syncgroup the user is currently in
 	Debug            bool                           // true if debugging, adds extra functionality to switch between players
 	SequentialPhases bool                           // true if trying to match Croupier Flutter Pass -> Take -> Play phase system
 	SwitchingViews   bool                           // true if currently animating between play and split views
@@ -102,6 +105,7 @@ type UIState struct {
 	AnimChans        []chan bool                    // keeps track of all 'quit' channels in animations so their goroutines can be stopped
 	SGChan           chan bool                      // pass in a bool to stop advertising the syncgroup
 	ScanChan         chan bool                      // pass in a bool to stop scanning for syncgroups
+	DiscGroups       map[string]*DiscStruct         // contains a set of addresses and game start data for each advertised game found
 }
 
 func MakeUIState() *UIState {
@@ -112,7 +116,7 @@ func MakeUIState() *UIState {
 		BackgroundImgs:   make([]*staticimg.StaticImg, 0),
 		EmptySuitImgs:    make([]*staticimg.StaticImg, 0),
 		DropTargets:      make([]*staticimg.StaticImg, 0),
-		Buttons:          make([]*staticimg.StaticImg, 0),
+		Buttons:          make(map[string]*staticimg.StaticImg),
 		Other:            make([]*staticimg.StaticImg, 0),
 		ModText:          make([]*staticimg.StaticImg, 0),
 		LastMouseXY:      coords.MakeVec(-1, -1),
@@ -136,6 +140,7 @@ func MakeUIState() *UIState {
 		UserData:         make(map[int]map[string]interface{}),
 		PlayerData:       make(map[int]int),
 		AnimChans:        make([]chan bool, 0),
+		DiscGroups:       make(map[string]*DiscStruct),
 		CurPlayerIndex:   -1,
 	}
 }
@@ -165,4 +170,24 @@ func GetDevice(playerNum int, u *UIState) sprite.SubTex {
 		return blankTex
 	}
 	return u.Texs[u.UserData[userID][Device].(string)]
+}
+
+type DiscStruct struct {
+	SettingsAddr  string
+	LogAddr       string
+	GameStartData map[string]interface{}
+}
+
+func MakeDiscStruct(s, l, g string) *DiscStruct {
+	gameStartData := []byte(g)
+	var dataMap map[string]interface{}
+	err := json.Unmarshal(gameStartData, &dataMap)
+	if err != nil {
+		fmt.Println("Unmarshal error:", err)
+	}
+	return &DiscStruct{
+		SettingsAddr:  s,
+		LogAddr:       l,
+		GameStartData: dataMap,
+	}
 }

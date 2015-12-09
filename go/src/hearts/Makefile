@@ -13,7 +13,6 @@ credentials: bin/principal
 hearts: fmt credentials
 	jiri go build hearts
 	./hearts \
-    --v23.proxy=proxy \
     --v23.tcp.address=:$(syncbase_port) \
 	--v23.credentials=credentials
 

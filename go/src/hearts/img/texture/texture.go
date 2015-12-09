@@ -240,10 +240,10 @@ func LoadTextures(eng sprite.Engine) map[string]sprite.SubTex {
 		"E-Lower.png", "F-Lower.png", "G-Lower.png", "H-Lower.png", "I-Lower.png", "J-Lower.png", "K-Lower.png", "L-Lower.png",
 		"M-Lower.png", "N-Lower.png", "O-Lower.png", "P-Lower.png", "Q-Lower.png", "R-Lower.png", "S-Lower.png", "T-Lower.png",
 		"U-Lower.png", "V-Lower.png", "W-Lower.png", "X-Lower.png", "Y-Lower.png", "Z-Lower.png", "Space.png", "Colon.png", "Bang.png",
-		"1.png", "2.png", "3.png", "4.png", "5.png", "6.png", "7.png", "8.png", "9.png", "0.png", "1-Red.png", "2-Red.png", "3-Red.png",
-		"4-Red.png", "5-Red.png", "6-Red.png", "7-Red.png", "8-Red.png", "9-Red.png", "0-Red.png", "1-DBlue.png", "2-DBlue.png",
-		"3-DBlue.png", "4-DBlue.png", "5-DBlue.png", "6-DBlue.png", "7-DBlue.png", "8-DBlue.png", "9-DBlue.png", "0-DBlue.png",
-		"A-Upper-DBlue.png", "B-Upper-DBlue.png",
+		"Apostrophe.png", "1.png", "2.png", "3.png", "4.png", "5.png", "6.png", "7.png", "8.png", "9.png", "0.png", "1-Red.png",
+		"2-Red.png", "3-Red.png", "4-Red.png", "5-Red.png", "6-Red.png", "7-Red.png", "8-Red.png", "9-Red.png", "0-Red.png",
+		"1-DBlue.png", "2-DBlue.png", "3-DBlue.png", "4-DBlue.png", "5-DBlue.png", "6-DBlue.png", "7-DBlue.png", "8-DBlue.png",
+		"9-DBlue.png", "0-DBlue.png", "A-Upper-DBlue.png", "B-Upper-DBlue.png",
 		"C-Upper-DBlue.png", "D-Upper-DBlue.png", "E-Upper-DBlue.png", "F-Upper-DBlue.png", "G-Upper-DBlue.png", "H-Upper-DBlue.png",
 		"I-Upper-DBlue.png", "J-Upper-DBlue.png", "K-Upper-DBlue.png", "L-Upper-DBlue.png", "M-Upper-DBlue.png", "N-Upper-DBlue.png",
 		"O-Upper-DBlue.png", "P-Upper-DBlue.png", "Q-Upper-DBlue.png", "R-Upper-DBlue.png", "S-Upper-DBlue.png", "T-Upper-DBlue.png",
@@ -272,7 +272,7 @@ func LoadTextures(eng sprite.Engine) map[string]sprite.SubTex {
 		"U-Lower-Gray.png", "V-Lower-Gray.png", "W-Lower-Gray.png", "X-Lower-Gray.png", "Y-Lower-Gray.png", "Z-Lower-Gray.png",
 		"Space-Gray.png", "RoundedRectangle-DBlue.png", "RoundedRectangle-LBlue.png", "RoundedRectangle-Gray.png", "Rectangle-LBlue.png",
 		"Rectangle-DBlue.png", "HorizontalPullTab.png", "VerticalPullTab.png", "NewGame.png", "NewRound.png", "JoinGame.png", "Period.png",
-		"SitSpot.png", "WatchSpot.png", "StartBlue.png", "StartGray.png", "Restart.png", "Visibility.png", "VisibilityOff.png",
+		"SitSpot.png", "WatchSpot.png", "StartBlue.png", "StartGray.png", "Restart.png", "Visibility.png", "VisibilityOff.png", "Quit.png",
 	}
 	for _, f := range boundedImgs {
 		a, err := asset.Open(f)

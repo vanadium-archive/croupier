@@ -8,6 +8,8 @@ package touchhandler
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 
 	"golang.org/x/mobile/event/touch"
 	"golang.org/x/mobile/exp/sprite"
@@ -107,8 +109,8 @@ func OnTouch(t touch.Event, u *uistate.UIState) {
 
 func beginClickDiscovery(t touch.Event, u *uistate.UIState) {
 	buttonList := findClickedButton(t, u)
-	if len(buttonList) > 0 {
-		if buttonList[0] == u.Buttons[0] {
+	for _, button := range buttonList {
+		if button == u.Buttons["newGame"] {
 			logCh := make(chan string)
 			settingsCh := make(chan string)
 			go sync.CreateLogSyncgroup(logCh, u)
@@ -126,14 +128,10 @@ func beginClickDiscovery(t touch.Event, u *uistate.UIState) {
 			}
 		} else {
 			for _, b := range u.Buttons {
-				if buttonList[0] == b {
+				if button == b {
 					joinLogDone := make(chan bool)
-					joinSettingsDone := make(chan bool)
-					settingsAddr := b.GetInfo()[0]
-					logAddr := b.GetInfo()[1]
+					logAddr := b.GetInfo()
 					go sync.JoinLogSyncgroup(joinLogDone, logAddr, u)
-					go sync.JoinSettingsSyncgroup(joinSettingsDone, settingsAddr, u)
-					<-joinSettingsDone
 					if success := <-joinLogDone; success {
 						settingsCh := make(chan string)
 						go sync.CreateSettingsSyncgroup(settingsCh, u)
@@ -155,27 +153,43 @@ func beginClickDiscovery(t touch.Event, u *uistate.UIState) {
 
 func beginClickArrange(t touch.Event, u *uistate.UIState) {
 	buttonList := findClickedButton(t, u)
-	if len(buttonList) > 0 {
-		for i, b := range u.Buttons {
-			if buttonList[0] == b {
-				if i == 5 {
-					if b.GetDisplayingImage() {
-						successStart := sync.LogGameStart(u)
-						for !successStart {
-							successStart = sync.LogGameStart(u)
-						}
-						newHands := u.CurTable.Deal()
-						successDeal := sync.LogDeal(u, u.CurPlayerIndex, newHands)
-						for !successDeal {
-							successDeal = sync.LogDeal(u, u.CurPlayerIndex, newHands)
+	for _, b := range buttonList {
+		if b == u.Buttons["exit"] {
+			if u.SGChan != nil {
+				u.SGChan <- true
+				u.SGChan = nil
+			}
+			u.IsOwner = false
+			u.DiscGroups = make(map[string]*uistate.DiscStruct)
+			u.ScanChan = make(chan bool)
+			go sync.ScanForSG(u.Ctx, u.ScanChan, u)
+			view.LoadDiscoveryView(u)
+		} else if b == u.Buttons["start"] {
+			if b.GetDisplayingImage() {
+				successStart := sync.LogGameStart(u)
+				for !successStart {
+					successStart = sync.LogGameStart(u)
+				}
+				newHands := u.CurTable.Deal()
+				successDeal := sync.LogDeal(u, u.CurPlayerIndex, newHands)
+				for !successDeal {
+					successDeal = sync.LogDeal(u, u.CurPlayerIndex, newHands)
+				}
+			}
+		} else {
+			for key, button := range u.Buttons {
+				if b == button {
+					if key == "joinTable" {
+						u.CurPlayerIndex = 4
+						sync.LogPlayerNum(u)
+					} else {
+						playerNum := strings.Split(key, "-")[1]
+						if u.CurPlayerIndex < 0 {
+							u.CurPlayerIndex, _ = strconv.Atoi(playerNum)
+							sync.LogReady(u)
+							sync.LogPlayerNum(u)
 						}
 					}
-				} else if u.CurPlayerIndex < 0 {
-					u.CurPlayerIndex = i
-					if u.CurPlayerIndex >= 0 && u.CurPlayerIndex < u.NumPlayers {
-						sync.LogReady(u)
-					}
-					sync.LogPlayerNum(u)
 				}
 			}
 		}
@@ -195,51 +209,27 @@ func beginClickPass(t touch.Event, u *uistate.UIState) {
 		reposition.BringNodeToFront(u.CurCard.GetNode(), u)
 	}
 	buttonList := findClickedButton(t, u)
-	if len(buttonList) > 0 {
-		if u.Debug {
-			if u.Buttons[0] == buttonList[0] {
-				pullTab := u.Buttons[0]
-				if pullTab.GetDisplayingImage() {
-					u.CurImg = u.Buttons[0]
-					for _, img := range u.Other {
-						u.Eng.SetSubTex(img.GetNode(), img.GetAlt())
-						img.SetDisplayingImage(false)
-					}
-					blueBanner := u.Other[0]
-					reposition.BringNodeToFront(u.BackgroundImgs[1].GetNode(), u)
-					reposition.BringNodeToFront(pullTab.GetNode(), u)
-					for _, d := range u.DropTargets {
-						reposition.BringNodeToFront(d.GetCardHere().GetNode(), u)
-					}
-					if blueBanner.GetNode().Arranger == nil {
-						finalX := blueBanner.GetInitial().X
-						finalY := pullTab.GetInitial().Y + pullTab.GetDimensions().Y - blueBanner.GetDimensions().Y
-						finalPos := coords.MakeVec(finalX, finalY)
-						reposition.AnimateImageNoChannel(blueBanner, finalPos, blueBanner.GetDimensions(), u)
-					}
-				}
-			} else if u.Buttons[1] == buttonList[0] {
-				view.LoadTableView(u)
-			} else if u.Buttons[2] == buttonList[0] {
-				view.LoadPassOrTakeOrPlay(u)
-			}
-		} else {
-			pullTab := u.Buttons[0]
-			if pullTab.GetDisplayingImage() {
-				u.CurImg = u.Buttons[0]
+	for _, b := range buttonList {
+		if b == u.Buttons["table"] {
+			view.LoadTableView(u)
+		} else if b == u.Buttons["hand"] {
+			view.LoadPassOrTakeOrPlay(u)
+		} else if b == u.Buttons["dragPass"] {
+			if b.GetDisplayingImage() {
+				u.CurImg = b
 				for _, img := range u.Other {
 					u.Eng.SetSubTex(img.GetNode(), img.GetAlt())
 					img.SetDisplayingImage(false)
 				}
 				blueBanner := u.Other[0]
 				reposition.BringNodeToFront(u.BackgroundImgs[1].GetNode(), u)
-				reposition.BringNodeToFront(pullTab.GetNode(), u)
+				reposition.BringNodeToFront(b.GetNode(), u)
 				for _, d := range u.DropTargets {
 					reposition.BringNodeToFront(d.GetCardHere().GetNode(), u)
 				}
 				if blueBanner.GetNode().Arranger == nil {
 					finalX := blueBanner.GetInitial().X
-					finalY := pullTab.GetInitial().Y + pullTab.GetDimensions().Y - blueBanner.GetDimensions().Y
+					finalY := b.GetInitial().Y + b.GetDimensions().Y - blueBanner.GetDimensions().Y
 					finalPos := coords.MakeVec(finalX, finalY)
 					reposition.AnimateImageNoChannel(blueBanner, finalPos, blueBanner.GetDimensions(), u)
 				}
@@ -252,7 +242,7 @@ func moveClickPass(t touch.Event, u *uistate.UIState) {
 	if u.CurImg != nil {
 		imgs := make([]*staticimg.StaticImg, 0)
 		cards := make([]*card.Card, 0)
-		pullTab := u.Buttons[0]
+		pullTab := u.Buttons["dragPass"]
 		blueBanner := u.BackgroundImgs[1]
 		imgs = append(imgs, pullTab)
 		imgs = append(imgs, blueBanner)
@@ -287,7 +277,7 @@ func endClickPass(t touch.Event, u *uistate.UIState) {
 				readyToPass = false
 			}
 		}
-		pullTab := u.Buttons[0]
+		pullTab := u.Buttons["dragPass"]
 		if readyToPass {
 			u.Eng.SetSubTex(pullTab.GetNode(), pullTab.GetImage())
 			pullTab.SetDisplayingImage(true)
@@ -322,13 +312,11 @@ func beginClickTake(t touch.Event, u *uistate.UIState) {
 		u.CurCard.GetNode().Arranger = nil
 	}
 	buttonList := findClickedButton(t, u)
-	if len(buttonList) > 0 {
-		if u.Debug {
-			if u.Buttons[0] == buttonList[0] {
-				view.LoadTableView(u)
-			} else if u.Buttons[1] == buttonList[0] {
-				view.LoadPassOrTakeOrPlay(u)
-			}
+	for _, b := range buttonList {
+		if b == u.Buttons["table"] {
+			view.LoadTableView(u)
+		} else if b == u.Buttons["hand"] {
+			view.LoadPassOrTakeOrPlay(u)
 		}
 	}
 }
@@ -373,17 +361,13 @@ func beginClickPlay(t touch.Event, u *uistate.UIState) {
 		reposition.BringNodeToFront(u.CurCard.GetNode(), u)
 	}
 	buttonList := findClickedButton(t, u)
-	if len(buttonList) > 0 {
-		if u.Debug {
-			if u.Buttons[0] == buttonList[0] && !u.SwitchingViews {
-				view.LoadSplitView(false, u)
-			} else if u.Buttons[1] == buttonList[0] {
-				view.LoadTableView(u)
-			} else if u.Buttons[2] == buttonList[0] {
-				view.LoadPassOrTakeOrPlay(u)
-			}
-		} else if !u.SwitchingViews {
+	for _, b := range buttonList {
+		if b == u.Buttons["toggleSplit"] && !u.SwitchingViews {
 			view.LoadSplitView(false, u)
+		} else if b == u.Buttons["table"] {
+			view.LoadTableView(u)
+		} else if b == u.Buttons["hand"] {
+			view.LoadPassOrTakeOrPlay(u)
 		}
 	}
 }
@@ -423,27 +407,8 @@ func beginClickSplit(t touch.Event, u *uistate.UIState) {
 		reposition.BringNodeToFront(u.CurCard.GetNode(), u)
 	}
 	buttonList := findClickedButton(t, u)
-	if len(buttonList) > 0 {
-		if u.Debug {
-			if u.Buttons[0] == buttonList[0] && !u.SwitchingViews {
-				ch := make(chan bool)
-				u.SwitchingViews = true
-				reposition.AnimateOutSplit(ch, u)
-				quit := make(chan bool)
-				u.AnimChans = append(u.AnimChans, quit)
-				go func() {
-					onDone := func() {
-						u.SwitchingViews = false
-						view.LoadPlayView(u)
-					}
-					reposition.SwitchOnChan(ch, quit, onDone, u)
-				}()
-			} else if u.Buttons[1] == buttonList[0] {
-				view.LoadTableView(u)
-			} else if u.Buttons[2] == buttonList[0] {
-				view.LoadPassOrTakeOrPlay(u)
-			}
-		} else if !u.SwitchingViews {
+	for _, b := range buttonList {
+		if b == u.Buttons["toggleSplit"] && !u.SwitchingViews {
 			ch := make(chan bool)
 			u.SwitchingViews = true
 			reposition.AnimateOutSplit(ch, u)
@@ -456,6 +421,10 @@ func beginClickSplit(t touch.Event, u *uistate.UIState) {
 				}
 				reposition.SwitchOnChan(ch, quit, onDone, u)
 			}()
+		} else if b == u.Buttons["table"] {
+			view.LoadTableView(u)
+		} else if b == u.Buttons["hand"] {
+			view.LoadPassOrTakeOrPlay(u)
 		}
 	}
 }
@@ -533,7 +502,7 @@ func passCards(ch chan bool, playerId int, u *uistate.UIState) bool {
 		success = sync.LogPass(u, cardsPassed)
 	}
 	// UI component
-	pullTab := u.Buttons[0]
+	pullTab := u.Buttons["dragPass"]
 	blueBanner := u.BackgroundImgs[1]
 	imgs := []*staticimg.StaticImg{pullTab, blueBanner}
 	for _, d := range dropsToReset {
@@ -672,21 +641,21 @@ func touchingStaticImg(t touch.Event, s *staticimg.StaticImg, u *uistate.UIState
 }
 
 func updateViewFromTable(b *staticimg.StaticImg, u *uistate.UIState) {
-	if u.Buttons[0] == b {
+	if b == u.Buttons["player0"] {
 		u.CurPlayerIndex = 0
 		view.LoadPassOrTakeOrPlay(u)
-	} else if u.Buttons[1] == b {
+	} else if b == u.Buttons["player1"] {
 		u.CurPlayerIndex = 1
 		view.LoadPassOrTakeOrPlay(u)
-	} else if u.Buttons[2] == b {
+	} else if b == u.Buttons["player2"] {
 		u.CurPlayerIndex = 2
 		view.LoadPassOrTakeOrPlay(u)
-	} else if u.Buttons[3] == b {
+	} else if b == u.Buttons["player3"] {
 		u.CurPlayerIndex = 3
 		view.LoadPassOrTakeOrPlay(u)
-	} else if u.Buttons[4] == b {
+	} else if b == u.Buttons["table"] {
 		view.LoadTableView(u)
-	} else if u.Buttons[5] == b {
+	} else if b == u.Buttons["hand"] {
 		view.LoadPassOrTakeOrPlay(u)
 	}
 }

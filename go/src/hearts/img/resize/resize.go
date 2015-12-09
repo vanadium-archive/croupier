@@ -38,9 +38,14 @@ func AdjustImgs(oldWindowSize *coords.Vec, u *uistate.UIState) {
 	adjustCardArray(u.TableCards, oldWindowSize, u.WindowSize, u.Eng)
 	adjustImgArray(u.DropTargets, oldWindowSize, u.WindowSize, u.Eng)
 	adjustImgArray(u.BackgroundImgs, oldWindowSize, u.WindowSize, u.Eng)
-	adjustImgArray(u.Buttons, oldWindowSize, u.WindowSize, u.Eng)
 	adjustImgArray(u.EmptySuitImgs, oldWindowSize, u.WindowSize, u.Eng)
 	adjustImgArray(u.Other, oldWindowSize, u.WindowSize, u.Eng)
+	adjustImgArray(u.ModText, oldWindowSize, u.WindowSize, u.Eng)
+	buttons := make([]*staticimg.StaticImg, 0)
+	for _, b := range u.Buttons {
+		buttons = append(buttons, b)
+	}
+	adjustImgArray(buttons, oldWindowSize, u.WindowSize, u.Eng)
 }
 
 // Returns coordinates for images with same width and height but in new positions proportional to the screen

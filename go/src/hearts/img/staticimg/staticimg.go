@@ -38,7 +38,7 @@ type StaticImg struct {
 	// cardHere is used if the StaticImg instance is a drop target
 	cardHere *card.Card
 	// info contains any additional information contained in the image (eg. game syncgroup address, in a join game button)
-	info []string
+	info string
 }
 
 // Returns the node of s
@@ -81,7 +81,7 @@ func (s *StaticImg) GetCardHere() *card.Card {
 }
 
 // Returns the additional info associated with s
-func (s *StaticImg) GetInfo() []string {
+func (s *StaticImg) GetInfo() string {
 	return s.info
 }
 
@@ -124,6 +124,6 @@ func (s *StaticImg) SetCardHere(c *card.Card) {
 }
 
 // Sets the additional info of s
-func (s *StaticImg) SetInfo(i []string) {
+func (s *StaticImg) SetInfo(i string) {
 	s.info = i
 }

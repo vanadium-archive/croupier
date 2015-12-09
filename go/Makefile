@@ -35,7 +35,6 @@ syncbase: delete bin/syncbased credentials tmp
 		--alsologtostderr=false \
 		--root-dir=tmp/$(name) \
 		--name=users/$(email)/croupier/$(name) \
-		--v23.proxy=proxy \
 		--v23.credentials=credentials \
 		--v23.permissions.literal='{"Admin":{"In":["..."]},"Write":{"In":["..."]},"Read":{"In":["..."]},"Resolve":{"In":["..."]},"Debug":{"In":["..."]}}'
 
@@ -51,4 +50,5 @@ vet:
 all: fmt 
 
 # Switch mountpoints by replacing the --name flag in syncbase with the following line:
-# --name=/192.168.86.254:8101/croupier/$(name) \
+# 
+#--name=/192.168.86.254:8101/croupier/$(name) \

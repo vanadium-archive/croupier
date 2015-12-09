@@ -40,19 +40,20 @@ func UpdateSettings(u *uistate.UIState) {
 	stream, err := WatchData(SettingsName, "users", u)
 	if err != nil {
 		fmt.Println("WatchData error:", err)
-	}
-	for {
-		if updateExists := stream.Advance(); updateExists {
-			c := stream.Change()
-			if c.ChangeType == nosql.PutChange {
-				key := c.Row
-				var value []byte
-				if err := c.Value(&value); err != nil {
-					fmt.Println("Value error:", err)
+	} else {
+		for {
+			if updateExists := stream.Advance(); updateExists {
+				c := stream.Change()
+				if c.ChangeType == nosql.PutChange {
+					key := c.Row
+					var value []byte
+					if err := c.Value(&value); err != nil {
+						fmt.Println("Value error:", err)
+					}
+					handleSettingsUpdate(key, value, u)
+				} else {
+					fmt.Println("Unexpected ChangeType: ", c.ChangeType)
 				}
-				handleSettingsUpdate(key, value, u)
-			} else {
-				fmt.Println("Unexpected ChangeType: ", c.ChangeType)
 			}
 		}
 	}
@@ -83,6 +84,9 @@ func handleSettingsUpdate(key string, value []byte, u *uistate.UIState) {
 				view.LoadSplitView(true, u)
 			}
 		}
+	}
+	if u.CurView == uistate.Discovery {
+		view.LoadDiscoveryView(u)
 	}
 }
 
@@ -118,15 +122,15 @@ func handleGameUpdate(key string, value []byte, u *uistate.UIState) {
 		updateType := strings.Split(valueStr, "|")[0]
 		switch updateType {
 		case Deal:
-			go onDeal(valueStr, u)
+			onDeal(valueStr, u)
 		case Pass:
-			go onPass(valueStr, u)
+			onPass(valueStr, u)
 		case Take:
-			go onTake(valueStr, u)
+			onTake(valueStr, u)
 		case Play:
-			go onPlay(valueStr, u)
+			onPlay(valueStr, u)
 		case Ready:
-			go onReady(valueStr, u)
+			onReady(valueStr, u)
 		}
 	case "players":
 		switch strings.Split(key, "/")[3] {
@@ -149,9 +153,7 @@ func onPlayerNum(key, value string, u *uistate.UIState) {
 }
 
 func onSettings(key, value string, u *uistate.UIState) {
-	joinDone := make(chan bool)
-	go JoinSettingsSyncgroup(joinDone, value, u)
-	<-joinDone
+	JoinSettingsSyncgroup(value, u)
 }
 
 func onDeal(value string, u *uistate.UIState) {
@@ -347,7 +349,7 @@ func onReady(value string, u *uistate.UIState) {
 	// UI
 	if u.CurTable.AllReadyForNewRound() && u.IsOwner {
 		if u.CurView == uistate.Arrange {
-			b := u.Buttons[5]
+			b := u.Buttons["start"]
 			if !b.GetDisplayingImage() {
 				u.Eng.SetSubTex(b.GetNode(), b.GetImage())
 				b.SetDisplayingImage(true)
