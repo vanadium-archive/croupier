@@ -42,10 +42,12 @@ class MainRouteState extends State<MainRoute> {
     return new Scaffold(
         key: _scaffoldKey,
         toolBar: new ToolBar(
-            left:
-                new IconButton(icon: "navigation/menu", onPressed: _showDrawer),
+            left: new IconButton(
+                icon: "navigation/menu",
+                onPressed: () => _scaffoldKey.currentState?.openDrawer()),
             center: new Text('Croupier')),
-        body: new Material(child: new CroupierComponent(config.croupier)));
+        body: new Material(child: new CroupierComponent(config.croupier)),
+        drawer: _buildDrawer());
   }
 
   // TODO(alexfandrianto): Can we do better than this?
@@ -68,41 +70,40 @@ class MainRouteState extends State<MainRoute> {
     return stack;
   }
 
-  void _showDrawer() {
-    showDrawer(
-        context: context,
+  Widget _buildDrawer() {
+    return new Drawer(
         child: new Block(<Widget>[
-          new DrawerHeader(
-              child: new Text('Croupier', style: style.Text.titleStyle)),
-          new DrawerItem(
-              icon: 'action/settings',
-              // TODO(alexfandrianto): Fix the Splash Screen, and we won't need
-              // to check if settings is null here.
-              // https://github.com/vanadium/issues/issues/958
-              onPressed:
-                  config.croupier.settings != null ? _handleShowSettings : null,
-              child: new Text('Settings')),
-          // TODO(alexfandrianto): Once Flutter alpha branch is updated, this
-          // DrawerItem can have a Switch inside instead of DebugRoute.
-          // https://github.com/vanadium/issues/issues/957
-          new DrawerItem(
-              icon: 'action/build',
-              onPressed: _handleShowDebug,
-              child: new Text('Debug Mode')),
-          new DrawerItem(
-              icon: 'action/help', child: new Text('Help & Feedback'))
-        ]));
+      new DrawerHeader(
+          child: new Text('Croupier', style: style.Text.titleStyle)),
+      new DrawerItem(
+          icon: 'action/settings',
+          // TODO(alexfandrianto): Fix the Splash Screen, and we won't need
+          // to check if settings is null here.
+          // https://github.com/vanadium/issues/issues/958
+          onPressed:
+              config.croupier.settings != null ? _handleShowSettings : null,
+          child: new Text('Settings')),
+      new DrawerItem(
+          icon: 'action/build',
+          child: new Row([
+            new Text('Debug Mode'),
+            new Switch(
+                value: config.croupier.debugMode, onChanged: _handleDebugMode)
+          ], justifyContent: FlexJustifyContent.spaceBetween)),
+      new DrawerItem(icon: 'action/help', child: new Text('Help & Feedback'))
+    ]));
   }
 
   void _handleShowSettings() {
-    Navigator.of(context)
-      ..pop()
-      ..pushNamed('/settings');
+    Navigator.popAndPushNamed(context, '/settings');
   }
 
-  void _handleShowDebug() {
-    Navigator.of(context)
-      ..pop()
-      ..pushNamed('/debug');
+  void _handleDebugMode(bool value) {
+    setState(() {
+      config.croupier.debugMode = value;
+      if (config.croupier.game != null) {
+        config.croupier.game.debugMode = value;
+      }
+    });
   }
 }

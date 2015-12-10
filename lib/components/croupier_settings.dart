@@ -74,7 +74,7 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
     return new ToolBar(
         left: new IconButton(
             icon: "navigation/arrow_back",
-            onPressed: () => Navigator.of(context).pop()),
+            onPressed: () => Navigator.pop(context)),
         center: new Text("Settings"));
   }
 
@@ -107,7 +107,6 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
     var capType = _capitalize(type);
 
     Dialog dialog;
-    NavigatorState navigator = Navigator.of(context);
 
     switch (dialogTypes[type]) {
       case DialogType.Text:
@@ -121,10 +120,10 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
                 onChanged: _makeHandleChanged(type)),
             actions: [
               new FlatButton(child: new Text('CANCEL'), onPressed: () {
-                navigator.pop();
+                Navigator.pop(context);
               }),
               new FlatButton(child: new Text('SAVE'), onPressed: () {
-                navigator.pop(_tempData[type]);
+                Navigator.pop(context);
               }),
             ]);
         break;
@@ -145,7 +144,7 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
           flexColors.add(_makeColoredRectangle(c, "", () {
             // TODO(alexfandrianto): Remove this hack-y subtraction once the
             // Dart + Android issue with int.parse is fixed.
-            navigator.pop("${c - 0xcf000000}");
+            Navigator.pop(context, "${c - 0xcf000000}");
           }));
         }
 
@@ -154,7 +153,7 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
             content: new Grid(flexColors, maxChildExtent: 75.0),
             actions: [
               new FlatButton(child: new Text('CANCEL'), onPressed: () {
-                navigator.pop();
+                Navigator.pop(context);
               })
             ]);
         break;
@@ -163,7 +162,7 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
         for (int i = 0; i < RandomSettings.avatars.length; i++) {
           String avatar = RandomSettings.avatars[i];
           flexAvatars.add(_makeImageButton(avatar, () {
-            navigator.pop(avatar);
+            Navigator.pop(context, avatar);
           }));
         }
 
@@ -172,7 +171,7 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
             content: new Grid(flexAvatars, maxChildExtent: 75.0),
             actions: [
               new FlatButton(child: new Text('CANCEL'), onPressed: () {
-                navigator.pop();
+                Navigator.pop(context);
               })
             ]);
         break;
