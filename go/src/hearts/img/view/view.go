@@ -409,6 +409,7 @@ func LoadTakeView(u *uistate.UIState) {
 // Play View: Shows player's hand and allows them to play cards
 func LoadPlayView(u *uistate.UIState) {
 	u.CurView = uistate.Play
+	fmt.Println("In play view")
 	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)
@@ -433,6 +434,7 @@ func LoadPlayView(u *uistate.UIState) {
 
 func LoadSplitView(reloading bool, u *uistate.UIState) {
 	u.CurView = uistate.Split
+	fmt.Println("In split view")
 	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)

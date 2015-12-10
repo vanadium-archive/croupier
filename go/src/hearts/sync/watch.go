@@ -17,6 +17,7 @@ import (
 	"hearts/img/uistate"
 	"hearts/img/view"
 	"hearts/logic/card"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -96,50 +97,58 @@ func UpdateGame(u *uistate.UIState) {
 	if err != nil {
 		fmt.Println("WatchData error:", err)
 	}
+	updateBlock := make([]nosql.WatchChange, 0)
 	for {
 		if updateExists := stream.Advance(); updateExists {
 			c := stream.Change()
-			if c.ChangeType == nosql.PutChange {
-				key := c.Row
-				var value []byte
-				if err := c.Value(&value); err != nil {
-					fmt.Println("Value error:", err)
-				}
-				handleGameUpdate(key, value, u)
-			} else {
-				fmt.Println("Unexpected ChangeType: ", c.ChangeType)
+			updateBlock = append(updateBlock, c)
+			if !c.Continued {
+				sort.Sort(updateSorter(updateBlock))
+				handleGameUpdate(updateBlock, u)
+				updateBlock = make([]nosql.WatchChange, 0)
 			}
 		}
 	}
 }
 
-func handleGameUpdate(key string, value []byte, u *uistate.UIState) {
-	valueStr := string(value)
-	fmt.Println(key, valueStr)
-	keyType := strings.Split(key, "/")[1]
-	switch keyType {
-	case "log":
-		updateType := strings.Split(valueStr, "|")[0]
-		switch updateType {
-		case Deal:
-			onDeal(valueStr, u)
-		case Pass:
-			onPass(valueStr, u)
-		case Take:
-			onTake(valueStr, u)
-		case Play:
-			onPlay(valueStr, u)
-		case Ready:
-			onReady(valueStr, u)
-		}
-	case "players":
-		switch strings.Split(key, "/")[3] {
-		case "player_number":
-			onPlayerNum(key, valueStr, u)
-		case "settings_sg":
-			onSettings(key, valueStr, u)
-		}
+func handleGameUpdate(changes []nosql.WatchChange, u *uistate.UIState) {
+	for _, c := range changes {
+		if c.ChangeType == nosql.PutChange {
+			key := c.Row
+			var value []byte
+			if err := c.Value(&value); err != nil {
+				fmt.Println("Value error:", err)
+			}
+			valueStr := string(value)
+			fmt.Println(key, valueStr)
+			keyType := strings.Split(key, "/")[1]
+			switch keyType {
+			case "log":
+				updateType := strings.Split(valueStr, "|")[0]
+				switch updateType {
+				case Deal:
+					onDeal(valueStr, u)
+				case Pass:
+					onPass(valueStr, u)
+				case Take:
+					onTake(valueStr, u)
+				case Play:
+					onPlay(valueStr, u)
+				case Ready:
+					onReady(valueStr, u)
+				}
+			case "players":
+				switch strings.Split(key, "/")[3] {
+				case "player_number":
+					onPlayerNum(key, valueStr, u)
+				case "settings_sg":
+					onSettings(key, valueStr, u)
+				}
 
+			}
+		} else {
+			fmt.Println("Unexpected ChangeType: ", c.ChangeType)
+		}
 	}
 }
 
@@ -147,6 +156,9 @@ func onPlayerNum(key, value string, u *uistate.UIState) {
 	userID, _ := strconv.Atoi(strings.Split(key, "/")[2])
 	playerNum, _ := strconv.Atoi(value)
 	u.PlayerData[playerNum] = userID
+	if playerNum == u.CurPlayerIndex && userID != UserID {
+		u.CurPlayerIndex = -1
+	}
 	if u.CurView == uistate.Arrange {
 		view.LoadArrangeView(u)
 	}
@@ -383,4 +395,34 @@ func parsePlayerAndCards(value string, u *uistate.UIState) (int, []*card.Card) {
 		curCards = append(curCards, cardList[cardIndex])
 	}
 	return playerInt, curCards
+}
+
+// Used to sort an array of watch changes
+type updateSorter []nosql.WatchChange
+
+// Returns the length of the array
+func (us updateSorter) Len() int {
+	return len(us)
+}
+
+// Swaps the positions of two changes in the array
+func (us updateSorter) Swap(i, j int) {
+	us[i], us[j] = us[j], us[i]
+}
+
+// Compares two changes-- one card is less than another if it has an earlier timestamp
+func (us updateSorter) Less(i, j int) bool {
+	iKey := us[i].Row
+	jKey := us[j].Row
+	itmp := strings.Split(iKey, "/")
+	if len(itmp) < 3 {
+		return true
+	}
+	iTime := itmp[2]
+	jtmp := strings.Split(jKey, "/")
+	if len(jtmp) < 3 {
+		return false
+	}
+	jTime := jtmp[2]
+	return iTime < jTime
 }

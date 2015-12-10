@@ -178,7 +178,7 @@ func beginClickArrange(t touch.Event, u *uistate.UIState) {
 			}
 		} else {
 			for key, button := range u.Buttons {
-				if b == button {
+				if b == button && u.CurPlayerIndex < 0 {
 					if key == "joinTable" {
 						u.CurPlayerIndex = 4
 						sync.LogPlayerNum(u)

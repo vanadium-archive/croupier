@@ -322,6 +322,7 @@ func AnimateInSplit(ch chan bool, u *uistate.UIState) {
 }
 
 func AnimateOutSplit(ch chan bool, u *uistate.UIState) {
+	ResetAnims(u)
 	topOfBanner := u.WindowSize.Y - 4*u.CardDim.Y - 5*u.Padding - u.BottomPadding - 40
 	tableImgs := make([]*staticimg.StaticImg, 0)
 	bannerImgs := make([]*staticimg.StaticImg, 0)
