@@ -271,8 +271,10 @@ func LoadTextures(eng sprite.Engine) map[string]sprite.SubTex {
 		"O-Lower-Gray.png", "P-Lower-Gray.png", "Q-Lower-Gray.png", "R-Lower-Gray.png", "S-Lower-Gray.png", "T-Lower-Gray.png",
 		"U-Lower-Gray.png", "V-Lower-Gray.png", "W-Lower-Gray.png", "X-Lower-Gray.png", "Y-Lower-Gray.png", "Z-Lower-Gray.png",
 		"Space-Gray.png", "RoundedRectangle-DBlue.png", "RoundedRectangle-LBlue.png", "RoundedRectangle-Gray.png", "Rectangle-LBlue.png",
-		"Rectangle-DBlue.png", "HorizontalPullTab.png", "VerticalPullTab.png", "NewGame.png", "NewRound.png", "JoinGame.png", "Period.png",
-		"SitSpot.png", "WatchSpot.png", "StartBlue.png", "StartGray.png", "Restart.png", "Visibility.png", "VisibilityOff.png", "Quit.png",
+		"Rectangle-DBlue.png", "HorizontalPullTab.png", "VerticalPullTab.png", "NewGamePressed.png", "NewGameUnpressed.png",
+		"NewRoundPressed.png", "NewRoundUnpressed.png", "JoinGamePressed.png", "JoinGameUnpressed.png", "Period.png",
+		"SitSpotPressed.png", "SitSpotUnpressed.png", "WatchSpotPressed.png", "WatchSpotUnpressed.png", "StartBlue.png", "StartGray.png",
+		"StartBluePressed.png", "Restart.png", "Visibility.png", "VisibilityOff.png", "QuitPressed.png", "QuitUnpressed.png",
 	}
 	for _, f := range boundedImgs {
 		a, err := asset.Open(f)

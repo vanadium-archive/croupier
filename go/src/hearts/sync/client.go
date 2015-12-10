@@ -30,7 +30,7 @@ func ScanForSG(ctx *context.T, quit chan bool, u *uistate.UIState) {
 	}
 	ds := ldiscovery.NewWithPlugins([]ldiscovery.Plugin{mdns})
 	fmt.Printf("Start scanning...\n")
-	ch, err := ds.Scan(ctx, "")
+	ch, err := ds.Scan(ctx, fmt.Sprintf("v.InterfaceName = \"%s\"", CroupierInterface))
 	if err != nil {
 		ctx.Fatalf("Scan failed: %v", err)
 	}
@@ -39,12 +39,7 @@ loop:
 	for {
 		select {
 		case update := <-ch:
-			key, discStruct := GetSG(instances, update, u)
-			if discStruct != nil {
-				settingsAddr := discStruct.SettingsAddr
-				JoinSettingsSyncgroup(settingsAddr, u)
-				u.DiscGroups[key] = discStruct
-			}
+			GetSG(instances, update, u)
 			view.LoadDiscoveryView(u)
 		case <-signals.ShutdownOnSignals(ctx):
 			break loop
@@ -55,16 +50,18 @@ loop:
 }
 
 // Returns the addresses of any discovered syncgroups that contain croupier game information
-func GetSG(instances map[string]string, update discovery.Update, u *uistate.UIState) (string, *uistate.DiscStruct) {
+func GetSG(instances map[string]string, update discovery.Update, u *uistate.UIState) {
 	switch uType := update.(type) {
 	case discovery.UpdateFound:
 		found := uType.Value
 		instances[string(found.Service.InstanceId)] = found.Service.InstanceName
 		fmt.Printf("Discovered %q: Instance=%x, Interface=%q, Addrs=%v\n", found.Service.InstanceName, found.Service.InstanceId, found.Service.InterfaceName, found.Service.Addrs)
-		if found.Service.InterfaceName == CroupierInterface {
-			key := found.Service.InstanceId
-			ds := uistate.MakeDiscStruct(found.Service.Attrs["settings_sgname"], found.Service.Addrs[0], found.Service.Attrs["game_start_data"])
-			return key, ds
+		key := found.Service.InstanceId
+		ds := uistate.MakeDiscStruct(found.Service.Attrs["settings_sgname"], found.Service.Addrs[0], found.Service.Attrs["game_start_data"])
+		if ds != nil {
+			settingsAddr := ds.SettingsAddr
+			JoinSettingsSyncgroup(settingsAddr, u)
+			u.DiscGroups[key] = ds
 		}
 	case discovery.UpdateLost:
 		lost := uType.Value
@@ -76,7 +73,6 @@ func GetSG(instances map[string]string, update discovery.Update, u *uistate.UISt
 		u.DiscGroups[lost.InstanceId] = nil
 		fmt.Printf("Lost %q: Instance=%x\n", name, lost.InstanceId)
 	}
-	return "", nil
 }
 
 // Returns a watchstream of the data in the table

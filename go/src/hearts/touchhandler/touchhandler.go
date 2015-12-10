@@ -34,11 +34,19 @@ func OnTouch(t touch.Event, u *uistate.UIState) {
 		switch t.Type {
 		case touch.TypeBegin:
 			beginClickDiscovery(t, u)
+		case touch.TypeMove:
+			moveClickDiscovery(t, u)
+		case touch.TypeEnd:
+			endClickDiscovery(t, u)
 		}
 	case uistate.Arrange:
 		switch t.Type {
 		case touch.TypeBegin:
 			beginClickArrange(t, u)
+		case touch.TypeMove:
+			moveClickArrange(t, u)
+		case touch.TypeEnd:
+			endClickArrange(t, u)
 		}
 	case uistate.Table:
 		switch t.Type {
@@ -101,6 +109,10 @@ func OnTouch(t touch.Event, u *uistate.UIState) {
 		switch t.Type {
 		case touch.TypeBegin:
 			beginClickScore(t, u)
+		case touch.TypeMove:
+			moveClickScore(t, u)
+		case touch.TypeEnd:
+			endClickScore(t, u)
 		}
 	}
 	u.LastMouseXY.X = t.X
@@ -110,6 +122,21 @@ func OnTouch(t touch.Event, u *uistate.UIState) {
 func beginClickDiscovery(t touch.Event, u *uistate.UIState) {
 	buttonList := findClickedButton(t, u)
 	for _, button := range buttonList {
+		pressButton(button, u)
+	}
+}
+
+func moveClickDiscovery(t touch.Event, u *uistate.UIState) {
+	curPressed := findClickedButton(t, u)
+	alreadyPressed := getPressed(u)
+	if len(alreadyPressed) > 0 && len(curPressed) == 0 {
+		unpressButtons(u)
+	}
+}
+
+func endClickDiscovery(t touch.Event, u *uistate.UIState) {
+	pressed := unpressButtons(u)
+	for _, button := range pressed {
 		if button == u.Buttons["newGame"] {
 			logCh := make(chan string)
 			settingsCh := make(chan string)
@@ -155,6 +182,33 @@ func beginClickArrange(t touch.Event, u *uistate.UIState) {
 	buttonList := findClickedButton(t, u)
 	for _, b := range buttonList {
 		if b == u.Buttons["exit"] {
+			pressButton(b, u)
+		} else if b == u.Buttons["start"] {
+			if u.CurTable.AllReadyForNewRound() {
+				pressButton(b, u)
+			}
+		} else if u.CurPlayerIndex < 0 {
+			for _, button := range u.Buttons {
+				if b == button {
+					pressButton(b, u)
+				}
+			}
+		}
+	}
+}
+
+func moveClickArrange(t touch.Event, u *uistate.UIState) {
+	curPressed := findClickedButton(t, u)
+	alreadyPressed := getPressed(u)
+	if len(alreadyPressed) > 0 && len(curPressed) == 0 {
+		unpressButtons(u)
+	}
+}
+
+func endClickArrange(t touch.Event, u *uistate.UIState) {
+	pressed := unpressButtons(u)
+	for _, b := range pressed {
+		if b == u.Buttons["exit"] {
 			if u.SGChan != nil {
 				u.SGChan <- true
 				u.SGChan = nil
@@ -165,7 +219,7 @@ func beginClickArrange(t touch.Event, u *uistate.UIState) {
 			go sync.ScanForSG(u.Ctx, u.ScanChan, u)
 			view.LoadDiscoveryView(u)
 		} else if b == u.Buttons["start"] {
-			if b.GetDisplayingImage() {
+			if u.CurTable.AllReadyForNewRound() {
 				successStart := sync.LogGameStart(u)
 				for !successStart {
 					successStart = sync.LogGameStart(u)
@@ -450,7 +504,22 @@ func endClickSplit(t touch.Event, c *card.Card, u *uistate.UIState) {
 
 func beginClickScore(t touch.Event, u *uistate.UIState) {
 	buttonList := findClickedButton(t, u)
-	if len(buttonList) > 0 {
+	for _, b := range buttonList {
+		pressButton(b, u)
+	}
+}
+
+func moveClickScore(t touch.Event, u *uistate.UIState) {
+	curPressed := findClickedButton(t, u)
+	alreadyPressed := getPressed(u)
+	if len(alreadyPressed) > 0 && len(curPressed) == 0 {
+		unpressButtons(u)
+	}
+}
+
+func endClickScore(t touch.Event, u *uistate.UIState) {
+	pressed := unpressButtons(u)
+	if len(pressed) > 0 {
 		success := sync.LogReady(u)
 		for !success {
 			sync.LogReady(u)
@@ -570,11 +639,28 @@ func pressButton(b *staticimg.StaticImg, u *uistate.UIState) {
 	b.SetDisplayingImage(false)
 }
 
-func unpressButtons(u *uistate.UIState) {
+// returns buttons that were pressed
+func unpressButtons(u *uistate.UIState) []*staticimg.StaticImg {
+	pressed := make([]*staticimg.StaticImg, 0)
 	for _, b := range u.Buttons {
-		u.Eng.SetSubTex(b.GetNode(), b.GetImage())
-		b.SetDisplayingImage(true)
+		if b.GetDisplayingImage() == false {
+			u.Eng.SetSubTex(b.GetNode(), b.GetImage())
+			b.SetDisplayingImage(true)
+			pressed = append(pressed, b)
+		}
 	}
+	return pressed
+}
+
+// returns pressed buttons without unpressing them
+func getPressed(u *uistate.UIState) []*staticimg.StaticImg {
+	pressed := make([]*staticimg.StaticImg, 0)
+	for _, b := range u.Buttons {
+		if b.GetDisplayingImage() == false {
+			pressed = append(pressed, b)
+		}
+	}
+	return pressed
 }
 
 // checks all drop targets to see if a card was dropped there

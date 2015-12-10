@@ -363,6 +363,8 @@ func onReady(value string, u *uistate.UIState) {
 		if u.CurView == uistate.Arrange {
 			b := u.Buttons["start"]
 			if !b.GetDisplayingImage() {
+				b.SetImage(b.GetAlt())
+				b.SetAlt(u.Texs["StartBluePressed.png"])
 				u.Eng.SetSubTex(b.GetNode(), b.GetImage())
 				b.SetDisplayingImage(true)
 			}
@@ -414,15 +416,5 @@ func (us updateSorter) Swap(i, j int) {
 func (us updateSorter) Less(i, j int) bool {
 	iKey := us[i].Row
 	jKey := us[j].Row
-	itmp := strings.Split(iKey, "/")
-	if len(itmp) < 3 {
-		return true
-	}
-	iTime := itmp[2]
-	jtmp := strings.Split(jKey, "/")
-	if len(jtmp) < 3 {
-		return false
-	}
-	jTime := jtmp[2]
-	return iTime < jTime
+	return iKey < jKey
 }

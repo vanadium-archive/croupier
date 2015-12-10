@@ -34,7 +34,8 @@ func LoadArrangeView(u *uistate.UIState) {
 	resetImgs(u)
 	resetScene(u)
 	addHeader(u)
-	watchImg := u.Texs["WatchSpot.png"]
+	watchImg := u.Texs["WatchSpotUnpressed.png"]
+	watchAlt := u.Texs["WatchSpotPressed.png"]
 	arrangeBlockLength := u.WindowSize.X - 4*u.Padding
 	if u.WindowSize.Y < u.WindowSize.X {
 		arrangeBlockLength = u.WindowSize.Y - u.CardDim.Y
@@ -50,17 +51,18 @@ func LoadArrangeView(u *uistate.UIState) {
 	addArrangePlayer(3, arrangeDim, arrangeBlockLength, u)
 	// table
 	watchPos := coords.MakeVec((u.WindowSize.X-arrangeDim.X)/2, (u.WindowSize.Y+arrangeBlockLength)/2-2*arrangeDim.Y-4*u.Padding)
-	u.Buttons["joinTable"] = texture.MakeImgWithoutAlt(watchImg, watchPos, arrangeDim, u)
-	quitImg := u.Texs["Quit.png"]
+	u.Buttons["joinTable"] = texture.MakeImgWithAlt(watchImg, watchAlt, watchPos, arrangeDim, true, u)
+	quitImg := u.Texs["QuitUnpressed.png"]
+	quitAlt := u.Texs["QuitPressed.png"]
 	quitDim := u.CardDim
 	quitPos := coords.MakeVec(u.Padding, u.TopPadding+10)
-	u.Buttons["exit"] = texture.MakeImgWithoutAlt(quitImg, quitPos, quitDim, u)
+	u.Buttons["exit"] = texture.MakeImgWithAlt(quitImg, quitAlt, quitPos, quitDim, true, u)
 	if u.IsOwner {
-		startImg := u.Texs["StartBlue.png"]
-		startAlt := u.Texs["StartGray.png"]
+		startImg := u.Texs["StartGray.png"]
+		startAlt := u.Texs["StartBlue.png"]
 		startDim := coords.MakeVec(2*u.CardDim.X, u.CardDim.Y)
 		startPos := u.WindowSize.MinusVec(startDim).Minus(u.BottomPadding)
-		display := u.CurTable.AllReadyForNewRound()
+		display := !u.CurTable.AllReadyForNewRound()
 		u.Buttons["start"] = texture.MakeImgWithAlt(startImg, startAlt, startPos, startDim, display, u)
 	}
 }
@@ -86,10 +88,11 @@ func LoadDiscoveryView(u *uistate.UIState) {
 	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)
-	newGameImg := u.Texs["NewGame.png"]
+	newGameImg := u.Texs["NewGameUnpressed.png"]
+	newGameAlt := u.Texs["NewGamePressed.png"]
 	newGameDim := coords.MakeVec(2*u.CardDim.X, u.CardDim.Y)
 	newGamePos := coords.MakeVec((u.WindowSize.X-newGameDim.X)/2, u.TopPadding)
-	u.Buttons["newGame"] = texture.MakeImgWithoutAlt(newGameImg, newGamePos, newGameDim, u)
+	u.Buttons["newGame"] = texture.MakeImgWithAlt(newGameImg, newGameAlt, newGamePos, newGameDim, true, u)
 	buttonNum := 1
 	for _, d := range u.DiscGroups {
 		if d != nil {
@@ -112,9 +115,10 @@ func LoadDiscoveryView(u *uistate.UIState) {
 				for _, img := range textImgs {
 					u.BackgroundImgs = append(u.BackgroundImgs, img)
 				}
-				joinGameImg := u.Texs["JoinGame.png"]
+				joinGameImg := u.Texs["JoinGameUnpressed.png"]
+				joinGameAlt := u.Texs["JoinGamePressed.png"]
 				joinGamePos := coords.MakeVec(u.WindowSize.X-u.BottomPadding-newGameDim.X, newGamePos.Y+float32(buttonNum)*(bgBannerDim.Y+u.Padding))
-				u.Buttons[fmt.Sprintf("joinGame-%d", buttonNum)] = texture.MakeImgWithoutAlt(joinGameImg, joinGamePos, newGameDim, u)
+				u.Buttons[fmt.Sprintf("joinGame-%d", buttonNum)] = texture.MakeImgWithAlt(joinGameImg, joinGameAlt, joinGamePos, newGameDim, true, u)
 				u.Buttons[fmt.Sprintf("joinGame-%d", buttonNum)].SetInfo(d.LogAddr)
 				buttonNum++
 			}
@@ -484,7 +488,8 @@ func ChangePlayMessage(message string, u *uistate.UIState) {
 }
 
 func addArrangePlayer(player int, arrangeDim *coords.Vec, arrangeBlockLength float32, u *uistate.UIState) {
-	sitImg := u.Texs["SitSpot.png"]
+	sitImg := u.Texs["SitSpotUnpressed.png"]
+	sitAlt := u.Texs["SitSpotPressed.png"]
 	var sitPos *coords.Vec
 	switch player {
 	case 0:
@@ -497,7 +502,7 @@ func addArrangePlayer(player int, arrangeDim *coords.Vec, arrangeBlockLength flo
 		sitPos = coords.MakeVec((u.WindowSize.X-arrangeDim.X)/2+arrangeDim.X+2*u.Padding, (u.WindowSize.Y+arrangeBlockLength)/2-2*arrangeDim.Y-4*u.Padding)
 	}
 	if u.PlayerData[player] == 0 {
-		u.Buttons[fmt.Sprintf("joinPlayer-%d", player)] = texture.MakeImgWithoutAlt(sitImg, sitPos, arrangeDim, u)
+		u.Buttons[fmt.Sprintf("joinPlayer-%d", player)] = texture.MakeImgWithAlt(sitImg, sitAlt, sitPos, arrangeDim, true, u)
 	} else {
 		avatar := uistate.GetAvatar(player, u)
 		u.BackgroundImgs = append(u.BackgroundImgs, texture.MakeImgWithoutAlt(avatar, sitPos, arrangeDim, u))
@@ -1095,14 +1100,17 @@ func addPlayerScores(roundScores []int, u *uistate.UIState) {
 
 func addScoreButton(gameOver bool, u *uistate.UIState) {
 	var buttonImg sprite.SubTex
+	var buttonAlt sprite.SubTex
 	if gameOver {
-		buttonImg = u.Texs["NewGame.png"]
+		buttonImg = u.Texs["NewGameUnpressed.png"]
+		buttonAlt = u.Texs["NewGamePressed.png"]
 	} else {
-		buttonImg = u.Texs["NewRound.png"]
+		buttonImg = u.Texs["NewRoundUnpressed.png"]
+		buttonAlt = u.Texs["NewRoundPressed.png"]
 	}
 	buttonDim := coords.MakeVec(2*u.CardDim.X, 3*u.CardDim.Y/4)
 	buttonPos := coords.MakeVec((u.WindowSize.X-buttonDim.X)/2, u.WindowSize.Y-buttonDim.Y-u.BottomPadding)
-	u.Buttons["ready"] = texture.MakeImgWithoutAlt(buttonImg, buttonPos, buttonDim, u)
+	u.Buttons["ready"] = texture.MakeImgWithAlt(buttonImg, buttonAlt, buttonPos, buttonDim, true, u)
 }
 
 func resetImgs(u *uistate.UIState) {
