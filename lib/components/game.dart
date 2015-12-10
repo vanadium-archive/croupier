@@ -7,7 +7,7 @@ library game_component;
 import 'dart:math' as math;
 import 'dart:async';
 
-import 'package:flutter/animation.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
@@ -142,7 +142,7 @@ abstract class GameComponentState<T extends GameComponent> extends State<T> {
   Widget buildCardAnimationLayer(List<int> visibleCardCollectionIndexes) {
     // It's possible that some cards need to be moved after this build.
     // If so, we can catch it in the next frame.
-    scheduler.requestPostFrameCallback((Duration d) {
+    scheduler.addPostFrameCallback((Duration d) {
       _cardLevelMapProcessAllVisible(visibleCardCollectionIndexes);
     });
 

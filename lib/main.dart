@@ -8,7 +8,6 @@ import 'dart:async';
 import 'settings/client.dart' as settings_client;
 import 'logic/croupier.dart' show Croupier;
 import 'components/settings_route.dart' show SettingsRoute;
-import 'components/debug_route.dart' show DebugRoute;
 import 'components/main_route.dart' show MainRoute;
 import 'styles/common.dart' as style;
 
@@ -32,8 +31,7 @@ class CroupierAppState extends State<CroupierApp> {
         title: 'Croupier',
         routes: <String, RouteBuilder>{
           "/": (RouteArguments args) => new MainRoute(croupier),
-          "/settings": (RouteArguments args) => new SettingsRoute(croupier),
-          "/debug": (RouteArguments args) => new DebugRoute(croupier)
+          "/settings": (RouteArguments args) => new SettingsRoute(croupier)
         },
         theme: style.theme);
   }
