@@ -95,7 +95,7 @@ func ScanData(tableName, prefix string, u *uistate.UIState) nosql.ScanStream {
 }
 
 // Joins gamelog syncgroup
-func JoinLogSyncgroup(ch chan bool, logName string, u *uistate.UIState) {
+func JoinLogSyncgroup(logName string, u *uistate.UIState) bool {
 	fmt.Println("Joining gamelog syncgroup")
 	u.IsOwner = false
 	app := u.Service.App(AppName)
@@ -105,13 +105,13 @@ func JoinLogSyncgroup(ch chan bool, logName string, u *uistate.UIState) {
 	_, err := logSg.Join(u.Ctx, myInfoJoiner)
 	if err != nil {
 		fmt.Println("SYNCGROUP JOIN ERROR: ", err)
-		ch <- false
+		return false
 	} else {
 		fmt.Println("Syncgroup joined")
 		if u.LogSG != logName {
 			resetGame(logName, false, u)
 		}
-		ch <- true
+		return true
 	}
 }
 

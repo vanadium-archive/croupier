@@ -179,19 +179,14 @@ func AnimateTableCardPlay(animCard *card.Card, playerInt int, quit chan bool, u 
 }
 
 // Animation for the 'pass' action, when app is in the hand view
-func AnimateHandCardPass(ch chan bool, animImages []*staticimg.StaticImg, animCards []*card.Card, u *uistate.UIState) {
-	for _, i := range animImages {
+func AnimateHandCardPass(ch chan bool, animImages []*staticimg.StaticImg, u *uistate.UIState) {
+	for counter, i := range animImages {
 		dims := i.GetDimensions()
 		to := coords.MakeVec(i.GetCurrent().X, i.GetCurrent().Y-u.WindowSize.Y)
-		AnimateImageNoChannel(i, to, dims, u)
-	}
-	for i, c := range animCards {
-		dims := c.GetDimensions()
-		to := coords.MakeVec(c.GetCurrent().X, c.GetCurrent().Y-u.WindowSize.Y)
-		if i < len(animCards)-1 {
-			animateCardNoChannel(c, to, dims, u)
+		if counter < len(animImages)-1 {
+			AnimateImageNoChannel(i, to, dims, u)
 		} else {
-			animateCardMovement(ch, c, to, dims, u)
+			animateImageMovement(ch, i, to, dims, u)
 		}
 	}
 }
@@ -211,18 +206,21 @@ func AnimateHandCardTake(ch chan bool, animImages []*staticimg.StaticImg, u *uis
 // Animation to bring in the take slot
 func AnimateInTake(u *uistate.UIState) {
 	imgs := append(u.Other, u.DropTargets...)
-	passedCards := u.CurTable.GetPlayers()[u.CurPlayerIndex].GetPassedTo()
 	for _, i := range imgs {
 		dims := i.GetDimensions()
 		to := coords.MakeVec(i.GetCurrent().X, i.GetCurrent().Y+u.WindowSize.Y)
 		AnimateImageNoChannel(i, to, dims, u)
 	}
-	if !u.SequentialPhases || u.CurTable.AllDonePassing() {
-		for _, c := range passedCards {
-			dims := c.GetDimensions()
-			to := coords.MakeVec(c.GetCurrent().X, c.GetCurrent().Y+u.WindowSize.Y)
-			animateCardNoChannel(c, to, dims, u)
-		}
+}
+
+// Animation to bring in the pass slot
+func AnimateInPass(u *uistate.UIState) {
+	imgs := append(u.Other, u.DropTargets...)
+	imgs = append(imgs, u.Buttons["pass"])
+	for _, i := range imgs {
+		dims := i.GetDimensions()
+		to := coords.MakeVec(i.GetCurrent().X, i.GetCurrent().Y+u.WindowSize.Y)
+		AnimateImageNoChannel(i, to, dims, u)
 	}
 }
 
@@ -238,13 +236,16 @@ func AnimateHandCardPlay(ch chan bool, animCard *card.Card, u *uistate.UIState) 
 		BringNodeToFront(img.GetNode(), u)
 	}
 	imgs := []*staticimg.StaticImg{u.BackgroundImgs[0], u.DropTargets[0]}
-	for _, i := range imgs {
+	for counter, i := range imgs {
 		dims := i.GetDimensions()
 		to := coords.MakeVec(i.GetCurrent().X, i.GetCurrent().Y-u.WindowSize.Y)
-		AnimateImageNoChannel(i, to, dims, u)
+		if counter == len(imgs)-1 {
+			animateImageMovement(ch, i, to, dims, u)
+		} else {
+			AnimateImageNoChannel(i, to, dims, u)
+		}
+
 	}
-	to := coords.MakeVec(animCard.GetCurrent().X, animCard.GetCurrent().Y-u.WindowSize.Y)
-	animateCardMovement(ch, animCard, to, animCard.GetDimensions(), u)
 }
 
 // Animation to bring in the play slot when app is in the hand view and it is the player's turn
@@ -281,17 +282,10 @@ func AnimateInSplit(ch chan bool, u *uistate.UIState) {
 	topOfBanner := u.WindowSize.Y - 4*u.CardDim.Y - 5*u.Padding - u.BottomPadding - 40
 	tableImgs := make([]*staticimg.StaticImg, 0)
 	bannerImgs := make([]*staticimg.StaticImg, 0)
-	cards := make([]*card.Card, 0)
 	bannerImgs = append(bannerImgs, u.Other...)
 	bannerImgs = append(bannerImgs, u.Buttons["toggleSplit"])
 	tableImgs = append(tableImgs, u.DropTargets...)
 	tableImgs = append(tableImgs, u.BackgroundImgs[:u.NumPlayers]...)
-	cards = append(cards, u.TableCards...)
-	for _, card := range cards {
-		from := card.GetCurrent()
-		to := coords.MakeVec(from.X, from.Y+topOfBanner)
-		animateCardNoChannel(card, to, card.GetDimensions(), u)
-	}
 	for _, img := range tableImgs {
 		from := img.GetCurrent()
 		to := coords.MakeVec(from.X, from.Y+topOfBanner)
@@ -326,17 +320,10 @@ func AnimateOutSplit(ch chan bool, u *uistate.UIState) {
 	topOfBanner := u.WindowSize.Y - 4*u.CardDim.Y - 5*u.Padding - u.BottomPadding - 40
 	tableImgs := make([]*staticimg.StaticImg, 0)
 	bannerImgs := make([]*staticimg.StaticImg, 0)
-	cards := make([]*card.Card, 0)
 	bannerImgs = append(bannerImgs, u.Other...)
 	bannerImgs = append(bannerImgs, u.Buttons["toggleSplit"])
 	tableImgs = append(tableImgs, u.DropTargets...)
 	tableImgs = append(tableImgs, u.BackgroundImgs[:u.NumPlayers]...)
-	cards = append(cards, u.TableCards...)
-	for _, card := range cards {
-		from := card.GetCurrent()
-		to := coords.MakeVec(from.X, from.Y-topOfBanner)
-		animateCardNoChannel(card, to, card.GetDimensions(), u)
-	}
 	for _, img := range tableImgs {
 		from := img.GetCurrent()
 		to := coords.MakeVec(from.X, from.Y-topOfBanner)
@@ -417,8 +404,16 @@ func animateImageMovement(c chan bool, animImage *staticimg.StaticImg, endPos, e
 			newVec := curXY.PlusVec(XYStep)
 			dimVec := curDim.PlusVec(dimStep)
 			animImage.Move(newVec, dimVec, eng)
+			card := animImage.GetCardHere()
+			if card != nil {
+				card.Move(newVec, dimVec, eng)
+			}
 		} else if iteration == animationFrameCount {
 			animImage.Move(endPos, endDim, eng)
+			card := animImage.GetCardHere()
+			if card != nil {
+				card.Move(endPos, endDim, eng)
+			}
 			c <- true
 		}
 	})
@@ -439,8 +434,16 @@ func AnimateImageNoChannel(animImage *staticimg.StaticImg, endPos, endDim *coord
 			newVec := curXY.PlusVec(XYStep)
 			dimVec := curDim.PlusVec(dimStep)
 			animImage.Move(newVec, dimVec, eng)
+			card := animImage.GetCardHere()
+			if card != nil {
+				card.Move(newVec, dimVec, eng)
+			}
 		} else if iteration == animationFrameCount {
 			animImage.Move(endPos, endDim, eng)
+			card := animImage.GetCardHere()
+			if card != nil {
+				card.Move(endPos, endDim, eng)
+			}
 		}
 	})
 }

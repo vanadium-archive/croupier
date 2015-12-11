@@ -134,7 +134,7 @@ func MakeUIState() *UIState {
 		Padding:          float32(5),
 		CurView:          None,
 		Done:             false,
-		Debug:            false,
+		Debug:            true,
 		SequentialPhases: true,
 		SwitchingViews:   false,
 		UserData:         make(map[int]map[string]interface{}),

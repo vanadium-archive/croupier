@@ -116,7 +116,7 @@ func CreateTables(u *uistate.UIState) {
 }
 
 // Creates a new gamelog syncgroup
-func CreateLogSyncgroup(ch chan string, u *uistate.UIState) {
+func CreateLogSyncgroup(u *uistate.UIState) (string, string) {
 	fmt.Println("Creating Log Syncgroup")
 	u.IsOwner = true
 	// Generate random gameID information to advertise this game
@@ -131,7 +131,6 @@ func CreateLogSyncgroup(ch chan string, u *uistate.UIState) {
 	if err != nil {
 		fmt.Println("WE HAVE A HUGE PROBLEM:", err)
 	}
-	ch <- string(value)
 	// Create gamelog syncgroup
 	logSGName := fmt.Sprintf("%s/croupier/%s/%%%%sync/gaming-%d", MountPoint, SBName, gameID)
 	allAccess := access.AccessList{In: []security.BlessingPattern{"..."}}
@@ -163,21 +162,21 @@ func CreateLogSyncgroup(ch chan string, u *uistate.UIState) {
 		_, err2 := logSG.Join(u.Ctx, myInfoCreator)
 		if err2 != nil {
 			fmt.Println("SYNCGROUP JOIN ERROR: ", err2)
-			ch <- ""
+			return string(value), ""
 		} else {
-			ch <- logSGName
+			return string(value), logSGName
 		}
 	} else {
 		fmt.Println("Syncgroup created")
 		if logSGName != u.LogSG {
 			resetGame(logSGName, true, u)
 		}
-		ch <- logSGName
+		return string(value), logSGName
 	}
 }
 
 // Creates a new user settings syncgroup
-func CreateSettingsSyncgroup(ch chan string, u *uistate.UIState) {
+func CreateSettingsSyncgroup(u *uistate.UIState) string {
 	fmt.Println("Creating Settings Syncgroup")
 	allAccess := access.AccessList{In: []security.BlessingPattern{"..."}}
 	permissions := access.Permissions{
@@ -209,13 +208,13 @@ func CreateSettingsSyncgroup(ch chan string, u *uistate.UIState) {
 		_, err2 := settingsSG.Join(u.Ctx, myInfoCreator)
 		if err2 != nil {
 			fmt.Println("SYNCGROUP JOIN ERROR: ", err2)
-			ch <- ""
+			return ""
 		} else {
-			ch <- settingsSGName
+			return settingsSGName
 		}
 	} else {
 		fmt.Println("Syncgroup created")
-		ch <- settingsSGName
+		return settingsSGName
 	}
 }
 

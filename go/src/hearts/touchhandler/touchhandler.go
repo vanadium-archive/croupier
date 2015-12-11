@@ -14,7 +14,6 @@ import (
 	"golang.org/x/mobile/event/touch"
 	"golang.org/x/mobile/exp/sprite"
 
-	"hearts/img/coords"
 	"hearts/img/reposition"
 	"hearts/img/staticimg"
 	"hearts/img/uistate"
@@ -51,9 +50,7 @@ func OnTouch(t touch.Event, u *uistate.UIState) {
 	case uistate.Table:
 		switch t.Type {
 		case touch.TypeBegin:
-			if u.Debug {
-				beginClickTable(t, u)
-			}
+			beginClickTable(t, u)
 		}
 	case uistate.Pass:
 		switch t.Type {
@@ -138,13 +135,8 @@ func endClickDiscovery(t touch.Event, u *uistate.UIState) {
 	pressed := unpressButtons(u)
 	for _, button := range pressed {
 		if button == u.Buttons["newGame"] {
-			logCh := make(chan string)
-			settingsCh := make(chan string)
-			go sync.CreateLogSyncgroup(logCh, u)
-			go sync.CreateSettingsSyncgroup(settingsCh, u)
-			gameStartData := <-logCh
-			logName := <-logCh
-			settingsName := <-settingsCh
+			gameStartData, logName := sync.CreateLogSyncgroup(u)
+			settingsName := sync.CreateSettingsSyncgroup(u)
 			if logName != "" && settingsName != "" {
 				sync.LogSettingsName(settingsName, u)
 				u.ScanChan <- true
@@ -156,13 +148,10 @@ func endClickDiscovery(t touch.Event, u *uistate.UIState) {
 		} else {
 			for _, b := range u.Buttons {
 				if button == b {
-					joinLogDone := make(chan bool)
 					logAddr := b.GetInfo()
-					go sync.JoinLogSyncgroup(joinLogDone, logAddr, u)
-					if success := <-joinLogDone; success {
-						settingsCh := make(chan string)
-						go sync.CreateSettingsSyncgroup(settingsCh, u)
-						sgName := <-settingsCh
+					success := sync.JoinLogSyncgroup(logAddr, u)
+					if success {
+						sgName := sync.CreateSettingsSyncgroup(u)
 						if sgName != "" {
 							sync.LogSettingsName(sgName, u)
 						}
@@ -187,7 +176,7 @@ func beginClickArrange(t touch.Event, u *uistate.UIState) {
 			if u.CurTable.AllReadyForNewRound() {
 				pressButton(b, u)
 			}
-		} else if u.CurPlayerIndex < 0 {
+		} else if u.CurPlayerIndex < 0 || u.Debug {
 			for _, button := range u.Buttons {
 				if b == button {
 					pressButton(b, u)
@@ -232,17 +221,15 @@ func endClickArrange(t touch.Event, u *uistate.UIState) {
 			}
 		} else {
 			for key, button := range u.Buttons {
-				if b == button && u.CurPlayerIndex < 0 {
+				if b == button && (u.CurPlayerIndex < 0 || u.Debug) {
 					if key == "joinTable" {
 						u.CurPlayerIndex = 4
 						sync.LogPlayerNum(u)
 					} else {
 						playerNum := strings.Split(key, "-")[1]
-						if u.CurPlayerIndex < 0 {
-							u.CurPlayerIndex, _ = strconv.Atoi(playerNum)
-							sync.LogReady(u)
-							sync.LogPlayerNum(u)
-						}
+						u.CurPlayerIndex, _ = strconv.Atoi(playerNum)
+						sync.LogReady(u)
+						sync.LogPlayerNum(u)
 					}
 				}
 			}
@@ -268,50 +255,20 @@ func beginClickPass(t touch.Event, u *uistate.UIState) {
 			view.LoadTableView(u)
 		} else if b == u.Buttons["hand"] {
 			view.LoadPassOrTakeOrPlay(u)
-		} else if b == u.Buttons["dragPass"] {
-			if b.GetDisplayingImage() {
-				u.CurImg = b
-				for _, img := range u.Other {
-					u.Eng.SetSubTex(img.GetNode(), img.GetAlt())
-					img.SetDisplayingImage(false)
-				}
-				blueBanner := u.Other[0]
-				reposition.BringNodeToFront(u.BackgroundImgs[1].GetNode(), u)
-				reposition.BringNodeToFront(b.GetNode(), u)
-				for _, d := range u.DropTargets {
-					reposition.BringNodeToFront(d.GetCardHere().GetNode(), u)
-				}
-				if blueBanner.GetNode().Arranger == nil {
-					finalX := blueBanner.GetInitial().X
-					finalY := b.GetInitial().Y + b.GetDimensions().Y - blueBanner.GetDimensions().Y
-					finalPos := coords.MakeVec(finalX, finalY)
-					reposition.AnimateImageNoChannel(blueBanner, finalPos, blueBanner.GetDimensions(), u)
-				}
-			}
+		} else if b == u.Buttons["pass"] {
+			pressButton(b, u)
 		}
 	}
 }
 
 func moveClickPass(t touch.Event, u *uistate.UIState) {
-	if u.CurImg != nil {
-		imgs := make([]*staticimg.StaticImg, 0)
-		cards := make([]*card.Card, 0)
-		pullTab := u.Buttons["dragPass"]
-		blueBanner := u.BackgroundImgs[1]
-		imgs = append(imgs, pullTab)
-		imgs = append(imgs, blueBanner)
-		for _, d := range u.DropTargets {
-			imgs = append(imgs, d)
-			cards = append(cards, d.GetCardHere())
-		}
-		for i := 2; i < 7; i++ {
-			text := u.BackgroundImgs[i]
-			u.Eng.SetSubTex(text.GetNode(), text.GetAlt())
-			text.SetDisplayingImage(false)
-		}
-		reposition.DragImgs(t, cards, imgs, u)
-	} else if u.CurCard != nil {
+	if u.CurCard != nil {
 		reposition.DragCard(t, u)
+	}
+	curPressed := findClickedButton(t, u)
+	alreadyPressed := getPressed(u)
+	if len(alreadyPressed) > 0 && len(curPressed) == 0 {
+		unpressButtons(u)
 	}
 }
 
@@ -331,32 +288,50 @@ func endClickPass(t touch.Event, u *uistate.UIState) {
 				readyToPass = false
 			}
 		}
-		pullTab := u.Buttons["dragPass"]
+		passButton := u.Buttons["pass"]
 		if readyToPass {
-			u.Eng.SetSubTex(pullTab.GetNode(), pullTab.GetImage())
-			pullTab.SetDisplayingImage(true)
-		} else {
-			u.Eng.SetSubTex(pullTab.GetNode(), pullTab.GetAlt())
-			pullTab.SetDisplayingImage(false)
-		}
-	} else if u.CurImg != nil && touchingStaticImg(t, u.Other[0], u) {
-		ch := make(chan bool)
-		success := passCards(ch, u.CurPlayerIndex, u)
-		quit := make(chan bool)
-		u.AnimChans = append(u.AnimChans, quit)
-		go func() {
-			onDone := func() {
-				if !success {
-					fmt.Println("Invalid pass")
-				} else {
-					view.LoadTakeView(u)
+			if passButton.GetDisplayingImage() {
+				u.Eng.SetSubTex(passButton.GetNode(), passButton.GetImage())
+				passButton.SetDisplayingImage(true)
+			}
+			for _, img := range u.Other {
+				if img.GetDisplayingImage() {
+					u.Eng.SetSubTex(img.GetNode(), img.GetAlt())
+					img.SetDisplayingImage(false)
 				}
 			}
-			reposition.SwitchOnChan(ch, quit, onDone, u)
-		}()
+		} else {
+			var emptyTex sprite.SubTex
+			u.Eng.SetSubTex(passButton.GetNode(), emptyTex)
+			passButton.SetDisplayingImage(true)
+			for _, img := range u.Other {
+				if !img.GetDisplayingImage() {
+					u.Eng.SetSubTex(img.GetNode(), img.GetImage())
+					img.SetDisplayingImage(true)
+				}
+			}
+		}
+	}
+	pressed := unpressButtons(u)
+	for _, p := range pressed {
+		if p == u.Buttons["pass"] {
+			ch := make(chan bool)
+			success := passCards(ch, u.CurPlayerIndex, u)
+			quit := make(chan bool)
+			u.AnimChans = append(u.AnimChans, quit)
+			go func() {
+				onDone := func() {
+					if !success {
+						fmt.Println("Invalid pass")
+					} else {
+						view.LoadTakeView(u)
+					}
+				}
+				reposition.SwitchOnChan(ch, quit, onDone, u)
+			}()
+		}
 	}
 	u.CurCard = nil
-	u.CurImg = nil
 }
 
 func beginClickTake(t touch.Event, u *uistate.UIState) {
@@ -554,12 +529,10 @@ func findClickedButton(t touch.Event, u *uistate.UIState) []*staticimg.StaticImg
 // returns true if pass was successful
 func passCards(ch chan bool, playerId int, u *uistate.UIState) bool {
 	cardsPassed := make([]*card.Card, 0)
-	dropsToReset := make([]*staticimg.StaticImg, 0)
 	for _, d := range u.DropTargets {
 		passCard := d.GetCardHere()
 		if passCard != nil {
 			cardsPassed = append(cardsPassed, passCard)
-			dropsToReset = append(dropsToReset, d)
 		}
 	}
 	// if the pass is not valid, don't pass any cards
@@ -570,19 +543,9 @@ func passCards(ch chan bool, playerId int, u *uistate.UIState) bool {
 	for !success {
 		success = sync.LogPass(u, cardsPassed)
 	}
-	// UI component
-	pullTab := u.Buttons["dragPass"]
-	blueBanner := u.BackgroundImgs[1]
-	imgs := []*staticimg.StaticImg{pullTab, blueBanner}
-	for _, d := range dropsToReset {
-		imgs = append(imgs, d)
-		d.SetCardHere(nil)
-	}
-	var blankTex sprite.SubTex
-	for _, i := range imgs {
-		u.Eng.SetSubTex(i.GetNode(), blankTex)
-	}
-	reposition.AnimateHandCardPass(ch, u.Other, cardsPassed, u)
+	imgs := append(u.Other, u.DropTargets...)
+	imgs = append(imgs, u.Buttons["pass"])
+	reposition.AnimateHandCardPass(ch, imgs, u)
 	return true
 }
 
@@ -622,7 +585,6 @@ func playCard(ch chan bool, playerId int, u *uistate.UIState) string {
 	if err := u.CurTable.ValidPlayLogic(c, playerId); err != "" {
 		return err
 	}
-	u.DropTargets[0].SetCardHere(nil)
 	success := sync.LogPlay(u, c)
 	for !success {
 		success = sync.LogPlay(u, c)
@@ -675,8 +637,8 @@ func dropCardOnTarget(c *card.Card, t touch.Event, u *uistate.UIState) bool {
 			}
 			oldY := c.GetInitial().Y
 			suit := c.GetSuit()
-			u.CurCard.Move(d.GetCurrent(), c.GetDimensions(), u.Eng)
-			d.SetCardHere(u.CurCard)
+			c.Move(d.GetCurrent(), c.GetDimensions(), u.Eng)
+			d.SetCardHere(c)
 			// realign suit the card just left
 			reposition.RealignSuit(suit, oldY, u)
 			return true
