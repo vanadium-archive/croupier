@@ -25,6 +25,7 @@ class Text {
 
 class Size {
   static const double splashLogo = 75.0;
+  static const double settingsSize = 125.0;
 }
 
 class Spacing {

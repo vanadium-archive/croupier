@@ -123,7 +123,7 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
                 Navigator.pop(context);
               }),
               new FlatButton(child: new Text('SAVE'), onPressed: () {
-                Navigator.pop(context);
+                Navigator.pop(context, _tempData[type]);
               }),
             ]);
         break;

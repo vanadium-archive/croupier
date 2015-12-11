@@ -49,7 +49,11 @@ class CroupierComponentState extends State<CroupierComponent> {
               new FlatButton(
                   child: new Text('Join Game', style: style.Text.titleStyle),
                   onPressed: makeSetStateCallback(
-                      logic_croupier.CroupierState.JoinGame))
+                      logic_croupier.CroupierState.JoinGame)),
+              new CroupierProfileComponent(
+                  settings: config.croupier.settings,
+                  width: style.Size.settingsSize,
+                  height: style.Size.settingsSize)
             ]));
       case logic_croupier.CroupierState.ChooseGame:
         // in which we let them pick a game out of the many possible games... There aren't that many.
@@ -131,7 +135,7 @@ class CroupierComponentState extends State<CroupierComponent> {
   // shown if the person has not sat down yet.
   Widget _buildPlayerProfiles(bool needsArrangement) {
     List<Widget> profileWidgets = new List<Widget>();
-    double size = 125.0;
+    double size = style.Size.settingsSize;
     config.croupier.players_found.forEach((int userID, int playerNumber) {
       if (!needsArrangement || playerNumber == null) {
         CroupierSettings cs = config.croupier.settings_everyone[userID];

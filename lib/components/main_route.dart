@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import '../logic/croupier.dart' show Croupier;
 import '../styles/common.dart' as style;
 import 'croupier.dart' show CroupierComponent;
+import 'croupier_profile.dart' show CroupierProfileComponent;
 
 final GlobalKey _scaffoldKey = new GlobalKey();
 
@@ -74,7 +75,13 @@ class MainRouteState extends State<MainRoute> {
     return new Drawer(
         child: new Block(<Widget>[
       new DrawerHeader(
-          child: new Text('Croupier', style: style.Text.titleStyle)),
+          child: new BlockBody([
+        new CroupierProfileComponent(
+            settings: config.croupier.settings,
+            width: style.Size.settingsSize,
+            height: style.Size.settingsSize),
+        new Text('Croupier', style: style.Text.titleStyle)
+      ])),
       new DrawerItem(
           icon: 'action/settings',
           // TODO(alexfandrianto): Fix the Splash Screen, and we won't need
