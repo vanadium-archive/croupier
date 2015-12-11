@@ -207,10 +207,14 @@ class HeartsGame extends Game {
       cardCollections[PLAYER_C].length == 13 &&
       cardCollections[PLAYER_D].length == 13;
 
+  bool hasPassed(int player) =>
+      cardCollections[player + OFFSET_PASS].length == 3;
   bool get allPassed => cardCollections[PLAYER_A_PASS].length == 3 &&
       cardCollections[PLAYER_B_PASS].length == 3 &&
       cardCollections[PLAYER_C_PASS].length == 3 &&
       cardCollections[PLAYER_D_PASS].length == 3;
+  bool hasTaken(int player) =>
+      cardCollections[getTakeTarget(player) + OFFSET_PASS].length == 0;
   bool get allTaken => cardCollections[PLAYER_A_PASS].length == 0 &&
       cardCollections[PLAYER_B_PASS].length == 0 &&
       cardCollections[PLAYER_C_PASS].length == 0 &&

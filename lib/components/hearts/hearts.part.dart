@@ -141,15 +141,17 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
                 .add(HeartsGame.OFFSET_HAND + playerNum);
             break;
           case HeartsPhase.Play:
-            for (int i = 0; i < 4; i++) {
-              if (_showSplitView || i == playerNum) {
+            if (_showSplitView) {
+              for (int i = 0; i < 4; i++) {
+                visibleCardCollectionIndexes.add(HeartsGame.OFFSET_HAND + i);
+                visibleCardCollectionIndexes.add(HeartsGame.OFFSET_TRICK + i);
                 visibleCardCollectionIndexes.add(HeartsGame.OFFSET_PLAY + i);
               }
-              if (_showSplitView) {
-                visibleCardCollectionIndexes
-                    .add(HeartsGame.OFFSET_HAND + playerNum);
-                visibleCardCollectionIndexes.add(HeartsGame.OFFSET_TRICK + i);
-              }
+            } else {
+              visibleCardCollectionIndexes
+                  .add(HeartsGame.OFFSET_PLAY + playerNum);
+              visibleCardCollectionIndexes
+                  .add(HeartsGame.OFFSET_HAND + playerNum);
             }
 
             break;
@@ -252,7 +254,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
         game.debugString = null;
       } catch (e) {
         print("You can't do that! ${e.toString()}");
-        config.game.debugString = e.toString();
+        config.game.debugString = "You must pass 3 cards";
       }
     });
   }
@@ -394,16 +396,44 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
   String _getStatus() {
     HeartsGame game = config.game;
 
-    // Who's turn is it?
-    String name = _getName(game.whoseTurn) ?? "Player ${game.whoseTurn}";
-    String status =
-        game.whoseTurn == game.playerNumber ? "Your turn" : "${name}'s turn";
+    String status;
+    switch (game.phase) {
+      case HeartsPhase.Play:
+        // Who's turn is it?
+        String name = _getName(game.whoseTurn) ?? "Player ${game.whoseTurn}";
+        status = game.whoseTurn == game.playerNumber
+            ? "Your turn"
+            : "${name}'s turn";
 
-    // Override if someone is taking a trick.
-    if (this.trickTaking) {
-      String trickTaker =
-          _getName(game.lastTrickTaker) ?? "Player ${game.lastTrickTaker}";
-      status = "${trickTaker}'s trick";
+        // Override if someone is taking a trick.
+        if (this.trickTaking) {
+          String trickTaker =
+              _getName(game.lastTrickTaker) ?? "Player ${game.lastTrickTaker}";
+          status = game.lastTrickTaker == game.playerNumber
+              ? "Your trick"
+              : "${trickTaker}'s trick";
+        }
+        break;
+      case HeartsPhase.Pass:
+        if (game.hasPassed(game.playerNumber)) {
+          status = "Waiting for cards...";
+        } else {
+          String name =
+              _getName(game.passTarget) ?? "Player ${game.passTarget}";
+          status = "Pass to ${name}";
+        }
+        break;
+      case HeartsPhase.Take:
+        if (game.hasTaken(game.playerNumber)) {
+          status = "Waiting for other players...";
+        } else {
+          String name =
+              _getName(game.takeTarget) ?? "Player ${game.takeTarget}";
+          status = "Take from ${name}";
+        }
+        break;
+      default:
+        break;
     }
 
     // Override if there is a debug string.
@@ -415,18 +445,53 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
   }
 
   Widget _buildStatusBar() {
+    HeartsGame game = config.game;
+
+    List<Widget> statusWidgets = new List<Widget>();
+    statusWidgets.add(new Text(_getStatus(), style: style.Text.largeStyle));
+
+    switch (game.phase) {
+      case HeartsPhase.Play:
+        statusWidgets
+            .add(new IconButton(icon: "action/swap_vert", onPressed: () {
+          setState(() {
+            _showSplitView = !_showSplitView;
+          });
+        }));
+        break;
+      case HeartsPhase.Pass:
+      case HeartsPhase.Take:
+        // TODO(alexfandrianto): Icons for arrow_upward and arrow_downward were
+        // just added to the material icon list. However, they are not available
+        // through Flutter yet.
+        double rotationAngle = 0.0; // right
+        switch (game.roundNumber % 4) {
+          case 1:
+            rotationAngle = math.PI; // left
+            break;
+          case 2:
+            rotationAngle = -math.PI / 2; // up
+            break;
+        }
+        if (game.phase == HeartsPhase.Take) {
+          rotationAngle = rotationAngle + math.PI; // opposite
+        }
+        statusWidgets.add(new Transform(
+            transform:
+                new vector_math.Matrix4.identity().rotateZ(rotationAngle),
+            alignment: new FractionalOffset(0.5, 0.5),
+            child: new Icon(icon: "navigation/arrow_forward")));
+        break;
+      default:
+        break;
+    }
+
     return new Container(
         padding: new EdgeDims.all(10.0),
         decoration:
             new BoxDecoration(backgroundColor: style.theme.primaryColor),
-        child: new Row([
-          new Text(_getStatus(), style: style.Text.largeStyle),
-          new IconButton(icon: "action/swap_vert", onPressed: () {
-            setState(() {
-              _showSplitView = !_showSplitView;
-            });
-          })
-        ], justifyContent: FlexJustifyContent.spaceBetween));
+        child: new Row(statusWidgets,
+            justifyContent: FlexJustifyContent.spaceBetween));
   }
 
   Widget _buildFullMiniBoard() {
@@ -465,7 +530,6 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
                   true,
                   CardCollectionOrientation.show1,
                   useKeys: true,
-                  animationType: component_card.CardAnimationType.NONE,
                   acceptCallback: _makeGameMoveCallback,
                   acceptType:
                       p == game.whoseTurn ? DropType.card : DropType.none,
@@ -478,7 +542,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
       cardCollections.add(new Container(
           decoration:
               new BoxDecoration(backgroundColor: style.theme.primaryColor),
-          child: new Column([_buildStatusBar(), playArea])));
+          child: new BlockBody([_buildStatusBar(), playArea])));
     }
 
     List<logic_card.Card> cards = game.cardCollections[p];
@@ -487,10 +551,8 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
         dragChildren: true, // Can drag, but may not have anywhere to drop
         comparator: _compareCards,
         width: config.width,
-        useKeys: _showSplitView);
-    cardCollections.add(c); // flex
-
-    cardCollections.add(_makeDebugButtons());
+        useKeys: true);
+    cardCollections.add(new BlockBody([c, _makeDebugButtons()]));
 
     return new Column(cardCollections,
         justifyContent: FlexJustifyContent.spaceBetween);
@@ -600,32 +662,39 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
 
     Color bgColor = completed ? Colors.teal[600] : Colors.teal[500];
 
+    Widget statusBar = _buildStatusBar();
+
     Widget topArea = new Container(
         decoration: new BoxDecoration(backgroundColor: bgColor),
         padding: new EdgeDims.all(10.0),
         width: config.width,
         child: new Flex(topCardWidgets,
             justifyContent: FlexJustifyContent.spaceBetween));
+    Widget combinedTopArea = new BlockBody([statusBar, topArea]);
 
     Widget handArea = new CardCollectionComponent(
         hand, true, CardCollectionOrientation.suit,
         dragChildren: draggable,
         comparator: _compareCards,
         width: config.width,
+        acceptCallback: cb,
+        acceptType: cb != null ? DropType.card : null,
         backgroundColor: Colors.grey[500],
         altColor: Colors.grey[700],
         useKeys: true);
 
-    return new Column(<Widget>[topArea, handArea, _makeDebugButtons()],
+    Widget combinedBottomArea = new BlockBody([handArea, _makeDebugButtons()]);
+
+    return new Column(<Widget>[combinedTopArea, combinedBottomArea],
         justifyContent: FlexJustifyContent.spaceBetween);
   }
 
   Widget _topCardWidget(List<logic_card.Card> cards, AcceptCb cb) {
     Widget ccc = new CardCollectionComponent(
         cards, true, CardCollectionOrientation.show1,
+        dragChildren: cb != null,
         acceptCallback: cb,
         acceptType: cb != null ? DropType.card : null,
-        animationType: component_card.CardAnimationType.NONE,
         backgroundColor: Colors.white,
         altColor: Colors.grey[200],
         useKeys: true);

@@ -10,6 +10,7 @@ import 'dart:async';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:vector_math/vector_math_64.dart' as vector_math;
 
 import '../logic/card.dart' as logic_card;
 import '../logic/croupier.dart' show Croupier;

@@ -75,10 +75,12 @@ class CardCollectionComponent extends StatefulComponent {
 class CardCollectionComponentState extends State<CardCollectionComponent> {
   String status = 'bar';
 
-  bool _handleWillAccept(dynamic data) {
-    print('will accept?');
-    print(data);
-    return true;
+  bool _handleWillAccept(component_card.Card data) {
+    return !config.cards.contains(data.card);
+  }
+
+  bool _handleWillAcceptMultiple(CardCollectionComponent data) {
+    return data != config; // don't accept your own self.
   }
 
   void _handleAccept(component_card.Card data) {
@@ -344,7 +346,7 @@ class CardCollectionComponentState extends State<CardCollectionComponent> {
         });
       case DropType.card_collection:
         return new DragTarget<CardCollectionComponent>(
-            onWillAccept: _handleWillAccept,
+            onWillAccept: _handleWillAcceptMultiple,
             onAccept: _handleAcceptMultiple, builder:
                 (BuildContext context, List<CardCollectionComponent> data, _) {
           return new Container(

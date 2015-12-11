@@ -6,6 +6,7 @@ material-design-icons:
   - name: av/play_arrow
   - name: action/swap_vert
   - name: navigation/arrow_back
+  - name: navigation/arrow_forward
   - name: navigation/menu
 assets:
   - images/default/classic/down/c10.png

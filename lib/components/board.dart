@@ -76,6 +76,8 @@ class HeartsBoard extends Board {
 
 class HeartsBoardState extends State<HeartsBoard> {
   Widget build(BuildContext context) {
+    double offscreenDelta = config.isMini ? 5.0 : 2.0;
+
     return new Container(
         height: config.height,
         width: config.width,
@@ -87,24 +89,24 @@ class HeartsBoardState extends State<HeartsBoard> {
                   ? _buildMiniBoardLayout()
                   : _buildBoardLayout()),
           new Positioned(
-              top: config.height * 5.5,
+              top: config.height * (offscreenDelta + 0.5),
               left: (config.width - config.cardWidth) / 2,
-              child: _buildTrick(
+              child: _buildOffScreenCards(
                   config.isMini ? rotateByGamePlayerNumber(0) : 0)), // bottom
           new Positioned(
               top: (config.height - config.cardHeight) / 2,
-              left: config.width * -4.5,
-              child: _buildTrick(
+              left: config.width * (-offscreenDelta + 0.5),
+              child: _buildOffScreenCards(
                   config.isMini ? rotateByGamePlayerNumber(1) : 1)), // left
           new Positioned(
-              top: config.height * -4.5,
+              top: config.height * (-offscreenDelta + 0.5),
               left: (config.width - config.cardWidth) / 2,
-              child: _buildTrick(
+              child: _buildOffScreenCards(
                   config.isMini ? rotateByGamePlayerNumber(2) : 2)), // top
           new Positioned(
               top: (config.height - config.cardHeight) / 2,
-              left: config.width * 5.5,
-              child: _buildTrick(
+              left: config.width * (offscreenDelta + 0.5),
+              child: _buildOffScreenCards(
                   config.isMini ? rotateByGamePlayerNumber(3) : 3)) // right
         ]));
   }
@@ -161,7 +163,6 @@ class HeartsBoardState extends State<HeartsBoard> {
         child: new CardCollectionComponent(
             showCard, true, CardCollectionOrientation.show1,
             useKeys: true,
-            animationType: component_card.CardAnimationType.NONE,
             acceptCallback: config.gameAcceptCallback,
             acceptType: isMe && isPlayerTurn ? DropType.card : DropType.none,
             widthCard: config.cardWidth - 6.0,
@@ -319,7 +320,7 @@ class HeartsBoardState extends State<HeartsBoard> {
             useKeys: true));
   }
 
-  Widget _buildTrick(int playerNumber) {
+  Widget _buildOffScreenCards(int playerNumber) {
     HeartsGame game = config.game;
 
     List<logic_card.Card> cards =
@@ -327,9 +328,18 @@ class HeartsBoardState extends State<HeartsBoard> {
     // If took trick, exclude the last 4 cards for the trick taking animation.
     if (config.trickTaking && playerNumber == game.lastTrickTaker) {
       cards = new List.from(cards.sublist(0, cards.length - 4));
+    } else {
+      cards = new List.from(cards);
     }
 
-    double sizeFactor = config.isMini ? 1.0 : 2.0;
+    double sizeFactor = 2.0;
+    if (config.isMini) {
+      sizeFactor = 1.0;
+      if (playerNumber != game.playerNumber) {
+        cards.addAll(
+            game.cardCollections[playerNumber + HeartsGame.OFFSET_HAND]);
+      }
+    }
 
     return new CardCollectionComponent(
         cards, true, CardCollectionOrientation.show1,
