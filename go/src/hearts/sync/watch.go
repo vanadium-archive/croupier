@@ -362,12 +362,8 @@ func onReady(value string, u *uistate.UIState) {
 	if u.CurTable.AllReadyForNewRound() && u.IsOwner {
 		if u.CurView == uistate.Arrange {
 			b := u.Buttons["start"]
-			if !b.GetDisplayingImage() {
-				b.SetImage(b.GetAlt())
-				b.SetAlt(u.Texs["StartBluePressed.png"])
-				u.Eng.SetSubTex(b.GetNode(), b.GetImage())
-				b.SetDisplayingImage(true)
-			}
+			u.Eng.SetSubTex(b.GetNode(), b.GetImage())
+			b.SetDisplayingImage(true)
 			if u.SGChan != nil {
 				u.SGChan <- true
 				u.SGChan = nil
