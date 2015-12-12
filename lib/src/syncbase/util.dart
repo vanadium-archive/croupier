@@ -77,6 +77,10 @@ String gameStatusKey(int gameID) {
   return "${gameID}/status";
 }
 
+String gameSyncgroupKey(int gameID) {
+  return "${gameID}/game_sg";
+}
+
 String playerSettingsKeyFromData(int gameID, int userID) {
   return "${gameID}/players/${userID}/settings_sg";
 }

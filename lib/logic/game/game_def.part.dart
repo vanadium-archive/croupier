@@ -91,7 +91,7 @@ abstract class Game {
   GameArrangeData get gameArrangeData;
   final GameType gameType;
   String get gameTypeName; // abstract
-  final bool isCreator;
+  bool isCreator; // True if this user created the game. Behavior can vary based on this flag, so it can make sense to defer setting it.
 
   final List<List<Card>> cardCollections = new List<List<Card>>();
   final List<Card> deck = new List<Card>.from(Card.All);

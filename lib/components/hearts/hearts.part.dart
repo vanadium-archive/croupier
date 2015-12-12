@@ -299,7 +299,9 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
 
   Widget _makeDebugButtons() {
     if (config.game.debugMode == false) {
-      return new Flex([]);
+      return new Flex([
+        new Flexible(flex: 4, child: _makeButton('Quit', _quitGameCallback))
+      ]);
     }
     return new Container(
         width: config.width,

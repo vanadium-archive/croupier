@@ -12,7 +12,14 @@ import 'croupier_settings.dart' show CroupierSettings;
 import 'game/game.dart'
     show Game, GameType, GameStartData, stringToGameType, gameTypeToString;
 
-enum CroupierState { Welcome, ChooseGame, JoinGame, ArrangePlayers, PlayGame }
+enum CroupierState {
+  Welcome,
+  ChooseGame,
+  JoinGame,
+  ArrangePlayers,
+  PlayGame,
+  ResumeGame
+}
 
 typedef void NoArgCb();
 
@@ -26,6 +33,7 @@ class Croupier {
   Map<String, GameStartData> games_found; // empty, but loads asynchronously
   Map<int, int> players_found; // empty, but loads asynchronously
   Game game; // null until chosen
+  int mostRecentGameID; // null until a game was started.
   NoArgCb informUICb;
 
   // Futures to use in order to cancel scans and advertisements.
@@ -81,6 +89,27 @@ class Croupier {
     return players_found.keys.firstWhere(
         (int user) => players_found[user] == playerNumber,
         orElse: () => null);
+  }
+
+  void _setCurrentGame(Game g) {
+    game = g;
+    mostRecentGameID = game.gameID;
+  }
+
+  Game _createNewGame(GameType gt) {
+    return cg.createGame(gt, this.debugMode, isCreator: true);
+  }
+
+  Game _createExistingGame(GameStartData gsd) {
+    return cg.createGame(stringToGameType(gsd.type), this.debugMode,
+        gameID: gsd.gameID, playerNumber: gsd.playerNumber);
+  }
+
+  void _quitGame() {
+    if (game != null) {
+      game.quit();
+      game = null;
+    }
   }
 
   CroupierSettings settingsFromPlayerNumber(int playerNumber) {
@@ -142,8 +171,10 @@ class Croupier {
   void setState(CroupierState nextState, var data) {
     switch (state) {
       case CroupierState.Welcome:
-        // data should be empty.
-        assert(data == null);
+        // data should be empty unless nextState is ResumeGame.
+        if (nextState != CroupierState.ResumeGame) {
+          assert(data == null);
+        }
         break;
       case CroupierState.ChooseGame:
         if (data == null) {
@@ -154,11 +185,14 @@ class Croupier {
 
         // data should be the game id here.
         GameType gt = data as GameType;
-        game = cg.createGame(gt, this.debugMode, isCreator: true);
+        _setCurrentGame(_createNewGame(gt));
 
         _advertiseFuture = settings_manager
             .createGameSyncgroup(gameTypeToString(gt), game.gameID)
             .then((GameStartData gsd) {
+          if (!game.gameArrangeData.needsArrangement) {
+            settings_manager.setPlayerNumber(gsd.gameID, 0);
+          }
           // Only the game chooser should be advertising the game.
           return settings_manager.advertiseSettings(gsd);
         }); // don't wait for this future.
@@ -179,8 +213,8 @@ class Croupier {
 
         // data would probably be the game id again.
         GameStartData gsd = data as GameStartData;
-        game = cg.createGame(stringToGameType(gsd.type), this.debugMode,
-            gameID: gsd.gameID);
+        gsd.playerNumber = null; // At first, there is no player number.
+        _setCurrentGame(_createExistingGame(gsd));
         String sgName;
         games_found.forEach((String name, GameStartData g) {
           if (g == gsd) {
@@ -189,11 +223,13 @@ class Croupier {
         });
         assert(sgName != null);
 
-        settings_manager.joinGameSyncgroup(sgName, gsd.gameID);
         players_found[gsd.ownerID] = null;
-        if (!game.gameArrangeData.needsArrangement) {
-          settings_manager.setPlayerNumber(gsd.gameID, 0);
-        }
+        settings_manager.joinGameSyncgroup(sgName, gsd.gameID).then((_) {
+          if (!game.gameArrangeData.needsArrangement) {
+            settings_manager.setPlayerNumber(gsd.gameID, 0);
+          }
+        });
+
         break;
       case CroupierState.ArrangePlayers:
         // Note that if we were arranging players, we might have been advertising.
@@ -209,7 +245,13 @@ class Croupier {
         assert(data == null);
         break;
       case CroupierState.PlayGame:
-        // data should be empty.
+        break;
+      case CroupierState.ResumeGame:
+        // Data might be GameStartData. If so, then we must advertise it.
+        GameStartData gsd = data;
+        if (gsd != null) {
+          _advertiseFuture = settings_manager.advertiseSettings(gsd);
+        }
         break;
       default:
         assert(false);
@@ -217,16 +259,62 @@ class Croupier {
 
     // A simplified way of clearing out the games and players found.
     // They will need to be re-discovered in the future.
-    if (nextState == CroupierState.Welcome) {
-      games_found.clear();
-      players_found.clear();
-      game = null;
-    } else if (nextState == CroupierState.JoinGame) {
-      // Start scanning for games since that's what's next for you.
-      _scanFuture =
-          settings_manager.scanSettings(); // don't wait for this future.
+    switch (nextState) {
+      case CroupierState.Welcome:
+        games_found.clear();
+        players_found.clear();
+        _quitGame();
+        break;
+      case CroupierState.JoinGame:
+        // Start scanning for games since that's what's next for you.
+        _scanFuture =
+            settings_manager.scanSettings(); // don't wait for this future.
+        break;
+      case CroupierState.ResumeGame:
+        // We need to create the game again.
+        int gameIDData = data;
+        _resumeGameAsynchronously(gameIDData);
+        break;
+      default:
+        break;
     }
 
     state = nextState;
+  }
+
+  // Resumes the game from the given gameID.
+  Future _resumeGameAsynchronously(int gameIDData) async {
+    GameStartData gsd = await settings_manager.getGameStartData(gameIDData);
+    bool wasOwner = (gsd.ownerID == settings?.userID);
+    print(
+        "The game was ${gsd.toJSONString()}, and was I the owner? ${wasOwner}");
+    _setCurrentGame(_createExistingGame(gsd));
+
+    String sgName = await settings_manager.getGameSyncgroup(gameIDData);
+    print("The sg name was ${sgName}");
+    await settings_manager.joinGameSyncgroup(sgName, gameIDData);
+
+    // Since initial scan processing is done, we can now set isCreator
+    game.isCreator = wasOwner;
+    String gameStatus = await settings_manager.getGameStatus(gameIDData);
+
+    print("The game's status was ${gameStatus}");
+    // Depending on the game state, we should go to a different screen.
+    switch (gameStatus) {
+      case "RUNNING":
+        // The game is running, so let's play it!
+        setState(CroupierState.PlayGame, null);
+        break;
+      default:
+        // We are still arranging players, so we need to advertise our game
+        // start data.
+        setState(CroupierState.ArrangePlayers, gsd);
+        break;
+    }
+
+    // And we can ask the UI to redraw
+    if (this.informUICb != null) {
+      this.informUICb();
+    }
   }
 }

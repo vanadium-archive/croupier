@@ -169,9 +169,11 @@ class SettingsManager {
     logic_game.GameStartData gsd =
         new logic_game.GameStartData(type, 0, gameID, id);
 
-    await _cc.createSyncgroup(
-        _cc.makeSyncgroupName(util.syncgameSuffix("${gsd.gameID}")),
-        util.tableNameGames,
+    String sgName = _cc.makeSyncgroupName(util.syncgameSuffix("${gsd.gameID}"));
+
+    await gameTable.row(util.gameSyncgroupKey(gameID)).put(UTF8.encode(sgName));
+
+    await _cc.createSyncgroup(sgName, util.tableNameGames,
         prefix: util.syncgamePrefix(gameID));
 
     return gsd;
@@ -210,6 +212,34 @@ class SettingsManager {
     sc.SyncbaseTable gameTable = await _cc.createTable(db, util.tableNameGames);
 
     await gameTable.row(util.gameStatusKey(gameID)).put(UTF8.encode(status));
+  }
+
+  Future<String> getGameStatus(int gameID) async {
+    sc.SyncbaseDatabase db = await _cc.createDatabase();
+    sc.SyncbaseTable gameTable = await _cc.createTable(db, util.tableNameGames);
+
+    return _tryReadData(gameTable, util.gameStatusKey(gameID));
+  }
+
+  Future<String> getGameSyncgroup(int gameID) async {
+    sc.SyncbaseDatabase db = await _cc.createDatabase();
+    sc.SyncbaseTable gameTable = await _cc.createTable(db, util.tableNameGames);
+    return _tryReadData(gameTable, util.gameSyncgroupKey(gameID));
+  }
+
+  Future<logic_game.GameStartData> getGameStartData(int gameID) async {
+    sc.SyncbaseDatabase db = await _cc.createDatabase();
+    sc.SyncbaseTable gameTable = await _cc.createTable(db, util.tableNameGames);
+
+    String owner = await _tryReadData(gameTable, util.gameOwnerKey(gameID));
+    String type = await _tryReadData(gameTable, util.gameTypeKey(gameID));
+
+    int id = await _getUserID();
+    String playerNumber =
+        await _tryReadData(gameTable, util.playerNumberKeyFromData(gameID, id));
+    int pn = playerNumber != null ? int.parse(playerNumber) : null;
+
+    return new logic_game.GameStartData(type, pn, gameID, int.parse(owner));
   }
 
   // TODO(alexfandrianto): It is possible that the more efficient way of

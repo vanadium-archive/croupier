@@ -77,4 +77,16 @@ class SettingsManager {
   Future setGameStatus(int gameID, String status) async {
     return new Future(() => null);
   }
+
+  Future<String> getGameStatus(int gameID) async {
+    return new Future(() => null);
+  }
+
+  Future<logic_game.GameStartData> getGameStartData(int gameID) async {
+    return new Future(() => null);
+  }
+
+  Future<String> getGameSyncgroup(int gameID) async {
+    return new Future(() => null);
+  }
 }

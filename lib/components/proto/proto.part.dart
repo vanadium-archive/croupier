@@ -17,7 +17,7 @@ class ProtoGameComponentState extends GameComponentState<ProtoGameComponent> {
   Widget build(BuildContext context) {
     List<Widget> cardCollections = new List<Widget>();
 
-    cardCollections.add(new Text(config.game.debugString));
+    cardCollections.add(new Text(config.game.debugString ?? ""));
 
     for (int i = 0; i < 4; i++) {
       List<logic_card.Card> cards = config.game.cardCollections[i];
@@ -60,7 +60,9 @@ class ProtoGameComponentState extends GameComponentState<ProtoGameComponent> {
 
   Widget _makeDebugButtons() {
     if (config.game.debugMode == false) {
-      return new Flex([]);
+      return new Flex([
+        new Flexible(flex: 4, child: _makeButton('Quit', _quitGameCallback))
+      ]);
     }
     return new Flex([
       new Text('P${config.game.playerNumber}'),
