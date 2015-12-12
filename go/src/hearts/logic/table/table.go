@@ -223,6 +223,16 @@ func (t *Table) AllReadyForNewRound() bool {
 	return true
 }
 
+// Returns true if all players have played a card in the current trick
+func (t *Table) TrickOver() bool {
+	for _, c := range t.trick {
+		if c == nil {
+			return false
+		}
+	}
+	return true
+}
+
 // Returns true if all players are out of cards, indicating the end of a round
 func (t *Table) RoundOver() bool {
 	for _, p := range t.players {
@@ -233,8 +243,8 @@ func (t *Table) RoundOver() bool {
 	return true
 }
 
-// Calculates who should take the cards in the current trick and sends them. Sets next first player accordingly. Returns true if the round is over
-func (t *Table) SendTrick() (bool, int) {
+// Calculates who should take the cards in the current trick
+func (t *Table) GetTrickRecipient() int {
 	trickSuit := t.trick[t.firstPlayer].GetSuit()
 	highestCardFace := card.Two
 	highestIndex := -1
@@ -245,22 +255,27 @@ func (t *Table) SendTrick() (bool, int) {
 			highestIndex = i
 		}
 	}
+	return highestIndex
+}
+
+// Sends cards to recipient. Sets next first player accordingly. Returns true if the round is over
+func (t *Table) SendTrick(recipient int) bool {
 	// resets all players' donePlaying bools
 	for _, p := range t.players {
 		p.SetDonePlaying(false)
 	}
 	// clear trick
-	t.players[highestIndex].TakeTrick(t.trick)
+	t.players[recipient].TakeTrick(t.trick)
 	t.trick = make([]*card.Card, len(t.players))
 	if t.firstTrick {
 		t.firstTrick = false
 	}
 	if t.RoundOver() {
-		return true, highestIndex
+		return true
 	}
 	// set first player for next trick to whoever received the current trick
-	t.SetFirstPlayer(highestIndex)
-	return false, highestIndex
+	t.SetFirstPlayer(recipient)
+	return false
 }
 
 // Returns the score of the current round

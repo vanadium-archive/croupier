@@ -12,6 +12,7 @@ package sync
 import (
 	"encoding/json"
 	"fmt"
+	"golang.org/x/mobile/exp/sprite"
 	"hearts/img/direction"
 	"hearts/img/reposition"
 	"hearts/img/uistate"
@@ -20,7 +21,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"time"
 	"v.io/v23/syncbase/nosql"
 )
 
@@ -134,6 +134,8 @@ func handleGameUpdate(changes []nosql.WatchChange, u *uistate.UIState) {
 					onTake(valueStr, u)
 				case Play:
 					onPlay(valueStr, u)
+				case TakeTrick:
+					onTakeTrick(valueStr, u)
 				case Ready:
 					onReady(valueStr, u)
 				}
@@ -156,11 +158,21 @@ func onPlayerNum(key, value string, u *uistate.UIState) {
 	userID, _ := strconv.Atoi(strings.Split(key, "/")[2])
 	playerNum, _ := strconv.Atoi(value)
 	u.PlayerData[playerNum] = userID
+	u.CurTable.GetPlayers()[playerNum].SetDoneScoring(true)
 	if playerNum == u.CurPlayerIndex && userID != UserID {
 		u.CurPlayerIndex = -1
 	}
 	if u.CurView == uistate.Arrange {
 		view.LoadArrangeView(u)
+		if u.CurTable.AllReadyForNewRound() && u.IsOwner {
+			b := u.Buttons["start"]
+			u.Eng.SetSubTex(b.GetNode(), b.GetImage())
+			b.SetDisplayingImage(true)
+			if u.SGChan != nil {
+				u.SGChan <- true
+				u.SGChan = nil
+			}
+		}
 	}
 }
 
@@ -262,22 +274,10 @@ func onPlay(value string, u *uistate.UIState) {
 	u.CurTable.GetPlayers()[playerInt].RemoveFromHand(playedCard)
 	u.CurTable.SetPlayedCard(playedCard, playerInt)
 	u.CurTable.GetPlayers()[playerInt].SetDonePlaying(true)
-	trickOver := true
-	trickCards := u.CurTable.GetTrick()
-	for _, c := range trickCards {
-		if c == nil {
-			trickOver = false
-		}
-	}
-	roundOver := false
+	trickOver := u.CurTable.TrickOver()
 	var recipient int
 	if trickOver {
-		roundOver, recipient = u.CurTable.SendTrick()
-	}
-	var roundScores []int
-	var winners []int
-	if roundOver {
-		roundScores, winners = u.CurTable.EndRound()
+		recipient = u.CurTable.GetTrickRecipient()
 	}
 	// UI
 	if u.CurView == uistate.Table {
@@ -286,65 +286,85 @@ func onPlay(value string, u *uistate.UIState) {
 		reposition.AnimateTableCardPlay(playedCard, playerInt, quit, u)
 		reposition.SetTableDropColors(u)
 		if trickOver {
+			// display take trick button
+			b := u.Buttons["takeTrick"]
+			u.Eng.SetSubTex(b.GetNode(), b.GetImage())
+		}
+	} else if u.CurView == uistate.Split {
+		if playerInt != u.CurPlayerIndex {
+			quit := make(chan bool)
+			u.AnimChans = append(u.AnimChans, quit)
+			reposition.AnimateSplitCardPlay(playedCard, playerInt, quit, u)
+		}
+		reposition.SetSplitDropColors(u)
+		view.LoadSplitView(true, u)
+		if trickOver {
+			if recipient == u.CurPlayerIndex {
+				// display take trick button
+				b := u.Buttons["takeTrick"]
+				u.Eng.SetSubTex(b.GetNode(), b.GetImage())
+			}
+		}
+	} else if u.CurView == uistate.Play && u.CurPlayerIndex != playerInt {
+		view.LoadPlayView(u)
+	}
+}
+
+func onTakeTrick(value string, u *uistate.UIState) {
+	trickCards := u.CurTable.GetTrick()
+	recipient := u.CurTable.GetTrickRecipient()
+	roundOver := u.CurTable.SendTrick(recipient)
+	var roundScores []int
+	var winners []int
+	if roundOver {
+		roundScores, winners = u.CurTable.EndRound()
+	}
+	// UI
+	if u.CurView == uistate.Table {
+		var emptyTex sprite.SubTex
+		u.Eng.SetSubTex(u.Buttons["takeTrick"].GetNode(), emptyTex)
+		var trickDir direction.Direction
+		switch recipient {
+		case 0:
+			trickDir = direction.Down
+		case 1:
+			trickDir = direction.Left
+		case 2:
+			trickDir = direction.Across
+		case 3:
+			trickDir = direction.Right
+		}
+		quit := make(chan bool)
+		u.AnimChans = append(u.AnimChans, quit)
+		reposition.AnimateTableCardTakeTrick(trickCards, trickDir, quit, u)
+		reposition.SetTableDropColors(u)
+		view.SetNumTricksTable(u)
+	} else if u.CurView == uistate.Split {
+		var emptyTex sprite.SubTex
+		u.Eng.SetSubTex(u.Buttons["takeTrick"].GetNode(), emptyTex)
+		if roundOver {
+			view.LoadScoreView(roundScores, winners, u)
+		} else {
 			var trickDir direction.Direction
 			switch recipient {
-			case 0:
+			case u.CurPlayerIndex:
 				trickDir = direction.Down
-			case 1:
+			case (u.CurPlayerIndex + 1) % u.NumPlayers:
 				trickDir = direction.Left
-			case 2:
+			case (u.CurPlayerIndex + 2) % u.NumPlayers:
 				trickDir = direction.Across
-			case 3:
+			case (u.CurPlayerIndex + 3) % u.NumPlayers:
 				trickDir = direction.Right
 			}
 			quit := make(chan bool)
 			u.AnimChans = append(u.AnimChans, quit)
 			reposition.AnimateTableCardTakeTrick(trickCards, trickDir, quit, u)
-			view.SetNumTricksTable(u)
-		}
-	} else if u.CurView == uistate.Split {
-		if roundOver {
-			view.LoadScoreView(roundScores, winners, u)
-		} else {
-			if playerInt != u.CurPlayerIndex {
-				quit := make(chan bool)
-				u.AnimChans = append(u.AnimChans, quit)
-				reposition.AnimateSplitCardPlay(playedCard, playerInt, quit, u)
-			}
-			reposition.SetSplitDropColors(u)
-			if trickOver {
-				var trickDir direction.Direction
-				switch recipient {
-				case u.CurPlayerIndex:
-					trickDir = direction.Down
-				case (u.CurPlayerIndex + 1) % u.NumPlayers:
-					trickDir = direction.Left
-				case (u.CurPlayerIndex + 2) % u.NumPlayers:
-					trickDir = direction.Across
-				case (u.CurPlayerIndex + 3) % u.NumPlayers:
-					trickDir = direction.Right
-				}
-				quit := make(chan bool)
-				u.AnimChans = append(u.AnimChans, quit)
-				reposition.AnimateTableCardTakeTrick(trickCards, trickDir, quit, u)
-			}
 			view.LoadSplitView(true, u)
 		}
 	} else if u.CurView == uistate.Play {
 		if roundOver {
 			view.LoadScoreView(roundScores, winners, u)
-		} else if trickOver {
-			if u.CurPlayerIndex != recipient {
-				message := uistate.GetName(recipient, u) + "'s trick"
-				view.ChangePlayMessage(message, u)
-				<-time.After(2 * time.Second)
-				view.LoadPlayView(u)
-			} else {
-				view.ChangePlayMessage("Your trick", u)
-				<-time.After(2 * time.Second)
-				view.LoadPlayView(u)
-			}
-		} else if u.CurPlayerIndex != playerInt {
+		} else {
 			view.LoadPlayView(u)
 		}
 	}

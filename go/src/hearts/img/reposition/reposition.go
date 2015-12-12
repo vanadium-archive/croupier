@@ -239,10 +239,10 @@ func AnimateHandCardPlay(ch chan bool, animCard *card.Card, u *uistate.UIState) 
 	for counter, i := range imgs {
 		dims := i.GetDimensions()
 		to := coords.MakeVec(i.GetCurrent().X, i.GetCurrent().Y-u.WindowSize.Y)
-		if counter == len(imgs)-1 {
-			animateImageMovement(ch, i, to, dims, u)
-		} else {
+		if counter < len(imgs)-1 {
 			AnimateImageNoChannel(i, to, dims, u)
+		} else {
+			animateImageMovement(ch, i, to, dims, u)
 		}
 
 	}
@@ -285,6 +285,7 @@ func AnimateInSplit(ch chan bool, u *uistate.UIState) {
 	bannerImgs = append(bannerImgs, u.Other...)
 	bannerImgs = append(bannerImgs, u.Buttons["toggleSplit"])
 	tableImgs = append(tableImgs, u.DropTargets...)
+	tableImgs = append(tableImgs, u.Buttons["takeTrick"])
 	tableImgs = append(tableImgs, u.BackgroundImgs[:u.NumPlayers]...)
 	for _, img := range tableImgs {
 		from := img.GetCurrent()
@@ -323,6 +324,7 @@ func AnimateOutSplit(ch chan bool, u *uistate.UIState) {
 	bannerImgs = append(bannerImgs, u.Other...)
 	bannerImgs = append(bannerImgs, u.Buttons["toggleSplit"])
 	tableImgs = append(tableImgs, u.DropTargets...)
+	tableImgs = append(tableImgs, u.Buttons["takeTrick"])
 	tableImgs = append(tableImgs, u.BackgroundImgs[:u.NumPlayers]...)
 	for _, img := range tableImgs {
 		from := img.GetCurrent()
@@ -373,7 +375,6 @@ func determineDestination(animCard *card.Card, dir direction.Direction, windowSi
 
 // Animation for when a trick is taken, when app is in the table view
 func AnimateTableCardTakeTrick(cards []*card.Card, dir direction.Direction, quit chan bool, u *uistate.UIState) {
-	<-time.After(2 * time.Second)
 	for _, c := range cards {
 		BringNodeToFront(c.GetNode(), u)
 	}
@@ -572,6 +573,7 @@ func SwitchOnChan(animChan, quitChan chan bool, f func(), u *uistate.UIState) {
 	case <-quitChan:
 		RemoveAnimChan(quitChan, u)
 		f()
+		<-time.After(time.Second)
 		return
 	case <-animChan:
 		RemoveAnimChan(quitChan, u)

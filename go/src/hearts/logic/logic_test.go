@@ -30,7 +30,7 @@ func TestOne(test *testing.T) {
 	t.SetPlayedCard(card.NewCard(card.Seven, card.Heart), 2)
 	t.SetPlayedCard(card.NewCard(card.Queen, card.Spade), 3)
 	t.SetPlayedCard(card.NewCard(card.Four, card.Diamond), 0)
-	t.SendTrick()
+	t.SendTrick(t.GetTrickRecipient())
 	t.EndRound()
 	score := players[0].GetScore()
 	if score != otherExpect {
@@ -63,13 +63,13 @@ func TestTwo(test *testing.T) {
 	t.SetPlayedCard(card.NewCard(card.Seven, card.Heart), 2)
 	t.SetPlayedCard(card.NewCard(card.Queen, card.Spade), 3)
 	t.SetPlayedCard(card.NewCard(card.Four, card.Diamond), 0)
-	t.SendTrick()
+	t.SendTrick(t.GetTrickRecipient())
 	t.SetFirstPlayer(2)
 	t.SetPlayedCard(card.NewCard(card.Five, card.Diamond), 2)
 	t.SetPlayedCard(card.NewCard(card.Two, card.Heart), 3)
 	t.SetPlayedCard(card.NewCard(card.King, card.Diamond), 0)
 	t.SetPlayedCard(card.NewCard(card.Ace, card.Spade), 1)
-	t.SendTrick()
+	t.SendTrick(t.GetTrickRecipient())
 	t.EndRound()
 	score := players[0].GetScore()
 	if score != p0Expect {
@@ -102,26 +102,26 @@ func TestThree(test *testing.T) {
 	t.SetPlayedCard(card.NewCard(card.Queen, card.Spade), 2)
 	t.SetPlayedCard(card.NewCard(card.King, card.Spade), 3)
 	t.SetPlayedCard(card.NewCard(card.Eight, card.Club), 0)
-	t.SendTrick()
+	t.SendTrick(t.GetTrickRecipient())
 	t.SetFirstPlayer(2)
 	t.SetPlayedCard(card.NewCard(card.Five, card.Club), 2)
 	t.SetPlayedCard(card.NewCard(card.Two, card.Club), 3)
 	t.SetPlayedCard(card.NewCard(card.King, card.Heart), 0)
 	t.SetPlayedCard(card.NewCard(card.Jack, card.Spade), 1)
-	t.SendTrick()
+	t.SendTrick(t.GetTrickRecipient())
 	t.EndRound()
 	t.SetFirstPlayer(3)
 	t.SetPlayedCard(card.NewCard(card.Five, card.Spade), 3)
 	t.SetPlayedCard(card.NewCard(card.Six, card.Spade), 0)
 	t.SetPlayedCard(card.NewCard(card.Seven, card.Spade), 1)
 	t.SetPlayedCard(card.NewCard(card.Ten, card.Heart), 2)
-	t.SendTrick()
+	t.SendTrick(t.GetTrickRecipient())
 	t.SetFirstPlayer(1)
 	t.SetPlayedCard(card.NewCard(card.Six, card.Diamond), 1)
 	t.SetPlayedCard(card.NewCard(card.Two, card.Club), 2)
 	t.SetPlayedCard(card.NewCard(card.King, card.Heart), 3)
 	t.SetPlayedCard(card.NewCard(card.Jack, card.Heart), 0)
-	t.SendTrick()
+	t.SendTrick(t.GetTrickRecipient())
 	t.EndRound()
 	score := players[0].GetScore()
 	if score != otherExpect {
@@ -186,7 +186,7 @@ func TestFive(test *testing.T) {
 
 // Testing playing a card-- HasSuit()
 func TestSix(test *testing.T) {
-	p := player.NewPlayer(0, "John", subtex)
+	p := player.NewPlayer(0)
 	p.AddToHand(card.NewCard(card.Six, card.Diamond))
 	p.AddToHand(card.NewCard(card.Four, card.Spade))
 	if !p.HasSuit(card.Diamond) || !p.HasSuit(card.Spade) {
@@ -199,8 +199,8 @@ func TestSix(test *testing.T) {
 
 // Testing playing a card-- HasAllPoints()
 func TestSeven(test *testing.T) {
-	p1 := player.NewPlayer(0, "John", subtex)
-	p2 := player.NewPlayer(1, "Jane", subtex)
+	p1 := player.NewPlayer(0)
+	p2 := player.NewPlayer(1)
 	p1.AddToHand(card.NewCard(card.Six, card.Heart))
 	p1.AddToHand(card.NewCard(card.Queen, card.Spade))
 	p2.AddToHand(card.NewCard(card.Two, card.Diamond))
@@ -218,9 +218,9 @@ func TestEight(test *testing.T) {
 	numPlayers := 1
 	t := table.InitializeGame(numPlayers, texs)
 	t.SetFirstPlayer(0)
-	if t.ValidPlayLogic(card.NewCard(card.Eight, card.Club), 0) {
+	if t.ValidPlayLogic(card.NewCard(card.Eight, card.Club), 0) == "" {
 		test.Errorf("Expected invalid play for starting round with card other than 2 of Clubs")
-	} else if !t.ValidPlayLogic(card.NewCard(card.Two, card.Club), 0) {
+	} else if t.ValidPlayLogic(card.NewCard(card.Two, card.Club), 0) != "" {
 		test.Errorf("Expected valid play for starting round with 2 of Clubs")
 	}
 }
@@ -234,7 +234,7 @@ func TestNine(test *testing.T) {
 	players[1].AddToHand(card.NewCard(card.Three, card.Diamond))
 	t.SetFirstPlayer(0)
 	t.SetPlayedCard(card.NewCard(card.Two, card.Club), 0)
-	if t.ValidPlayLogic(card.NewCard(card.Queen, card.Spade), 1) {
+	if t.ValidPlayLogic(card.NewCard(card.Queen, card.Spade), 1) == "" {
 		test.Errorf("Expected invalid play for points on the first round")
 	}
 }
@@ -250,21 +250,21 @@ func TestTen(test *testing.T) {
 	t.SetFirstPlayer(0)
 	t.SetPlayedCard(card.NewCard(card.Two, card.Club), 0)
 	t.SetPlayedCard(card.NewCard(card.Three, card.Club), 1)
-	t.SendTrick()
+	t.SendTrick(t.GetTrickRecipient())
 	t.SetFirstPlayer(0)
-	if !t.ValidPlayLogic(card.NewCard(card.Five, card.Heart), 0) {
+	if t.ValidPlayLogic(card.NewCard(card.Five, card.Heart), 0) != "" {
 		test.Errorf("Expected valid play for opener rightfully breaking Hearts")
 	}
 	t.SetFirstPlayer(1)
-	if t.ValidPlayLogic(card.NewCard(card.Two, card.Heart), 1) {
+	if t.ValidPlayLogic(card.NewCard(card.Two, card.Heart), 1) == "" {
 		test.Errorf("Expected invalid play for opener wrongfully breaking Hearts")
 	}
 	t.SetPlayedCard(card.NewCard(card.Three, card.Diamond), 1)
-	if !t.ValidPlayLogic(card.NewCard(card.Five, card.Heart), 0) {
+	if t.ValidPlayLogic(card.NewCard(card.Five, card.Heart), 0) != "" {
 		test.Errorf("Expected valid play for follower rightfully breaking Hearts")
 	}
 	players[0].AddToHand(card.NewCard(card.Seven, card.Diamond))
-	if t.ValidPlayLogic(card.NewCard(card.Five, card.Heart), 0) {
+	if t.ValidPlayLogic(card.NewCard(card.Five, card.Heart), 0) == "" {
 		test.Errorf("Expected invalid play for follower wrongfully breaking Hearts")
 	}
 }
@@ -278,14 +278,14 @@ func TestEleven(test *testing.T) {
 	players[1].AddToHand(card.NewCard(card.Three, card.Diamond))
 	t.SetFirstPlayer(0)
 	t.SetPlayedCard(card.NewCard(card.Two, card.Club), 0)
-	if !t.ValidPlayLogic(card.NewCard(card.Three, card.Diamond), 1) {
+	if t.ValidPlayLogic(card.NewCard(card.Three, card.Diamond), 1) != "" {
 		test.Errorf("Expected valid play for not following suit when player doesn't have suit")
 	}
 	players[1].AddToHand(card.NewCard(card.Five, card.Club))
-	if !t.ValidPlayLogic(card.NewCard(card.Five, card.Club), 1) {
+	if t.ValidPlayLogic(card.NewCard(card.Five, card.Club), 1) != "" {
 		test.Errorf("Expected valid play for following suit")
 	}
-	if t.ValidPlayLogic(card.NewCard(card.Three, card.Diamond), 1) {
+	if t.ValidPlayLogic(card.NewCard(card.Three, card.Diamond), 1) == "" {
 		test.Errorf("Expected invalid play for not following suit when player has suit")
 	}
 }
@@ -296,33 +296,34 @@ func TestTwelve(test *testing.T) {
 	t := table.InitializeGame(numPlayers, texs)
 	t.SetFirstPlayer(0)
 	t.SetPlayedCard(card.NewCard(card.Queen, card.Spade), 0)
-	t.SendTrick()
+	t.SendTrick(t.GetTrickRecipient())
 	t.SetPlayedCard(card.NewCard(card.Queen, card.Spade), 0)
-	t.SendTrick()
+	t.SendTrick(t.GetTrickRecipient())
 	t.SetPlayedCard(card.NewCard(card.Queen, card.Spade), 0)
-	t.SendTrick()
-	winner := t.EndRound()
+	t.SendTrick(t.GetTrickRecipient())
+	_, winners := t.EndRound()
 	expect := 0
-	if len(winner) != expect {
-		test.Errorf("Expected %d, got %d", expect, winner)
+	if len(winners) != expect {
+		test.Errorf("Expected %d, got %d", expect, winners[0])
 	}
 	t.NewRound()
+	t.SetFirstPlayer(0)
 	t.SetPlayedCard(card.NewCard(card.Queen, card.Spade), 0)
-	t.SendTrick()
+	t.SendTrick(t.GetTrickRecipient())
 	t.SetPlayedCard(card.NewCard(card.Queen, card.Spade), 0)
-	t.SendTrick()
+	t.SendTrick(t.GetTrickRecipient())
 	t.SetPlayedCard(card.NewCard(card.Queen, card.Spade), 0)
-	t.SendTrick()
+	t.SendTrick(t.GetTrickRecipient())
 	t.SetPlayedCard(card.NewCard(card.Queen, card.Spade), 0)
-	t.SendTrick()
+	t.SendTrick(t.GetTrickRecipient())
 	t.SetPlayedCard(card.NewCard(card.Queen, card.Spade), 0)
-	t.SendTrick()
+	t.SendTrick(t.GetTrickRecipient())
 	t.SetPlayedCard(card.NewCard(card.Queen, card.Spade), 0)
-	t.SendTrick()
-	winner = t.EndRound()
+	t.SendTrick(t.GetTrickRecipient())
+	_, winners = t.EndRound()
 	expect = 0
-	if winner[0] != expect {
-		test.Errorf("Expected %d, got %d", expect, winner)
+	if winners[0] != expect {
+		test.Errorf("Expected %d, got %d", expect, winners[0])
 	}
 }
 

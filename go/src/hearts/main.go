@@ -100,9 +100,7 @@ func onStart(glctx gl.Context, u *uistate.UIState) {
 	namespace.SetPermissions(u.Ctx, sync.MountPoint+"/croupier", permissions, "")
 	u.Service.SetPermissions(u.Ctx, permissions, "")
 	u.Images = glutil.NewImages(glctx)
-	if u.Debug {
-		fps = debug.NewFPS(u.Images)
-	}
+	fps = debug.NewFPS(u.Images)
 	u.Eng = glsprite.Engine(u.Images)
 	u.Texs = texture.LoadTextures(u.Eng)
 	u.CurTable = table.InitializeGame(u.NumPlayers, u.Texs)
@@ -113,9 +111,7 @@ func onStart(glctx gl.Context, u *uistate.UIState) {
 
 func onStop(u *uistate.UIState) {
 	u.Eng.Release()
-	if u.Debug {
-		fps.Release()
-	}
+	fps.Release()
 	u.Images.Release()
 	u.Done = true
 	u.Shutdown()

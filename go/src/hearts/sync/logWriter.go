@@ -24,16 +24,17 @@ var (
 )
 
 const (
-	Deal  string = "Deal"
-	Pass  string = "Pass"
-	Take  string = "Take"
-	Play  string = "Play"
-	Ready string = "Ready"
-	Bar   string = "|"
-	Space string = " "
-	Colon string = ":"
-	Dash  string = "-"
-	End   string = "END"
+	Deal      string = "Deal"
+	Pass      string = "Pass"
+	Take      string = "Take"
+	Play      string = "Play"
+	Ready     string = "Ready"
+	TakeTrick string = "TakeTrick"
+	Bar       string = "|"
+	Space     string = " "
+	Colon     string = ":"
+	Dash      string = "-"
+	End       string = "END"
 )
 
 // Formats deal command and sends to Syncbase
@@ -84,6 +85,12 @@ func LogPlay(u *uistate.UIState, c *card.Card) bool {
 func LogReady(u *uistate.UIState) bool {
 	key := getKey(u.CurPlayerIndex, u)
 	value := Ready + Bar + strconv.Itoa(u.CurPlayerIndex) + Colon + End
+	return logKeyValue(u.Service, u.Ctx, key, value)
+}
+
+func LogTakeTrick(u *uistate.UIState) bool {
+	key := getKey(u.CurPlayerIndex, u)
+	value := TakeTrick + Bar + End
 	return logKeyValue(u.Service, u.Ctx, key, value)
 }
 

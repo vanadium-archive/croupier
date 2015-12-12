@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"sort"
 	"strconv"
-	"time"
 
 	"hearts/img/coords"
 	"hearts/img/direction"
@@ -28,10 +27,7 @@ import (
 
 // Arrange view: For seating players
 func LoadArrangeView(u *uistate.UIState) {
-	if len(u.AnimChans) > 0 {
-		reposition.ResetAnims(u)
-		<-time.After(time.Second)
-	}
+	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)
 	u.CurView = uistate.Arrange
@@ -76,10 +72,7 @@ func LoadArrangeView(u *uistate.UIState) {
 // Waiting view: Displays the word "Waiting". To be displayed when players are waiting for a new round to be dealt
 // TODO(emshack): Integrate this with Arrange view and Score view so that a separate screen is not necessary
 func LoadWaitingView(u *uistate.UIState) {
-	if len(u.AnimChans) > 0 {
-		reposition.ResetAnims(u)
-		<-time.After(time.Second)
-	}
+	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)
 	center := u.WindowSize.DividedBy(2)
@@ -93,10 +86,7 @@ func LoadWaitingView(u *uistate.UIState) {
 
 // Discovery view: Displays a menu of possible games to join
 func LoadDiscoveryView(u *uistate.UIState) {
-	if len(u.AnimChans) > 0 {
-		reposition.ResetAnims(u)
-		<-time.After(time.Second)
-	}
+	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)
 	u.CurView = uistate.Discovery
@@ -140,10 +130,7 @@ func LoadDiscoveryView(u *uistate.UIState) {
 
 // Table View: Displays the table. Intended for public devices
 func LoadTableView(u *uistate.UIState) {
-	if len(u.AnimChans) > 0 {
-		reposition.ResetAnims(u)
-		<-time.After(time.Second)
-	}
+	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)
 	u.CurView = uistate.Table
@@ -154,15 +141,20 @@ func LoadTableView(u *uistate.UIState) {
 	dropTargetAlt := u.Texs["trickDropBlue.png"]
 	dropTargetDimensions := u.CardDim
 	dropTargetX := (u.WindowSize.X - u.CardDim.X) / 2
-	var dropTargetY float32
-	if u.WindowSize.X < u.WindowSize.Y {
-		dropTargetY = u.WindowSize.Y/2 + u.CardDim.Y/2 + u.Padding
-	} else {
-		dropTargetY = u.WindowSize.Y/2 + u.Padding
-	}
+	dropTargetY := u.WindowSize.Y/2 + u.CardDim.Y/2 + u.Padding
 	dropTargetPos := coords.MakeVec(dropTargetX, dropTargetY)
 	u.DropTargets = append(u.DropTargets,
 		texture.MakeImgWithAlt(dropTargetImage, dropTargetAlt, dropTargetPos, dropTargetDimensions, true, u))
+	// take trick button
+	takeTrickImage := u.Texs["TakeTrickTableUnpressed.png"]
+	takeTrickAlt := u.Texs["TakeTrickTablePressed.png"]
+	takeTrickDim := coords.MakeVec(u.CardDim.X, u.CardDim.Y)
+	takeTrickPos := coords.MakeVec(dropTargetX, dropTargetY-u.Padding-takeTrickDim.Y)
+	u.Buttons["takeTrick"] = texture.MakeImgWithAlt(takeTrickImage, takeTrickAlt, takeTrickPos, takeTrickDim, true, u)
+	if !u.CurTable.TrickOver() {
+		var emptyTex sprite.SubTex
+		u.Eng.SetSubTex(u.Buttons["takeTrick"].GetNode(), emptyTex)
+	}
 	// card on top of first drop target
 	dropCard := u.CurTable.GetTrick()[0]
 	if dropCard != nil {
@@ -173,11 +165,7 @@ func LoadTableView(u *uistate.UIState) {
 	}
 	// second drop target
 	dropTargetY = (u.WindowSize.Y - u.CardDim.Y) / 2
-	if u.WindowSize.X < u.WindowSize.Y {
-		dropTargetX = u.WindowSize.X/2 - u.CardDim.X - u.Padding
-	} else {
-		dropTargetX = u.WindowSize.X/2 - 3*u.CardDim.X/2 - u.Padding
-	}
+	dropTargetX = u.WindowSize.X/2 - 3*u.CardDim.X/2 - u.Padding
 	dropTargetPos = coords.MakeVec(dropTargetX, dropTargetY)
 	u.DropTargets = append(u.DropTargets,
 		texture.MakeImgWithAlt(dropTargetImage, dropTargetAlt, dropTargetPos, dropTargetDimensions, true, u))
@@ -191,11 +179,7 @@ func LoadTableView(u *uistate.UIState) {
 	}
 	// third drop target
 	dropTargetX = (u.WindowSize.X - u.CardDim.X) / 2
-	if u.WindowSize.X < u.WindowSize.Y {
-		dropTargetY = u.WindowSize.Y/2 - 3*u.CardDim.Y/2 - u.Padding
-	} else {
-		dropTargetY = u.WindowSize.Y/2 - u.Padding - u.CardDim.Y
-	}
+	dropTargetY = u.WindowSize.Y/2 - 3*u.CardDim.Y/2 - u.Padding
 	dropTargetPos = coords.MakeVec(dropTargetX, dropTargetY)
 	u.DropTargets = append(u.DropTargets,
 		texture.MakeImgWithAlt(dropTargetImage, dropTargetAlt, dropTargetPos, dropTargetDimensions, true, u))
@@ -209,11 +193,7 @@ func LoadTableView(u *uistate.UIState) {
 	}
 	// fourth drop target
 	dropTargetY = (u.WindowSize.Y - u.CardDim.Y) / 2
-	if u.WindowSize.X < u.WindowSize.Y {
-		dropTargetX = u.WindowSize.X/2 + u.Padding
-	} else {
-		dropTargetX = u.WindowSize.X/2 + u.CardDim.X/2 + u.Padding
-	}
+	dropTargetX = u.WindowSize.X/2 + u.CardDim.X/2 + u.Padding
 	dropTargetPos = coords.MakeVec(dropTargetX, dropTargetY)
 	u.DropTargets = append(u.DropTargets,
 		texture.MakeImgWithAlt(dropTargetImage, dropTargetAlt, dropTargetPos, dropTargetDimensions, true, u))
@@ -382,10 +362,7 @@ func LoadPassOrTakeOrPlay(u *uistate.UIState) {
 
 // Score View: Shows current player standings at the end of every round, including the end of the game
 func LoadScoreView(roundScores, winners []int, u *uistate.UIState) {
-	if len(u.AnimChans) > 0 {
-		reposition.ResetAnims(u)
-		<-time.After(time.Second)
-	}
+	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)
 	u.CurView = uistate.Score
@@ -397,10 +374,7 @@ func LoadScoreView(roundScores, winners []int, u *uistate.UIState) {
 
 // Pass View: Shows player's hand and allows them to pass cards
 func LoadPassView(u *uistate.UIState) {
-	if len(u.AnimChans) > 0 {
-		reposition.ResetAnims(u)
-		<-time.After(time.Second)
-	}
+	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)
 	u.CurView = uistate.Pass
@@ -416,10 +390,7 @@ func LoadPassView(u *uistate.UIState) {
 
 // Take View: Shows player's hand and allows them to take the cards that have been passed to them
 func LoadTakeView(u *uistate.UIState) {
-	if len(u.AnimChans) > 0 {
-		reposition.ResetAnims(u)
-		<-time.After(time.Second)
-	}
+	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)
 	u.CurView = uistate.Take
@@ -436,10 +407,7 @@ func LoadTakeView(u *uistate.UIState) {
 
 // Play View: Shows player's hand and allows them to play cards
 func LoadPlayView(u *uistate.UIState) {
-	if len(u.AnimChans) > 0 {
-		reposition.ResetAnims(u)
-		<-time.After(time.Second)
-	}
+	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)
 	u.CurView = uistate.Play
@@ -463,10 +431,7 @@ func LoadPlayView(u *uistate.UIState) {
 }
 
 func LoadSplitView(reloading bool, u *uistate.UIState) {
-	if len(u.AnimChans) > 0 {
-		reposition.ResetAnims(u)
-		<-time.After(time.Second)
-	}
+	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)
 	u.CurView = uistate.Split
@@ -652,7 +617,16 @@ func getTurnText(u *uistate.UIState) string {
 	var turnText string
 	playerTurnNum := u.CurTable.WhoseTurn()
 	if playerTurnNum == -1 || !u.CurTable.AllDonePassing() || (u.SequentialPhases && !u.CurTable.AllDoneTaking()) {
-		turnText = "Waiting for other players"
+		if u.CurTable.TrickOver() {
+			recipient := u.CurTable.GetTrickRecipient()
+			if recipient == u.CurPlayerIndex {
+				turnText = "Please take your trick"
+			} else {
+				turnText = fmt.Sprintf("Waiting for %s to take the trick", uistate.GetName(recipient, u))
+			}
+		} else {
+			turnText = "Waiting for other players"
+		}
 	} else if playerTurnNum == u.CurPlayerIndex {
 		turnText = "Your turn"
 	} else {
@@ -699,6 +673,16 @@ func addPlayHeader(message string, beforeSplitAnimation bool, u *uistate.UIState
 	maxWidth := u.WindowSize.X - pullTabDim.X*2 - u.Padding*4
 	u.Other = append(u.Other,
 		texture.MakeStringImgCenterAlign(message, color, color, true, center, scaler, maxWidth, u)...)
+	takeTrickImage := u.Texs["TakeTrickHandUnpressed.png"]
+	takeTrickAlt := u.Texs["TakeTrickHandPressed.png"]
+	takeTrickDim := coords.MakeVec(u.CardDim.X, u.CardDim.Y/2)
+	takeTrickPos := coords.MakeVec(u.Padding, headerPos.Y-takeTrickDim.Y-u.Padding)
+	display := (u.CurTable.TrickOver() && u.CurTable.GetTrickRecipient() == u.CurPlayerIndex)
+	u.Buttons["takeTrick"] = texture.MakeImgWithAlt(takeTrickImage, takeTrickAlt, takeTrickPos, takeTrickDim, true, u)
+	if !display {
+		var emptyTex sprite.SubTex
+		u.Eng.SetSubTex(u.Buttons["takeTrick"].GetNode(), emptyTex)
+	}
 }
 
 func addPlaySlot(u *uistate.UIState) {
@@ -956,7 +940,7 @@ func SetNumTricksHand(u *uistate.UIState) {
 						tLeft := coords.MakeVec(dropTargetPos.X+dropTargetDimensions.X+2, dropTargetPos.Y)
 						textImgs = texture.MakeStringImgLeftAlign(strconv.Itoa(numTricks)+trickText, "", "", true, tLeft, scaler, tMax, u)
 					} else {
-						tCenter := coords.MakeVec(dropTargetPos.X+dropTargetDimensions.X/2, dropTargetPos.Y-u.Padding-10)
+						tCenter := coords.MakeVec(dropTargetPos.X+dropTargetDimensions.X/2, dropTargetPos.Y-u.Padding-15)
 						textImgs = texture.MakeStringImgCenterAlign(strconv.Itoa(numTricks)+trickText, "", "", true, tCenter, scaler, tMax, u)
 					}
 				case 3:

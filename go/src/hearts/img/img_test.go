@@ -84,12 +84,12 @@ func TestThree(test *testing.T) {
 	})
 	imgPos := coords.MakeVec(5, 20)
 	imgDimensions := coords.MakeVec(10, 10)
-	newButton := texture.MakeImgWithoutAlt(subtex, imgPos, imgDimensions, u.Eng, u.Scene)
-	u.Buttons = append(u.Buttons, newButton)
+	newButton := texture.MakeImgWithoutAlt(subtex, imgPos, imgDimensions, u)
+	u.Buttons["1"] = newButton
 	oldWindow := u.WindowSize.DividedBy(2)
 	resize.AdjustImgs(oldWindow, u)
-	newPos := u.Buttons[0].GetCurrent()
-	newDimensions := u.Buttons[0].GetDimensions()
+	newPos := u.Buttons["1"].GetCurrent()
+	newDimensions := u.Buttons["1"].GetDimensions()
 	dimExpect := imgDimensions.Times(2)
 	posExpect := imgPos.Times(2)
 	if newDimensions.X != dimExpect.X {
@@ -110,9 +110,11 @@ func TestThree(test *testing.T) {
 func TestFour(test *testing.T) {
 	scene := &sprite.Node{}
 	eng := glsprite.Engine(nil)
+	u.Eng = eng
+	u.Scene = scene
 	pos := coords.MakeVec(5, 10)
 	dimensions := coords.MakeVec(20, 10)
-	i := texture.MakeImgWithoutAlt(subtex, pos, dimensions, eng, scene)
+	i := texture.MakeImgWithoutAlt(subtex, pos, dimensions, u)
 	if i.GetCurrent().X != pos.X {
 		test.Errorf("Expected x %f, got %f", pos.X, i.GetCurrent().X)
 	}
@@ -137,9 +139,11 @@ func TestFour(test *testing.T) {
 func TestFive(test *testing.T) {
 	scene := &sprite.Node{}
 	eng := glsprite.Engine(nil)
+	u.Eng = eng
+	u.Scene = scene
 	pos := coords.MakeVec(5, 10)
 	dimensions := coords.MakeVec(20, 10)
-	i := texture.MakeImgWithAlt(subtex, subtex, pos, dimensions, true, eng, scene)
+	i := texture.MakeImgWithAlt(subtex, subtex, pos, dimensions, true, u)
 	if i.GetCurrent().X != pos.X {
 		test.Errorf("Expected x %f, got %f", pos.X, i.GetCurrent().X)
 	}
@@ -172,7 +176,7 @@ func TestSix(test *testing.T) {
 	})
 	u.EmptySuitImgs = []*staticimg.StaticImg{staticimg.MakeStaticImg(), staticimg.MakeStaticImg(), staticimg.MakeStaticImg(), staticimg.MakeStaticImg()}
 	u.WindowSize = windowSize
-	n := texture.MakeNode(u.Eng, u.Scene)
+	n := texture.MakeNode(u)
 	for _, e := range u.EmptySuitImgs {
 		e.SetImage(subtex)
 		e.SetAlt(subtex)
@@ -180,8 +184,8 @@ func TestSix(test *testing.T) {
 	}
 	c := card.NewCard(card.Two, card.Heart)
 	c2 := card.NewCard(card.Four, card.Heart)
-	n = texture.MakeNode(u.Eng, u.Scene)
-	n2 := texture.MakeNode(u.Eng, u.Scene)
+	n = texture.MakeNode(u)
+	n2 := texture.MakeNode(u)
 	initialXY := coords.MakeVec(10, 10)
 	curXY := coords.MakeVec(100, 30)
 	dimensions := coords.MakeVec(5, 5)

@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"golang.org/x/mobile/event/touch"
 	"golang.org/x/mobile/exp/sprite"
@@ -22,11 +23,34 @@ import (
 	"hearts/sync"
 )
 
+var (
+	numTaps            int
+	beganTouchX        float32
+	beganTouchY        float32
+	timeStartedTapping = time.Now()
+)
+
 func OnTouch(t touch.Event, u *uistate.UIState) {
 	if t.Type == touch.TypeBegin {
 		u.ViewOnTouch = u.CurView
+		beganTouchX = t.X
+		beganTouchY = t.Y
 	} else if u.CurView != u.ViewOnTouch {
 		return
+	}
+	// tap 5 times to trigger debug mode
+	if t.Type == touch.TypeEnd {
+		if t.X == beganTouchX && t.Y == beganTouchY && time.Since(timeStartedTapping).Seconds() <= 5.0 {
+			numTaps++
+			if numTaps == 5 {
+				fmt.Println("TOGGLING DEBUG")
+				u.Debug = !u.Debug
+				numTaps = 0
+			}
+		} else {
+			numTaps = 0
+			timeStartedTapping = time.Now()
+		}
 	}
 	switch u.CurView {
 	case uistate.Discovery:
@@ -51,6 +75,10 @@ func OnTouch(t touch.Event, u *uistate.UIState) {
 		switch t.Type {
 		case touch.TypeBegin:
 			beginClickTable(t, u)
+		case touch.TypeMove:
+			moveClickTable(t, u)
+		case touch.TypeEnd:
+			endClickTable(t, u)
 		}
 	case uistate.Pass:
 		switch t.Type {
@@ -93,14 +121,9 @@ func OnTouch(t touch.Event, u *uistate.UIState) {
 		case touch.TypeBegin:
 			beginClickSplit(t, u)
 		case touch.TypeMove:
-			if u.CurCard != nil {
-				moveClickSplit(t, u)
-			}
+			moveClickSplit(t, u)
 		case touch.TypeEnd:
-			if u.CurCard != nil {
-				endClickSplit(t, u.CurCard, u)
-				u.CurCard = nil
-			}
+			endClickSplit(t, u)
 		}
 	case uistate.Score:
 		switch t.Type {
@@ -228,7 +251,6 @@ func endClickArrange(t touch.Event, u *uistate.UIState) {
 					} else {
 						playerNum := strings.Split(key, "-")[1]
 						u.CurPlayerIndex, _ = strconv.Atoi(playerNum)
-						sync.LogReady(u)
 						sync.LogPlayerNum(u)
 					}
 				}
@@ -240,7 +262,28 @@ func endClickArrange(t touch.Event, u *uistate.UIState) {
 func beginClickTable(t touch.Event, u *uistate.UIState) {
 	buttonList := findClickedButton(t, u)
 	if len(buttonList) > 0 {
-		updateViewFromTable(buttonList[0], u)
+		if buttonList[0] == u.Buttons["takeTrick"] {
+			pressButton(buttonList[0], u)
+		} else {
+			updateViewFromTable(buttonList[0], u)
+		}
+	}
+}
+
+func moveClickTable(t touch.Event, u *uistate.UIState) {
+	curPressed := findClickedButton(t, u)
+	alreadyPressed := getPressed(u)
+	if len(alreadyPressed) > 0 && len(curPressed) == 0 {
+		unpressButtons(u)
+	}
+}
+
+func endClickTable(t touch.Event, u *uistate.UIState) {
+	pressed := unpressButtons(u)
+	for _, b := range pressed {
+		if b == u.Buttons["takeTrick"] {
+			sync.LogTakeTrick(u)
+		}
 	}
 }
 
@@ -360,7 +403,7 @@ func endClickTake(t touch.Event, c *card.Card, u *uistate.UIState) {
 	// add card back to hand
 	reposition.ResetCardPosition(c, u.Eng)
 	reposition.RealignSuit(c.GetSuit(), c.GetInitial().Y, u)
-	doneTaking := true
+	doneTaking := len(u.DropTargets) == 3
 	for _, d := range u.DropTargets {
 		if d.GetCardHere() != nil {
 			doneTaking = false
@@ -450,6 +493,8 @@ func beginClickSplit(t touch.Event, u *uistate.UIState) {
 				}
 				reposition.SwitchOnChan(ch, quit, onDone, u)
 			}()
+		} else if b == u.Buttons["takeTrick"] {
+			pressButton(b, u)
 		} else if b == u.Buttons["table"] {
 			view.LoadTableView(u)
 		} else if b == u.Buttons["hand"] {
@@ -459,21 +504,36 @@ func beginClickSplit(t touch.Event, u *uistate.UIState) {
 }
 
 func moveClickSplit(t touch.Event, u *uistate.UIState) {
-	reposition.DragCard(t, u)
+	if u.CurCard != nil {
+		reposition.DragCard(t, u)
+	}
+	curPressed := findClickedButton(t, u)
+	alreadyPressed := getPressed(u)
+	if len(alreadyPressed) > 0 && len(curPressed) == 0 {
+		unpressButtons(u)
+	}
 }
 
-func endClickSplit(t touch.Event, c *card.Card, u *uistate.UIState) {
-	if dropCardHere(c, u.DropTargets[0], t, u) {
-		ch := make(chan bool)
-		if err := playCard(ch, u.CurPlayerIndex, u); err != "" {
-			view.ChangePlayMessage(err, u)
-			removeCardFromTarget(c, u)
+func endClickSplit(t touch.Event, u *uistate.UIState) {
+	if u.CurCard != nil {
+		if dropCardHere(u.CurCard, u.DropTargets[0], t, u) {
+			ch := make(chan bool)
+			if err := playCard(ch, u.CurPlayerIndex, u); err != "" {
+				view.ChangePlayMessage(err, u)
+				removeCardFromTarget(u.CurCard, u)
+				// add card back to hand
+				reposition.ResetCardPosition(u.CurCard, u.Eng)
+			}
+		} else {
 			// add card back to hand
-			reposition.ResetCardPosition(c, u.Eng)
+			reposition.ResetCardPosition(u.CurCard, u.Eng)
 		}
-	} else {
-		// add card back to hand
-		reposition.ResetCardPosition(c, u.Eng)
+	}
+	pressed := unpressButtons(u)
+	for _, b := range pressed {
+		if b == u.Buttons["takeTrick"] {
+			sync.LogTakeTrick(u)
+		}
 	}
 }
 

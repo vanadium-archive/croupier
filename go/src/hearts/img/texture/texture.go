@@ -276,7 +276,8 @@ func LoadTextures(eng sprite.Engine) map[string]sprite.SubTex {
 		"SitSpotPressed.png", "SitSpotUnpressed.png", "WatchSpotPressed.png", "WatchSpotUnpressed.png", "StartBlue.png", "StartGray.png",
 		"StartBluePressed.png", "Restart.png", "Visibility.png", "VisibilityOff.png", "QuitPressed.png", "QuitUnpressed.png",
 		"PassPressed.png", "PassUnpressed.png", "RightArrowBlue.png", "LeftArrowBlue.png", "AcrossArrowBlue.png", "RightArrowGray.png",
-		"LeftArrowGray.png", "AcrossArrowGray.png",
+		"LeftArrowGray.png", "AcrossArrowGray.png", "TakeTrickTableUnpressed.png", "TakeTrickTablePressed.png", "TakeTrickHandPressed.png",
+		"TakeTrickHandUnpressed.png",
 	}
 	for _, f := range boundedImgs {
 		a, err := asset.Open(f)
