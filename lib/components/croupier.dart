@@ -50,6 +50,13 @@ class CroupierComponentState extends State<CroupierComponent> {
                   child: new Text('Join Game', style: style.Text.titleStyle),
                   onPressed: makeSetStateCallback(
                       logic_croupier.CroupierState.JoinGame)),
+              new FlatButton(
+                  child: new Text('Resume Game', style: style.Text.titleStyle),
+                  onPressed: config.croupier.mostRecentGameID != null
+                      ? makeSetStateCallback(
+                          logic_croupier.CroupierState.ResumeGame,
+                          config.croupier.mostRecentGameID)
+                      : null),
               new CroupierProfileComponent(
                   settings: config.croupier.settings,
                   width: style.Size.settingsSize,
@@ -118,13 +125,18 @@ class CroupierComponentState extends State<CroupierComponent> {
       case logic_croupier.CroupierState.PlayGame:
         return new Container(
             padding: new EdgeDims.only(top: ui.window.padding.top),
-            child: component_game.createGameComponent(config.croupier, () {
-              config.croupier.game.quit();
-              makeSetStateCallback(logic_croupier.CroupierState.Welcome)();
-            },
+            child: component_game.createGameComponent(config.croupier,
+                makeSetStateCallback(logic_croupier.CroupierState.Welcome),
                 width: ui.window.size.width,
                 height: ui.window.size.height - ui.window.padding.top,
                 key: _gameKey));
+
+      case logic_croupier.CroupierState.ResumeGame:
+        return new Container(
+            padding: new EdgeDims.only(top: ui.window.padding.top),
+            child: new Text("Resuming Game...", style: style.Text.titleStyle),
+            width: ui.window.size.width,
+            height: ui.window.size.height - ui.window.padding.top);
       default:
         assert(false);
         return null;

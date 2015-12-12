@@ -11,6 +11,7 @@ participated in. The schema is as follows:
 
 ```
 For advertising and setting up the game:
+<game_id>/game_sg = <game_syncgroup_name>
 <game_id>/type = <game_type>
 <game_id>/owner = <user_id>
 <game_id>/status = [null|RUNNING]
