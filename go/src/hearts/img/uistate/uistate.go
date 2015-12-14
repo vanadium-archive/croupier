@@ -10,6 +10,7 @@ package uistate
 import (
 	"encoding/json"
 	"fmt"
+	"sync"
 	"time"
 
 	"hearts/img/coords"
@@ -106,6 +107,7 @@ type UIState struct {
 	SGChan           chan bool                      // pass in a bool to stop advertising the syncgroup
 	ScanChan         chan bool                      // pass in a bool to stop scanning for syncgroups
 	DiscGroups       map[string]*DiscStruct         // contains a set of addresses and game start data for each advertised game found
+	M                sync.Mutex
 }
 
 func MakeUIState() *UIState {
