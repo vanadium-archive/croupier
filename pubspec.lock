@@ -4,7 +4,7 @@ packages:
   analyzer:
     description: analyzer
     source: hosted
-    version: "0.26.4"
+    version: "0.27.0"
   archive:
     description: archive
     source: hosted
@@ -31,7 +31,7 @@ packages:
     version: "0.0.7"
   cassowary:
     description:
-      path: "../../../../../flutter/packages/cassowary"
+      path: "../../../flutter/packages/cassowary"
       relative: true
     source: path
     version: "0.1.7"
@@ -65,19 +65,19 @@ packages:
     version: "0.9.1+2"
   flutter:
     description:
-      path: "../../../../../flutter/packages/flutter"
+      path: "../../../flutter/packages/flutter"
       relative: true
     source: path
     version: "0.0.21"
   flutter_tools:
     description:
-      path: "../../../../../flutter/packages/flutter_tools"
+      path: "../../../flutter/packages/flutter_tools"
       relative: true
     source: path
     version: "0.0.38"
   flx:
     description:
-      path: "../../../../../flutter/packages/flx"
+      path: "../../../flutter/packages/flx"
       relative: true
     source: path
     version: "0.0.10"
@@ -120,30 +120,30 @@ packages:
   mojo:
     description: mojo
     source: hosted
-    version: "0.4.6"
+    version: "0.4.8"
   mojo_apptest:
     description: mojo_apptest
     source: hosted
-    version: "0.2.9"
+    version: "0.2.12"
   mojo_sdk:
     description: mojo_sdk
     source: hosted
-    version: "0.2.5"
+    version: "0.2.7"
   mojo_services:
     description: mojo_services
     source: hosted
-    version: "0.4.8"
+    version: "0.4.10"
   mojom:
     description: mojom
     source: hosted
-    version: "0.2.10"
+    version: "0.2.12"
   mustache4dart:
     description: mustache4dart
     source: hosted
     version: "1.0.10"
   newton:
     description:
-      path: "../../../../../flutter/packages/newton"
+      path: "../../../flutter/packages/newton"
       relative: true
     source: path
     version: "0.1.5"
@@ -186,11 +186,11 @@ packages:
   sky_engine:
     description: sky_engine
     source: hosted
-    version: "0.0.69"
+    version: "0.0.71"
   sky_services:
     description: sky_services
     source: hosted
-    version: "0.0.69"
+    version: "0.0.71"
   source_map_stack_trace:
     description: source_map_stack_trace
     source: hosted
@@ -218,7 +218,7 @@ packages:
   test:
     description: test
     source: hosted
-    version: "0.12.6"
+    version: "0.12.6+1"
   typed_data:
     description: typed_data
     source: hosted
@@ -230,7 +230,7 @@ packages:
   v23discovery:
     description: v23discovery
     source: hosted
-    version: "0.0.6"
+    version: "0.0.7"
   vector_math:
     description: vector_math
     source: hosted

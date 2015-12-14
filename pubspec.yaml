@@ -3,7 +3,7 @@ dependencies:
   v23discovery: ">=0.0.0 <0.1.0"
   syncbase: ">=0.0.0 <0.1.0"
   flutter:
-    path: ../../../../../flutter/packages/flutter
+    path: ../../../flutter/packages/flutter
   flutter_tools:
-    path: ../../../../../flutter/packages/flutter_tools
+    path: ../../../flutter/packages/flutter_tools
   test: any

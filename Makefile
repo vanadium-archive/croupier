@@ -203,10 +203,13 @@ ifndef JIRI_ROOT
 	$(error JIRI_ROOT is not set)
 endif
 
+.PHONY: test
+test: test-unit
+
 # TODO(alexfandrianto): I split off the syncbase logic from game.dart because it
 # would not run in a stand-alone VM. We will need to add mojo_test eventually.
-.PHONY: test
-test: packages
+.PHONY: test-unit
+test-unit: packages
 	# Mock the syncbase implementations and unmock regardless of the test outcome.
 	$(MAKE) mock
 	pub run test -r expanded $(DART_TEST_FILES) || ($(MAKE) unmock && exit 1)
