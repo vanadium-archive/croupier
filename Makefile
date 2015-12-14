@@ -2,6 +2,9 @@ DART_LIB_FILES_ALL := $(shell find lib -name *.dart)
 DART_TEST_FILES_ALL := $(shell find test -name *.dart)
 DART_TEST_FILES := $(shell find test -name *.dart ! -name *.part.dart)
 
+# Add Dart SDK to path.
+PATH := $(shell jiri v23-profile env --profiles=dart DART_SDK=)/bin:$(PATH)
+
 # This section is used to setup the environment for running with mojo_shell.
 CROUPIER_DIR := $(shell pwd)
 DISCOVERY_DIR := $(JIRI_ROOT)/release/mojo/discovery
