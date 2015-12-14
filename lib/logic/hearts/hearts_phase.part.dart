@@ -4,4 +4,4 @@
 
 part of hearts;
 
-enum HeartsPhase { StartGame, Deal, Pass, Take, Play, Score }
+enum HeartsPhase { Deal, Pass, Take, Play, Score }

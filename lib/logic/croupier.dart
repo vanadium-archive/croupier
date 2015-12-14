@@ -156,6 +156,8 @@ class Croupier {
         if (state == CroupierState.ArrangePlayers) {
           game.startGameSignal();
           setState(CroupierState.PlayGame, null);
+        } else if (state == CroupierState.ResumeGame) {
+          game.startGameSignal();
         }
         break;
       default:

@@ -19,10 +19,6 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
 
   HeartsType _lastViewType;
   bool _showSplitView = false;
-  bool trickTaking = false;
-  List<List<logic_card.Card>> playedCards = new List<List<logic_card.Card>>(4);
-
-  static const int SHOW_TRICK_DURATION = 2000; // ms
 
   @override
   void initState() {
@@ -34,46 +30,6 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
       _showSplitView = true;
     }
     _reset();
-
-    _fillPlayedCards();
-  }
-
-  // Make copies of the played cards.
-  void _fillPlayedCards() {
-    for (int i = 0; i < 4; i++) {
-      playedCards[i] = new List<logic_card.Card>.from(
-          config.game.cardCollections[i + HeartsGame.OFFSET_PLAY]);
-    }
-  }
-
-  // If there were 3 played cards before and now there are 0...
-  bool _detectTrick() {
-    HeartsGame game = config.game;
-    int lastNumPlayed = playedCards.where((List<logic_card.Card> list) {
-      return list.length > 0;
-    }).length;
-    return lastNumPlayed == 3 && game.numPlayed == 0;
-  }
-
-  // Make a copy of the missing played card.
-  void _fillMissingPlayedCard() {
-    HeartsGame game = config.game;
-    List<logic_card.Card> trickPile =
-        game.cardCollections[game.lastTrickTaker + HeartsGame.OFFSET_TRICK];
-
-    // Find the index of the missing play card.
-    int missing;
-    for (int j = 0; j < 4; j++) {
-      if (playedCards[j].length == 0) {
-        missing = j;
-        break;
-      }
-    }
-
-    // Use the trickPile to get this card.
-    playedCards[missing] = <logic_card.Card>[
-      trickPile[trickPile.length - 4 + missing]
-    ];
   }
 
   @override
@@ -92,24 +48,6 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
       _reset();
     }
 
-    // Set the trickTaking flag on each build.
-    if (!trickTaking) {
-      if (_detectTrick()) {
-        trickTaking = true;
-        _fillMissingPlayedCard();
-        // Unfortunately, ZCards are drawn on the game layer,
-        // so instead of setState, we must use trueSetState.
-        new Future.delayed(const Duration(milliseconds: SHOW_TRICK_DURATION),
-            () {
-          setState(() {
-            trickTaking = false;
-          });
-        });
-      } else {
-        _fillPlayedCards();
-      }
-    }
-
     // Hearts Widget
     Widget heartsWidget = new Container(
         decoration: new BoxDecoration(backgroundColor: Colors.grey[300]),
@@ -122,9 +60,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
         height: config.height,
         child: heartsWidget));
     List<int> visibleCardCollectionIndexes = new List<int>();
-    if (game.phase != HeartsPhase.StartGame &&
-        game.phase != HeartsPhase.Deal &&
-        game.phase != HeartsPhase.Score) {
+    if (game.phase != HeartsPhase.Deal && game.phase != HeartsPhase.Score) {
       int playerNum = game.playerNumber;
       if (game.viewType == HeartsType.Player) {
         switch (game.phase) {
@@ -343,7 +279,6 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     }
 
     switch (game.phase) {
-      case HeartsPhase.StartGame:
       case HeartsPhase.Deal:
         return showDeal();
       case HeartsPhase.Pass:
@@ -364,7 +299,6 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     HeartsGame game = config.game as HeartsGame;
     List<Widget> kids = new List<Widget>();
     switch (game.phase) {
-      case HeartsPhase.StartGame:
       case HeartsPhase.Deal:
         kids.add(new Text("Waiting for Deal..."));
         break;
@@ -385,10 +319,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
 
   Widget showBoard() {
     return new HeartsBoard(config.croupier,
-        width: config.width,
-        height: 0.80 * config.height,
-        trickTaking: trickTaking,
-        playedCards: playedCards);
+        width: config.width, height: 0.80 * config.height);
   }
 
   String _getName(int playerNumber) {
@@ -408,10 +339,10 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
             : "${name}'s turn";
 
         // Override if someone is taking a trick.
-        if (this.trickTaking) {
-          String trickTaker =
-              _getName(game.lastTrickTaker) ?? "Player ${game.lastTrickTaker}";
-          status = game.lastTrickTaker == game.playerNumber
+        if (game.allPlayed) {
+          int winner = game.determineTrickWinner();
+          String trickTaker = _getName(winner) ?? "Player ${winner}";
+          status = winner == game.playerNumber
               ? "Your trick"
               : "${trickTaker}'s trick";
         }
@@ -449,12 +380,28 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
   Widget _buildStatusBar() {
     HeartsGame game = config.game;
 
-    List<Widget> statusWidgets = new List<Widget>();
-    statusWidgets.add(new Text(_getStatus(), style: style.Text.largeStyle));
+    List<Widget> statusBarWidgets = new List<Widget>();
+    statusBarWidgets.add(new Flexible(
+        flex: 1, child: new Text(_getStatus(), style: style.Text.largeStyle)));
 
     switch (game.phase) {
       case HeartsPhase.Play:
-        statusWidgets
+        if (game.allPlayed &&
+            game.determineTrickWinner() == game.playerNumber) {
+          statusBarWidgets.add(new Flexible(
+              flex: 0,
+              child: new GestureDetector(onTap: () {
+                setState(() {
+                  game.takeTrickUI();
+                });
+              },
+                  child: new Container(
+                      decoration: style.Box.liveBackground,
+                      padding: style.Spacing.smallPadding,
+                      child: new Text("Take Cards",
+                          style: style.Text.largeStyle)))));
+        }
+        statusBarWidgets
             .add(new IconButton(icon: "action/swap_vert", onPressed: () {
           setState(() {
             _showSplitView = !_showSplitView;
@@ -478,7 +425,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
         if (game.phase == HeartsPhase.Take) {
           rotationAngle = rotationAngle + math.PI; // opposite
         }
-        statusWidgets.add(new Transform(
+        statusBarWidgets.add(new Transform(
             transform:
                 new vector_math.Matrix4.identity().rotateZ(rotationAngle),
             alignment: new FractionalOffset(0.5, 0.5),
@@ -492,7 +439,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
         padding: new EdgeDims.all(10.0),
         decoration:
             new BoxDecoration(backgroundColor: style.theme.primaryColor),
-        child: new Row(statusWidgets,
+        child: new Row(statusBarWidgets,
             justifyContent: FlexJustifyContent.spaceBetween));
   }
 
@@ -506,9 +453,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
             cardWidth: config.height * 0.1,
             cardHeight: config.height * 0.1,
             isMini: true,
-            gameAcceptCallback: _makeGameMoveCallback,
-            trickTaking: trickTaking,
-            playedCards: playedCards));
+            gameAcceptCallback: _makeGameMoveCallback));
   }
 
   Widget showPlay() {
@@ -808,9 +753,6 @@ class HeartsArrangeComponent extends GameArrangeComponent {
   Widget _buildSlot(String name, int index) {
     NoArgCb onTap = () {
       croupier.settings_manager.setPlayerNumber(croupier.game.gameID, index);
-      HeartsGame game = croupier.game;
-      game.playerNumber = index;
-      game.setReadyUI();
     };
     Widget slotWidget = new Text(name, style: style.Text.hugeStyle);
 

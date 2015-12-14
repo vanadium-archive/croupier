@@ -30,6 +30,10 @@ class HeartsCommand extends GameCommand {
       : super("Play", computePlay(playerId, c),
             simultaneity: SimulLevel.TURN_BASED);
 
+  HeartsCommand.takeTrick()
+      : super("TakeTrick", computeTakeTrick(),
+            simultaneity: SimulLevel.TURN_BASED);
+
   HeartsCommand.ready(int playerId)
       : super("Ready", computeReady(playerId),
             simultaneity: SimulLevel.INDEPENDENT);
@@ -43,6 +47,8 @@ class HeartsCommand extends GameCommand {
       case "Take":
         return SimulLevel.INDEPENDENT;
       case "Play":
+        return SimulLevel.TURN_BASED;
+      case "TakeTrick":
         return SimulLevel.TURN_BASED;
       case "Ready":
         return SimulLevel.INDEPENDENT;
@@ -75,6 +81,10 @@ class HeartsCommand extends GameCommand {
 
   static String computePlay(int playerId, Card c) {
     return "${playerId}:${c.toString()}:END";
+  }
+
+  static String computeTakeTrick() {
+    return "END";
   }
 
   static String computeReady(int playerId) {
@@ -160,12 +170,18 @@ class HeartsCommand extends GameCommand {
         }
         bool canTransfer = this.transferCheck(hand, discard, c);
         return canTransfer;
+      case "TakeTrick":
+        if (game.phase != HeartsPhase.Play) {
+          return false;
+        }
+
+        // There must be 4 cards played.
+        return game.allPlayed;
       case "Ready":
         if (game.hasGameEnded) {
           return false;
         }
-        if (game.phase != HeartsPhase.Score &&
-            game.phase != HeartsPhase.StartGame) {
+        if (game.phase != HeartsPhase.Score) {
           return false;
         }
         return true;
@@ -257,15 +273,45 @@ class HeartsCommand extends GameCommand {
         }
         this.transfer(hand, discard, c);
         return;
+      case "TakeTrick":
+        if (game.phase != HeartsPhase.Play) {
+          throw new StateError(
+              "Cannot process take trick commands when not in Play phase");
+        }
+        if (!game.allPlayed) {
+          throw new StateError(
+              "Cannot take trick when some players have not played");
+        }
+
+        // Determine who won this trick.
+        int winner = game.determineTrickWinner();
+
+        // Move the cards to their trick list. Also check if hearts was broken.
+        // Note: While some variants of Hearts allow the QUEEN_OF_SPADES to
+        // break hearts, this version does NOT implement that rule.
+        for (int i = 0; i < 4; i++) {
+          List<Card> play = game.cardCollections[i + HeartsGame.OFFSET_PLAY];
+          if (!game.heartsBroken && game.isHeartsCard(play[0])) {
+            game.heartsBroken = true;
+          }
+          game.cardCollections[winner + HeartsGame.OFFSET_TRICK]
+              .addAll(play); // or add(play[0])
+          play.clear();
+        }
+
+        // Set them as the next person to go.
+        game.lastTrickTaker = winner;
+        game.trickNumber++;
+
+        return;
       case "Ready":
         if (game.hasGameEnded) {
           throw new StateError(
               "Game has already ended. Start a new one to play again.");
         }
-        if (game.phase != HeartsPhase.Score &&
-            game.phase != HeartsPhase.StartGame) {
+        if (game.phase != HeartsPhase.Score) {
           throw new StateError(
-              "Cannot process ready commands when not in Score or StartGame phase");
+              "Cannot process ready commands when not in Score phase");
         }
         int playerId = int.parse(parts[0]);
         game.setReady(playerId);

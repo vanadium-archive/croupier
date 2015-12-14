@@ -50,8 +50,6 @@ class HeartsBoard extends Board {
   final Croupier croupier;
   final bool isMini;
   final AcceptCb gameAcceptCallback;
-  final bool trickTaking;
-  final List<List<logic_card.Card>> playedCards;
 
   HeartsBoard(Croupier croupier,
       {double height,
@@ -59,9 +57,7 @@ class HeartsBoard extends Board {
       double cardHeight,
       double cardWidth,
       this.isMini: false,
-      this.gameAcceptCallback,
-      this.trickTaking,
-      this.playedCards})
+      this.gameAcceptCallback})
       : super(croupier.game,
             height: height,
             width: width,
@@ -148,14 +144,10 @@ class HeartsBoardState extends State<HeartsBoard> {
 
     List<Widget> items = new List<Widget>();
     bool isMe = playerNumber == p;
-    bool isPlayerTurn = playerNumber == game.whoseTurn && !config.trickTaking;
+    bool isPlayerTurn = playerNumber == game.whoseTurn && !game.allPlayed;
 
     List<logic_card.Card> showCard =
         game.cardCollections[playerNumber + HeartsGame.OFFSET_PLAY];
-
-    if (config.trickTaking) {
-      showCard = config.playedCards[playerNumber];
-    }
 
     items.add(new Positioned(
         top: 0.0,
@@ -307,9 +299,6 @@ class HeartsBoardState extends State<HeartsBoard> {
     HeartsGame game = config.game;
     List<logic_card.Card> cards =
         game.cardCollections[playerNumber + HeartsGame.OFFSET_PLAY];
-    if (config.trickTaking) {
-      cards = config.playedCards[playerNumber];
-    }
 
     return new Container(
         decoration: game.whoseTurn == playerNumber ? style.Box.liveNow : null,
@@ -323,14 +312,8 @@ class HeartsBoardState extends State<HeartsBoard> {
   Widget _buildOffScreenCards(int playerNumber) {
     HeartsGame game = config.game;
 
-    List<logic_card.Card> cards =
-        game.cardCollections[playerNumber + HeartsGame.OFFSET_TRICK];
-    // If took trick, exclude the last 4 cards for the trick taking animation.
-    if (config.trickTaking && playerNumber == game.lastTrickTaker) {
-      cards = new List.from(cards.sublist(0, cards.length - 4));
-    } else {
-      cards = new List.from(cards);
-    }
+    List<logic_card.Card> cards = new List.from(
+        game.cardCollections[playerNumber + HeartsGame.OFFSET_TRICK]);
 
     double sizeFactor = 2.0;
     if (config.isMini) {

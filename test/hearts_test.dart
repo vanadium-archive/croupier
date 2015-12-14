@@ -199,16 +199,6 @@ void main() {
       }
     }
 
-    test("Start Game Phase", () {
-      expect(game.phase, equals(HeartsPhase.StartGame));
-
-      // Start Game consists of 4 ready commands.
-      runCommand();
-      runCommand();
-      runCommand();
-      runCommand();
-    });
-
     test("Deal Phase", () {
       expect(game.phase, equals(HeartsPhase.Deal));
 
@@ -314,10 +304,14 @@ void main() {
     test("Play Phase - Trick 1", () {
       expect(game.phase, equals(HeartsPhase.Play));
 
-      // Play Trick 1 consists of 4 play commands.
+      // Play Trick 1 consists of 4 play commands + 1 take trick command.
       runCommand();
       runCommand();
       runCommand();
+      runCommand();
+
+      // Confirm that everyone has played before taking the trick
+      expect(game.allPlayed, isTrue);
       runCommand();
 
       // Confirm the winner of the round.
@@ -329,10 +323,14 @@ void main() {
     test("Play Phase - Trick 2", () {
       expect(game.phase, equals(HeartsPhase.Play));
 
-      // Play Trick 2 consists of 4 play commands.
+      // Play Trick 2 consists of 4 play commands + 1 take trick command.
       runCommand();
       runCommand();
       runCommand();
+      runCommand();
+
+      // Confirm that everyone has played before taking the trick
+      expect(game.allPlayed, isTrue);
       runCommand();
 
       // Confirm the winner of the round.
@@ -346,9 +344,9 @@ void main() {
     test("Play Phase - Trick 13", () {
       expect(game.phase, equals(HeartsPhase.Play));
 
-      // Play Trick 13 consists of 44 play commands.
+      // Play Trick 13 consists of 44 play commands  + 11 take trick command.
       // Read line by line until the game is "over".
-      for (int i = 8; i < 52; i++) {
+      for (int i = 10; i < 65; i++) {
         runCommand();
       }
 
@@ -411,24 +409,24 @@ void main() {
     test("Score Phase - end of game", () {
       expect(game.hasGameEnded, isFalse);
 
-      // 2nd Round: 4 deal, 4 pass, 4 take, 52 play, 4 ready
+      // 2nd Round: 4 deal, 4 pass, 4 take, 52 play, 13 take trick, 4 ready
       // Player A will shoot the moon for all remaining games (for simplicity).
-      for (int i = 0; i < 68; i++) {
+      for (int i = 0; i < 81; i++) {
         runCommand();
       }
       expect(game.scores, equals([21 + 0, 3 + 26, 2 + 26, 0 + 26]));
       expect(game.hasGameEnded, isFalse);
 
-      // 3rd Round: 4 deal, 4 pass, 4 take, 52 play, 4 ready
-      for (int i = 0; i < 68; i++) {
+      // 3rd Round: 4 deal, 4 pass, 4 take, 52 play, 13 take trick, 4 ready
+      for (int i = 0; i < 81; i++) {
         runCommand();
       }
       expect(game.scores,
           equals([21 + 0 + 0, 3 + 26 + 26, 2 + 26 + 26, 0 + 26 + 26]));
       expect(game.hasGameEnded, isFalse);
 
-      // 4th Round: 4 deal, 52 play, 4 ready
-      for (int i = 0; i < 60; i++) {
+      // 4th Round: 4 deal, 52 play, 13 take trick, 4 ready
+      for (int i = 0; i < 73; i++) {
         runCommand();
       }
       expect(
@@ -442,8 +440,8 @@ void main() {
       expect(game.deltaScores, equals([0, 26, 26, 26]));
       expect(game.hasGameEnded, isFalse);
 
-      // 5th round: 4 deal, 4 pass, 4 take, 52 play. Game is over, so no ready phase.
-      for (int i = 0; i < 64; i++) {
+      // 5th round: 4 deal, 4 pass, 4 take, 52 play, 13 take trick. Game is over, so no ready phase.
+      for (int i = 0; i < 77; i++) {
         runCommand();
       }
       expect(
@@ -461,14 +459,6 @@ void main() {
   });
 
   group("Card Manipulation - Error Cases", () {
-    test("Dealing - too soon", () {
-      HeartsGame game = new HeartsGame()..playerNumber = 0;
-      expect(game.phase, HeartsPhase.StartGame);
-      expect(() {
-        game.gamelog.add(new HeartsCommand.deal(
-            0, new List<Card>.from(Card.All.getRange(0, 13))));
-      }, throwsA(new isInstanceOf<StateError>()));
-    });
     test("Dealing - wrong phase", () {
       HeartsGame game = new HeartsGame()..playerNumber = 0;
       game.phase = HeartsPhase.Score;
@@ -656,9 +646,67 @@ void main() {
       game.gamelog.add(new HeartsCommand.play(1, Card.All[13]));
       game.gamelog.add(new HeartsCommand.play(2, Card.All[12])); // 2 won!
       game.gamelog.add(new HeartsCommand.play(3, Card.All[39]));
+      game.gamelog.add(new HeartsCommand.takeTrick());
       expect(() {
         game.gamelog.add(new HeartsCommand.play(
             2, Card.All[26])); // But 2 can't lead with a hearts.
+      }, throwsA(new isInstanceOf<StateError>()));
+    });
+    test("Playing - trick not taken yet", () {
+      HeartsGame game = new HeartsGame()..playerNumber = 0;
+      game.phase = HeartsPhase.Deal;
+      game.gamelog.add(new HeartsCommand.deal(
+          0,
+          new List<Card>.from(Card.All.getRange(0, 11))
+            ..add(Card.All[38])
+            ..add(Card.All[37])));
+      game.gamelog.add(new HeartsCommand.deal(
+          1, new List<Card>.from(Card.All.getRange(13, 26))));
+      game.gamelog.add(new HeartsCommand.deal(
+          2,
+          new List<Card>.from(Card.All.getRange(26, 37))
+            ..add(Card.All[12])
+            ..add(Card.All[11])));
+      game.gamelog.add(new HeartsCommand.deal(
+          3, new List<Card>.from(Card.All.getRange(39, 52))));
+      game.phase = HeartsPhase.Play;
+      game.lastTrickTaker = 0;
+      game.gamelog.add(new HeartsCommand.play(0, Card.All[1]));
+      game.gamelog.add(new HeartsCommand.play(1, Card.All[13]));
+      game.gamelog.add(new HeartsCommand.play(2, Card.All[12])); // 2 won!
+      game.gamelog.add(new HeartsCommand.play(3, Card.All[39]));
+
+      // Do not take trick. Play a card instead.
+      expect(() {
+        game.gamelog.add(new HeartsCommand.play(
+            2, Card.All[11])); // But 2 can't play until trick is taken
+      }, throwsA(new isInstanceOf<StateError>()));
+    });
+    test("Playing - take trick wrong phase", () {
+      HeartsGame game = new HeartsGame()..playerNumber = 0;
+      game.phase = HeartsPhase.Deal;
+      expect(() {
+        game.gamelog.add(new HeartsCommand.takeTrick()); // bad phase
+      }, throwsA(new isInstanceOf<StateError>()));
+    });
+    test("Playing - take trick too soon", () {
+      HeartsGame game = new HeartsGame()..playerNumber = 0;
+      game.phase = HeartsPhase.Deal;
+      game.gamelog.add(new HeartsCommand.deal(
+          0, new List<Card>.from(Card.All.getRange(0, 12))..add(Card.All[38])));
+      game.gamelog.add(new HeartsCommand.deal(
+          1, new List<Card>.from(Card.All.getRange(13, 26))));
+      game.gamelog.add(new HeartsCommand.deal(2,
+          new List<Card>.from(Card.All.getRange(26, 38))..add(Card.All[12])));
+      game.gamelog.add(new HeartsCommand.deal(
+          3, new List<Card>.from(Card.All.getRange(39, 52))));
+      game.phase = HeartsPhase.Play;
+      game.lastTrickTaker = 0;
+      game.gamelog.add(new HeartsCommand.play(0, Card.All[1]));
+      game.gamelog.add(new HeartsCommand.play(1, Card.All[13]));
+      game.gamelog.add(new HeartsCommand.play(2, Card.All[12]));
+      expect(() {
+        game.gamelog.add(new HeartsCommand.takeTrick()); // too soon
       }, throwsA(new isInstanceOf<StateError>()));
     });
   });

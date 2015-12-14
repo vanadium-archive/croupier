@@ -39,7 +39,7 @@ class HeartsGame extends Game {
 
   HeartsType viewType = HeartsType.Player;
 
-  HeartsPhase _phase = HeartsPhase.StartGame;
+  HeartsPhase _phase = HeartsPhase.Deal;
   HeartsPhase get phase => _phase;
   void set phase(HeartsPhase other) {
     print('setting phase from ${_phase} to ${other}');
@@ -259,7 +259,7 @@ class HeartsGame extends Game {
   // Note that this will be called by the UI.
   // It won't be possible to set the readiness for other players, except via the GameLog.
   void setReadyUI() {
-    assert(phase == HeartsPhase.Score || phase == HeartsPhase.StartGame);
+    assert(phase == HeartsPhase.Score);
     if (this.debugMode) {
       // Debug Mode should pretend this device is all players.
       for (int i = 0; i < 4; i++) {
@@ -268,6 +268,13 @@ class HeartsGame extends Game {
     } else if (this.isPlayer) {
       gamelog.add(new HeartsCommand.ready(playerNumber));
     }
+  }
+
+  // Note that this will be called by the UI.
+  void takeTrickUI() {
+    assert(phase == HeartsPhase.Play);
+    assert(this.allPlayed);
+    gamelog.add(new HeartsCommand.takeTrick());
   }
 
   static final GameArrangeData _arrangeData =
@@ -329,14 +336,6 @@ class HeartsGame extends Game {
   @override
   void triggerEvents() {
     switch (this.phase) {
-      case HeartsPhase.StartGame:
-        if (this.allReady) {
-          phase = HeartsPhase.Deal;
-          this.resetGame();
-
-          print('we are all ready. ${isCreator}');
-        }
-        return;
       case HeartsPhase.Deal:
         if (this.allDealt) {
           if (this.passTarget != null) {
@@ -363,31 +362,10 @@ class HeartsGame extends Game {
         }
         return;
       case HeartsPhase.Play:
-        if (this.allPlayed) {
-          // Determine who won this trick.
-          int winner = this.determineTrickWinner();
-
-          // Move the cards to their trick list. Also check if hearts was broken.
-          // Note: Some variants of Hearts allows the QUEEN_OF_SPADES to break hearts too.
-          for (int i = 0; i < 4; i++) {
-            List<Card> play = this.cardCollections[i + OFFSET_PLAY];
-            if (!heartsBroken && isHeartsCard(play[0])) {
-              heartsBroken = true;
-            }
-            this.cardCollections[winner + OFFSET_TRICK]
-                .addAll(play); // or add(play[0])
-            play.clear();
-          }
-
-          // Set them as the next person to go.
-          this.lastTrickTaker = winner;
-          this.trickNumber++;
-
-          // Additionally, if that was the last trick, move onto the score phase.
-          if (this.trickNumber == 13) {
-            phase = HeartsPhase.Score;
-            this.prepareScore();
-          }
+        // If that was the last trick, move onto the score phase.
+        if (this.trickNumber == 13) {
+          phase = HeartsPhase.Score;
+          this.prepareScore();
         }
         return;
       case HeartsPhase.Score:
@@ -414,6 +392,9 @@ class HeartsGame extends Game {
     }
     if (!cardCollections[player].contains(c)) {
       return "Player ${player} does not have the card (${c.toString()})";
+    }
+    if (this.allPlayed) {
+      return "Trick not taken yet.";
     }
     if (this.whoseTurn != player) {
       return "It is not Player ${player}'s turn.";

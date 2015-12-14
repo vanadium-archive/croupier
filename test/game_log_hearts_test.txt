@@ -1,9 +1,3 @@
-# Start Game
-Ready|2:END
-Ready|0:END
-Ready|3:END
-Ready|1:END
-
 # Deal
 Deal|0:classic h1:classic h2:classic h3:classic h4:classic h5:classic d6:classic d7:classic d8:classic d9:classic d10:classic dj:classic dq:classic dk:END
 Deal|1:classic d1:classic d2:classic d3:classic d4:classic d5:classic s6:classic s7:classic s8:classic s9:classic s10:classic sj:classic sq:classic sk:END
@@ -32,78 +26,91 @@ Play|2:classic c2:END
 Play|3:classic c4:END
 Play|0:classic d1:END
 Play|1:classic s1:END
+TakeTrick|END
 
 # Trick 2 (3 won last round with 4 of clubs)
 Play|3:classic c5:END
 Play|0:classic d2:END
 Play|1:classic s2:END
 Play|2:classic c1:END
+TakeTrick|END
 
 # Trick 3 (2 won with ace of clubs)
 Play|2:classic s4:END
 Play|3:classic h1:END
 Play|0:classic h5:END
 Play|1:classic s3:END
+TakeTrick|END
 
 # Trick 4 (2 won with s4)
 Play|2:classic s5:END
 Play|3:classic hk:END
 Play|0:classic h4:END
 Play|1:classic sk:END
+TakeTrick|END
 
 # Trick 5 (1 won with sk)
 Play|1:classic d5:END
 Play|2:classic ck:END
 Play|3:classic hq:END
 Play|0:classic d3:END
+TakeTrick|END
 
 # Trick 6 (1 won with d5)
 Play|1:classic d4:END
 Play|2:classic cq:END
 Play|3:classic hj:END
 Play|0:classic dk:END
+TakeTrick|END
 
 # Trick 7 (0 won with dk)
 Play|0:classic dq:END
 Play|1:classic sq:END
 Play|2:classic c3:END
 Play|3:classic h2:END
+TakeTrick|END
 
 # Trick 8 (0 won with dq)
 Play|0:classic dj:END
 Play|1:classic sj:END
 Play|2:classic cj:END
 Play|3:classic h3:END
+TakeTrick|END
 
 # Trick 9 (0 won with dj)
 Play|0:classic d10:END
 Play|1:classic s10:END
 Play|2:classic c10:END
 Play|3:classic h10:END
+TakeTrick|END
 
 # Trick 10 (0 won with d10)
 Play|0:classic d9:END
 Play|1:classic s9:END
 Play|2:classic c9:END
 Play|3:classic h9:END
+TakeTrick|END
 
 # Trick 11 (0 won with d9)
 Play|0:classic d8:END
 Play|1:classic s8:END
 Play|2:classic c8:END
 Play|3:classic h8:END
+TakeTrick|END
 
 # Trick 12 (0 won with d8)
 Play|0:classic d7:END
 Play|1:classic s7:END
 Play|2:classic c7:END
 Play|3:classic h7:END
+TakeTrick|END
 
 # Trick 13 (0 won with d7)
 Play|0:classic d6:END
 Play|1:classic s6:END
 Play|2:classic c6:END
 Play|3:classic h6:END
+TakeTrick|END
 
 # Score Phase (ready)
 Ready|2:END
@@ -138,78 +145,91 @@ Play|0:classic c2:END
 Play|1:classic d2:END
 Play|2:classic d4:END
 Play|3:classic s2:END
+TakeTrick|END
 
 # Trick 2
 Play|0:classic c3:END
 Play|1:classic d3:END
 Play|2:classic h3:END
 Play|3:classic s3:END
+TakeTrick|END
 
 # Trick 3
 Play|0:classic c4:END
 Play|1:classic s4:END
 Play|2:classic h2:END
 Play|3:classic h4:END
+TakeTrick|END
 
 # Trick 4
 Play|0:classic c5:END
 Play|1:classic d5:END
 Play|2:classic h5:END
 Play|3:classic s5:END
+TakeTrick|END
 
 # Trick 5
 Play|0:classic c6:END
 Play|1:classic d6:END
 Play|2:classic h6:END
 Play|3:classic s6:END
+TakeTrick|END
 
 # Trick 6
 Play|0:classic c7:END
 Play|1:classic d7:END
 Play|2:classic h7:END
 Play|3:classic s7:END
+TakeTrick|END
 
 # Trick 7
 Play|0:classic c8:END
 Play|1:classic d8:END
 Play|2:classic h8:END
 Play|3:classic s8:END
+TakeTrick|END
 
 # Trick 8
 Play|0:classic c9:END
 Play|1:classic d9:END
 Play|2:classic h9:END
 Play|3:classic s9:END
+TakeTrick|END
 
 # Trick 9
 Play|0:classic c1:END
 Play|1:classic d1:END
 Play|2:classic h1:END
 Play|3:classic s1:END
+TakeTrick|END
 
 # Trick 10
 Play|0:classic c10:END
 Play|1:classic d10:END
 Play|2:classic h10:END
 Play|3:classic s10:END
+TakeTrick|END
 
 # Trick 11
 Play|0:classic cj:END
 Play|1:classic dj:END
 Play|2:classic hj:END
 Play|3:classic sj:END
+TakeTrick|END
 
 # Trick 12
 Play|0:classic cq:END
 Play|1:classic dq:END
 Play|2:classic hq:END
 Play|3:classic sq:END
+TakeTrick|END
 
 # Trick 13
 Play|0:classic ck:END
 Play|1:classic dk:END
 Play|2:classic hk:END
 Play|3:classic sk:END
+TakeTrick|END
 
 # Score Phase (ready)
 Ready|2:END
@@ -242,78 +262,91 @@ Play|0:classic c2:END
 Play|1:classic d2:END
 Play|2:classic d4:END
 Play|3:classic s2:END
+TakeTrick|END
 
 # Trick 2
 Play|0:classic c3:END
 Play|1:classic d3:END
 Play|2:classic h3:END
 Play|3:classic s3:END
+TakeTrick|END
 
 # Trick 3
 Play|0:classic c4:END
 Play|1:classic s4:END
 Play|2:classic h2:END
 Play|3:classic h4:END
+TakeTrick|END
 
 # Trick 4
 Play|0:classic c5:END
 Play|1:classic d5:END
 Play|2:classic h5:END
 Play|3:classic s5:END
+TakeTrick|END
 
 # Trick 5
 Play|0:classic c6:END
 Play|1:classic d6:END
 Play|2:classic h6:END
 Play|3:classic s6:END
+TakeTrick|END
 
 # Trick 6
 Play|0:classic c7:END
 Play|1:classic d7:END
 Play|2:classic h7:END
 Play|3:classic s7:END
+TakeTrick|END
 
 # Trick 7
 Play|0:classic c8:END
 Play|1:classic d8:END
 Play|2:classic h8:END
 Play|3:classic s8:END
+TakeTrick|END
 
 # Trick 8
 Play|0:classic c9:END
 Play|1:classic d9:END
 Play|2:classic h9:END
 Play|3:classic s9:END
+TakeTrick|END
 
 # Trick 9
 Play|0:classic c1:END
 Play|1:classic d1:END
 Play|2:classic h1:END
 Play|3:classic s1:END
+TakeTrick|END
 
 # Trick 10
 Play|0:classic c10:END
 Play|1:classic d10:END
 Play|2:classic h10:END
 Play|3:classic s10:END
+TakeTrick|END
 
 # Trick 11
 Play|0:classic cj:END
 Play|1:classic dj:END
 Play|2:classic hj:END
 Play|3:classic sj:END
+TakeTrick|END
 
 # Trick 12
 Play|0:classic cq:END
 Play|1:classic dq:END
 Play|2:classic hq:END
 Play|3:classic sq:END
+TakeTrick|END
 
 # Trick 13
 Play|0:classic ck:END
 Play|1:classic dk:END
 Play|2:classic hk:END
 Play|3:classic sk:END
+TakeTrick|END
 
 # Score Phase (ready)
 Ready|2:END
@@ -334,78 +367,91 @@ Play|0:classic c2:END
 Play|1:classic d2:END
 Play|2:classic d4:END
 Play|3:classic s2:END
+TakeTrick|END
 
 # Trick 2
 Play|0:classic c3:END
 Play|1:classic d3:END
 Play|2:classic h3:END
 Play|3:classic s3:END
+TakeTrick|END
 
 # Trick 3
 Play|0:classic c4:END
 Play|1:classic s4:END
 Play|2:classic h2:END
 Play|3:classic h4:END
+TakeTrick|END
 
 # Trick 4
 Play|0:classic c5:END
 Play|1:classic d5:END
 Play|2:classic h5:END
 Play|3:classic s5:END
+TakeTrick|END
 
 # Trick 5
 Play|0:classic c6:END
 Play|1:classic d6:END
 Play|2:classic h6:END
 Play|3:classic s6:END
+TakeTrick|END
 
 # Trick 6
 Play|0:classic c7:END
 Play|1:classic d7:END
 Play|2:classic h7:END
 Play|3:classic s7:END
+TakeTrick|END
 
 # Trick 7
 Play|0:classic c8:END
 Play|1:classic d8:END
 Play|2:classic h8:END
 Play|3:classic s8:END
+TakeTrick|END
 
 # Trick 8
 Play|0:classic c9:END
 Play|1:classic d9:END
 Play|2:classic h9:END
 Play|3:classic s9:END
+TakeTrick|END
 
 # Trick 9
 Play|0:classic c1:END
 Play|1:classic d1:END
 Play|2:classic h1:END
 Play|3:classic s1:END
+TakeTrick|END
 
 # Trick 10
 Play|0:classic c10:END
 Play|1:classic d10:END
 Play|2:classic h10:END
 Play|3:classic s10:END
+TakeTrick|END
 
 # Trick 11
 Play|0:classic cj:END
 Play|1:classic dj:END
 Play|2:classic hj:END
 Play|3:classic sj:END
+TakeTrick|END
 
 # Trick 12
 Play|0:classic cq:END
 Play|1:classic dq:END
 Play|2:classic hq:END
 Play|3:classic sq:END
+TakeTrick|END
 
 # Trick 13
 Play|0:classic ck:END
 Play|1:classic dk:END
 Play|2:classic hk:END
 Play|3:classic sk:END
+TakeTrick|END
 
 # Score Phase (ready)
 Ready|2:END
@@ -438,77 +484,90 @@ Play|0:classic c2:END
 Play|1:classic d2:END
 Play|2:classic d4:END
 Play|3:classic s2:END
+TakeTrick|END
 
 # Trick 2
 Play|0:classic c3:END
 Play|1:classic d3:END
 Play|2:classic h3:END
 Play|3:classic s3:END
+TakeTrick|END
 
 # Trick 3
 Play|0:classic c4:END
 Play|1:classic s4:END
 Play|2:classic h2:END
 Play|3:classic h4:END
+TakeTrick|END
 
 # Trick 4
 Play|0:classic c5:END
 Play|1:classic d5:END
 Play|2:classic h5:END
 Play|3:classic s5:END
+TakeTrick|END
 
 # Trick 5
 Play|0:classic c6:END
 Play|1:classic d6:END
 Play|2:classic h6:END
 Play|3:classic s6:END
+TakeTrick|END
 
 # Trick 6
 Play|0:classic c7:END
 Play|1:classic d7:END
 Play|2:classic h7:END
 Play|3:classic s7:END
+TakeTrick|END
 
 # Trick 7
 Play|0:classic c8:END
 Play|1:classic d8:END
 Play|2:classic h8:END
 Play|3:classic s8:END
+TakeTrick|END
 
 # Trick 8
 Play|0:classic c9:END
 Play|1:classic d9:END
 Play|2:classic h9:END
 Play|3:classic s9:END
+TakeTrick|END
 
 # Trick 9
 Play|0:classic c1:END
 Play|1:classic d1:END
 Play|2:classic h1:END
 Play|3:classic s1:END
+TakeTrick|END
 
 # Trick 10
 Play|0:classic c10:END
 Play|1:classic d10:END
 Play|2:classic h10:END
 Play|3:classic s10:END
+TakeTrick|END
 
 # Trick 11
 Play|0:classic cj:END
 Play|1:classic dj:END
 Play|2:classic hj:END
 Play|3:classic sj:END
+TakeTrick|END
 
 # Trick 12
 Play|0:classic cq:END
 Play|1:classic dq:END
 Play|2:classic hq:END
 Play|3:classic sq:END
+TakeTrick|END
 
 # Trick 13
 Play|0:classic ck:END
 Play|1:classic dk:END
 Play|2:classic hk:END
 Play|3:classic sk:END
+TakeTrick|END
 
 # Game is over!
