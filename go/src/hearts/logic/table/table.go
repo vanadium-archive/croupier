@@ -180,7 +180,6 @@ func (t *Table) ValidPlayLogic(c *card.Card, playerIndex int) string {
 			return "Must follow suit"
 		}
 	}
-	return "Invalid play"
 }
 
 // Returns true if all players have their initial dealt hands
