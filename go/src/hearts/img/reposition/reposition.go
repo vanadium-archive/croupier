@@ -7,8 +7,6 @@
 package reposition
 
 import (
-	"time"
-
 	"hearts/img/coords"
 	"hearts/img/direction"
 	"hearts/img/staticimg"
@@ -128,7 +126,7 @@ func DetermineTablePassPosition(c *card.Card, cardNum, playerIndex int, u *uista
 	dropTargetDim := u.DropTargets[playerIndex].GetDimensions()
 	targetCenter := dropTargetXY.PlusVec(dropTargetDim.DividedBy(2))
 	xPlayerBlockSize := 2*u.PlayerIconDim.X + u.Padding
-	yPlayerBlockSize := u.TopPadding + 2*u.TableCardDim.Y + 3*u.Padding + u.PlayerIconDim.Y
+	yPlayerBlockSize := u.TopPadding + u.TableCardDim.Y + 3*u.Padding + u.PlayerIconDim.Y
 	blockEdge := targetCenter.MinusVec(cardDim.Times(1.5).Plus(u.Padding))
 	var destination *coords.Vec
 	switch playerIndex {
@@ -143,7 +141,7 @@ func DetermineTablePassPosition(c *card.Card, cardNum, playerIndex int, u *uista
 	case 2:
 		destination = coords.MakeVec(
 			blockEdge.X+float32(cardNum)*(u.Padding+cardDim.X),
-			yPlayerBlockSize)
+			yPlayerBlockSize+u.Padding)
 	case 3:
 		destination = coords.MakeVec(
 			u.WindowSize.X-xPlayerBlockSize-u.TableCardDim.X,
@@ -250,7 +248,7 @@ func AnimateHandCardPlay(ch chan bool, animCard *card.Card, u *uistate.UIState) 
 
 // Animation to bring in the play slot when app is in the hand view and it is the player's turn
 func AnimateInPlay(u *uistate.UIState) {
-	imgs := []*staticimg.StaticImg{u.BackgroundImgs[0], u.DropTargets[0]}
+	imgs := append(u.DropTargets, u.BackgroundImgs[0])
 	for _, i := range imgs {
 		dims := i.GetDimensions()
 		to := coords.MakeVec(i.GetCurrent().X, i.GetCurrent().Y+u.WindowSize.Y/3+u.TopPadding)
@@ -388,6 +386,11 @@ func AnimateTableCardTakeTrick(cards []*card.Card, dir direction.Direction, quit
 			SwitchOnChan(c, quit, func() {}, u)
 		}
 	}
+}
+
+func AnimateHandCardTakeTrick(ch chan bool, c *card.Card, u *uistate.UIState) {
+	destination := c.GetDimensions().Times(-1)
+	animateCardMovement(ch, c, destination, c.GetDimensions(), u)
 }
 
 func animateImageMovement(c chan bool, animImage *staticimg.StaticImg, endPos, endDim *coords.Vec, u *uistate.UIState) {
@@ -573,7 +576,6 @@ func SwitchOnChan(animChan, quitChan chan bool, f func(), u *uistate.UIState) {
 	case <-quitChan:
 		RemoveAnimChan(quitChan, u)
 		f()
-		<-time.After(time.Second)
 		return
 	case <-animChan:
 		RemoveAnimChan(quitChan, u)

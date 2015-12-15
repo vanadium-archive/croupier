@@ -25,8 +25,29 @@ import (
 	"golang.org/x/mobile/exp/sprite"
 )
 
+func ReloadView(u *uistate.UIState) {
+	switch u.CurView {
+	case uistate.Discovery:
+		LoadDiscoveryView(u)
+	case uistate.Arrange:
+		LoadArrangeView(u)
+	case uistate.Table:
+		LoadTableView(u)
+	case uistate.Pass:
+		LoadPassView(u)
+	case uistate.Take:
+		LoadTakeView(u)
+	case uistate.Play:
+		LoadPlayView(u)
+	case uistate.Split:
+		LoadSplitView(true, u)
+	}
+}
+
 // Arrange view: For seating players
 func LoadArrangeView(u *uistate.UIState) {
+	u.M.Lock()
+	fmt.Println("ARRANGE LOCKED")
 	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)
@@ -67,11 +88,15 @@ func LoadArrangeView(u *uistate.UIState) {
 			u.Eng.SetSubTex(u.Buttons["start"].GetNode(), emptyTex)
 		}
 	}
+	u.M.Unlock()
+	fmt.Println("UNLOCKED")
 }
 
 // Waiting view: Displays the word "Waiting". To be displayed when players are waiting for a new round to be dealt
 // TODO(emshack): Integrate this with Arrange view and Score view so that a separate screen is not necessary
 func LoadWaitingView(u *uistate.UIState) {
+	u.M.Lock()
+	fmt.Println("WAITING LOCKED")
 	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)
@@ -82,10 +107,14 @@ func LoadWaitingView(u *uistate.UIState) {
 	for _, img := range textImgs {
 		u.BackgroundImgs = append(u.BackgroundImgs, img)
 	}
+	u.M.Unlock()
+	fmt.Println("UNLOCKED")
 }
 
 // Discovery view: Displays a menu of possible games to join
 func LoadDiscoveryView(u *uistate.UIState) {
+	u.M.Lock()
+	fmt.Println("DISCOVERY LOCKED")
 	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)
@@ -126,10 +155,14 @@ func LoadDiscoveryView(u *uistate.UIState) {
 			}
 		}
 	}
+	u.M.Unlock()
+	fmt.Println("UNLOCKED")
 }
 
 // Table View: Displays the table. Intended for public devices
 func LoadTableView(u *uistate.UIState) {
+	u.M.Lock()
+	fmt.Println("TABLE LOCKED")
 	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)
@@ -336,7 +369,6 @@ func LoadTableView(u *uistate.UIState) {
 				texture.PopulateCardImage(c, u)
 				c.SetBackDisplay(u.Eng)
 				pos := reposition.DetermineTablePassPosition(c, i, p.GetPlayerIndex(), u)
-				c.SetInitial(pos)
 				c.Move(pos, u.TableCardDim, u.Eng)
 				u.TableCards = append(u.TableCards, c)
 			}
@@ -346,6 +378,8 @@ func LoadTableView(u *uistate.UIState) {
 		addDebugBar(u)
 	}
 	reposition.SetTableDropColors(u)
+	u.M.Unlock()
+	fmt.Println("UNLOCKED")
 }
 
 // Decides which view of the player's hand to load based on what steps of the round they have completed
@@ -362,6 +396,8 @@ func LoadPassOrTakeOrPlay(u *uistate.UIState) {
 
 // Score View: Shows current player standings at the end of every round, including the end of the game
 func LoadScoreView(roundScores, winners []int, u *uistate.UIState) {
+	u.M.Lock()
+	fmt.Println("SCORE LOCKED")
 	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)
@@ -370,10 +406,14 @@ func LoadScoreView(roundScores, winners []int, u *uistate.UIState) {
 	addScoreViewHeaderText(u)
 	addPlayerScores(roundScores, u)
 	addScoreButton(len(winners) > 0, u)
+	u.M.Unlock()
+	fmt.Println("UNLOCKED")
 }
 
 // Pass View: Shows player's hand and allows them to pass cards
 func LoadPassView(u *uistate.UIState) {
+	u.M.Lock()
+	fmt.Println("PASS LOCKED")
 	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)
@@ -386,10 +426,14 @@ func LoadPassView(u *uistate.UIState) {
 		addDebugBar(u)
 	}
 	reposition.AnimateInPass(u)
+	u.M.Unlock()
+	fmt.Println("UNLOCKED")
 }
 
 // Take View: Shows player's hand and allows them to take the cards that have been passed to them
 func LoadTakeView(u *uistate.UIState) {
+	u.M.Lock()
+	fmt.Println("TAKE LOCKED")
 	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)
@@ -403,10 +447,14 @@ func LoadTakeView(u *uistate.UIState) {
 	}
 	// animate in take bar
 	reposition.AnimateInTake(u)
+	u.M.Unlock()
+	fmt.Println("UNLOCKED")
 }
 
 // Play View: Shows player's hand and allows them to play cards
 func LoadPlayView(u *uistate.UIState) {
+	u.M.Lock()
+	fmt.Println("PLAY LOCKED")
 	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)
@@ -427,10 +475,16 @@ func LoadPlayView(u *uistate.UIState) {
 		} else if u.CurTable.AllDonePassing() {
 			reposition.AnimateInPlay(u)
 		}
+	} else if u.CurTable.GetTrickRecipient() == u.CurPlayerIndex {
+		reposition.AnimateInPlay(u)
 	}
+	u.M.Unlock()
+	fmt.Println("UNLOCKED")
 }
 
 func LoadSplitView(reloading bool, u *uistate.UIState) {
+	u.M.Lock()
+	fmt.Println("SPLIT LOCKED")
 	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)
@@ -454,6 +508,8 @@ func LoadSplitView(reloading bool, u *uistate.UIState) {
 			reposition.SwitchOnChan(ch, quit, onDone, u)
 		}()
 	}
+	u.M.Unlock()
+	fmt.Println("UNLOCKED")
 }
 
 func ChangePlayMessage(message string, u *uistate.UIState) {
@@ -694,10 +750,25 @@ func addPlaySlot(u *uistate.UIState) {
 	u.BackgroundImgs = append(u.BackgroundImgs,
 		texture.MakeImgWithoutAlt(blueRectImg, blueRectPos, blueRectDim, u))
 	// adding drop target
-	dropTargetImg := u.Texs["trickDrop.png"]
-	dropTargetPos := coords.MakeVec(u.WindowSize.X/2-u.CardDim.X/2, -u.CardDim.Y-3*u.Padding)
-	u.DropTargets = append(u.DropTargets,
-		texture.MakeImgWithoutAlt(dropTargetImg, dropTargetPos, u.CardDim, u))
+	if u.CurTable.GetTrickRecipient() == u.CurPlayerIndex {
+		var emptyTex sprite.SubTex
+		dropTargetImg := emptyTex
+		blockStartX := (u.WindowSize.X - float32(u.NumPlayers)*(u.CardDim.X+u.Padding) + u.Padding) / 2
+		for i, c := range u.CurTable.GetTrick() {
+			dropTargetPos := coords.MakeVec(blockStartX+float32(i)*(u.CardDim.X+u.Padding), -u.CardDim.Y-3*u.Padding)
+			d := texture.MakeImgWithoutAlt(dropTargetImg, dropTargetPos, u.CardDim, u)
+			texture.PopulateCardImage(c, u)
+			c.Move(dropTargetPos, u.CardDim, u.Eng)
+			d.SetCardHere(c)
+			u.TableCards = append(u.TableCards, c)
+			u.DropTargets = append(u.DropTargets, d)
+		}
+	} else {
+		dropTargetImg := u.Texs["trickDrop.png"]
+		dropTargetPos := coords.MakeVec(u.WindowSize.X/2-u.CardDim.X/2, -u.CardDim.Y-3*u.Padding)
+		u.DropTargets = append(u.DropTargets,
+			texture.MakeImgWithoutAlt(dropTargetImg, dropTargetPos, u.CardDim, u))
+	}
 }
 
 func addGrayPassBar(u *uistate.UIState) {

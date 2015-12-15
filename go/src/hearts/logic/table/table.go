@@ -243,12 +243,19 @@ func (t *Table) RoundOver() bool {
 }
 
 // Calculates who should take the cards in the current trick
+// Returns -1 if trick is incomplete
 func (t *Table) GetTrickRecipient() int {
+	if t.firstPlayer < 0 || t.firstPlayer >= len(t.players) || t.trick[t.firstPlayer] == nil {
+		return -1
+	}
 	trickSuit := t.trick[t.firstPlayer].GetSuit()
 	highestCardFace := card.Two
 	highestIndex := -1
 	for i := 0; i < len(t.trick); i++ {
 		curCard := t.trick[i]
+		if curCard == nil {
+			return -1
+		}
 		if curCard.GetSuit() == trickSuit && curCard.GetFace() >= highestCardFace {
 			highestCardFace = curCard.GetFace()
 			highestIndex = i

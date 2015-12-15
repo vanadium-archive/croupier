@@ -157,8 +157,10 @@ func handleGameUpdate(changes []nosql.WatchChange, u *uistate.UIState) {
 func onPlayerNum(key, value string, u *uistate.UIState) {
 	userID, _ := strconv.Atoi(strings.Split(key, "/")[2])
 	playerNum, _ := strconv.Atoi(value)
-	u.PlayerData[playerNum] = userID
-	u.CurTable.GetPlayers()[playerNum].SetDoneScoring(true)
+	if playerNum >= 0 && playerNum < 4 {
+		u.PlayerData[playerNum] = userID
+		u.CurTable.GetPlayers()[playerNum].SetDoneScoring(true)
+	}
 	if playerNum == u.CurPlayerIndex && userID != UserID {
 		u.CurPlayerIndex = -1
 	}
@@ -216,7 +218,7 @@ func onPass(value string, u *uistate.UIState) {
 		quit := make(chan bool)
 		u.AnimChans = append(u.AnimChans, quit)
 		reposition.AnimateTableCardPass(curCards, receivingPlayer, quit, u)
-		reposition.SetTableDropColors(u)
+		view.LoadTableView(u)
 	} else if u.CurView == uistate.Take {
 		if u.SequentialPhases {
 			if u.CurTable.AllDonePassing() {
@@ -263,7 +265,7 @@ func onTake(value string, u *uistate.UIState) {
 		quit := make(chan bool)
 		u.AnimChans = append(u.AnimChans, quit)
 		reposition.AnimateTableCardTake(passed, u.CurTable.GetPlayers()[playerInt], quit, u)
-		reposition.SetTableDropColors(u)
+		view.LoadTableView(u)
 	}
 }
 

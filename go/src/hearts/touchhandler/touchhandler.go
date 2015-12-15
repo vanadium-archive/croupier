@@ -45,6 +45,7 @@ func OnTouch(t touch.Event, u *uistate.UIState) {
 			if numTaps == 5 {
 				fmt.Println("TOGGLING DEBUG")
 				u.Debug = !u.Debug
+				view.ReloadView(u)
 				numTaps = 0
 			}
 		} else {
@@ -366,7 +367,7 @@ func endClickPass(t touch.Event, u *uistate.UIState) {
 				onDone := func() {
 					if !success {
 						fmt.Println("Invalid pass")
-					} else {
+					} else if u.CurView == uistate.Pass {
 						view.LoadTakeView(u)
 					}
 				}
@@ -419,7 +420,9 @@ func endClickTake(t touch.Event, c *card.Card, u *uistate.UIState) {
 				if !success {
 					fmt.Println("Invalid take")
 				} else {
-					view.LoadPlayView(u)
+					if u.CurView == uistate.Take {
+						view.LoadPlayView(u)
+					}
 				}
 			}
 			reposition.SwitchOnChan(ch, quit, onDone, u)
@@ -431,6 +434,29 @@ func beginClickPlay(t touch.Event, u *uistate.UIState) {
 	u.CurCard = findClickedCard(t, u)
 	if u.CurCard != nil {
 		reposition.BringNodeToFront(u.CurCard.GetNode(), u)
+	}
+	takenCard := findClickedTableCard(t, u)
+	if takenCard != nil {
+		removeCardFromTarget(takenCard, u)
+		reposition.BringNodeToFront(takenCard.GetNode(), u)
+		ch := make(chan bool)
+		reposition.AnimateHandCardTakeTrick(ch, takenCard, u)
+		quit := make(chan bool)
+		u.AnimChans = append(u.AnimChans, quit)
+		go func() {
+			onDone := func() {
+				doneTaking := len(u.DropTargets) == 4
+				for _, d := range u.DropTargets {
+					if d.GetCardHere() != nil {
+						doneTaking = false
+					}
+				}
+				if doneTaking {
+					sync.LogTakeTrick(u)
+				}
+			}
+			reposition.SwitchOnChan(ch, quit, onDone, u)
+		}()
 	}
 	buttonList := findClickedButton(t, u)
 	for _, b := range buttonList {
@@ -461,7 +487,11 @@ func endClickPlay(t touch.Event, c *card.Card, u *uistate.UIState) {
 		quit := make(chan bool)
 		u.AnimChans = append(u.AnimChans, quit)
 		go func() {
-			onDone := func() { view.LoadPlayView(u) }
+			onDone := func() {
+				if u.CurView == uistate.Play {
+					view.LoadPlayView(u)
+				}
+			}
 			reposition.SwitchOnChan(ch, quit, onDone, u)
 		}()
 	} else {
@@ -489,7 +519,9 @@ func beginClickSplit(t touch.Event, u *uistate.UIState) {
 			go func() {
 				onDone := func() {
 					u.SwitchingViews = false
-					view.LoadPlayView(u)
+					if u.CurView == uistate.Split {
+						view.LoadPlayView(u)
+					}
 				}
 				reposition.SwitchOnChan(ch, quit, onDone, u)
 			}()
@@ -568,6 +600,18 @@ func findClickedCard(t touch.Event, u *uistate.UIState) *card.Card {
 	// i goes from the end backwards so that it checks cards displayed on top of other cards first
 	for i := len(u.Cards) - 1; i >= 0; i-- {
 		c := u.Cards[i]
+		if touchingCard(t, c, u) {
+			return c
+		}
+	}
+	return nil
+}
+
+// returns a card object if a card was clicked, or nil if no card was clicked
+func findClickedTableCard(t touch.Event, u *uistate.UIState) *card.Card {
+	// i goes from the end backwards so that it checks cards displayed on top of other cards first
+	for i := len(u.TableCards) - 1; i >= 0; i-- {
+		c := u.TableCards[i]
 		if touchingCard(t, c, u) {
 			return c
 		}
