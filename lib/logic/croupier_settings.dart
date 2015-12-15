@@ -95,10 +95,10 @@ class RandomSettings {
     'Diamond.png',
     'Heart.png',
     'Spade.png',
-    'player0.jpeg',
-    'player1.jpeg',
-    'player2.jpeg',
-    'player3.jpeg',
+    'cat.png',
+    'android.png',
+    'man.png',
+    'woman.png',
   ];
   static final List names = [
     'Anne',

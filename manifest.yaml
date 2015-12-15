@@ -232,6 +232,10 @@ assets:
   - images/avatars/player1.jpeg
   - images/avatars/player2.jpeg
   - images/avatars/player3.jpeg
+  - images/avatars/cat.png
+  - images/avatars/android.png
+  - images/avatars/man.png
+  - images/avatars/woman.png
   - images/splash/background.png
   - images/splash/flutter.png
   - images/splash/vanadium.png
