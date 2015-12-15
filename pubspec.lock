@@ -174,15 +174,15 @@ packages:
   shelf:
     description: shelf
     source: hosted
-    version: "0.6.4+2"
+    version: "0.6.4+3"
   shelf_static:
     description: shelf_static
     source: hosted
-    version: "0.2.3+1"
+    version: "0.2.3+2"
   shelf_web_socket:
     description: shelf_web_socket
     source: hosted
-    version: "0.0.1+4"
+    version: "0.0.1+5"
   sky_engine:
     description: sky_engine
     source: hosted
