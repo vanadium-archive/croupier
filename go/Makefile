@@ -46,24 +46,24 @@ vet: src/golang.org/x/mobile/cmd/gomobile
 	jiri go vet hearts/...
 
 # This project depends on gomobile, which is retrieved by `go get`.
-# Note: gomobile is gotten to the src/golang.org area because of how this
-# Makefile sets its GOPATH, which makes it easier to delete.
+# Note: Since this Makefile prepends "./go" to the GOPATH, gomobile will be
+# installed in go/src/golang.org, which makes it easier to delete.
 src/golang.org/x/mobile/cmd/gomobile:
 	go get golang.org/x/mobile/cmd/gomobile
 
 # Builds the Hearts binary.
 bin/hearts: $(go_files) src/golang.org/x/mobile/cmd/gomobile | fmt
-	jiri go build -a -o $@ hearts
+	jiri go build -o $@ hearts
 
-# It seems that gomobile expects assets to be part of the working directory.
-# This symlink copies the src/hearts/assets folder down.
+# gomobile resolves assets through the working directory.
+# This symlink points ./assets to the assets in ./src/hearts/assets.
 assets:
 	ln -sf src/hearts/assets assets
 
 .PHONY: hearts
 hearts: bin/hearts assets credentials
 	bin/hearts \
-    --v23.tcp.address=:$(syncbase_port) \
+	--v23.tcp.address=:$(syncbase_port) \
 	--v23.credentials=credentials
 
 .PHONY: clean
