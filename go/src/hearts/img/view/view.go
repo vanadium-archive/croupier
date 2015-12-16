@@ -47,7 +47,7 @@ func ReloadView(u *uistate.UIState) {
 // Arrange view: For seating players
 func LoadArrangeView(u *uistate.UIState) {
 	u.M.Lock()
-	fmt.Println("ARRANGE LOCKED")
+	defer u.M.Unlock()
 	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)
@@ -88,15 +88,13 @@ func LoadArrangeView(u *uistate.UIState) {
 			u.Eng.SetSubTex(u.Buttons["start"].GetNode(), emptyTex)
 		}
 	}
-	u.M.Unlock()
-	fmt.Println("UNLOCKED")
 }
 
 // Waiting view: Displays the word "Waiting". To be displayed when players are waiting for a new round to be dealt
 // TODO(emshack): Integrate this with Arrange view and Score view so that a separate screen is not necessary
 func LoadWaitingView(u *uistate.UIState) {
 	u.M.Lock()
-	fmt.Println("WAITING LOCKED")
+	defer u.M.Unlock()
 	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)
@@ -107,14 +105,12 @@ func LoadWaitingView(u *uistate.UIState) {
 	for _, img := range textImgs {
 		u.BackgroundImgs = append(u.BackgroundImgs, img)
 	}
-	u.M.Unlock()
-	fmt.Println("UNLOCKED")
 }
 
 // Discovery view: Displays a menu of possible games to join
 func LoadDiscoveryView(u *uistate.UIState) {
 	u.M.Lock()
-	fmt.Println("DISCOVERY LOCKED")
+	defer u.M.Unlock()
 	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)
@@ -155,14 +151,12 @@ func LoadDiscoveryView(u *uistate.UIState) {
 			}
 		}
 	}
-	u.M.Unlock()
-	fmt.Println("UNLOCKED")
 }
 
 // Table View: Displays the table. Intended for public devices
 func LoadTableView(u *uistate.UIState) {
 	u.M.Lock()
-	fmt.Println("TABLE LOCKED")
+	defer u.M.Unlock()
 	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)
@@ -378,8 +372,6 @@ func LoadTableView(u *uistate.UIState) {
 		addDebugBar(u)
 	}
 	reposition.SetTableDropColors(u)
-	u.M.Unlock()
-	fmt.Println("UNLOCKED")
 }
 
 // Decides which view of the player's hand to load based on what steps of the round they have completed
@@ -397,7 +389,7 @@ func LoadPassOrTakeOrPlay(u *uistate.UIState) {
 // Score View: Shows current player standings at the end of every round, including the end of the game
 func LoadScoreView(roundScores, winners []int, u *uistate.UIState) {
 	u.M.Lock()
-	fmt.Println("SCORE LOCKED")
+	defer u.M.Unlock()
 	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)
@@ -406,14 +398,12 @@ func LoadScoreView(roundScores, winners []int, u *uistate.UIState) {
 	addScoreViewHeaderText(u)
 	addPlayerScores(roundScores, u)
 	addScoreButton(len(winners) > 0, u)
-	u.M.Unlock()
-	fmt.Println("UNLOCKED")
 }
 
 // Pass View: Shows player's hand and allows them to pass cards
 func LoadPassView(u *uistate.UIState) {
 	u.M.Lock()
-	fmt.Println("PASS LOCKED")
+	defer u.M.Unlock()
 	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)
@@ -426,14 +416,12 @@ func LoadPassView(u *uistate.UIState) {
 		addDebugBar(u)
 	}
 	reposition.AnimateInPass(u)
-	u.M.Unlock()
-	fmt.Println("UNLOCKED")
 }
 
 // Take View: Shows player's hand and allows them to take the cards that have been passed to them
 func LoadTakeView(u *uistate.UIState) {
 	u.M.Lock()
-	fmt.Println("TAKE LOCKED")
+	defer u.M.Unlock()
 	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)
@@ -447,14 +435,12 @@ func LoadTakeView(u *uistate.UIState) {
 	}
 	// animate in take bar
 	reposition.AnimateInTake(u)
-	u.M.Unlock()
-	fmt.Println("UNLOCKED")
 }
 
 // Play View: Shows player's hand and allows them to play cards
 func LoadPlayView(u *uistate.UIState) {
 	u.M.Lock()
-	fmt.Println("PLAY LOCKED")
+	defer u.M.Unlock()
 	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)
@@ -478,13 +464,11 @@ func LoadPlayView(u *uistate.UIState) {
 	} else if u.CurTable.GetTrickRecipient() == u.CurPlayerIndex {
 		reposition.AnimateInPlay(u)
 	}
-	u.M.Unlock()
-	fmt.Println("UNLOCKED")
 }
 
 func LoadSplitView(reloading bool, u *uistate.UIState) {
 	u.M.Lock()
-	fmt.Println("SPLIT LOCKED")
+	defer u.M.Unlock()
 	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)
@@ -508,8 +492,6 @@ func LoadSplitView(reloading bool, u *uistate.UIState) {
 			reposition.SwitchOnChan(ch, quit, onDone, u)
 		}()
 	}
-	u.M.Unlock()
-	fmt.Println("UNLOCKED")
 }
 
 func ChangePlayMessage(message string, u *uistate.UIState) {
@@ -676,9 +658,9 @@ func getTurnText(u *uistate.UIState) string {
 		if u.CurTable.TrickOver() {
 			recipient := u.CurTable.GetTrickRecipient()
 			if recipient == u.CurPlayerIndex {
-				turnText = "Please take your trick"
+				turnText = ""
 			} else {
-				turnText = fmt.Sprintf("Waiting for %s to take the trick", uistate.GetName(recipient, u))
+				turnText = fmt.Sprintf("%s's trick", uistate.GetName(recipient, u))
 			}
 		} else {
 			turnText = "Waiting for other players"
@@ -731,8 +713,13 @@ func addPlayHeader(message string, beforeSplitAnimation bool, u *uistate.UIState
 		texture.MakeStringImgCenterAlign(message, color, color, true, center, scaler, maxWidth, u)...)
 	takeTrickImage := u.Texs["TakeTrickHandUnpressed.png"]
 	takeTrickAlt := u.Texs["TakeTrickHandPressed.png"]
-	takeTrickDim := coords.MakeVec(u.CardDim.X, u.CardDim.Y/2)
-	takeTrickPos := coords.MakeVec(u.Padding, headerPos.Y-takeTrickDim.Y-u.Padding)
+	takeTrickDim := coords.MakeVec(3*u.CardDim.X/2, 3*u.CardDim.Y/4)
+	takeTrickPos := headerDimensions.MinusVec(takeTrickDim).DividedBy(2)
+	if u.CurView == uistate.Play || beforeSplitAnimation {
+		takeTrickPos = coords.MakeVec(takeTrickPos.X, takeTrickPos.Y+u.TopPadding/2+headerPos.Y)
+	} else {
+		takeTrickPos = coords.MakeVec(takeTrickPos.X, takeTrickPos.Y+u.TopPadding/2+headerPos.Y-5)
+	}
 	display := (u.CurTable.TrickOver() && u.CurTable.GetTrickRecipient() == u.CurPlayerIndex)
 	u.Buttons["takeTrick"] = texture.MakeImgWithAlt(takeTrickImage, takeTrickAlt, takeTrickPos, takeTrickDim, true, u)
 	if !display {
@@ -816,16 +803,16 @@ func addGrayPassBar(u *uistate.UIState) {
 	numDrops := 3
 	dropXStart := (u.WindowSize.X - (float32(numDrops)*u.CardDim.X + (float32(numDrops)-1)*u.Padding)) / 2
 	dropImg := u.Texs["trickDrop.png"]
+	passDim := coords.MakeVec(3*u.CardDim.X/2, 2*u.CardDim.Y/3)
 	for i := 0; i < numDrops; i++ {
 		dropX := dropXStart + float32(i)*(u.Padding+u.CardDim.X)
-		dropPos := coords.MakeVec(dropX, topOfHand-u.Padding-u.WindowSize.Y-20)
+		dropPos := coords.MakeVec(dropX, topOfHand-2*u.Padding-u.WindowSize.Y-20-passDim.Y)
 		d := texture.MakeImgWithoutAlt(dropImg, dropPos, u.CardDim, u)
 		u.DropTargets = append(u.DropTargets, d)
 	}
 	passImg := u.Texs["PassUnpressed.png"]
 	passAlt := u.Texs["PassPressed.png"]
-	passDim := coords.MakeVec(2*u.CardDim.X, 2*u.CardDim.Y/3)
-	passPos := coords.MakeVec((u.WindowSize.X-passDim.X)/2, topOfHand-2*u.Padding-u.WindowSize.Y-20-passDim.Y)
+	passPos := coords.MakeVec((u.WindowSize.X-passDim.X)/2, topOfHand-2*u.Padding-u.WindowSize.Y-20-passDim.Y+u.CardDim.Y+u.Padding)
 	b := texture.MakeImgWithAlt(passImg, passAlt, passPos, passDim, true, u)
 	var emptyTex sprite.SubTex
 	u.Eng.SetSubTex(b.GetNode(), emptyTex)
@@ -868,15 +855,19 @@ func addGrayTakeBar(u *uistate.UIState) {
 	color := "Gray"
 	nameAltColor := "LBlue"
 	awaitingAltColor := "None"
-	center := coords.MakeVec(u.WindowSize.X/2, 20-u.WindowSize.Y)
+	center := coords.MakeVec(u.WindowSize.X/2, 50-u.WindowSize.Y)
+	if !display {
+		center = coords.MakeVec(center.X, center.Y-30)
+		name = "Take from " + name
+	}
 	scaler := float32(3)
 	maxWidth := grayBarDim.X - 2*u.Padding
 	u.Other = append(u.Other,
 		texture.MakeStringImgCenterAlign(name, color, nameAltColor, display, center, scaler, maxWidth, u)...)
-	center = coords.MakeVec(center.X, center.Y+30)
+	center = coords.MakeVec(center.X, center.Y-30)
 	scaler = float32(5)
 	u.Other = append(u.Other,
-		texture.MakeStringImgCenterAlign("Awaiting pass", color, awaitingAltColor, display, center, scaler, maxWidth, u)...)
+		texture.MakeStringImgCenterAlign("Awaiting pass from", color, awaitingAltColor, display, center, scaler, maxWidth, u)...)
 	// adding cards to take, if cards have been passed
 	if !display {
 		u.Cards = append(u.Cards, passedCards...)
@@ -884,6 +875,7 @@ func addGrayTakeBar(u *uistate.UIState) {
 }
 
 func moveTakeCards(u *uistate.UIState) {
+	topOfHand := u.WindowSize.Y - 5*(u.CardDim.Y+u.Padding) - (2 * u.Padding / 5) - u.BottomPadding
 	passedCards := make([]*card.Card, 0)
 	if u.SequentialPhases {
 		if u.CurTable.AllDonePassing() {
@@ -893,12 +885,18 @@ func moveTakeCards(u *uistate.UIState) {
 		passedCards = append(passedCards, u.CurTable.GetPlayers()[u.CurPlayerIndex].GetPassedTo()...)
 	}
 	if len(passedCards) > 0 {
+		takeImg := u.Texs["TakeUnpressed.png"]
+		takeAlt := u.Texs["TakePressed.png"]
+		takeDim := coords.MakeVec(3*u.CardDim.X/2, 2*u.CardDim.Y/3)
+		takePos := coords.MakeVec((u.WindowSize.X-takeDim.X)/2, topOfHand-2*u.Padding-u.WindowSize.Y-20-takeDim.Y+u.CardDim.Y+u.Padding)
+		b := texture.MakeImgWithAlt(takeImg, takeAlt, takePos, takeDim, true, u)
+		u.Buttons["take"] = b
 		topOfHand := u.WindowSize.Y - 5*(u.CardDim.Y+u.Padding) - (2 * u.Padding / 5) - u.BottomPadding
 		numCards := float32(3)
 		cardXStart := (u.WindowSize.X - (numCards*u.CardDim.X + (numCards-1)*u.Padding)) / 2
 		for i, c := range passedCards {
 			cardX := cardXStart + float32(i)*(u.Padding+u.CardDim.X)
-			cardPos := coords.MakeVec(cardX, topOfHand-u.Padding-u.WindowSize.Y-20)
+			cardPos := coords.MakeVec(cardX, topOfHand-2*u.Padding-u.WindowSize.Y-20-takeDim.Y)
 			c.Move(cardPos, u.CardDim, u.Eng)
 			reposition.RealignSuit(c.GetSuit(), c.GetInitial().Y, u)
 			// invisible drop target holding card

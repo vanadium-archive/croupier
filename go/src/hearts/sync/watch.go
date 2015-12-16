@@ -21,6 +21,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"os"
+	"time"
 	"v.io/v23/syncbase/nosql"
 )
 
@@ -97,6 +99,12 @@ func UpdateGame(u *uistate.UIState) {
 	if err != nil {
 		fmt.Println("WatchData error:", err)
 	}
+	file, err2 := os.OpenFile("/sdcard/test.txt", os.O_RDWR|os.O_APPEND|os.O_CREATE, 0666)
+	if err2 != nil {
+		fmt.Println("err2:", err2)
+	}
+	fmt.Fprintf(file, fmt.Sprintf("\n***NEW GAME: %d\n", u.GameID))
+	defer file.Close()
 	updateBlock := make([]nosql.WatchChange, 0)
 	for {
 		if updateExists := stream.Advance(); updateExists {
@@ -104,22 +112,33 @@ func UpdateGame(u *uistate.UIState) {
 			updateBlock = append(updateBlock, c)
 			if !c.Continued {
 				sort.Sort(updateSorter(updateBlock))
-				handleGameUpdate(updateBlock, u)
+				handleGameUpdate(file, updateBlock, u)
 				updateBlock = make([]nosql.WatchChange, 0)
 			}
 		}
 	}
 }
 
-func handleGameUpdate(changes []nosql.WatchChange, u *uistate.UIState) {
+func handleGameUpdate(file *os.File, changes []nosql.WatchChange, u *uistate.UIState) {
 	for _, c := range changes {
 		if c.ChangeType == nosql.PutChange {
 			key := c.Row
+			curTime := time.Now().UnixNano() / 1000000
 			var value []byte
 			if err := c.Value(&value); err != nil {
 				fmt.Println("Value error:", err)
 			}
 			valueStr := string(value)
+			fmt.Fprintf(file, fmt.Sprintf("key: %s\n", key))
+			fmt.Fprintf(file, fmt.Sprintf("value: %s\n", valueStr))
+			fmt.Fprintf(file, fmt.Sprintf("time: %v\n", curTime))
+			tmp := strings.Split(key, "/")
+			if len(tmp) == 3 {
+				keyTime, _ := strconv.ParseInt(strings.Split(tmp[2], "-")[0], 10, 64)
+				fmt.Fprintf(file, fmt.Sprintf("diff: %d milliseconds\n\n", curTime - keyTime))
+			} else {
+				fmt.Fprintf(file, "\n")
+			}
 			fmt.Println(key, valueStr)
 			keyType := strings.Split(key, "/")[1]
 			switch keyType {

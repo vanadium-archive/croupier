@@ -204,6 +204,9 @@ func AnimateHandCardTake(ch chan bool, animImages []*staticimg.StaticImg, u *uis
 // Animation to bring in the take slot
 func AnimateInTake(u *uistate.UIState) {
 	imgs := append(u.Other, u.DropTargets...)
+	if u.Buttons["take"] != nil {
+		imgs = append(imgs, u.Buttons["take"])
+	}
 	for _, i := range imgs {
 		dims := i.GetDimensions()
 		to := coords.MakeVec(i.GetCurrent().X, i.GetCurrent().Y+u.WindowSize.Y)
@@ -281,9 +284,9 @@ func AnimateInSplit(ch chan bool, u *uistate.UIState) {
 	tableImgs := make([]*staticimg.StaticImg, 0)
 	bannerImgs := make([]*staticimg.StaticImg, 0)
 	bannerImgs = append(bannerImgs, u.Other...)
+	bannerImgs = append(bannerImgs, u.Buttons["takeTrick"])
 	bannerImgs = append(bannerImgs, u.Buttons["toggleSplit"])
 	tableImgs = append(tableImgs, u.DropTargets...)
-	tableImgs = append(tableImgs, u.Buttons["takeTrick"])
 	tableImgs = append(tableImgs, u.BackgroundImgs[:u.NumPlayers]...)
 	for _, img := range tableImgs {
 		from := img.GetCurrent()
@@ -320,9 +323,9 @@ func AnimateOutSplit(ch chan bool, u *uistate.UIState) {
 	tableImgs := make([]*staticimg.StaticImg, 0)
 	bannerImgs := make([]*staticimg.StaticImg, 0)
 	bannerImgs = append(bannerImgs, u.Other...)
+	bannerImgs = append(bannerImgs, u.Buttons["takeTrick"])
 	bannerImgs = append(bannerImgs, u.Buttons["toggleSplit"])
 	tableImgs = append(tableImgs, u.DropTargets...)
-	tableImgs = append(tableImgs, u.Buttons["takeTrick"])
 	tableImgs = append(tableImgs, u.BackgroundImgs[:u.NumPlayers]...)
 	for _, img := range tableImgs {
 		from := img.GetCurrent()
@@ -388,9 +391,21 @@ func AnimateTableCardTakeTrick(cards []*card.Card, dir direction.Direction, quit
 	}
 }
 
-func AnimateHandCardTakeTrick(ch chan bool, c *card.Card, u *uistate.UIState) {
-	destination := c.GetDimensions().Times(-1)
-	animateCardMovement(ch, c, destination, c.GetDimensions(), u)
+func AnimateHandCardTakeTrick(ch chan bool, cards []*card.Card, u *uistate.UIState) {
+	imgs := append(u.DropTargets, u.BackgroundImgs[0])
+	for _, i := range imgs {
+		dims := i.GetDimensions()
+		to := coords.MakeVec(i.GetCurrent().X, i.GetCurrent().Y-u.WindowSize.Y/3-u.TopPadding)
+		AnimateImageNoChannel(i, to, dims, u)
+	}
+	for i, c := range cards {
+		destination := c.GetDimensions().Times(-1)
+		if i < len(cards) - 1 {
+			animateCardNoChannel(c, destination, c.GetDimensions(), u)
+		} else {
+			animateCardMovement(ch, c, destination, c.GetDimensions(), u)
+		}
+	}
 }
 
 func animateImageMovement(c chan bool, animImage *staticimg.StaticImg, endPos, endDim *coords.Vec, u *uistate.UIState) {
