@@ -58,20 +58,17 @@ class SolitaireGameComponentState
 
   Widget _makeDebugButtons() {
     if (config.game.debugMode == false) {
-      return new Flex([
+      return new Row([
         new Flexible(flex: 4, child: _makeButton('Quit', _quitGameCallback))
       ]);
     }
-    return new Container(
-        width: config.width,
-        child: new Flex([
-          new Flexible(
-              flex: 1, child: new Text('P${config.game.playerNumber}')),
-          new Flexible(flex: 5, child: _makeButton('Cheat', _cheatCallback)),
-          new Flexible(
-              flex: 5, child: _makeButton('End Round', _endRoundDebugCallback)),
-          new Flexible(flex: 4, child: _makeButton('Quit', _quitGameCallback))
-        ]));
+    return new Row([
+      new Flexible(flex: 1, child: new Text('P${config.game.playerNumber}')),
+      new Flexible(flex: 5, child: _makeButton('Cheat', _cheatCallback)),
+      new Flexible(
+          flex: 5, child: _makeButton('End Round', _endRoundDebugCallback)),
+      new Flexible(flex: 4, child: _makeButton('Quit', _quitGameCallback))
+    ]);
   }
 
   @override
@@ -206,11 +203,11 @@ class SolitaireGameComponentState
 
     return new Container(
         decoration: new BoxDecoration(backgroundColor: Colors.pink[500]),
-        child: new Flex([
+        child: new Column([
           new Text('Player ${game.playerNumber}'),
           _makeButton("Return to Lobby", _quitGameCallback),
           _makeDebugButtons()
-        ], direction: FlexDirection.vertical));
+        ]));
   }
 
   Widget showDeal() {
@@ -218,12 +215,10 @@ class SolitaireGameComponentState
 
     return new Container(
         decoration: new BoxDecoration(backgroundColor: Colors.pink[500]),
-        child: new Flex([
+        child: new Column([
           new Text('Player ${game.playerNumber}'),
           _makeButton('Deal', game.dealCardsUI),
           _makeDebugButtons()
-        ],
-            direction: FlexDirection.vertical,
-            justifyContent: FlexJustifyContent.spaceBetween));
+        ], justifyContent: FlexJustifyContent.spaceBetween));
   }
 }

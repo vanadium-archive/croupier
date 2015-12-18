@@ -237,24 +237,20 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
 
   Widget _makeDebugButtons() {
     if (config.game.debugMode == false) {
-      return new Flex([
+      return new Row([
         new Flexible(flex: 4, child: _makeButton('Quit', _quitGameCallback))
       ]);
     }
-    return new Container(
-        width: config.width,
-        child: new Flex([
-          new Flexible(
-              flex: 1, child: new Text('P${config.game.playerNumber}')),
-          new Flexible(
-              flex: 5,
-              child: _makeButton('Switch Player', _switchPlayersCallback)),
-          new Flexible(
-              flex: 5, child: _makeButton('Switch View', _switchViewCallback)),
-          new Flexible(
-              flex: 5, child: _makeButton('End Round', _endRoundDebugCallback)),
-          new Flexible(flex: 4, child: _makeButton('Quit', _quitGameCallback))
-        ]));
+    return new Row([
+      new Flexible(flex: 1, child: new Text('P${config.game.playerNumber}')),
+      new Flexible(
+          flex: 5, child: _makeButton('Switch Player', _switchPlayersCallback)),
+      new Flexible(
+          flex: 5, child: _makeButton('Switch View', _switchViewCallback)),
+      new Flexible(
+          flex: 5, child: _makeButton('End Round', _endRoundDebugCallback)),
+      new Flexible(flex: 4, child: _makeButton('Quit', _quitGameCallback))
+    ]);
   }
 
   @override
@@ -496,6 +492,8 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     CardCollectionComponent c = new CardCollectionComponent(
         cards, game.playerNumber == p, CardCollectionOrientation.suit,
         dragChildren: true, // Can drag, but may not have anywhere to drop
+        cardTapCallback: (logic_card.Card card) => (_makeGameMoveCallback(
+            card, game.cardCollections[p + HeartsGame.OFFSET_PLAY])),
         comparator: _compareCards,
         width: config.width,
         useKeys: true);
@@ -572,7 +570,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
           child: new Row([w, _makeButton("Return to Lobby", _quitGameCallback)],
               justifyContent: FlexJustifyContent.spaceAround),
           flex: 1),
-      new Flexible(child: new Row([_makeDebugButtons()]), flex: 1)
+      new Flexible(child: _makeDebugButtons(), flex: 1)
     ]);
   }
 
@@ -581,13 +579,11 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
 
     return new Container(
         decoration: new BoxDecoration(backgroundColor: Colors.pink[500]),
-        child: new Flex([
+        child: new Column([
           new Text('Player ${game.playerNumber}'),
           new Text('Waiting for Deal...'),
           _makeDebugButtons()
-        ],
-            direction: FlexDirection.vertical,
-            justifyContent: FlexJustifyContent.spaceBetween));
+        ], justifyContent: FlexJustifyContent.spaceBetween));
   }
 
   Widget _helpPassTake(
@@ -615,9 +611,18 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
         decoration: new BoxDecoration(backgroundColor: bgColor),
         padding: new EdgeDims.all(10.0),
         width: config.width,
-        child: new Flex(topCardWidgets,
+        child: new Row(topCardWidgets,
             justifyContent: FlexJustifyContent.spaceBetween));
     Widget combinedTopArea = new BlockBody([statusBar, topArea]);
+
+    List<logic_card.Card> emptyC;
+    if (c1.length == 0) {
+      emptyC = c1;
+    } else if (c2.length == 0) {
+      emptyC = c2;
+    } else {
+      emptyC = c3; // even if c3 is already filled, it will be replaced.
+    }
 
     Widget handArea = new CardCollectionComponent(
         hand, true, CardCollectionOrientation.suit,
@@ -626,6 +631,8 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
         width: config.width,
         acceptCallback: cb,
         acceptType: cb != null ? DropType.card : null,
+        cardTapCallback:
+            cb != null ? (logic_card.Card c) => cb(c, emptyC) : null,
         backgroundColor: Colors.grey[500],
         altColor: Colors.grey[700],
         useKeys: true);
@@ -637,11 +644,17 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
   }
 
   Widget _topCardWidget(List<logic_card.Card> cards, AcceptCb cb) {
+    HeartsGame game = config.game as HeartsGame;
+    List<logic_card.Card> passCards =
+        game.cardCollections[game.playerNumber + HeartsGame.OFFSET_PASS];
+
     Widget ccc = new CardCollectionComponent(
         cards, true, CardCollectionOrientation.show1,
         dragChildren: cb != null,
         acceptCallback: cb,
         acceptType: cb != null ? DropType.card : null,
+        cardTapCallback:
+            cb != null ? (logic_card.Card c) => cb(c, passCards) : null,
         backgroundColor: Colors.white,
         altColor: Colors.grey[200],
         useKeys: true);

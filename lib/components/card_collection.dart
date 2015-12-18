@@ -34,6 +34,7 @@ class CardCollectionComponent extends StatefulComponent {
   final bool faceUp;
   final AcceptCb acceptCallback;
   final bool dragChildren;
+  final component_card.TapCallback cardTapCallback;
   final DropType _acceptType;
   final Comparator<logic_card.Card> comparator;
   final double width;
@@ -52,6 +53,7 @@ class CardCollectionComponent extends StatefulComponent {
 
   CardCollectionComponent(this.cards, this.faceUp, this.orientation,
       {this.dragChildren: false,
+      this.cardTapCallback: null,
       DropType acceptType,
       this.acceptCallback: null,
       this.comparator: null,
@@ -316,6 +318,7 @@ class CardCollectionComponentState extends State<CardCollectionComponent> {
               !config.useKeys, // TODO(alexfandrianto): Is there a case where you want an invisible card and a key?
           useKey: config.useKeys,
           z: 0.0 + i,
+          tapCallback: config.cardTapCallback,
           animationType: config.animationType);
 
       cardComponents.add(c);

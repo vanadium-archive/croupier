@@ -13,6 +13,8 @@ enum CardAnimationType { NONE, NORMAL, LONG }
 
 enum CardUIType { CARD, ZCARD }
 
+typedef void TapCallback(logic_card.Card card);
+
 class GlobalCardKey extends widgets.GlobalKey {
   logic_card.Card card;
   CardUIType type;
@@ -66,6 +68,7 @@ class Card extends widgets.StatefulComponent {
   final double rotation;
   final bool useKey;
   final bool visible;
+  final TapCallback tapCallback;
   final CardAnimationType animationType;
   final double z;
 
@@ -76,6 +79,7 @@ class Card extends widgets.StatefulComponent {
       bool useKey: false,
       this.visible: true,
       CardAnimationType animationType,
+      this.tapCallback,
       this.z})
       : animationType = animationType ?? CardAnimationType.NONE,
         card = card,
@@ -123,14 +127,18 @@ class CardState extends widgets.State<Card> {
   }
 
   widgets.Widget build(widgets.BuildContext context) {
-    widgets.Widget image = new widgets.Opacity(
-        opacity: config.visible ? 1.0 : 0.0,
-        child: new widgets.Transform(
-            child: _imageFromCard(
-                config.card, config.faceUp, config.width, config.height),
-            transform:
-                new vector_math.Matrix4.identity().rotateZ(config.rotation),
-            alignment: new FractionalOffset(0.5, 0.5)));
+    widgets.Widget image = new widgets.GestureDetector(
+        onTap: config.tapCallback != null
+            ? () => config.tapCallback(config.card)
+            : null,
+        child: new widgets.Opacity(
+            opacity: config.visible ? 1.0 : 0.0,
+            child: new widgets.Transform(
+                child: _imageFromCard(
+                    config.card, config.faceUp, config.width, config.height),
+                transform:
+                    new vector_math.Matrix4.identity().rotateZ(config.rotation),
+                alignment: new FractionalOffset(0.5, 0.5))));
 
     return image;
   }
@@ -165,7 +173,7 @@ class ZCardState extends widgets.State<ZCard> {
     }
     _pointQueue.add(config.endingPosition);
     _performance = new ValuePerformance<Point>(
-        variable: new AnimatedValue<Point>(Point.origin, curve: Curves.ease),
+        variable: new AnimatedValue<Point>(Point.origin, curve: Curves.easeOut),
         duration: this.animationDuration);
     _performance.addStatusListener((PerformanceStatus status) {
       if (status == PerformanceStatus.completed) {
@@ -180,9 +188,9 @@ class ZCardState extends widgets.State<ZCard> {
       case CardAnimationType.NONE:
         return const Duration(milliseconds: 0);
       case CardAnimationType.NORMAL:
-        return const Duration(milliseconds: 250);
+        return const Duration(milliseconds: 200);
       case CardAnimationType.LONG:
-        return const Duration(milliseconds: 1500);
+        return const Duration(milliseconds: 1000);
       default:
         print("Unexpected animation type: ${config.animationType}");
         assert(false);

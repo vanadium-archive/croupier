@@ -4,7 +4,7 @@ packages:
   analyzer:
     description: analyzer
     source: hosted
-    version: "0.27.0"
+    version: "0.27.1"
   archive:
     description: archive
     source: hosted
@@ -88,7 +88,7 @@ packages:
   html:
     description: html
     source: hosted
-    version: "0.12.2"
+    version: "0.12.2+1"
   http_multi_server:
     description: http_multi_server
     source: hosted
@@ -100,7 +100,7 @@ packages:
   intl:
     description: intl
     source: hosted
-    version: "0.12.4+3"
+    version: "0.12.5"
   logging:
     description: logging
     source: hosted

@@ -44,7 +44,7 @@ class ProtoGameComponentState extends GameComponentState<ProtoGameComponent> {
 
     return new Container(
         decoration: new BoxDecoration(backgroundColor: Colors.pink[500]),
-        child: new Flex(cardCollections, direction: FlexDirection.vertical));
+        child: new Column(cardCollections));
   }
 
   void _makeGameMoveCallback(logic_card.Card card, List<logic_card.Card> dest) {
@@ -60,11 +60,11 @@ class ProtoGameComponentState extends GameComponentState<ProtoGameComponent> {
 
   Widget _makeDebugButtons() {
     if (config.game.debugMode == false) {
-      return new Flex([
+      return new Row([
         new Flexible(flex: 4, child: _makeButton('Quit', _quitGameCallback))
       ]);
     }
-    return new Flex([
+    return new Row([
       new Text('P${config.game.playerNumber}'),
       _makeButton('Switch View', _switchPlayersCallback),
       _makeButton('Quit', _quitGameCallback)
