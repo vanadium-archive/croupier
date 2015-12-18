@@ -22,6 +22,8 @@ import 'util.dart' as util;
 
 import 'dart:async';
 import 'dart:convert' show UTF8, JSON;
+import 'dart:io' show File, FileMode;
+import 'dart:math' as math;
 
 import 'package:syncbase/syncbase_client.dart'
     show SyncbaseDatabase, SyncbaseTable, WatchChange, WatchChangeTypes;
@@ -65,11 +67,24 @@ class LogWriter {
   SyncbaseTable tb;
   static final String tbName = util.tableNameGames;
 
+  // A file reference to track how Syncbase sync is going.
+  final File _diffFile =
+      new File('/data/data/org.chromium.mojo.shell/diffFile.txt');
+
   // The LogWriter takes a callback for watch updates, the list of users, and
   // the logPrefix to write at on table.
   LogWriter(this.updateCallback, this.users)
       : _cc = new CroupierClient.singleton() {
     _prepareLog();
+    _diffFileLog("=========Starting Log Writer=========");
+  }
+
+  Future _diffFileLog(String s, [DateTime other]) async {
+    DateTime now = new DateTime.now();
+    int diff = other != null ? now.difference(other).inMilliseconds : null;
+    String logStr = "${now.millisecondsSinceEpoch}\t${diff}\t${s}\n";
+    print(logStr);
+    await _diffFile.writeAsString(logStr, mode: FileMode.APPEND, flush: true);
   }
 
   Future _prepareLog() async {
@@ -90,6 +105,12 @@ class LogWriter {
 
   Future _onChange(String rowKey, String value, bool duringScan) async {
     String key = rowKey.replaceFirst("${this.logPrefix}/", "");
+    String timeStr = key.split("-")[0];
+    String front = timeStr.substring(0, 8);
+    String back = timeStr.substring(8);
+    int time = int.parse(front) * math.pow(10, back.length) + int.parse(back);
+    await _diffFileLog("Key: ${key} Value: ${value}",
+        new DateTime.fromMillisecondsSinceEpoch(time));
 
     if (_isProposalKey(key)) {
       if (value != null && !_acceptedProposals.contains(key) && !duringScan) {
