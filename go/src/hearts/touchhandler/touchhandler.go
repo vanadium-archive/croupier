@@ -311,7 +311,7 @@ func endClickPass(t touch.Event, u *uistate.UIState) {
 	if u.CurCard != nil {
 		if !dropCardOnTarget(u.CurCard, t, u) {
 			// check to see if card was removed from a drop target
-			removeCardFromTarget(u.CurCard, u)
+			sync.RemoveCardFromTarget(u.CurCard, u)
 			// add card back to hand
 			reposition.ResetCardPosition(u.CurCard, u.Eng)
 			reposition.RealignSuit(u.CurCard.GetSuit(), u.CurCard.GetInitial().Y, u)
@@ -402,7 +402,7 @@ func endClickTake(t touch.Event, u *uistate.UIState) {
 				}
 			}
 			for _, c := range cards {
-				removeCardFromTarget(c, u)
+				sync.RemoveCardFromTarget(c, u)
 				// add card back to hand
 				reposition.ResetCardPosition(c, u.Eng)
 				reposition.RealignSuit(c.GetSuit(), c.GetInitial().Y, u)
@@ -417,7 +417,7 @@ func endClickTake(t touch.Event, u *uistate.UIState) {
 						fmt.Println("Invalid take")
 					} else {
 						if u.CurView == uistate.Take {
-							view.LoadPlayView(u)
+							view.LoadPlayView(false, u)
 						}
 					}
 				}
@@ -459,28 +459,40 @@ func moveClickPlay(t touch.Event, u *uistate.UIState) {
 
 func endClickPlay(t touch.Event, u *uistate.UIState) {
 	if u.CurCard != nil {
-		if dropCardOnTarget(u.CurCard, t, u) {
-			ch := make(chan bool)
-			if err := playCard(ch, u.CurPlayerIndex, u); err != "" {
-				view.ChangePlayMessage(err, u)
-				removeCardFromTarget(u.CurCard, u)
+		if u.CurTable.GetTrick()[u.CurPlayerIndex] == nil {
+			if dropCardOnTarget(u.CurCard, t, u) {
+				if u.CurTable.WhoseTurn() == u.CurPlayerIndex {
+					ch := make(chan bool)
+					if err := sync.PlayCard(ch, u.CurPlayerIndex, u); err != "" {
+						view.ChangePlayMessage(err, u)
+						sync.RemoveCardFromTarget(u.CurCard, u)
+						u.CardToPlay = nil
+						// add card back to hand
+						reposition.ResetCardPosition(u.CurCard, u.Eng)
+						reposition.RealignSuit(u.CurCard.GetSuit(), u.CurCard.GetInitial().Y, u)
+					}
+					quit := make(chan bool)
+					u.AnimChans = append(u.AnimChans, quit)
+					go func() {
+						onDone := func() {
+							if u.CurView == uistate.Play {
+								view.LoadPlayView(true, u)
+							}
+						}
+						reposition.SwitchOnChan(ch, quit, onDone, u)
+					}()
+				} else {
+					u.CardToPlay = u.CurCard
+				}
+			} else {
 				// add card back to hand
+				if sync.RemoveCardFromTarget(u.CurCard, u) {
+					u.CardToPlay = nil
+				}
 				reposition.ResetCardPosition(u.CurCard, u.Eng)
 				reposition.RealignSuit(u.CurCard.GetSuit(), u.CurCard.GetInitial().Y, u)
 			}
-			quit := make(chan bool)
-			u.AnimChans = append(u.AnimChans, quit)
-			go func() {
-				onDone := func() {
-					if u.CurView == uistate.Play {
-						view.LoadPlayView(u)
-					}
-				}
-				reposition.SwitchOnChan(ch, quit, onDone, u)
-			}()
 		} else {
-			// check to see if card was removed from a drop target
-			removeCardFromTarget(u.CurCard, u)
 			// add card back to hand
 			reposition.ResetCardPosition(u.CurCard, u.Eng)
 			reposition.RealignSuit(u.CurCard.GetSuit(), u.CurCard.GetInitial().Y, u)
@@ -493,7 +505,7 @@ func endClickPlay(t touch.Event, u *uistate.UIState) {
 			u.Eng.SetSubTex(b.GetNode(), emptyTex)
 			u.Buttons["takeTrick"] = nil
 			for _, takenCard := range u.TableCards {
-				removeCardFromTarget(takenCard, u)
+				sync.RemoveCardFromTarget(takenCard, u)
 				reposition.BringNodeToFront(takenCard.GetNode(), u)
 			}
 			ch := make(chan bool)
@@ -527,7 +539,7 @@ func beginClickSplit(t touch.Event, u *uistate.UIState) {
 				onDone := func() {
 					u.SwitchingViews = false
 					if u.CurView == uistate.Split {
-						view.LoadPlayView(u)
+						view.LoadPlayView(false, u)
 					}
 				}
 				reposition.SwitchOnChan(ch, quit, onDone, u)
@@ -555,17 +567,40 @@ func moveClickSplit(t touch.Event, u *uistate.UIState) {
 
 func endClickSplit(t touch.Event, u *uistate.UIState) {
 	if u.CurCard != nil {
-		if dropCardHere(u.CurCard, u.DropTargets[0], t, u) {
-			ch := make(chan bool)
-			if err := playCard(ch, u.CurPlayerIndex, u); err != "" {
-				view.ChangePlayMessage(err, u)
-				removeCardFromTarget(u.CurCard, u)
+		if u.CurTable.GetTrick()[u.CurPlayerIndex] == nil {
+			if dropCardHere(u.CurCard, u.DropTargets[0], t, u) {
+				if u.CurTable.WhoseTurn() == u.CurPlayerIndex {
+					ch := make(chan bool)
+					if err := sync.PlayCard(ch, u.CurPlayerIndex, u); err != "" {
+						view.ChangePlayMessage(err, u)
+						if sync.RemoveCardFromTarget(u.CurCard, u) {
+							u.CardToPlay = nil
+							u.BackgroundImgs[0].GetNode().Arranger = nil
+							var emptyTex sprite.SubTex
+							u.Eng.SetSubTex(u.BackgroundImgs[0].GetNode(), emptyTex)
+						}
+						// add card back to hand
+						reposition.ResetCardPosition(u.CurCard, u.Eng)
+					}
+				} else {
+					u.CardToPlay = u.CurCard
+					reposition.AlternateImgs(u.BackgroundImgs[0], u)
+				}
+			} else {
 				// add card back to hand
+				if sync.RemoveCardFromTarget(u.CurCard, u) {
+					u.CardToPlay = nil
+					u.BackgroundImgs[0].GetNode().Arranger = nil
+					var emptyTex sprite.SubTex
+					u.Eng.SetSubTex(u.BackgroundImgs[0].GetNode(), emptyTex)
+				}
 				reposition.ResetCardPosition(u.CurCard, u.Eng)
+				reposition.RealignSuit(u.CurCard.GetSuit(), u.CurCard.GetInitial().Y, u)
 			}
 		} else {
 			// add card back to hand
 			reposition.ResetCardPosition(u.CurCard, u.Eng)
+			reposition.RealignSuit(u.CurCard.GetSuit(), u.CurCard.GetInitial().Y, u)
 		}
 	}
 	pressed := unpressButtons(u)
@@ -677,39 +712,6 @@ func takeCards(ch chan bool, playerId int, u *uistate.UIState) bool {
 	return true
 }
 
-func playCard(ch chan bool, playerId int, u *uistate.UIState) string {
-	c := u.DropTargets[0].GetCardHere()
-	if c == nil {
-		return "No card has been played"
-	}
-	// checks to make sure that:
-	// -player has not already played a card this round
-	// -all players have passed cards
-	// -the play is in the right order
-	// -the play is valid given game logic
-	if u.CurTable.GetPlayers()[playerId].GetDonePlaying() {
-		return "You have already played a card in this trick"
-	}
-	if !u.CurTable.AllDonePassing() {
-		return "Not all players have passed their cards"
-	}
-	if !u.CurTable.ValidPlayOrder(playerId) {
-		return "It is not your turn"
-	}
-	if err := u.CurTable.ValidPlayLogic(c, playerId); err != "" {
-		return err
-	}
-	success := sync.LogPlay(u, c)
-	for !success {
-		success = sync.LogPlay(u, c)
-	}
-	// no animation when in split view
-	if u.CurView == uistate.Play {
-		reposition.AnimateHandCardPlay(ch, c, u)
-	}
-	return ""
-}
-
 func pressButton(b *staticimg.StaticImg, u *uistate.UIState) {
 	u.Eng.SetSubTex(b.GetNode(), b.GetAlt())
 	b.SetDisplayingImage(false)
@@ -778,16 +780,6 @@ func dropCardHere(c *card.Card, d *staticimg.StaticImg, t touch.Event, u *uistat
 	// realign suit the card just left
 	reposition.RealignSuit(suit, oldY, u)
 	return true
-}
-
-func removeCardFromTarget(c *card.Card, u *uistate.UIState) bool {
-	for _, d := range u.DropTargets {
-		if d.GetCardHere() == c {
-			d.SetCardHere(nil)
-			return true
-		}
-	}
-	return false
 }
 
 func touchingCard(t touch.Event, c *card.Card, u *uistate.UIState) bool {

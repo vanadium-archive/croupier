@@ -7,6 +7,8 @@
 package reposition
 
 import (
+	"time"
+
 	"hearts/img/coords"
 	"hearts/img/direction"
 	"hearts/img/staticimg"
@@ -287,7 +289,7 @@ func AnimateInSplit(ch chan bool, u *uistate.UIState) {
 	bannerImgs = append(bannerImgs, u.Buttons["takeTrick"])
 	bannerImgs = append(bannerImgs, u.Buttons["toggleSplit"])
 	tableImgs = append(tableImgs, u.DropTargets...)
-	tableImgs = append(tableImgs, u.BackgroundImgs[:u.NumPlayers]...)
+	tableImgs = append(tableImgs, u.BackgroundImgs[:u.NumPlayers+1]...)
 	for _, img := range tableImgs {
 		from := img.GetCurrent()
 		to := coords.MakeVec(from.X, from.Y+topOfBanner)
@@ -326,7 +328,7 @@ func AnimateOutSplit(ch chan bool, u *uistate.UIState) {
 	bannerImgs = append(bannerImgs, u.Buttons["takeTrick"])
 	bannerImgs = append(bannerImgs, u.Buttons["toggleSplit"])
 	tableImgs = append(tableImgs, u.DropTargets...)
-	tableImgs = append(tableImgs, u.BackgroundImgs[:u.NumPlayers]...)
+	tableImgs = append(tableImgs, u.BackgroundImgs[:u.NumPlayers+1]...)
 	for _, img := range tableImgs {
 		from := img.GetCurrent()
 		to := coords.MakeVec(from.X, from.Y-topOfBanner)
@@ -400,7 +402,7 @@ func AnimateHandCardTakeTrick(ch chan bool, cards []*card.Card, u *uistate.UISta
 	}
 	for i, c := range cards {
 		destination := c.GetDimensions().Times(-1)
-		if i < len(cards) - 1 {
+		if i < len(cards)-1 {
 			animateCardNoChannel(c, destination, c.GetDimensions(), u)
 		} else {
 			animateCardMovement(ch, c, destination, c.GetDimensions(), u)
@@ -566,6 +568,19 @@ func SetCardPositionHand(c *card.Card, indexInSuit int, suitCounts []int, u *uis
 	pos := coords.MakeVec(x, y)
 	c.SetInitial(pos)
 	c.Move(pos, u.CardDim, u.Eng)
+}
+
+func AlternateImgs(s *staticimg.StaticImg, u *uistate.UIState) {
+	<-time.After(100 * time.Millisecond)
+	node := s.GetNode()
+	node.Arranger = arrangerFunc(func(eng sprite.Engine, node *sprite.Node, t clock.Time) {
+		t0 := uint32(t) % 10
+		if t0 < 5 {
+			u.Eng.SetSubTex(s.GetNode(), s.GetImage())
+		} else {
+			u.Eng.SetSubTex(s.GetNode(), s.GetAlt())
+		}
+	})
 }
 
 func RemoveAnimChan(ch chan bool, u *uistate.UIState) {
