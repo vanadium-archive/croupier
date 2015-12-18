@@ -38,7 +38,7 @@ func ReloadView(u *uistate.UIState) {
 	case uistate.Take:
 		LoadTakeView(u)
 	case uistate.Play:
-		LoadPlayView(u)
+		LoadPlayView(true, u)
 	case uistate.Split:
 		LoadSplitView(true, u)
 	}
@@ -377,8 +377,14 @@ func LoadTableView(u *uistate.UIState) {
 // Decides which view of the player's hand to load based on what steps of the round they have completed
 func LoadPassOrTakeOrPlay(u *uistate.UIState) {
 	p := u.CurTable.GetPlayers()[u.CurPlayerIndex]
-	if p.GetDoneTaking() || u.CurTable.GetDir() == direction.None {
-		LoadPlayView(u)
+	if u.CurTable.RoundOver() {
+		LoadScoreView(u)
+	} else if p.GetDoneTaking() || u.CurTable.GetDir() == direction.None {
+		if u.CurView == uistate.Play {
+			LoadPlayView(true, u)
+		} else {
+			LoadPlayView(false, u)
+		}
 	} else if p.GetDonePassing() {
 		LoadTakeView(u)
 	} else {
@@ -387,7 +393,7 @@ func LoadPassOrTakeOrPlay(u *uistate.UIState) {
 }
 
 // Score View: Shows current player standings at the end of every round, including the end of the game
-func LoadScoreView(roundScores, winners []int, u *uistate.UIState) {
+func LoadScoreView(u *uistate.UIState) {
 	u.M.Lock()
 	defer u.M.Unlock()
 	reposition.ResetAnims(u)
@@ -396,8 +402,8 @@ func LoadScoreView(roundScores, winners []int, u *uistate.UIState) {
 	u.CurView = uistate.Score
 	addHeader(u)
 	addScoreViewHeaderText(u)
-	addPlayerScores(roundScores, u)
-	addScoreButton(len(winners) > 0, u)
+	addPlayerScores(u.RoundScores, u)
+	addScoreButton(len(u.Winners) > 0, u)
 }
 
 // Pass View: Shows player's hand and allows them to pass cards
@@ -438,14 +444,15 @@ func LoadTakeView(u *uistate.UIState) {
 }
 
 // Play View: Shows player's hand and allows them to play cards
-func LoadPlayView(u *uistate.UIState) {
+func LoadPlayView(reloading bool, u *uistate.UIState) {
 	u.M.Lock()
 	defer u.M.Unlock()
 	reposition.ResetAnims(u)
 	resetImgs(u)
 	resetScene(u)
 	u.CurView = uistate.Play
-	addPlaySlot(u)
+	display := u.CurTable.GetTrick()[u.CurPlayerIndex] == nil && !u.CurTable.TrickNew() && reloading
+	addPlaySlot(display, u)
 	addHand(u)
 	addPlayHeader(getTurnText(u), false, u)
 	SetNumTricksHand(u)
@@ -453,15 +460,7 @@ func LoadPlayView(u *uistate.UIState) {
 		addDebugBar(u)
 	}
 	// animate in play slot if relevant
-	if u.CurTable.WhoseTurn() == u.CurPlayerIndex {
-		if u.SequentialPhases {
-			if u.CurTable.AllDoneTaking() {
-				reposition.AnimateInPlay(u)
-			}
-		} else if u.CurTable.AllDonePassing() {
-			reposition.AnimateInPlay(u)
-		}
-	} else if u.CurTable.GetTrickRecipient() == u.CurPlayerIndex {
+	if u.CurTable.TrickNew() || u.CurTable.GetTrickRecipient() == u.CurPlayerIndex || (!reloading && u.CurTable.GetTrick()[u.CurPlayerIndex] == nil) {
 		reposition.AnimateInPlay(u)
 	}
 }
@@ -488,9 +487,18 @@ func LoadSplitView(reloading bool, u *uistate.UIState) {
 		u.SwitchingViews = true
 		reposition.AnimateInSplit(ch, u)
 		go func() {
-			onDone := func() { u.SwitchingViews = false }
+			onDone := func() {
+				u.SwitchingViews = false
+				if u.CardToPlay != nil {
+					reposition.AlternateImgs(u.BackgroundImgs[0], u)
+				}
+			}
 			reposition.SwitchOnChan(ch, quit, onDone, u)
 		}()
+	} else {
+		if u.CardToPlay != nil {
+			reposition.AlternateImgs(u.BackgroundImgs[0], u)
+		}
 	}
 }
 
@@ -569,6 +577,17 @@ func addSplitViewPlayerIcons(beforeSplitAnimation bool, u *uistate.UIState) {
 	dropTargetPos := coords.MakeVec(dropTargetX, dropTargetY)
 	d := texture.MakeImgWithAlt(dropTargetImage, dropTargetAlt, dropTargetPos, dropTargetDimensions, true, u)
 	u.DropTargets = append(u.DropTargets, d)
+	// 'unplayed' border
+	borderImage := u.Texs["UnplayedBorder1.png"]
+	borderAlt := u.Texs["UnplayedBorder2.png"]
+	borderDim := dropTargetDimensions.Plus(2)
+	borderPos := dropTargetPos.Minus(1)
+	b := texture.MakeImgWithAlt(borderImage, borderAlt, borderPos, borderDim, true, u)
+	u.BackgroundImgs = append(u.BackgroundImgs, b)
+	if u.CardToPlay == nil {
+		var emptyTex sprite.SubTex
+		u.Eng.SetSubTex(b.GetNode(), emptyTex)
+	}
 	// first player icon
 	playerIconImage := uistate.GetAvatar(u.CurPlayerIndex, u)
 	u.BackgroundImgs = append(u.BackgroundImgs,
@@ -728,12 +747,15 @@ func addPlayHeader(message string, beforeSplitAnimation bool, u *uistate.UIState
 	}
 }
 
-func addPlaySlot(u *uistate.UIState) {
+func addPlaySlot(display bool, u *uistate.UIState) {
 	topOfHand := u.WindowSize.Y - 5*(u.CardDim.Y+u.Padding) - (2 * u.Padding / 5) - u.BottomPadding
 	// adding blue rectangle
 	blueRectImg := u.Texs["RoundedRectangle-LBlue.png"]
 	blueRectDim := coords.MakeVec(u.WindowSize.X-4*u.BottomPadding, topOfHand+u.CardDim.Y)
 	blueRectPos := coords.MakeVec(2*u.BottomPadding, -blueRectDim.Y)
+	if display {
+		blueRectPos = coords.MakeVec(blueRectPos.X, blueRectPos.Y+u.WindowSize.Y/3+u.TopPadding)
+	}
 	u.BackgroundImgs = append(u.BackgroundImgs,
 		texture.MakeImgWithoutAlt(blueRectImg, blueRectPos, blueRectDim, u))
 	// adding drop target
@@ -753,6 +775,9 @@ func addPlaySlot(u *uistate.UIState) {
 	} else {
 		dropTargetImg := u.Texs["trickDrop.png"]
 		dropTargetPos := coords.MakeVec(u.WindowSize.X/2-u.CardDim.X/2, -u.CardDim.Y-3*u.Padding)
+		if display {
+			dropTargetPos = coords.MakeVec(dropTargetPos.X, dropTargetPos.Y+u.WindowSize.Y/3+u.TopPadding)
+		}
 		u.DropTargets = append(u.DropTargets,
 			texture.MakeImgWithoutAlt(dropTargetImg, dropTargetPos, u.CardDim, u))
 	}
@@ -1136,6 +1161,11 @@ func addHand(u *uistate.UIState) {
 		numInSuit := i - clubCount - diamondCount - spadeCount
 		texture.PopulateCardImage(u.Cards[i], u)
 		reposition.SetCardPositionHand(u.Cards[i], numInSuit, suitCounts, u)
+	}
+	if u.CardToPlay != nil && u.DropTargets[0].GetCardHere() == nil {
+		u.CardToPlay.Move(u.DropTargets[0].GetCurrent(), u.DropTargets[0].GetDimensions(), u.Eng)
+		u.DropTargets[0].SetCardHere(u.CardToPlay)
+		reposition.RealignSuit(u.CardToPlay.GetSuit(), u.CardToPlay.GetInitial().Y, u)
 	}
 }
 

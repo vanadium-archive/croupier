@@ -18,10 +18,10 @@ import (
 	"hearts/img/uistate"
 	"hearts/img/view"
 	"hearts/logic/card"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
-	"os"
 	"time"
 	"v.io/v23/syncbase/nosql"
 )
@@ -72,20 +72,7 @@ func handleSettingsUpdate(key string, value []byte, u *uistate.UIState) {
 	u.UserData[userID] = valueMap
 	for _, v := range u.PlayerData {
 		if v == userID {
-			switch u.CurView {
-			case uistate.Arrange:
-				view.LoadArrangeView(u)
-			case uistate.Table:
-				view.LoadTableView(u)
-			case uistate.Pass:
-				view.LoadPassView(u)
-			case uistate.Take:
-				view.LoadTakeView(u)
-			case uistate.Play:
-				view.LoadPlayView(u)
-			case uistate.Split:
-				view.LoadSplitView(true, u)
-			}
+			view.ReloadView(u)
 		}
 	}
 	if u.CurView == uistate.Discovery {
@@ -135,7 +122,7 @@ func handleGameUpdate(file *os.File, changes []nosql.WatchChange, u *uistate.UIS
 			tmp := strings.Split(key, "/")
 			if len(tmp) == 3 {
 				keyTime, _ := strconv.ParseInt(strings.Split(tmp[2], "-")[0], 10, 64)
-				fmt.Fprintf(file, fmt.Sprintf("diff: %d milliseconds\n\n", curTime - keyTime))
+				fmt.Fprintf(file, fmt.Sprintf("diff: %d milliseconds\n\n", curTime-keyTime))
 			} else {
 				fmt.Fprintf(file, "\n")
 			}
@@ -247,7 +234,7 @@ func onPass(value string, u *uistate.UIState) {
 			view.LoadTakeView(u)
 		}
 	} else if u.CurView == uistate.Play && u.CurTable.AllDonePassing() {
-		view.LoadPlayView(u)
+		view.LoadPlayView(true, u)
 	}
 }
 
@@ -269,14 +256,14 @@ func onTake(value string, u *uistate.UIState) {
 			}
 			// UI
 			if u.CurView == uistate.Play {
-				view.LoadPlayView(u)
+				view.LoadPlayView(true, u)
 			}
 		}
 	} else if p.HasTwoOfClubs() {
 		u.CurTable.SetFirstPlayer(p.GetPlayerIndex())
 		// UI
 		if u.CurView == uistate.Play && u.CurPlayerIndex != playerInt {
-			view.LoadPlayView(u)
+			view.LoadPlayView(true, u)
 		}
 	}
 	// UI
@@ -325,9 +312,42 @@ func onPlay(value string, u *uistate.UIState) {
 				b := u.Buttons["takeTrick"]
 				u.Eng.SetSubTex(b.GetNode(), b.GetImage())
 			}
+		} else if u.CardToPlay != nil && u.CurTable.WhoseTurn() == u.CurPlayerIndex {
+			ch := make(chan bool)
+			if err := PlayCard(ch, u.CurPlayerIndex, u); err != "" {
+				view.ChangePlayMessage(err, u)
+				RemoveCardFromTarget(u.CardToPlay, u)
+				// add card back to hand
+				reposition.ResetCardPosition(u.CardToPlay, u.Eng)
+			}
+			u.CardToPlay = nil
+			u.BackgroundImgs[0].GetNode().Arranger = nil
+			var emptyTex sprite.SubTex
+			u.Eng.SetSubTex(u.BackgroundImgs[0].GetNode(), emptyTex)
 		}
 	} else if u.CurView == uistate.Play && u.CurPlayerIndex != playerInt {
-		view.LoadPlayView(u)
+		view.LoadPlayView(true, u)
+		if u.CardToPlay != nil && u.CurTable.WhoseTurn() == u.CurPlayerIndex {
+			ch := make(chan bool)
+			if err := PlayCard(ch, u.CurPlayerIndex, u); err != "" {
+				view.ChangePlayMessage(err, u)
+				RemoveCardFromTarget(u.CardToPlay, u)
+				// add card back to hand
+				reposition.ResetCardPosition(u.CardToPlay, u.Eng)
+				reposition.RealignSuit(u.CardToPlay.GetSuit(), u.CardToPlay.GetInitial().Y, u)
+			}
+			u.CardToPlay = nil
+			quit := make(chan bool)
+			u.AnimChans = append(u.AnimChans, quit)
+			go func() {
+				onDone := func() {
+					if u.CurView == uistate.Play {
+						view.LoadPlayView(true, u)
+					}
+				}
+				reposition.SwitchOnChan(ch, quit, onDone, u)
+			}()
+		}
 	}
 }
 
@@ -335,10 +355,8 @@ func onTakeTrick(value string, u *uistate.UIState) {
 	trickCards := u.CurTable.GetTrick()
 	recipient := u.CurTable.GetTrickRecipient()
 	roundOver := u.CurTable.SendTrick(recipient)
-	var roundScores []int
-	var winners []int
 	if roundOver {
-		roundScores, winners = u.CurTable.EndRound()
+		u.RoundScores, u.Winners = u.CurTable.EndRound()
 	}
 	// UI
 	if u.CurView == uistate.Table {
@@ -364,7 +382,7 @@ func onTakeTrick(value string, u *uistate.UIState) {
 		var emptyTex sprite.SubTex
 		u.Eng.SetSubTex(u.Buttons["takeTrick"].GetNode(), emptyTex)
 		if roundOver {
-			view.LoadScoreView(roundScores, winners, u)
+			view.LoadScoreView(u)
 		} else {
 			var trickDir direction.Direction
 			switch recipient {
@@ -384,13 +402,13 @@ func onTakeTrick(value string, u *uistate.UIState) {
 		}
 	} else if u.CurView == uistate.Play {
 		if roundOver {
-			view.LoadScoreView(roundScores, winners, u)
+			view.LoadScoreView(u)
 		} else {
-			view.LoadPlayView(u)
+			view.LoadPlayView(true, u)
 		}
 	}
 	// logic
-	if len(winners) > 0 {
+	if len(u.Winners) > 0 {
 		u.CurTable.NewGame()
 	}
 }
@@ -454,4 +472,47 @@ func (us updateSorter) Less(i, j int) bool {
 	iKey := us[i].Row
 	jKey := us[j].Row
 	return iKey < jKey
+}
+
+func PlayCard(ch chan bool, playerId int, u *uistate.UIState) string {
+	c := u.DropTargets[0].GetCardHere()
+	if c == nil {
+		return "No card has been played"
+	}
+	// checks to make sure that:
+	// -player has not already played a card this round
+	// -all players have passed cards
+	// -the play is in the right order
+	// -the play is valid given game logic
+	if u.CurTable.GetPlayers()[playerId].GetDonePlaying() {
+		return "You have already played a card in this trick"
+	}
+	if !u.CurTable.AllDonePassing() {
+		return "Not all players have passed their cards"
+	}
+	if !u.CurTable.ValidPlayOrder(playerId) {
+		return "It is not your turn"
+	}
+	if err := u.CurTable.ValidPlayLogic(c, playerId); err != "" {
+		return err
+	}
+	success := LogPlay(u, c)
+	for !success {
+		success = LogPlay(u, c)
+	}
+	// no animation when in split view
+	if u.CurView == uistate.Play {
+		reposition.AnimateHandCardPlay(ch, c, u)
+	}
+	return ""
+}
+
+func RemoveCardFromTarget(c *card.Card, u *uistate.UIState) bool {
+	for _, d := range u.DropTargets {
+		if d.GetCardHere() == c {
+			d.SetCardHere(nil)
+			return true
+		}
+	}
+	return false
 }

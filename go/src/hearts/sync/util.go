@@ -8,13 +8,13 @@ package sync
 
 const (
 	// switch back to my mountpoint with the following code:
-	//MountPoint = "users/emshack@google.com"
-	MountPoint        = "/192.168.86.254:8101"
-	UserID            = 2222
+	MountPoint = "users/emshack@google.com"
+	//MountPoint        = "/192.168.86.254:8101"
+	UserID            = 111
 	UserColor         = 16777215
-	UserAvatar        = "man.png"
+	UserAvatar        = "woman.png"
 	UserName          = "Bob"
-	SBName            = "syncbase1"
+	SBName            = "syncbase"
 	AppName           = "app"
 	DbName            = "db"
 	LogName           = "games"

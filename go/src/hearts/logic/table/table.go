@@ -37,7 +37,7 @@ func makeTable(p []*player.Player) *Table {
 		heartsBroken: false,
 		firstTrick:   true,
 		winCondition: 100,
-		dir:          direction.Right,
+		dir:          direction.None,
 	}
 }
 
@@ -226,6 +226,16 @@ func (t *Table) AllReadyForNewRound() bool {
 func (t *Table) TrickOver() bool {
 	for _, c := range t.trick {
 		if c == nil {
+			return false
+		}
+	}
+	return true
+}
+
+// Returns true if no players have played a card in the current trick
+func (t *Table) TrickNew() bool {
+	for _, c := range t.trick {
+		if c != nil {
 			return false
 		}
 	}

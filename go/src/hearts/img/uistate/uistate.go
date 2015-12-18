@@ -68,6 +68,9 @@ type UIState struct {
 	Buttons        map[string]*staticimg.StaticImg
 	Other          []*staticimg.StaticImg
 	ModText        []*staticimg.StaticImg
+	RoundScores    []int                // the scores of the most recently finished round
+	Winners        []int                // the list of players, if any, who have won
+	CardToPlay     *card.Card           // the card, if any, curPlayer has decided to play before their turn
 	CurCard        *card.Card           // the card that is currently clicked on
 	CurImg         *staticimg.StaticImg // the image that is currently clicked on
 	// lastMouseXY is in Px: divide by pixelsPerPt to get Pt
@@ -121,6 +124,7 @@ func MakeUIState() *UIState {
 		Buttons:          make(map[string]*staticimg.StaticImg),
 		Other:            make([]*staticimg.StaticImg, 0),
 		ModText:          make([]*staticimg.StaticImg, 0),
+		RoundScores:      make([]int, numPlayers),
 		LastMouseXY:      coords.MakeVec(-1, -1),
 		NumPlayers:       numPlayers,
 		NumSuits:         numSuits,
