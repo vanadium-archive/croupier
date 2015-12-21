@@ -9,6 +9,8 @@ class HeartsGameComponent extends GameComponent {
       {Key key, double width, double height})
       : super(croupier, cb, key: key, width: width, height: height);
 
+  HeartsGame get game => super.game;
+
   HeartsGameComponentState createState() => new HeartsGameComponentState();
 }
 
@@ -16,6 +18,8 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
   List<logic_card.Card> passingCards1 = new List<logic_card.Card>();
   List<logic_card.Card> passingCards2 = new List<logic_card.Card>();
   List<logic_card.Card> passingCards3 = new List<logic_card.Card>();
+  List<logic_card.Card> bufferedPlay = new List<logic_card.Card>();
+  bool bufferedPlaying = false;
 
   HeartsType _lastViewType;
   bool _showSplitView = false;
@@ -35,17 +39,43 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
   @override
   void _reset() {
     super._reset();
-    HeartsGame game = config.game as HeartsGame;
-    _lastViewType = game.viewType;
+    _lastViewType = config.game.viewType;
+  }
+
+  bool get _canBuffer {
+    HeartsGame game = config.game;
+    List<logic_card.Card> playCards =
+        game.cardCollections[HeartsGame.OFFSET_PLAY + game.playerNumber];
+    return game.isPlayer && game.numPlayed >= 1 && playCards.length == 0;
+  }
+
+  bool get _shouldUnbuffer {
+    HeartsGame game = config.game;
+    return game.whoseTurn == game.playerNumber &&
+        bufferedPlay.length > 0 &&
+        !bufferedPlaying;
   }
 
   @override
   Widget build(BuildContext context) {
-    HeartsGame game = config.game as HeartsGame;
+    HeartsGame game = config.game;
 
-    // check if we need to swap out our 's map.
+    // Reset the game's stored ZCards if the view type changes.
     if (_lastViewType != game.viewType) {
       _reset();
+    }
+
+    // If it's our turn and buffered play is not empty, let's play it!
+    // Set a flag to ensure that we only play it once.
+    if (_shouldUnbuffer) {
+      _makeGameMoveCallback(bufferedPlay[0],
+          game.cardCollections[HeartsGame.OFFSET_PLAY + game.playerNumber]);
+      bufferedPlaying = true;
+    }
+
+    // If all cards were played, we can safely clear bufferedPlay.
+    if (game.allPlayed) {
+      _clearBufferedPlay();
     }
 
     // Hearts Widget
@@ -154,7 +184,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
   int _compareCards(logic_card.Card a, logic_card.Card b) {
     if (a == b) return 0;
     assert(a.deck == "classic" && b.deck == "classic");
-    HeartsGame game = config.game as HeartsGame;
+    HeartsGame game = config.game;
     int r = game.getCardSuit(a).compareTo(game.getCardSuit(b));
     if (r != 0) return r;
     return game.getCardValue(a) < game.getCardValue(b) ? -1 : 1;
@@ -174,20 +204,25 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     return ls;
   }
 
+  void _clearBufferedPlay() {
+    bufferedPlay.clear();
+    bufferedPlaying = false;
+  }
+
   // This shouldn't always be here, but for now, we have little choice.
   void _switchPlayersCallback() {
     setState(() {
       config.game.playerNumber = (config.game.playerNumber + 1) % 4;
       _clearPassing(); // Just for sanity.
+      _clearBufferedPlay();
     });
   }
 
   void _makeGamePassCallback() {
     setState(() {
       try {
-        HeartsGame game = config.game as HeartsGame;
-        game.passCards(_combinePassing());
-        game.debugString = null;
+        config.game.passCards(_combinePassing());
+        config.game.debugString = null;
       } catch (e) {
         print("You can't do that! ${e.toString()}");
         config.game.debugString = "You must pass 3 cards";
@@ -203,9 +238,8 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
         // However, since they are never seen outside of the Pass phase, it is
         // also valid to clear them upon taking any cards.
         _clearPassing();
-        HeartsGame game = config.game as HeartsGame;
-        game.takeCards();
-        game.debugString = null;
+        config.game.takeCards();
+        config.game.debugString = null;
       } catch (e) {
         print("You can't do that! ${e.toString()}");
         config.game.debugString = e.toString();
@@ -216,9 +250,19 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
   void _makeGameMoveCallback(logic_card.Card card, List<logic_card.Card> dest) {
     setState(() {
       HeartsGame game = config.game;
-      String reason = game.canPlay(game.playerNumber, card);
+
+      bool isBufferAttempt = dest == bufferedPlay;
+
+      String reason =
+          game.canPlay(game.playerNumber, card, lenient: isBufferAttempt);
       if (reason == null) {
-        game.move(card, dest);
+        if (isBufferAttempt) {
+          print("Buffering ${card}...");
+          _clearBufferedPlay();
+          bufferedPlay.add(card);
+        } else {
+          game.move(card, dest);
+        }
         game.debugString = null;
       } else {
         print("You can't do that! ${reason}");
@@ -229,9 +273,8 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
 
   void _endRoundDebugCallback() {
     setState(() {
-      HeartsGame game = config.game as HeartsGame;
-      game.jumpToScorePhaseDebug();
-      game.debugString = null;
+      config.game.jumpToScorePhaseDebug();
+      config.game.debugString = null;
     });
   }
 
@@ -268,13 +311,11 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
   }
 
   Widget buildHearts() {
-    HeartsGame game = config.game as HeartsGame;
-
-    if (game.viewType == HeartsType.Board) {
+    if (config.game.viewType == HeartsType.Board) {
       return buildHeartsBoard();
     }
 
-    switch (game.phase) {
+    switch (config.game.phase) {
       case HeartsPhase.Deal:
         return showDeal();
       case HeartsPhase.Pass:
@@ -292,9 +333,8 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
   }
 
   Widget buildHeartsBoard() {
-    HeartsGame game = config.game as HeartsGame;
     List<Widget> kids = new List<Widget>();
-    switch (game.phase) {
+    switch (config.game.phase) {
       case HeartsPhase.Deal:
         kids.add(new Text("Waiting for Deal..."));
         break;
@@ -366,8 +406,8 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     }
 
     // Override if there is a debug string.
-    if (config.game.debugString != null) {
-      status = config.game.debugString;
+    if (game.debugString != null) {
+      status = game.debugString;
     }
 
     return status;
@@ -449,14 +489,21 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
             cardWidth: config.height * 0.1,
             cardHeight: config.height * 0.1,
             isMini: true,
-            gameAcceptCallback: _makeGameMoveCallback));
+            gameAcceptCallback: _makeGameMoveCallback,
+            bufferedPlay: _canBuffer ? bufferedPlay : null));
   }
 
   Widget showPlay() {
-    HeartsGame game = config.game as HeartsGame;
+    HeartsGame game = config.game;
     int p = game.playerNumber;
 
     List<Widget> cardCollections = new List<Widget>();
+
+    List<logic_card.Card> playOrBuffer =
+        game.cardCollections[p + HeartsGame.OFFSET_PLAY];
+    if (playOrBuffer.length == 0) {
+      playOrBuffer = bufferedPlay;
+    }
 
     if (_showSplitView) {
       cardCollections.add(new Container(
@@ -469,13 +516,10 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
           width: config.width,
           child: new Center(
               child: new CardCollectionComponent(
-                  game.cardCollections[p + HeartsGame.OFFSET_PLAY],
-                  true,
-                  CardCollectionOrientation.show1,
+                  playOrBuffer, true, CardCollectionOrientation.show1,
                   useKeys: true,
                   acceptCallback: _makeGameMoveCallback,
-                  acceptType:
-                      p == game.whoseTurn ? DropType.card : DropType.none,
+                  acceptType: this._canBuffer ? DropType.card : DropType.none,
                   backgroundColor:
                       p == game.whoseTurn ? Colors.white : Colors.grey[500],
                   altColor: p == game.whoseTurn
@@ -489,11 +533,25 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     }
 
     List<logic_card.Card> cards = game.cardCollections[p];
+
+    // A buffered card won't show up in the normal hand area.
+    List<logic_card.Card> remainingCards = new List<logic_card.Card>();
+    cards.forEach((logic_card.Card c) {
+      if (!bufferedPlay.contains(c)) {
+        remainingCards.add(c);
+      }
+    });
+
+    // You can start playing/buffering if it's your turn or you can buffer.
+    bool canTap = game.whoseTurn == game.playerNumber || this._canBuffer;
+
     CardCollectionComponent c = new CardCollectionComponent(
-        cards, game.playerNumber == p, CardCollectionOrientation.suit,
+        remainingCards, game.playerNumber == p, CardCollectionOrientation.suit,
         dragChildren: true, // Can drag, but may not have anywhere to drop
-        cardTapCallback: (logic_card.Card card) => (_makeGameMoveCallback(
-            card, game.cardCollections[p + HeartsGame.OFFSET_PLAY])),
+        cardTapCallback: canTap
+            ? (logic_card.Card card) =>
+                (_makeGameMoveCallback(card, playOrBuffer))
+            : null,
         comparator: _compareCards,
         width: config.width,
         useKeys: true);
@@ -504,7 +562,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
   }
 
   Widget showScore() {
-    HeartsGame game = config.game as HeartsGame;
+    HeartsGame game = config.game;
 
     Widget w;
     if (game.hasGameEnded) {
@@ -575,12 +633,10 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
   }
 
   Widget showDeal() {
-    HeartsGame game = config.game as HeartsGame;
-
     return new Container(
         decoration: new BoxDecoration(backgroundColor: Colors.pink[500]),
         child: new Column([
-          new Text('Player ${game.playerNumber}'),
+          new Text('Player ${config.game.playerNumber}'),
           new Text('Waiting for Deal...'),
           _makeDebugButtons()
         ], justifyContent: FlexJustifyContent.spaceBetween));
@@ -644,7 +700,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
   }
 
   Widget _topCardWidget(List<logic_card.Card> cards, AcceptCb cb) {
-    HeartsGame game = config.game as HeartsGame;
+    HeartsGame game = config.game;
     List<logic_card.Card> passCards =
         game.cardCollections[game.playerNumber + HeartsGame.OFFSET_PASS];
 
@@ -668,7 +724,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
 
   // Pass Phase Screen: Show the cards being passed and the player's remaining cards.
   Widget showPass() {
-    HeartsGame game = config.game as HeartsGame;
+    HeartsGame game = config.game;
 
     List<logic_card.Card> passCards =
         game.cardCollections[game.playerNumber + HeartsGame.OFFSET_PASS];
@@ -697,7 +753,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
 
   // Take Phase Screen: Show the cards the player has received and the player's hand.
   Widget showTake() {
-    HeartsGame game = config.game as HeartsGame;
+    HeartsGame game = config.game;
 
     List<logic_card.Card> playerCards = game.cardCollections[game.playerNumber];
     List<logic_card.Card> takeCards =

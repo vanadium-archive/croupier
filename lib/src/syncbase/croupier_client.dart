@@ -179,14 +179,17 @@ class CroupierClient {
 
       sc.SyncbaseTable tb = sbdb.table(tbName);
 
-      await tb
-          .scan(new sc.RowRange.prefix(prefix))
-          .forEach((sc.KeyValue kv) async {
+      Stream<sc.KeyValue> scanStream =
+          await tb.scan(new sc.RowRange.prefix(prefix));
+
+      // Use an await for loop to ensure that each onChange event is processed
+      // in order.
+      await for (sc.KeyValue kv in scanStream) {
         String key = kv.key;
         String value = UTF8.decode(kv.value);
         print("Scan found ${key}, ${value}");
         await onChange(key, value, true);
-      });
+      }
     } finally {
       await sbdb.abort();
     }

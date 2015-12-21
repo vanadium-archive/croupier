@@ -386,7 +386,7 @@ class HeartsGame extends Game {
   }
 
   // Returns null or the reason that the player cannot play the card.
-  String canPlay(int player, Card c) {
+  String canPlay(int player, Card c, {bool lenient: false}) {
     if (phase != HeartsPhase.Play) {
       return "It is not the Play phase of Hearts.";
     }
@@ -396,7 +396,7 @@ class HeartsGame extends Game {
     if (this.allPlayed) {
       return "Trick not taken yet.";
     }
-    if (this.whoseTurn != player) {
+    if (this.whoseTurn != player && !lenient) {
       return "It is not Player ${player}'s turn.";
     }
     if (trickNumber == 0 && this.numPlayed == 0 && c != TWO_OF_CLUBS) {

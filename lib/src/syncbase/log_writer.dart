@@ -63,6 +63,12 @@ class LogWriter {
     _associatedUser = other;
   }
 
+  // The latest timestamp watched so far.
+  // By applying this timestamp (as a minimum), this ensures that turn-based
+  // actions remain in-order, despite clock desynchronization.
+  // Note: This may occasionally affect the diff-log values.
+  DateTime latestTime = new DateTime.now();
+
   // This holds a reference to the syncbase table we're writing to.
   SyncbaseTable tb;
   static final String tbName = util.tableNameGames;
@@ -79,8 +85,27 @@ class LogWriter {
     _diffFileLog("=========Starting Log Writer=========");
   }
 
-  Future _diffFileLog(String s, [DateTime other]) async {
+  DateTime _getLatestTime() {
     DateTime now = new DateTime.now();
+    if (latestTime.isAfter(now)) {
+      return latestTime.add(new Duration(milliseconds: 1));
+    }
+    return now;
+  }
+
+  // Parses a millisecond string into a DateTime.
+  DateTime _parseTime(String timeStr) {
+    // Since the Dart VM on Android has a bug with parsing large integers, we
+    // are forced to split the string into parts to successfully parse it.
+    // TODO(alexfandrianto): https://github.com/vanadium/issues/issues/1026
+    String front = timeStr.substring(0, 8);
+    String back = timeStr.substring(8);
+    int time = int.parse(front) * math.pow(10, back.length) + int.parse(back);
+    return new DateTime.fromMillisecondsSinceEpoch(time);
+  }
+
+  Future _diffFileLog(String s, [DateTime other]) async {
+    DateTime now = _getLatestTime();
     int diff = other != null ? now.difference(other).inMilliseconds : null;
     String logStr = "${now.millisecondsSinceEpoch}\t${diff}\t${s}\n";
     print(logStr);
@@ -106,11 +131,12 @@ class LogWriter {
   Future _onChange(String rowKey, String value, bool duringScan) async {
     String key = rowKey.replaceFirst("${this.logPrefix}/", "");
     String timeStr = key.split("-")[0];
-    String front = timeStr.substring(0, 8);
-    String back = timeStr.substring(8);
-    int time = int.parse(front) * math.pow(10, back.length) + int.parse(back);
-    await _diffFileLog("Key: ${key} Value: ${value}",
-        new DateTime.fromMillisecondsSinceEpoch(time));
+    DateTime keyTime = _parseTime(timeStr);
+    await _diffFileLog("Key: ${key} Value: ${value}", keyTime);
+
+    if (keyTime.isAfter(latestTime)) {
+      latestTime = keyTime;
+    }
 
     if (_isProposalKey(key)) {
       if (value != null && !_acceptedProposals.contains(key) && !duringScan) {
@@ -166,7 +192,11 @@ class LogWriter {
 
   // Helper that returns the log key using a mixture of timestamp + user.
   String _logKey(int user) {
-    int ms = new DateTime.now().millisecondsSinceEpoch;
+    DateTime time = _getLatestTime();
+    if (time.isAfter(latestTime)) {
+      latestTime = time;
+    }
+    int ms = time.millisecondsSinceEpoch;
     String key = "${ms}-${user}";
     return key;
   }

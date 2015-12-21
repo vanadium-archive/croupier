@@ -50,6 +50,9 @@ class HeartsBoard extends Board {
   final Croupier croupier;
   final bool isMini;
   final AcceptCb gameAcceptCallback;
+  final List<logic_card.Card> bufferedPlay;
+
+  HeartsGame get game => super.game;
 
   HeartsBoard(Croupier croupier,
       {double height,
@@ -57,7 +60,8 @@ class HeartsBoard extends Board {
       double cardHeight,
       double cardWidth,
       this.isMini: false,
-      this.gameAcceptCallback})
+      this.gameAcceptCallback,
+      this.bufferedPlay})
       : super(croupier.game,
             height: height,
             width: width,
@@ -139,15 +143,19 @@ class HeartsBoardState extends State<HeartsBoard> {
   }
 
   Widget _buildAvatarSlotCombo(int playerNumber) {
-    HeartsGame game = config.game as HeartsGame;
+    HeartsGame game = config.game;
     int p = game.playerNumber;
 
     List<Widget> items = new List<Widget>();
     bool isMe = playerNumber == p;
-    bool isPlayerTurn = playerNumber == game.whoseTurn && !game.allPlayed;
 
     List<logic_card.Card> showCard =
         game.cardCollections[playerNumber + HeartsGame.OFFSET_PLAY];
+    bool hasPlayed = showCard.length > 0;
+    bool isTurn = playerNumber == game.whoseTurn && !hasPlayed;
+    if (isMe && config.bufferedPlay != null) {
+      showCard = config.bufferedPlay;
+    }
 
     items.add(new Positioned(
         top: 0.0,
@@ -156,15 +164,13 @@ class HeartsBoardState extends State<HeartsBoard> {
             showCard, true, CardCollectionOrientation.show1,
             useKeys: true,
             acceptCallback: config.gameAcceptCallback,
-            acceptType: isMe && isPlayerTurn ? DropType.card : DropType.none,
+            acceptType: isMe && !hasPlayed ? DropType.card : DropType.none,
             widthCard: config.cardWidth - 6.0,
             heightCard: config.cardHeight - 6.0,
             backgroundColor:
-                isPlayerTurn ? style.theme.accentColor : Colors.grey[500],
-            altColor: isPlayerTurn ? Colors.grey[200] : Colors.grey[600])));
+                isTurn ? style.theme.accentColor : Colors.grey[500],
+            altColor: isTurn ? Colors.grey[200] : Colors.grey[600])));
 
-    bool hasPlayed =
-        game.cardCollections[playerNumber + HeartsGame.OFFSET_PLAY].length > 0;
     if (!hasPlayed) {
       items.add(new Positioned(
           top: 0.0,
