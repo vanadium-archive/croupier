@@ -362,25 +362,25 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     return config.croupier.settingsFromPlayerNumber(playerNumber)?.name;
   }
 
-  String _getStatus() {
+  HeartsStatus _getStatus() {
     HeartsGame game = config.game;
 
     String status;
+    bool isPlayer = false;
+    bool isError = false;
     switch (game.phase) {
       case HeartsPhase.Play:
         // Who's turn is it?
         String name = _getName(game.whoseTurn) ?? "Player ${game.whoseTurn}";
-        status = game.whoseTurn == game.playerNumber
-            ? "Your turn"
-            : "${name}'s turn";
+        isPlayer = game.whoseTurn == game.playerNumber;
+        status = isPlayer ? "Your turn" : "${name}'s turn";
 
         // Override if someone is taking a trick.
         if (game.allPlayed) {
           int winner = game.determineTrickWinner();
           String trickTaker = _getName(winner) ?? "Player ${winner}";
-          status = winner == game.playerNumber
-              ? "Your trick"
-              : "${trickTaker}'s trick";
+          isPlayer = winner == game.playerNumber;
+          status = isPlayer ? "Your trick" : "${trickTaker}'s trick";
         }
         break;
       case HeartsPhase.Pass:
@@ -390,6 +390,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
           String name =
               _getName(game.passTarget) ?? "Player ${game.passTarget}";
           status = "Pass to ${name}";
+          isPlayer = true;
         }
         break;
       case HeartsPhase.Take:
@@ -399,6 +400,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
           String name =
               _getName(game.takeTarget) ?? "Player ${game.takeTarget}";
           status = "Take from ${name}";
+          isPlayer = true;
         }
         break;
       default:
@@ -408,17 +410,36 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     // Override if there is a debug string.
     if (game.debugString != null) {
       status = game.debugString;
+      isError = true;
     }
 
-    return status;
+    return new HeartsStatus(status, isPlayer, isError);
+  }
+
+  Widget _buildNumTrickIcon() {
+    HeartsGame game = config.game;
+
+    int numTrickCards = game.cardCollections[
+        HeartsGame.OFFSET_TRICK + game.playerNumber].length;
+    int numTricks = numTrickCards ~/ 4;
+
+    String iconName = "image/filter_9_plus";
+    if (numTricks == 0) {
+      iconName = "image/filter_none";
+    } else if (numTricks <= 9) {
+      iconName = "image/filter_${numTricks}";
+    }
+
+    return new Icon(icon: iconName);
   }
 
   Widget _buildStatusBar() {
     HeartsGame game = config.game;
 
     List<Widget> statusBarWidgets = new List<Widget>();
+    HeartsStatus status = _getStatus();
     statusBarWidgets.add(new Flexible(
-        flex: 1, child: new Text(_getStatus(), style: style.Text.largeStyle)));
+        flex: 1, child: new Text(status.text, style: style.Text.largeStyle)));
 
     switch (game.phase) {
       case HeartsPhase.Play:
@@ -432,11 +453,13 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
                 });
               },
                   child: new Container(
-                      decoration: style.Box.liveBackground,
+                      decoration: style.Box.brightBackground,
+                      margin: style.Spacing.smallPaddingSide,
                       padding: style.Spacing.smallPadding,
                       child: new Text("Take Cards",
                           style: style.Text.largeStyle)))));
         }
+        statusBarWidgets.add(_buildNumTrickIcon());
         statusBarWidgets
             .add(new IconButton(icon: "action/swap_vert", onPressed: () {
           setState(() {
@@ -471,10 +494,17 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
         break;
     }
 
+    BoxDecoration decoration = style.Box.background;
+    if (status.isPlayer) {
+      decoration = style.Box.liveBackground;
+    }
+    if (status.isError) {
+      decoration = style.Box.errorBackground;
+    }
+
     return new Container(
         padding: new EdgeDims.all(10.0),
-        decoration:
-            new BoxDecoration(backgroundColor: style.theme.primaryColor),
+        decoration: decoration,
         child: new Row(statusBarWidgets,
             justifyContent: FlexJustifyContent.spaceBetween));
   }
@@ -507,8 +537,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
 
     if (_showSplitView) {
       cardCollections.add(new Container(
-          decoration:
-              new BoxDecoration(backgroundColor: style.theme.primaryColor),
+          decoration: style.Box.background,
           child: new Column([_buildFullMiniBoard(), _buildStatusBar()])));
     } else {
       Widget playArea = new Container(
@@ -527,8 +556,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
                       : Colors.grey[600])));
 
       cardCollections.add(new Container(
-          decoration:
-              new BoxDecoration(backgroundColor: style.theme.primaryColor),
+          decoration: style.Box.background,
           child: new BlockBody([_buildStatusBar(), playArea])));
     }
 
@@ -851,4 +879,12 @@ class HeartsArrangeComponent extends GameArrangeComponent {
 
     return new Flexible(flex: 1, child: dragTarget);
   }
+}
+
+class HeartsStatus {
+  final String text;
+  final bool isPlayer;
+  final bool isError;
+
+  const HeartsStatus(this.text, this.isPlayer, this.isError);
 }

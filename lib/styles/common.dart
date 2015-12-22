@@ -5,20 +5,18 @@
 import 'package:flutter/material.dart';
 
 class Text {
-  static final Color secondaryTextColor = Colors.grey[500];
-  static final Color errorTextColor = Colors.red[500];
   static final TextStyle titleStyle = new TextStyle(fontSize: 18.0);
   static final TextStyle subtitleStyle =
       new TextStyle(fontSize: 12.0, color: secondaryTextColor);
   static final TextStyle liveNow =
       new TextStyle(fontSize: 12.0, color: theme.accentColor);
-  static final TextStyle error = new TextStyle(color: errorTextColor);
+  static final TextStyle error = new TextStyle(color: errorColor);
   static final TextStyle hugeStyle = new TextStyle(fontSize: 32.0);
   static final TextStyle hugeRedStyle =
-      new TextStyle(fontSize: 32.0, color: errorTextColor);
+      new TextStyle(fontSize: 32.0, color: errorColor);
   static final TextStyle largeStyle = new TextStyle(fontSize: 24.0);
   static final TextStyle largeRedStyle =
-      new TextStyle(fontSize: 24.0, color: errorTextColor);
+      new TextStyle(fontSize: 24.0, color: errorColor);
   static final TextStyle splash =
       new TextStyle(fontSize: 16.0, color: Colors.white);
 }
@@ -29,6 +27,8 @@ class Size {
 }
 
 class Spacing {
+  static final EdgeDims smallPaddingSide =
+      new EdgeDims.symmetric(horizontal: 5.0);
   static final EdgeDims smallPadding = new EdgeDims.all(5.0);
   static final EdgeDims normalPadding = new EdgeDims.all(10.0);
 }
@@ -38,11 +38,19 @@ class Box {
       border: new Border.all(color: theme.accentColor), borderRadius: 2.0);
   static final BoxDecoration liveBackground =
       new BoxDecoration(backgroundColor: theme.accentColor);
+  static final BoxDecoration background =
+      new BoxDecoration(backgroundColor: theme.primaryColor);
+  static final BoxDecoration brightBackground =
+      new BoxDecoration(backgroundColor: theme.primarySwatch[100]);
+  static final BoxDecoration errorBackground =
+      new BoxDecoration(backgroundColor: errorColor);
   static final BoxDecoration border = new BoxDecoration(
       border: new Border.all(color: theme.primaryColor), borderRadius: 2.0);
   static final BoxDecoration borderInactive = new BoxDecoration(
       border: new Border.all(color: Colors.grey[300]), borderRadius: 2.0);
 }
 
+Color secondaryTextColor = Colors.grey[500];
+Color errorColor = Colors.red[500];
 ThemeData theme = new ThemeData(
     primarySwatch: Colors.blueGrey, accentColor: Colors.orangeAccent[700]);
