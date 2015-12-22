@@ -192,9 +192,8 @@ class Croupier {
         _advertiseFuture = settings_manager
             .createGameSyncgroup(gameTypeToString(gt), game.gameID)
             .then((GameStartData gsd) {
-          if (!game.gameArrangeData.needsArrangement) {
-            settings_manager.setPlayerNumber(gsd.gameID, 0);
-          }
+          // The game creator should always sit as player 0, at least initially.
+          settings_manager.setPlayerNumber(gsd.gameID, settings.userID, 0);
           // Only the game chooser should be advertising the game.
           return settings_manager.advertiseSettings(gsd);
         }); // don't wait for this future.
@@ -228,7 +227,7 @@ class Croupier {
         players_found[gsd.ownerID] = null;
         settings_manager.joinGameSyncgroup(sgName, gsd.gameID).then((_) {
           if (!game.gameArrangeData.needsArrangement) {
-            settings_manager.setPlayerNumber(gsd.gameID, 0);
+            settings_manager.setPlayerNumber(gsd.gameID, settings.userID, 0);
           }
         });
 

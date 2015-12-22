@@ -70,7 +70,7 @@ class SettingsManager {
     return new Future(() => null);
   }
 
-  Future setPlayerNumber(int gameID, int playerNumber) async {
+  Future setPlayerNumber(int gameID, int userID, int playerNumber) async {
     return new Future(() => null);
   }
 

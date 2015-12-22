@@ -13,6 +13,7 @@ import 'package:vector_math/vector_math_64.dart' as vector_math;
 
 import '../logic/card.dart' as logic_card;
 import '../logic/croupier.dart' show Croupier;
+import '../logic/croupier_settings.dart' show CroupierSettings;
 import '../logic/game/game.dart' show Game, GameType;
 import '../logic/hearts/hearts.dart' show HeartsGame, HeartsPhase, HeartsType;
 import '../logic/solitaire/solitaire.dart' show SolitaireGame, SolitairePhase;

@@ -777,8 +777,6 @@ class HeartsArrangeComponent extends GameArrangeComponent {
   HeartsArrangeComponent(Croupier croupier, {double width, double height})
       : super(croupier, width: width, height: height);
 
-  bool get hasSat => croupier.game.playerNumber != null;
-
   Widget build(BuildContext context) {
     int numAtTable = croupier.players_found.values
         .where((int playerNumber) => playerNumber == 4)
@@ -792,22 +790,22 @@ class HeartsArrangeComponent extends GameArrangeComponent {
           new Flexible(
               flex: 1,
               child: new Row(
-                  [_buildEmptySlot(), _buildSlot("Player", 2), _buildEmptySlot()],
+                  [_buildEmptySlot(), _buildSlot("social/person_outline", 2), _buildEmptySlot()],
                   justifyContent: FlexJustifyContent.spaceAround,
                   alignItems: FlexAlignItems.stretch)),
           new Flexible(
               flex: 1,
               child: new Row([
-                _buildSlot("Player", 1),
-                _buildSlot("Table: ${numAtTable}", 4),
-                _buildSlot("Player", 3)
+                _buildSlot("social/person_outline", 1),
+                _buildSlot("hardware/tablet", 4, extra: "x${numAtTable}"),
+                _buildSlot("social/person_outline", 3)
               ],
                   justifyContent: FlexJustifyContent.spaceAround,
                   alignItems: FlexAlignItems.stretch)),
           new Flexible(
               flex: 1,
               child: new Row(
-                  [_buildEmptySlot(), _buildSlot("Player", 0), _buildEmptySlot()],
+                  [_buildEmptySlot(), _buildSlot("social/person_outline", 0), _buildEmptySlot()],
                   justifyContent: FlexJustifyContent.spaceAround,
                   alignItems: FlexAlignItems.stretch))
         ],
@@ -819,30 +817,38 @@ class HeartsArrangeComponent extends GameArrangeComponent {
     return new Flexible(flex: 1, child: new Text(""));
   }
 
-  Widget _buildSlot(String name, int index) {
-    NoArgCb onTap = () {
-      croupier.settings_manager.setPlayerNumber(croupier.game.gameID, index);
-    };
-    Widget slotWidget = new Text(name, style: style.Text.hugeStyle);
+  Widget _buildSlot(String name, int index, {String extra: ""}) {
+    Widget slotWidget = new Row([
+      new Icon(size: IconSize.s48, icon: name),
+      new Text(extra, style: style.Text.largeStyle)
+    ],
+        alignItems: FlexAlignItems.center,
+        justifyContent: FlexJustifyContent.center);
 
-    bool seatTaken =
-        index >= 0 && index < 4 && croupier.players_found.containsValue(index);
+    bool isMe = croupier.game.playerNumber == index;
+    bool isPlayerIndex = index >= 0 && index < 4;
+    bool isTableIndex = index == 4;
+    bool seatTaken = (isPlayerIndex || (isTableIndex && isMe)) &&
+        croupier.players_found.containsValue(index);
     if (seatTaken) {
-      onTap = null;
-      slotWidget = new CroupierProfileComponent(
-          settings: croupier.settingsFromPlayerNumber(index));
-    } else if (hasSat) {
-      onTap = null;
+      // Note: If more than 1 person is in the seat, it may no longer show you.
+      CroupierSettings cs = croupier.settingsFromPlayerNumber(index);
+      CroupierProfileComponent cpc = new CroupierProfileComponent(settings: cs);
+      slotWidget =
+          new Draggable<CroupierSettings>(child: cpc, feedback: cpc, data: cs);
     }
 
-    return new Flexible(
-        flex: 1,
-        child: new GestureDetector(
-            child: new Card(
-                color: croupier.game.playerNumber == index
-                    ? style.theme.accentColor
-                    : null,
-                child: slotWidget),
-            onTap: onTap));
+    Widget dragTarget = new DragTarget<CroupierSettings>(
+        builder: (BuildContext context, List<CroupierSettings> data, _) {
+      return new Container(
+          constraints: const BoxConstraints.expand(),
+          decoration: isMe ? style.Box.liveBackground : style.Box.border,
+          child: slotWidget);
+    }, onAccept: (CroupierSettings cs) {
+      croupier.settings_manager
+          .setPlayerNumber(croupier.game.gameID, cs.userID, index);
+    }, onWillAccept: (_) => true);
+
+    return new Flexible(flex: 1, child: dragTarget);
   }
 }

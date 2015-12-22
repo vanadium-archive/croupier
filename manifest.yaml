@@ -5,9 +5,11 @@ material-design-icons:
   - name: action/settings
   - name: av/play_arrow
   - name: action/swap_vert
+  - name: hardware/tablet
   - name: navigation/arrow_back
   - name: navigation/arrow_forward
   - name: navigation/menu
+  - name: social/person_outline
 assets:
   - images/default/classic/down/c10.png
   - images/default/classic/down/c1.png

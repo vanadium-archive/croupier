@@ -197,13 +197,12 @@ class SettingsManager {
         .put(UTF8.encode(await _mySettingsSyncgroupName()));
   }
 
-  Future setPlayerNumber(int gameID, int playerNumber) async {
+  Future setPlayerNumber(int gameID, int userID, int playerNumber) async {
     sc.SyncbaseDatabase db = await _cc.createDatabase();
     sc.SyncbaseTable gameTable = await _cc.createTable(db, util.tableNameGames);
 
-    int id = await _getUserID();
     await gameTable
-        .row(util.playerNumberKeyFromData(gameID, id))
+        .row(util.playerNumberKeyFromData(gameID, userID))
         .put(UTF8.encode("${playerNumber}"));
   }
 

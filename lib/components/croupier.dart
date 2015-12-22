@@ -150,11 +150,21 @@ class CroupierComponentState extends State<CroupierComponent> {
     double size = style.Size.settingsSize;
     config.croupier.players_found.forEach((int userID, int playerNumber) {
       if (!needsArrangement || playerNumber == null) {
+        // Note: Even if cs is null, a placeholder will be shown instead.
         CroupierSettings cs = config.croupier.settings_everyone[userID];
-        // cs could be null if this settings data hasn't synced yet.
-        // If so, a placeholder is shown instead.
-        profileWidgets.add(new CroupierProfileComponent(
-            settings: cs, height: size, width: size));
+        bool isMe = config.croupier.settings.userID == userID;
+        Widget cpc = new Container(
+            decoration: isMe ? style.Box.liveNow : null,
+            child: new CroupierProfileComponent(
+                settings: cs, height: size, width: size));
+
+        // If the player profiles can be arranged, they should be draggable too.
+        if (needsArrangement) {
+          profileWidgets.add(new Draggable<CroupierSettings>(
+              child: cpc, feedback: cpc, data: cs));
+        } else {
+          profileWidgets.add(cpc);
+        }
       }
     });
 
@@ -187,7 +197,8 @@ class CroupierComponentState extends State<CroupierComponent> {
     if (gad.needsArrangement) {
       // Games that need arrangement can show their game arrange component.
       allWidgets.add(component_game.createGameArrangeComponent(config.croupier,
-          width: ui.window.size.width, height: ui.window.size.height / 2));
+          width: ui.window.size.width * 0.90,
+          height: ui.window.size.height * 0.50));
     }
 
     // Allow games that can start with these players to begin.
@@ -214,7 +225,7 @@ class CroupierComponentState extends State<CroupierComponent> {
                     backgroundColor: startCb != null
                         ? style.theme.accentColor
                         : Colors.grey[300]),
-                padding: new EdgeDims.all(10.0),
+                padding: style.Spacing.smallPadding,
                 child: new FlatButton(
                     child: new Text("Start Game", style: style.Text.hugeStyle),
                     onPressed: startCb))
