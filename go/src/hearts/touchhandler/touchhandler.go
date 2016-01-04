@@ -290,6 +290,8 @@ func beginClickPass(t touch.Event, u *uistate.UIState) {
 			view.LoadTableView(u)
 		} else if b == u.Buttons["hand"] {
 			view.LoadPassOrTakeOrPlay(u)
+		} else if b == u.Buttons["restart"] {
+			sync.ResetGame(u.LogSG, u.IsOwner, u)
 		} else if b == u.Buttons["pass"] {
 			pressButton(b, u)
 		}
@@ -376,6 +378,8 @@ func beginClickTake(t touch.Event, u *uistate.UIState) {
 			view.LoadTableView(u)
 		} else if b == u.Buttons["hand"] {
 			view.LoadPassOrTakeOrPlay(u)
+		} else if b == u.Buttons["restart"] {
+			sync.ResetGame(u.LogSG, u.IsOwner, u)
 		} else if b == u.Buttons["take"] {
 			pressButton(b, u)
 		}
@@ -440,6 +444,8 @@ func beginClickPlay(t touch.Event, u *uistate.UIState) {
 			view.LoadTableView(u)
 		} else if b == u.Buttons["hand"] {
 			view.LoadPassOrTakeOrPlay(u)
+		} else if b == u.Buttons["restart"] {
+			sync.ResetGame(u.LogSG, u.IsOwner, u)
 		} else if b == u.Buttons["takeTrick"] {
 			pressButton(b, u)
 		}
@@ -550,6 +556,8 @@ func beginClickSplit(t touch.Event, u *uistate.UIState) {
 			view.LoadTableView(u)
 		} else if b == u.Buttons["hand"] {
 			view.LoadPassOrTakeOrPlay(u)
+		} else if b == u.Buttons["restart"] {
+			sync.ResetGame(u.LogSG, u.IsOwner, u)
 		}
 	}
 }
@@ -721,7 +729,7 @@ func pressButton(b *staticimg.StaticImg, u *uistate.UIState) {
 func unpressButtons(u *uistate.UIState) []*staticimg.StaticImg {
 	pressed := make([]*staticimg.StaticImg, 0)
 	for _, b := range u.Buttons {
-		if b.GetDisplayingImage() == false {
+		if b != nil && b.GetDisplayingImage() == false {
 			u.Eng.SetSubTex(b.GetNode(), b.GetImage())
 			b.SetDisplayingImage(true)
 			pressed = append(pressed, b)
@@ -811,5 +819,7 @@ func updateViewFromTable(b *staticimg.StaticImg, u *uistate.UIState) {
 		view.LoadTableView(u)
 	} else if b == u.Buttons["hand"] {
 		view.LoadPassOrTakeOrPlay(u)
+	} else if b == u.Buttons["restart"] {
+		sync.ResetGame(u.LogSG, u.IsOwner, u)
 	}
 }

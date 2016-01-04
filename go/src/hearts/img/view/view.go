@@ -1289,6 +1289,9 @@ func addDebugBar(u *uistate.UIState) {
 	debugPassImage := u.Texs["Clubs-2.png"]
 	debugPassPos := coords.MakeVec(u.WindowSize.X-2*buttonDim.X, u.WindowSize.Y-buttonDim.Y)
 	u.Buttons["hand"] = texture.MakeImgWithoutAlt(debugPassImage, debugPassPos, buttonDim, u)
+	debugRestartImage := u.Texs["Restart.png"]
+	debugRestartPos := coords.MakeVec(u.WindowSize.X-3*buttonDim.X, u.WindowSize.Y-buttonDim.Y)
+	u.Buttons["restart"] = texture.MakeImgWithoutAlt(debugRestartImage, debugRestartPos, buttonDim, u)
 }
 
 // Helper function that returns the largest int in a non-negative int array (not index of largest int)

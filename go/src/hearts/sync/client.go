@@ -109,7 +109,7 @@ func JoinLogSyncgroup(logName string, u *uistate.UIState) bool {
 	} else {
 		fmt.Println("Syncgroup joined")
 		if u.LogSG != logName {
-			resetGame(logName, false, u)
+			ResetGame(logName, false, u)
 		}
 		return true
 	}

@@ -169,7 +169,7 @@ func CreateLogSyncgroup(u *uistate.UIState) (string, string) {
 	} else {
 		fmt.Println("Syncgroup created")
 		if logSGName != u.LogSG {
-			resetGame(logSGName, true, u)
+			ResetGame(logSGName, true, u)
 		}
 		return string(value), logSGName
 	}
@@ -218,14 +218,25 @@ func CreateSettingsSyncgroup(u *uistate.UIState) string {
 	}
 }
 
-func resetGame(logName string, creator bool, u *uistate.UIState) {
+func ResetGame(logName string, creator bool, u *uistate.UIState) {
+	u.M.Lock()
+	defer u.M.Unlock()
+	go sendTrueIfExists(u.GameChan)
 	u.PlayerData = make(map[int]int)
 	u.CurPlayerIndex = -1
 	u.LogSG = logName
+	u.CurTable.NewGame()
 	if !creator {
 		tmp := strings.Split(logName, "-")
 		gameID, _ := strconv.Atoi(tmp[len(tmp)-1])
 		u.GameID = gameID
 	}
-	go UpdateGame(u)
+	u.GameChan = make(chan bool)
+	go UpdateGame(u.GameChan, u)
+}
+
+func sendTrueIfExists(ch chan bool) {
+	if ch != nil {
+		ch <- true
+	}
 }

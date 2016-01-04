@@ -109,6 +109,7 @@ type UIState struct {
 	AnimChans        []chan bool                    // keeps track of all 'quit' channels in animations so their goroutines can be stopped
 	SGChan           chan bool                      // pass in a bool to stop advertising the syncgroup
 	ScanChan         chan bool                      // pass in a bool to stop scanning for syncgroups
+	GameChan         chan bool                      // pass in a bool to stop receiving updates from the current game
 	DiscGroups       map[string]*DiscStruct         // contains a set of addresses and game start data for each advertised game found
 	M                sync.Mutex
 }
