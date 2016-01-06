@@ -37,7 +37,7 @@ func makeTable(p []*player.Player) *Table {
 		heartsBroken: false,
 		firstTrick:   true,
 		winCondition: 100,
-		dir:          direction.None,
+		dir:          direction.Right,
 	}
 }
 
@@ -395,6 +395,7 @@ func (t *Table) NewGame() {
 		p.ResetTricks()
 		p.ResetScore()
 	}
+	t.trick = make([]*card.Card, len(t.players))
 	t.NewRound()
 	t.dir = direction.Right
 }

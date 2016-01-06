@@ -80,18 +80,43 @@ func handleSettingsUpdate(key string, value []byte, u *uistate.UIState) {
 	}
 }
 
-func UpdateGame(u *uistate.UIState) {
-	stream, err := WatchData(LogName, fmt.Sprintf("%d", u.GameID), u)
-	fmt.Println("STARTING WATCH FOR GAME", u.GameID)
+func UpdateGame(quit chan bool, u *uistate.UIState) {
+	file, err := os.OpenFile("/sdcard/test.txt", os.O_RDWR|os.O_APPEND|os.O_CREATE, 0666)
 	if err != nil {
-		fmt.Println("WatchData error:", err)
-	}
-	file, err2 := os.OpenFile("/sdcard/test.txt", os.O_RDWR|os.O_APPEND|os.O_CREATE, 0666)
-	if err2 != nil {
-		fmt.Println("err2:", err2)
+		fmt.Println("err:", err)
 	}
 	fmt.Fprintf(file, fmt.Sprintf("\n***NEW GAME: %d\n", u.GameID))
 	defer file.Close()
+	scanner := ScanData(LogName, fmt.Sprintf("%d", u.GameID), u)
+	m := make(map[string][]byte)
+	keys := make([]string, 0)
+	for scanner.Advance() {
+		k := scanner.Key()
+		var v []byte
+		if err := scanner.Value(&v); err != nil {
+			fmt.Println("Value error:", err)
+		}
+		id := strings.Split(k, "/")[0]
+		if id == fmt.Sprintf("%d", u.GameID) {
+			m[k] = v
+			keys = append(keys, k)
+		}
+	}
+	sort.Sort(scanSorter(keys))
+	for _, key := range keys {
+		select {
+		case <-quit:
+			return
+		default:
+			value := m[key]
+			handleGameUpdate(file, key, value, u)
+		}
+	}
+	stream, err2 := WatchData(LogName, fmt.Sprintf("%d", u.GameID), u)
+	fmt.Println("STARTING WATCH FOR GAME", u.GameID)
+	if err2 != nil {
+		fmt.Println("WatchData error:", err2)
+	}
 	updateBlock := make([]nosql.WatchChange, 0)
 	for {
 		if updateExists := stream.Advance(); updateExists {
@@ -99,63 +124,67 @@ func UpdateGame(u *uistate.UIState) {
 			updateBlock = append(updateBlock, c)
 			if !c.Continued {
 				sort.Sort(updateSorter(updateBlock))
-				handleGameUpdate(file, updateBlock, u)
+				for _, c := range updateBlock {
+					select {
+					case <-quit:
+						return
+					default:
+						if c.ChangeType == nosql.PutChange {
+							key := c.Row
+							var value []byte
+							if err := c.Value(&value); err != nil {
+								fmt.Println("Value error:", err)
+							}
+							handleGameUpdate(file, key, value, u)
+						} else {
+							fmt.Println("Unexpected ChangeType: ", c.ChangeType)
+						}
+					}
+				}
 				updateBlock = make([]nosql.WatchChange, 0)
 			}
 		}
 	}
 }
 
-func handleGameUpdate(file *os.File, changes []nosql.WatchChange, u *uistate.UIState) {
-	for _, c := range changes {
-		if c.ChangeType == nosql.PutChange {
-			key := c.Row
-			curTime := time.Now().UnixNano() / 1000000
-			var value []byte
-			if err := c.Value(&value); err != nil {
-				fmt.Println("Value error:", err)
-			}
-			valueStr := string(value)
-			fmt.Fprintf(file, fmt.Sprintf("key: %s\n", key))
-			fmt.Fprintf(file, fmt.Sprintf("value: %s\n", valueStr))
-			fmt.Fprintf(file, fmt.Sprintf("time: %v\n", curTime))
-			tmp := strings.Split(key, "/")
-			if len(tmp) == 3 {
-				keyTime, _ := strconv.ParseInt(strings.Split(tmp[2], "-")[0], 10, 64)
-				fmt.Fprintf(file, fmt.Sprintf("diff: %d milliseconds\n\n", curTime-keyTime))
-			} else {
-				fmt.Fprintf(file, "\n")
-			}
-			fmt.Println(key, valueStr)
-			keyType := strings.Split(key, "/")[1]
-			switch keyType {
-			case "log":
-				updateType := strings.Split(valueStr, "|")[0]
-				switch updateType {
-				case Deal:
-					onDeal(valueStr, u)
-				case Pass:
-					onPass(valueStr, u)
-				case Take:
-					onTake(valueStr, u)
-				case Play:
-					onPlay(valueStr, u)
-				case TakeTrick:
-					onTakeTrick(valueStr, u)
-				case Ready:
-					onReady(valueStr, u)
-				}
-			case "players":
-				switch strings.Split(key, "/")[3] {
-				case "player_number":
-					onPlayerNum(key, valueStr, u)
-				case "settings_sg":
-					onSettings(key, valueStr, u)
-				}
-
-			}
-		} else {
-			fmt.Println("Unexpected ChangeType: ", c.ChangeType)
+func handleGameUpdate(file *os.File, key string, value []byte, u *uistate.UIState) {
+	curTime := time.Now().UnixNano() / 1000000
+	valueStr := string(value)
+	fmt.Fprintf(file, fmt.Sprintf("key: %s\n", key))
+	fmt.Fprintf(file, fmt.Sprintf("value: %s\n", valueStr))
+	fmt.Fprintf(file, fmt.Sprintf("time: %v\n", curTime))
+	tmp := strings.Split(key, "/")
+	if len(tmp) == 3 {
+		keyTime, _ := strconv.ParseInt(strings.Split(tmp[2], "-")[0], 10, 64)
+		fmt.Fprintf(file, fmt.Sprintf("diff: %d milliseconds\n\n", curTime-keyTime))
+	} else {
+		fmt.Fprintf(file, "\n")
+	}
+	fmt.Println(key, valueStr)
+	keyType := strings.Split(key, "/")[1]
+	switch keyType {
+	case "log":
+		updateType := strings.Split(valueStr, "|")[0]
+		switch updateType {
+		case Deal:
+			onDeal(valueStr, u)
+		case Pass:
+			onPass(valueStr, u)
+		case Take:
+			onTake(valueStr, u)
+		case Play:
+			onPlay(valueStr, u)
+		case TakeTrick:
+			onTakeTrick(valueStr, u)
+		case Ready:
+			onReady(valueStr, u)
+		}
+	case "players":
+		switch strings.Split(key, "/")[3] {
+		case "player_number":
+			onPlayerNum(key, valueStr, u)
+		case "settings_sg":
+			onSettings(key, valueStr, u)
 		}
 	}
 }
@@ -471,6 +500,24 @@ func (us updateSorter) Swap(i, j int) {
 func (us updateSorter) Less(i, j int) bool {
 	iKey := us[i].Row
 	jKey := us[j].Row
+	return iKey < jKey
+}
+
+type scanSorter []string
+
+func (ss scanSorter) Len() int {
+	return len(ss)
+}
+
+// Swaps the positions of two changes in the array
+func (ss scanSorter) Swap(i, j int) {
+	ss[i], ss[j] = ss[j], ss[i]
+}
+
+// Compares two changes-- one card is less than another if it has an earlier timestamp
+func (ss scanSorter) Less(i, j int) bool {
+	iKey := ss[i]
+	jKey := ss[j]
 	return iKey < jKey
 }
 
