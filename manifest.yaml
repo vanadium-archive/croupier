@@ -249,6 +249,9 @@ assets:
   - images/avatars/android.png
   - images/avatars/man.png
   - images/avatars/woman.png
+  - images/games/hearts/pass_across.png
+  - images/games/hearts/pass_left.png
+  - images/games/hearts/pass_right.png
   - images/splash/background.png
   - images/splash/flutter.png
   - images/splash/vanadium.png

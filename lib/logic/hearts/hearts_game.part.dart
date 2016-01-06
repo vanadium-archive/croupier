@@ -101,9 +101,9 @@ class HeartsGame extends Game {
     switch (roundNumber % 4) {
       // is a 4-cycle
       case 0:
-        return (playerNumber - 1) % 4; // passLeft
+        return (playerNumber - 1) % 4; // passRight
       case 1:
-        return (playerNumber + 1) % 4; // passRight
+        return (playerNumber + 1) % 4; // passLeft
       case 2:
         return (playerNumber + 2) % 4; // passAcross
       case 3:

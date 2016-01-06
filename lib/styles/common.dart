@@ -52,5 +52,6 @@ class Box {
 
 Color secondaryTextColor = Colors.grey[500];
 Color errorColor = Colors.red[500];
+Color transparentColor = const Color(0x00000000);
 ThemeData theme = new ThemeData(
     primarySwatch: Colors.blueGrey, accentColor: Colors.orangeAccent[700]);

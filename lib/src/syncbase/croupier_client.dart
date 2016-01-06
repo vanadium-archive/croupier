@@ -215,7 +215,7 @@ class CroupierClient {
         }
 
         // 2. Then run through each value in order.
-        watchSequence.forEach((sc.WatchChange _w) async {
+        await Future.forEach(watchSequence, (sc.WatchChange _w) async {
           String key = _w.rowKey;
           String value;
           switch (_w.changeType) {

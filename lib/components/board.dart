@@ -2,13 +2,15 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:vector_math/vector_math_64.dart' as vector_math;
 
 import '../logic/card.dart' as logic_card;
 import '../logic/croupier.dart' show Croupier;
-import '../logic/croupier_settings.dart' show CroupierSettings;
 import '../logic/game/game.dart' show Game, GameType, NoArgCb;
-import '../logic/hearts/hearts.dart' show HeartsGame;
+import '../logic/hearts/hearts.dart' show HeartsGame, HeartsPhase;
 import '../styles/common.dart' as style;
 import 'card.dart' as component_card;
 import 'card_collection.dart'
@@ -76,18 +78,21 @@ class HeartsBoard extends Board {
 
 class HeartsBoardState extends State<HeartsBoard> {
   Widget build(BuildContext context) {
-    double offscreenDelta = config.isMini ? 5.0 : 2.0;
+    double offscreenDelta = config.isMini ? 5.0 : 1.5;
+
+    Widget boardChild;
+    if (config.game.phase == HeartsPhase.Play) {
+      boardChild =
+          config.isMini ? _buildMiniBoardLayout() : _buildBoardLayout();
+    } else {
+      boardChild = _buildPassLayout();
+    }
 
     return new Container(
         height: config.height,
         width: config.width,
         child: new Stack([
-          new Positioned(
-              top: 0.0,
-              left: 0.0,
-              child: config.isMini
-                  ? _buildMiniBoardLayout()
-                  : _buildBoardLayout()),
+          new Positioned(top: 0.0, left: 0.0, child: boardChild),
           new Positioned(
               top: config.height * (offscreenDelta + 0.5),
               left: (config.width - config.cardWidth) / 2,
@@ -113,6 +118,109 @@ class HeartsBoardState extends State<HeartsBoard> {
 
   int rotateByGamePlayerNumber(int i) {
     return (i + config.game.playerNumber) % 4;
+  }
+
+  static Map<int, String> passBackgrounds = const <int, String>{
+    0: "images/games/hearts/pass_right.png",
+    1: "images/games/hearts/pass_left.png",
+    2: "images/games/hearts/pass_across.png",
+    3: "",
+  };
+
+  Widget _buildPassLayout() {
+    String passBackground = ""; // It's possible to have no background.
+    if (config.game.phase == HeartsPhase.Pass ||
+        config.game.phase == HeartsPhase.Take) {
+      passBackground = passBackgrounds[config.game.roundNumber % 4];
+    }
+
+    return new Container(
+        height: config.height,
+        width: config.width,
+        child: new Stack([
+          new Positioned(
+              top: 0.0,
+              left: 0.0,
+              child: new AssetImage(
+                  name: passBackground,
+                  height: config.height,
+                  width: config.width)),
+          new Positioned(top: 0.0, left: 0.0, child: _buildPassLayoutInternal())
+        ]));
+  }
+
+  double _rotationAngle(int pNum) {
+    return pNum * math.PI / 2;
+  }
+
+  Widget _rotate(Widget w, int pNum) {
+    return new Transform(
+        child: w,
+        transform:
+            new vector_math.Matrix4.identity().rotateZ(_rotationAngle(pNum)),
+        alignment: new FractionalOffset(0.5, 0.5));
+  }
+
+  Widget _getPass(int playerNumber) {
+    double sizeRatio = 0.10;
+    double cccSize = math.min(sizeRatio * config.width, config.cardWidth * 3.5);
+
+    HeartsGame game = config.game;
+    List<logic_card.Card> cardsToTake = [];
+    int takeTarget = game.getTakeTarget(playerNumber);
+    if (takeTarget != null) {
+      cardsToTake = game.cardCollections[
+          game.getTakeTarget(playerNumber) + HeartsGame.OFFSET_PASS];
+    }
+
+    bool isHorz = playerNumber % 2 == 0;
+    CardCollectionOrientation ori = isHorz
+        ? CardCollectionOrientation.horz
+        : CardCollectionOrientation.vert;
+    return new CardCollectionComponent(cardsToTake, false, ori,
+        backgroundColor: style.transparentColor,
+        width: isHorz ? cccSize : null,
+        height: isHorz ? null : cccSize,
+        widthCard: config.cardWidth,
+        heightCard: config.cardHeight,
+        rotation: playerNumber * math.PI / 2,
+        useKeys: true);
+  }
+
+  Widget _getProfile(int pNum, double sizeFactor) {
+    return new CroupierProfileComponent(
+        settings: config.croupier.settingsFromPlayerNumber(pNum),
+        height: config.height * sizeFactor,
+        width: config.height * sizeFactor * 1.5);
+  }
+
+  Widget _playerProfile(int pNum, double sizeFactor) {
+    return _rotate(_getProfile(pNum, sizeFactor), pNum);
+  }
+
+  Widget _buildPassLayoutInternal() {
+    return new Container(
+        height: config.height,
+        width: config.width,
+        child: new Column([
+          new Flexible(child: _playerProfile(2, 0.2), flex: 0),
+          new Flexible(child: _getPass(2), flex: 0),
+          new Flexible(
+              child: new Row([
+                new Flexible(child: _playerProfile(1, 0.2), flex: 0),
+                new Flexible(child: _getPass(1), flex: 0),
+                new Flexible(child: new Block([]), flex: 1),
+                new Flexible(child: _getPass(3), flex: 0),
+                new Flexible(child: _playerProfile(3, 0.2), flex: 0)
+              ],
+                  alignItems: FlexAlignItems.center,
+                  justifyContent: FlexJustifyContent.spaceAround),
+              flex: 1),
+          new Flexible(child: _getPass(0), flex: 0),
+          new Flexible(child: _playerProfile(0, 0.2), flex: 0)
+        ],
+            alignItems: FlexAlignItems.center,
+            justifyContent: FlexJustifyContent.spaceAround));
   }
 
   Widget _buildMiniBoardLayout() {
@@ -190,89 +298,41 @@ class HeartsBoardState extends State<HeartsBoard> {
         child: new Stack(items));
   }
 
+  Widget _showTrickText(int pNum) {
+    HeartsGame game = config.game;
+
+    int numTrickCards =
+        game.cardCollections[HeartsGame.OFFSET_TRICK + pNum].length;
+    int numTricks = numTrickCards ~/ 4;
+
+    String s = numTricks != 1 ? "s" : "";
+
+    return _rotate(new Text("${numTricks} trick${s}"), pNum);
+  }
+
   Widget _buildBoardLayout() {
     return new Container(
         height: config.height,
         width: config.width,
         child: new Column([
-          new Flexible(child: _buildPlayer(2), flex: 5),
+          new Flexible(child: _playerProfile(2, 0.2), flex: 0),
+          new Flexible(child: _showTrickText(2), flex: 0),
           new Flexible(
               child: new Row([
-                new Flexible(child: _buildPlayer(1), flex: 3),
-                new Flexible(child: _buildCenterCards(), flex: 4),
-                new Flexible(child: _buildPlayer(3), flex: 3)
+                new Flexible(child: _playerProfile(1, 0.2), flex: 0),
+                new Flexible(child: _showTrickText(1), flex: 0),
+                new Flexible(child: _buildCenterCards(), flex: 1),
+                new Flexible(child: _showTrickText(3), flex: 0),
+                new Flexible(child: _playerProfile(3, 0.2), flex: 0)
               ],
                   alignItems: FlexAlignItems.center,
                   justifyContent: FlexJustifyContent.spaceAround),
-              flex: 9),
-          new Flexible(child: _buildPlayer(0), flex: 5)
+              flex: 1),
+          new Flexible(child: _showTrickText(0), flex: 0),
+          new Flexible(child: _playerProfile(0, 0.2), flex: 0)
         ],
             alignItems: FlexAlignItems.center,
             justifyContent: FlexJustifyContent.spaceAround));
-  }
-
-  Widget _buildPlayer(int playerNumber) {
-    bool wide = (config.width >= config.height);
-
-    List<Widget> widgets = [
-      _getProfile(playerNumber, wide),
-      _getHand(playerNumber),
-      _getPass(playerNumber)
-    ];
-
-    if (playerNumber % 2 == 0) {
-      return new Row(widgets,
-          alignItems: FlexAlignItems.center,
-          justifyContent: FlexJustifyContent.center);
-    } else {
-      return new Column(widgets,
-          alignItems: FlexAlignItems.center,
-          justifyContent: FlexJustifyContent.center);
-    }
-  }
-
-  Widget _getProfile(int playerNumber, bool isWide) {
-    bool isMini = isWide && config.cardHeight * 2 > config.height * 0.25;
-
-    // If cs is null, a placeholder is used instead.
-    CroupierSettings cs =
-        config.croupier.settingsFromPlayerNumber(playerNumber);
-    return new CroupierProfileComponent(
-        settings: cs, height: config.height * 0.15, isMini: isMini);
-  }
-
-  Widget _getHand(int playerNumber) {
-    double sizeRatio = 0.30;
-    double cccSize = sizeRatio * config.width;
-
-    return new CardCollectionComponent(
-        config.game.cardCollections[playerNumber + HeartsGame.OFFSET_HAND],
-        false,
-        CardCollectionOrientation.horz,
-        width: cccSize,
-        widthCard: config.cardWidth,
-        heightCard: config.cardHeight,
-        useKeys: true);
-  }
-
-  Widget _getPass(int playerNumber) {
-    double sizeRatio = 0.10;
-    double cccSize = sizeRatio * config.width;
-
-    HeartsGame game = config.game;
-    List<logic_card.Card> cardsToTake = [];
-    int takeTarget = game.getTakeTarget(playerNumber);
-    if (takeTarget != null) {
-      cardsToTake = game.cardCollections[
-          game.getTakeTarget(playerNumber) + HeartsGame.OFFSET_PASS];
-    }
-    return new CardCollectionComponent(
-        cardsToTake, false, CardCollectionOrientation.horz,
-        backgroundColor: Colors.grey[300],
-        width: cccSize,
-        widthCard: config.cardWidth / 2,
-        heightCard: config.cardHeight / 2,
-        useKeys: true);
   }
 
   Widget _buildCenterCards() {
@@ -301,40 +361,62 @@ class HeartsBoardState extends State<HeartsBoard> {
     }
   }
 
+  double get _centerScaleFactor {
+    return math.min(config.height * 0.6 / (config.cardHeight * 3),
+        config.width - config.height * 0.4 / (config.cardWidth * 3));
+  }
+
   Widget _buildCenterCard(int playerNumber) {
     HeartsGame game = config.game;
     List<logic_card.Card> cards =
         game.cardCollections[playerNumber + HeartsGame.OFFSET_PLAY];
 
-    return new Container(
-        decoration: game.whoseTurn == playerNumber ? style.Box.liveNow : null,
-        child: new CardCollectionComponent(
-            cards, true, CardCollectionOrientation.show1,
-            widthCard: config.cardWidth * 2,
-            heightCard: config.cardHeight * 2,
-            useKeys: true));
+    bool hasPlayed = cards.length > 0;
+    bool isTurn = game.whoseTurn == playerNumber && !hasPlayed;
+
+    return new CardCollectionComponent(
+        cards, true, CardCollectionOrientation.show1,
+        widthCard: config.cardWidth * this._centerScaleFactor,
+        heightCard: config.cardHeight * this._centerScaleFactor,
+        rotation: _rotationAngle(playerNumber),
+        useKeys: true,
+        backgroundColor: isTurn ? style.theme.accentColor : null);
   }
 
+  // The off-screen cards consist of trick cards and play cards.
+  // When the board is mini, the player's play cards are excluded.
   Widget _buildOffScreenCards(int playerNumber) {
     HeartsGame game = config.game;
 
     List<logic_card.Card> cards = new List.from(
         game.cardCollections[playerNumber + HeartsGame.OFFSET_TRICK]);
 
-    double sizeFactor = 2.0;
+    bool isPlay = game.phase == HeartsPhase.Play;
+
+    // Prevent over-expansion of cards until a card has been played.
+    bool alreadyPlaying =
+        (isPlay && (game.numPlayed > 0 || game.trickNumber > 0));
+
+    double sizeFactor = 1.0;
     if (config.isMini) {
-      sizeFactor = 1.0;
       if (playerNumber != game.playerNumber) {
         cards.addAll(
             game.cardCollections[playerNumber + HeartsGame.OFFSET_HAND]);
       }
+    } else {
+      cards.addAll(game.cardCollections[playerNumber + HeartsGame.OFFSET_HAND]);
+
+      if (alreadyPlaying) {
+        sizeFactor = this._centerScaleFactor;
+      }
     }
 
     return new CardCollectionComponent(
-        cards, true, CardCollectionOrientation.show1,
+        cards, isPlay, CardCollectionOrientation.show1,
         widthCard: config.cardWidth * sizeFactor,
         heightCard: config.cardHeight * sizeFactor,
         useKeys: true,
+        rotation: config.isMini ? null : _rotationAngle(playerNumber),
         animationType: component_card.CardAnimationType.LONG);
   }
 }

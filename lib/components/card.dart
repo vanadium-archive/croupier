@@ -53,7 +53,7 @@ class ZCard extends widgets.StatefulComponent {
         faceUp = dataComponent.faceUp,
         width = dataComponent.width ?? 40.0,
         height = dataComponent.height ?? 40.0,
-        rotation = dataComponent.rotation,
+        rotation = dataComponent.rotation ?? 0.0,
         animationType = dataComponent.animationType,
         z = dataComponent.z;
 
@@ -75,7 +75,7 @@ class Card extends widgets.StatefulComponent {
   Card(logic_card.Card card, this.faceUp,
       {double width,
       double height,
-      this.rotation: 0.0,
+      double rotation,
       bool useKey: false,
       this.visible: true,
       CardAnimationType animationType,
@@ -85,6 +85,7 @@ class Card extends widgets.StatefulComponent {
         card = card,
         width = width ?? 40.0,
         height = height ?? 40.0,
+        rotation = rotation ?? 0.0,
         useKey = useKey,
         super(key: useKey ? new GlobalCardKey(card, CardUIType.CARD) : null);
 

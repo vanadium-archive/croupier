@@ -336,8 +336,6 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     List<Widget> kids = new List<Widget>();
     switch (config.game.phase) {
       case HeartsPhase.Deal:
-        kids.add(new Text("Waiting for Deal..."));
-        break;
       case HeartsPhase.Pass:
       case HeartsPhase.Take:
       case HeartsPhase.Play:
@@ -450,6 +448,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
               child: new GestureDetector(onTap: () {
                 setState(() {
                   game.takeTrickUI();
+                  game.debugString = null;
                 });
               },
                   child: new Container(
@@ -678,13 +677,14 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
       List<logic_card.Card> hand,
       AcceptCb cb,
       NoArgCb buttoncb) {
-    bool draggable = (cb != null);
     bool completed = (buttoncb == null);
+    bool draggable = (cb != null) && !completed;
 
     List<Widget> topCardWidgets = new List<Widget>();
-    topCardWidgets.add(_topCardWidget(c1, cb));
-    topCardWidgets.add(_topCardWidget(c2, cb));
-    topCardWidgets.add(_topCardWidget(c3, cb));
+    AcceptCb topCb = completed ? null : cb;
+    topCardWidgets.add(_topCardWidget(c1, topCb));
+    topCardWidgets.add(_topCardWidget(c2, topCb));
+    topCardWidgets.add(_topCardWidget(c3, topCb));
     topCardWidgets.add(_makeButton(name, buttoncb, inactive: completed));
 
     Color bgColor = completed ? Colors.teal[600] : Colors.teal[500];
@@ -714,9 +714,9 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
         comparator: _compareCards,
         width: config.width,
         acceptCallback: cb,
-        acceptType: cb != null ? DropType.card : null,
+        acceptType: draggable ? DropType.card : null,
         cardTapCallback:
-            cb != null ? (logic_card.Card c) => cb(c, emptyC) : null,
+            draggable ? (logic_card.Card c) => cb(c, emptyC) : null,
         backgroundColor: Colors.grey[500],
         altColor: Colors.grey[700],
         useKeys: true);
