@@ -150,7 +150,7 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
 
         dialog = new Dialog(
             title: new Text(capType),
-            content: new Grid(flexColors, maxChildExtent: 75.0),
+            content: new MaxTileWidthGrid(flexColors, maxTileWidth: 75.0),
             actions: [
               new FlatButton(child: new Text('CANCEL'), onPressed: () {
                 Navigator.pop(context);
@@ -168,7 +168,7 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
 
         dialog = new Dialog(
             title: new Text(capType),
-            content: new Grid(flexAvatars, maxChildExtent: 75.0),
+            content: new MaxTileWidthGrid(flexAvatars, maxTileWidth: 75.0),
             actions: [
               new FlatButton(child: new Text('CANCEL'), onPressed: () {
                 Navigator.pop(context);

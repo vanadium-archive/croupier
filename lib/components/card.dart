@@ -263,12 +263,15 @@ class ZCardState extends widgets.State<ZCard> {
         transform: new vector_math.Matrix4.identity().rotateZ(config.rotation),
         alignment: new FractionalOffset(0.5, 0.5));
 
-    // Set up the slide transition.
-    // During animation, we must ignore all events.
-    widgets.Widget retWidget = new widgets.SlideTransition(
-        performance: _performance.view,
-        position: _performance.variable,
-        child: image);
+    // Prepare the transition, which is a fixed pixel translation.
+    widgets.Widget retWidget = new widgets.BuilderTransition(
+        variables: <AnimatedValue>[_performance.variable],
+        builder: (widgets.BuildContext c) {
+      Matrix4 transform = new Matrix4.identity()
+        ..translate(
+            _performance.variable.value.x, _performance.variable.value.y);
+      return new widgets.Transform(transform: transform, child: image);
+    }, performance: _performance.view);
 
     return retWidget;
   }

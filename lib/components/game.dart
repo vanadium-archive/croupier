@@ -143,7 +143,7 @@ abstract class GameComponentState<T extends GameComponent> extends State<T> {
   Widget buildCardAnimationLayer(List<int> visibleCardCollectionIndexes) {
     // It's possible that some cards need to be moved after this build.
     // If so, we can catch it in the next frame.
-    scheduler.addPostFrameCallback((Duration d) {
+    Scheduler.instance.addPostFrameCallback((Duration d) {
       _cardLevelMapProcessAllVisible(visibleCardCollectionIndexes);
     });
 

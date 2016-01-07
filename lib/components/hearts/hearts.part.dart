@@ -547,7 +547,9 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
                   playOrBuffer, true, CardCollectionOrientation.show1,
                   useKeys: true,
                   acceptCallback: _makeGameMoveCallback,
-                  acceptType: this._canBuffer ? DropType.card : DropType.none,
+                  acceptType: p == game.whoseTurn || this._canBuffer
+                      ? DropType.card
+                      : DropType.none,
                   backgroundColor:
                       p == game.whoseTurn ? Colors.white : Colors.grey[500],
                   altColor: p == game.whoseTurn

@@ -173,7 +173,7 @@ class CroupierComponentState extends State<CroupierComponent> {
           child: new Row(profileWidgets),
           scrollDirection: ScrollDirection.horizontal);
     }
-    return new Grid(profileWidgets, maxChildExtent: size);
+    return new MaxTileWidthGrid(profileWidgets, maxTileWidth: size);
   }
 
   Widget _buildArrangePlayers() {
