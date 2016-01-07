@@ -23,6 +23,7 @@ import (
 	"hearts/logic/table"
 	"hearts/sync"
 	"hearts/touchhandler"
+	"hearts/util"
 
 	"golang.org/x/mobile/app"
 	"golang.org/x/mobile/event/lifecycle"
@@ -86,7 +87,7 @@ func onStart(glctx gl.Context, u *uistate.UIState) {
 	ctx, shutdown := v23.Init()
 	u.Shutdown = shutdown
 	u.Ctx = ctx
-	u.Service = syncbase.NewService(sync.MountPoint + "/croupier/" + sync.SBName)
+	u.Service = syncbase.NewService(util.MountPoint + "/croupier/" + util.SBName)
 	namespace := v23.GetNamespace(u.Ctx)
 	allAccess := access.AccessList{In: []security.BlessingPattern{"..."}}
 	permissions := access.Permissions{
@@ -96,8 +97,8 @@ func onStart(glctx gl.Context, u *uistate.UIState) {
 		"Resolve": allAccess,
 		"Debug":   allAccess,
 	}
-	namespace.SetPermissions(u.Ctx, sync.MountPoint, permissions, "")
-	namespace.SetPermissions(u.Ctx, sync.MountPoint+"/croupier", permissions, "")
+	namespace.SetPermissions(u.Ctx, util.MountPoint, permissions, "")
+	namespace.SetPermissions(u.Ctx, util.MountPoint+"/croupier", permissions, "")
 	u.Service.SetPermissions(u.Ctx, permissions, "")
 	u.Images = glutil.NewImages(glctx)
 	fps = debug.NewFPS(u.Images)

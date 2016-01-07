@@ -14,6 +14,7 @@ import (
 
 	"hearts/img/uistate"
 	"hearts/logic/card"
+	"hearts/util"
 
 	"v.io/v23/context"
 	"v.io/v23/syncbase"
@@ -95,13 +96,13 @@ func LogTakeTrick(u *uistate.UIState) bool {
 }
 
 func LogPlayerNum(u *uistate.UIState) bool {
-	key := fmt.Sprintf("%d/players/%d/player_number", u.GameID, UserID)
+	key := fmt.Sprintf("%d/players/%d/player_number", u.GameID, util.UserID)
 	value := strconv.Itoa(u.CurPlayerIndex)
 	return logKeyValue(u.Service, u.Ctx, key, value)
 }
 
 func LogSettingsName(name string, u *uistate.UIState) bool {
-	key := fmt.Sprintf("%d/players/%d/settings_sg", u.GameID, UserID)
+	key := fmt.Sprintf("%d/players/%d/settings_sg", u.GameID, util.UserID)
 	return logKeyValue(u.Service, u.Ctx, key, name)
 }
 

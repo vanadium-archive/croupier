@@ -4,13 +4,13 @@
 
 // util.go stores constants relevant to the syncbase hierarchy
 
-package sync
+package util
 
 const (
 	// switch back to my mountpoint with the following code:
 	MountPoint = "users/emshack@google.com"
 	//MountPoint        = "/192.168.86.254:8101"
-	UserID            = 111
+	UserID            = 1112
 	UserColor         = 16777215
 	UserAvatar        = "woman.png"
 	UserName          = "Bob"
@@ -20,4 +20,7 @@ const (
 	LogName           = "games"
 	SettingsName      = "table_settings"
 	CroupierInterface = "CroupierSettingsAndGame"
+	// Swap the following two lines when running app on a computer vs. mobile device:
+	// AddrFile = "src/dataParser/addr"
+	AddrFile = "/sdcard/addr.txt"
 )

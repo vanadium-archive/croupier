@@ -11,6 +11,7 @@ import (
 
 	"hearts/img/uistate"
 	"hearts/img/view"
+	"hearts/util"
 
 	"v.io/v23/context"
 	"v.io/v23/discovery"
@@ -30,7 +31,7 @@ func ScanForSG(ctx *context.T, quit chan bool, u *uistate.UIState) {
 	}
 	ds := ldiscovery.NewWithPlugins([]ldiscovery.Plugin{mdns})
 	fmt.Printf("Start scanning...\n")
-	ch, err := ds.Scan(ctx, fmt.Sprintf("v.InterfaceName = \"%s\"", CroupierInterface))
+	ch, err := ds.Scan(ctx, fmt.Sprintf("v.InterfaceName = \"%s\"", util.CroupierInterface))
 	if err != nil {
 		ctx.Fatalf("Scan failed: %v", err)
 	}
@@ -77,7 +78,7 @@ func GetSG(instances map[string]string, update discovery.Update, u *uistate.UISt
 
 // Returns a watchstream of the data in the table
 func WatchData(tableName, prefix string, u *uistate.UIState) (nosql.WatchStream, error) {
-	db := u.Service.App(AppName).NoSQLDatabase(DbName, nil)
+	db := u.Service.App(util.AppName).NoSQLDatabase(util.DbName, nil)
 	resumeMarker, err := db.GetResumeMarker(u.Ctx)
 	if err != nil {
 		fmt.Println("RESUMEMARKER ERR: ", err)
@@ -87,21 +88,21 @@ func WatchData(tableName, prefix string, u *uistate.UIState) (nosql.WatchStream,
 
 // Returns a scanstream of the data in the table
 func ScanData(tableName, prefix string, u *uistate.UIState) nosql.ScanStream {
-	app := u.Service.App(AppName)
-	db := app.NoSQLDatabase(DbName, nil)
+	app := u.Service.App(util.AppName)
+	db := app.NoSQLDatabase(util.DbName, nil)
 	table := db.Table(tableName)
 	rowRange := nosql.Range(prefix, "")
 	return table.Scan(u.Ctx, rowRange)
 }
 
 // Joins gamelog syncgroup
-func JoinLogSyncgroup(logName string, u *uistate.UIState) bool {
+func JoinLogSyncgroup(logName string, creator bool, u *uistate.UIState) bool {
 	fmt.Println("Joining gamelog syncgroup")
-	u.IsOwner = false
-	app := u.Service.App(AppName)
-	db := app.NoSQLDatabase(DbName, nil)
+	u.IsOwner = creator
+	app := u.Service.App(util.AppName)
+	db := app.NoSQLDatabase(util.DbName, nil)
 	logSg := db.Syncgroup(logName)
-	myInfoJoiner := wire.SyncgroupMemberInfo{8, false}
+	myInfoJoiner := wire.SyncgroupMemberInfo{8, creator}
 	_, err := logSg.Join(u.Ctx, myInfoJoiner)
 	if err != nil {
 		fmt.Println("SYNCGROUP JOIN ERROR: ", err)
@@ -109,7 +110,7 @@ func JoinLogSyncgroup(logName string, u *uistate.UIState) bool {
 	} else {
 		fmt.Println("Syncgroup joined")
 		if u.LogSG != logName {
-			ResetGame(logName, false, u)
+			ResetGame(logName, creator, u)
 		}
 		return true
 	}
@@ -118,8 +119,8 @@ func JoinLogSyncgroup(logName string, u *uistate.UIState) bool {
 // Joins player settings syncgroup
 func JoinSettingsSyncgroup(settingsName string, u *uistate.UIState) {
 	fmt.Println("Joining user settings syncgroup")
-	app := u.Service.App(AppName)
-	db := app.NoSQLDatabase(DbName, nil)
+	app := u.Service.App(util.AppName)
+	db := app.NoSQLDatabase(util.DbName, nil)
 	settingsSg := db.Syncgroup(settingsName)
 	myInfoJoiner := wire.SyncgroupMemberInfo{8, false}
 	_, err := settingsSg.Join(u.Ctx, myInfoJoiner)
@@ -131,8 +132,8 @@ func JoinSettingsSyncgroup(settingsName string, u *uistate.UIState) {
 }
 
 func NumInSG(logName string, u *uistate.UIState) int {
-	app := u.Service.App(AppName)
-	db := app.NoSQLDatabase(DbName, nil)
+	app := u.Service.App(util.AppName)
+	db := app.NoSQLDatabase(util.DbName, nil)
 	sg := db.Syncgroup(logName)
 	members, err := sg.GetMembers(u.Ctx)
 	if err != nil {

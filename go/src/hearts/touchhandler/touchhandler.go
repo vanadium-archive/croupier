@@ -163,8 +163,11 @@ func endClickDiscovery(t touch.Event, u *uistate.UIState) {
 		} else {
 			for _, b := range u.Buttons {
 				if button == b {
-					logAddr := b.GetInfo()
-					success := sync.JoinLogSyncgroup(logAddr, u)
+					s := strings.Split(b.GetInfo(), "|")
+					logAddr := s[0]
+					creator, _ := strconv.ParseBool(s[1])
+					fmt.Println("TRYING TO JOIN:", logAddr)
+					success := sync.JoinLogSyncgroup(logAddr, creator, u)
 					if success {
 						sgName := sync.CreateSettingsSyncgroup(u)
 						if sgName != "" {

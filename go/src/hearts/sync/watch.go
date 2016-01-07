@@ -12,22 +12,26 @@ package sync
 import (
 	"encoding/json"
 	"fmt"
-	"golang.org/x/mobile/exp/sprite"
-	"hearts/img/direction"
-	"hearts/img/reposition"
-	"hearts/img/uistate"
-	"hearts/img/view"
-	"hearts/logic/card"
 	"os"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	"golang.org/x/mobile/exp/sprite"
+
+	"hearts/img/direction"
+	"hearts/img/reposition"
+	"hearts/img/uistate"
+	"hearts/img/view"
+	"hearts/logic/card"
+	"hearts/util"
+
 	"v.io/v23/syncbase/nosql"
 )
 
 func UpdateSettings(u *uistate.UIState) {
-	scanner := ScanData(SettingsName, "users", u)
+	scanner := ScanData(util.SettingsName, "users", u)
 	for {
 		if updateExists := scanner.Advance(); updateExists {
 			key := scanner.Key()
@@ -40,7 +44,7 @@ func UpdateSettings(u *uistate.UIState) {
 			break
 		}
 	}
-	stream, err := WatchData(SettingsName, "users", u)
+	stream, err := WatchData(util.SettingsName, "users", u)
 	if err != nil {
 		fmt.Println("WatchData error:", err)
 	} else {
@@ -87,7 +91,7 @@ func UpdateGame(quit chan bool, u *uistate.UIState) {
 	}
 	fmt.Fprintf(file, fmt.Sprintf("\n***NEW GAME: %d\n", u.GameID))
 	defer file.Close()
-	scanner := ScanData(LogName, fmt.Sprintf("%d", u.GameID), u)
+	scanner := ScanData(util.LogName, fmt.Sprintf("%d", u.GameID), u)
 	m := make(map[string][]byte)
 	keys := make([]string, 0)
 	for scanner.Advance() {
@@ -112,7 +116,7 @@ func UpdateGame(quit chan bool, u *uistate.UIState) {
 			handleGameUpdate(file, key, value, u)
 		}
 	}
-	stream, err2 := WatchData(LogName, fmt.Sprintf("%d", u.GameID), u)
+	stream, err2 := WatchData(util.LogName, fmt.Sprintf("%d", u.GameID), u)
 	fmt.Println("STARTING WATCH FOR GAME", u.GameID)
 	if err2 != nil {
 		fmt.Println("WatchData error:", err2)
@@ -196,7 +200,7 @@ func onPlayerNum(key, value string, u *uistate.UIState) {
 		u.PlayerData[playerNum] = userID
 		u.CurTable.GetPlayers()[playerNum].SetDoneScoring(true)
 	}
-	if playerNum == u.CurPlayerIndex && userID != UserID {
+	if playerNum == u.CurPlayerIndex && userID != util.UserID {
 		u.CurPlayerIndex = -1
 	}
 	if u.CurView == uistate.Arrange {
