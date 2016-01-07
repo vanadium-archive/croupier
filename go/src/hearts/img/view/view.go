@@ -9,7 +9,9 @@
 package view
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"sort"
 	"strconv"
 
@@ -20,6 +22,7 @@ import (
 	"hearts/img/texture"
 	"hearts/img/uistate"
 	"hearts/logic/card"
+	"hearts/util"
 
 	"golang.org/x/mobile/exp/f32"
 	"golang.org/x/mobile/exp/sprite"
@@ -91,7 +94,6 @@ func LoadArrangeView(u *uistate.UIState) {
 }
 
 // Waiting view: Displays the word "Waiting". To be displayed when players are waiting for a new round to be dealt
-// TODO(emshack): Integrate this with Arrange view and Score view so that a separate screen is not necessary
 func LoadWaitingView(u *uistate.UIState) {
 	u.M.Lock()
 	defer u.M.Unlock()
@@ -121,6 +123,37 @@ func LoadDiscoveryView(u *uistate.UIState) {
 	newGamePos := coords.MakeVec((u.WindowSize.X-newGameDim.X)/2, u.TopPadding)
 	u.Buttons["newGame"] = texture.MakeImgWithAlt(newGameImg, newGameAlt, newGamePos, newGameDim, true, u)
 	buttonNum := 1
+	file, err := os.OpenFile(util.AddrFile, os.O_RDONLY|os.O_CREATE, 0666)
+	if err != nil {
+		fmt.Println("err:", err)
+	}
+	scanner := bufio.NewScanner(file)
+	var oldAddr string
+	scanner.Scan()
+	addr := scanner.Text()
+	// Search through all the database's syncgroups to see if addr represents a current syncgroup
+	app := u.Service.App(util.AppName)
+	db := app.NoSQLDatabase(util.DbName, nil)
+	allAddrs, _ := db.GetSyncgroupNames(u.Ctx)
+	fmt.Println(allAddrs)
+	for _, a := range allAddrs {
+		if a == addr {
+			oldAddr = a
+		}
+	}
+	file.Close()
+	if oldAddr != "" {
+		rejoinGameImg := u.Texs["RejoinUnpressed.png"]
+		rejoinGameAlt := u.Texs["RejoinPressed.png"]
+		rejoinGameDim := coords.MakeVec(4*u.CardDim.X, u.CardDim.Y)
+		rejoinGamePos := coords.MakeVec((u.WindowSize.X-rejoinGameDim.X)/2, u.TopPadding+rejoinGameDim.Y+u.Padding)
+		u.Buttons["rejoinGame"] = texture.MakeImgWithAlt(rejoinGameImg, rejoinGameAlt, rejoinGamePos, rejoinGameDim, true, u)
+		scanner.Scan()
+		creator := scanner.Text()
+		bInfo := oldAddr + "|" + creator
+		u.Buttons["rejoinGame"].SetInfo(bInfo)
+		buttonNum = 2
+	}
 	for _, d := range u.DiscGroups {
 		if d != nil {
 			dataMap := d.GameStartData
@@ -146,7 +179,9 @@ func LoadDiscoveryView(u *uistate.UIState) {
 				joinGameAlt := u.Texs["JoinGamePressed.png"]
 				joinGamePos := coords.MakeVec(u.WindowSize.X-u.BottomPadding-newGameDim.X, newGamePos.Y+float32(buttonNum)*(bgBannerDim.Y+u.Padding))
 				u.Buttons[fmt.Sprintf("joinGame-%d", buttonNum)] = texture.MakeImgWithAlt(joinGameImg, joinGameAlt, joinGamePos, newGameDim, true, u)
-				u.Buttons[fmt.Sprintf("joinGame-%d", buttonNum)].SetInfo(d.LogAddr)
+				creator := creatorName == util.UserName
+				bInfo := d.LogAddr + "|" + strconv.FormatBool(creator)
+				u.Buttons[fmt.Sprintf("joinGame-%d", buttonNum)].SetInfo(bInfo)
 				buttonNum++
 			}
 		}
@@ -376,19 +411,21 @@ func LoadTableView(u *uistate.UIState) {
 
 // Decides which view of the player's hand to load based on what steps of the round they have completed
 func LoadPassOrTakeOrPlay(u *uistate.UIState) {
-	p := u.CurTable.GetPlayers()[u.CurPlayerIndex]
-	if u.CurTable.RoundOver() {
-		LoadScoreView(u)
-	} else if p.GetDoneTaking() || u.CurTable.GetDir() == direction.None {
-		if u.CurView == uistate.Play {
-			LoadPlayView(true, u)
+	if u.CurPlayerIndex >= 0 {
+		p := u.CurTable.GetPlayers()[u.CurPlayerIndex]
+		if u.CurTable.RoundOver() {
+			LoadScoreView(u)
+		} else if p.GetDoneTaking() || u.CurTable.GetDir() == direction.None {
+			if u.CurView == uistate.Play {
+				LoadPlayView(true, u)
+			} else {
+				LoadPlayView(false, u)
+			}
+		} else if p.GetDonePassing() {
+			LoadTakeView(u)
 		} else {
-			LoadPlayView(false, u)
+			LoadPassView(u)
 		}
-	} else if p.GetDonePassing() {
-		LoadTakeView(u)
-	} else {
-		LoadPassView(u)
 	}
 }
 
