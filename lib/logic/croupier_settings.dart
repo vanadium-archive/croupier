@@ -8,7 +8,12 @@ import 'dart:convert' show JSON;
 /// CroupierSettings is a simple struct that contains player-specific settings.
 /// Players can modify a subset of their settings via the UI.
 class CroupierSettings {
-  int userID; // This is a value the user cannot set on their own.
+  // Values the user does not set.
+  int userID;
+  int lastGameID; // Note: Some versions of Croupier do not support lastGameID.
+  bool get hasLastGame => lastGameID != null;
+
+  // Values the user can customize
   String avatar;
   String name;
   int color;
@@ -20,7 +25,6 @@ class CroupierSettings {
   }
 
   CroupierSettings.placeholder() {
-    userID = 0;
     avatar = "Heart.png";
     name = "Loading...";
     color = 0xcfcccccc;
@@ -29,6 +33,7 @@ class CroupierSettings {
   CroupierSettings.fromJSONString(String json) {
     var data = JSON.decode(json);
     userID = data["userID"];
+    lastGameID = data["lastGameID"];
     avatar = data["avatar"];
     name = data["name"];
     color = data["color"];
@@ -77,8 +82,13 @@ class CroupierSettings {
   }
 
   String toJSONString() {
-    return JSON.encode(
-        {"userID": userID, "avatar": avatar, "name": name, "color": color});
+    return JSON.encode({
+      "userID": userID,
+      "lastGameID": lastGameID,
+      "avatar": avatar,
+      "name": name,
+      "color": color
+    });
   }
 
   void _randomInitialization() {

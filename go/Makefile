@@ -72,7 +72,7 @@ clean:
 	rm -rf bin
 	rm -rf credentials
 	rm -rf pkg
-	rm -rf src/golang.org/x/mobile/cmd/gomobile
+	rm -rf src/golang.org/x/mobile
 	rm -rf tmp/syncbase
 
 all: bin/hearts

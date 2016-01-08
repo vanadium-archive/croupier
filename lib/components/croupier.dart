@@ -52,10 +52,10 @@ class CroupierComponentState extends State<CroupierComponent> {
                       logic_croupier.CroupierState.JoinGame)),
               new FlatButton(
                   child: new Text('Resume Game', style: style.Text.titleStyle),
-                  onPressed: config.croupier.mostRecentGameID != null
+                  onPressed: config.croupier.settings.hasLastGame
                       ? makeSetStateCallback(
                           logic_croupier.CroupierState.ResumeGame,
-                          config.croupier.mostRecentGameID)
+                          config.croupier.settings.lastGameID)
                       : null),
               new CroupierProfileComponent(
                   settings: config.croupier.settings,

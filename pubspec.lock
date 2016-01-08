@@ -238,7 +238,7 @@ packages:
   syncbase:
     description: syncbase
     source: hosted
-    version: "0.0.23"
+    version: "0.0.26"
   test:
     description: test
     source: hosted
@@ -254,7 +254,7 @@ packages:
   v23discovery:
     description: v23discovery
     source: hosted
-    version: "0.0.7"
+    version: "0.0.8"
   vector_math:
     description: vector_math
     source: hosted

@@ -33,7 +33,6 @@ class Croupier {
   Map<String, GameStartData> games_found; // empty, but loads asynchronously
   Map<int, int> players_found; // empty, but loads asynchronously
   Game game; // null until chosen
-  int mostRecentGameID; // null until a game was started.
   NoArgCb informUICb;
 
   // Futures to use in order to cancel scans and advertisements.
@@ -93,7 +92,8 @@ class Croupier {
 
   void _setCurrentGame(Game g) {
     game = g;
-    mostRecentGameID = game.gameID;
+    settings.lastGameID = g.gameID;
+    settings_manager.save(settings.userID, settings.toJSONString()); // async
   }
 
   Game _createNewGame(GameType gt) {
