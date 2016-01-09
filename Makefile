@@ -226,6 +226,7 @@ ifdef ANDROID
 endif
 	rm -f croupier.flx snapshot_blob.bin
 	rm -rf bin tmp
+	rm -rf .packages .pub packages pubspec.lock
 
 .PHONY: clean-creds
 clean-creds:
@@ -237,4 +238,3 @@ endif
 
 .PHONY: veryclean
 veryclean: clean clean-creds
-	rm -rf .packages .pub packages pubspec.lock
