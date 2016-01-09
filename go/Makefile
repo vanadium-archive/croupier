@@ -5,7 +5,7 @@ name ?= syncbase
 PATH := ./bin/:$(PATH)
 go_files := $(shell find ./src -name "*.go")
 
-export GOPATH := $(JIRI_ROOT)/release/projects/croupier/go:$(GOPATH)
+export GOPATH := $(JIRI_ROOT)/release/projects/croupier/go
 
 bin/principal:
 	jiri go build -a -o $@ v.io/x/ref/cmd/principal
