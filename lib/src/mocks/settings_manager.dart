@@ -14,13 +14,15 @@ class SettingsManager {
   final util.keyValueCallback updateGamesCallback;
   final util.keyValueCallback updatePlayerFoundCallback;
   final util.keyValueCallback updateGameStatusCallback;
+  final util.asyncKeyValueCallback updateGameLogCallback;
 
   SettingsManager(
       settings_client.AppSettings _,
       this.updateCallback,
       this.updateGamesCallback,
       this.updatePlayerFoundCallback,
-      this.updateGameStatusCallback);
+      this.updateGameStatusCallback,
+      this.updateGameLogCallback);
 
   Map<String, String> _data = new Map<String, String>();
 
@@ -89,4 +91,6 @@ class SettingsManager {
   Future<String> getGameSyncgroup(int gameID) async {
     return new Future(() => null);
   }
+
+  void quitGame() {}
 }

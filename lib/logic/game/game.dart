@@ -9,6 +9,7 @@ import 'dart:math' as math;
 
 import '../card.dart' show Card;
 import '../../src/syncbase/log_writer.dart' show SimulLevel;
+import '../../src/syncbase/util.dart';
 
 part 'game_def.part.dart';
 part 'game_command.part.dart';

@@ -32,17 +32,22 @@ class SettingsManager {
   final util.keyValueCallback updateGamesCallback;
   final util.keyValueCallback updatePlayerFoundCallback;
   final util.keyValueCallback updateGameStatusCallback;
+  final util.asyncKeyValueCallback updateGameLogCallback;
   final CroupierClient _cc;
   sc.SyncbaseTable tb;
 
   static const String _discoveryGameAdKey = "discovery-game-ad";
+
+  // The game subscription. Cancel when done listening.
+  StreamSubscription<sc.WatchChange> _gameSubscription;
 
   SettingsManager(
       settings_client.AppSettings appSettings,
       this.updateSettingsCallback,
       this.updateGamesCallback,
       this.updatePlayerFoundCallback,
-      this.updateGameStatusCallback)
+      this.updateGameStatusCallback,
+      this.updateGameLogCallback)
       : _cc = new CroupierClient(appSettings);
 
   Future _prepareSettingsTable() async {
@@ -143,6 +148,10 @@ class SettingsManager {
       if (this.updateGameStatusCallback != null) {
         this.updateGameStatusCallback(key, value);
       }
+    } else if (key.indexOf("/log") != -1) {
+      if (this.updateGameLogCallback != null) {
+        await this.updateGameLogCallback(key, value, duringScan);
+      }
     }
   }
 
@@ -152,9 +161,13 @@ class SettingsManager {
     sc.SyncbaseDatabase db = await _cc.createDatabase();
     sc.SyncbaseTable gameTable = await _cc.createTable(db, util.tableNameGames);
 
-    // Watch for the players in the game.
-    await _cc.watchEverything(
-        db, util.tableNameGames, util.syncgamePrefix(gameID), _onGameChange);
+    // Watch all the data in the game.
+    assert(_gameSubscription == null);
+    _gameSubscription = await _cc.watchEverything(
+        db, util.tableNameGames, util.syncgamePrefix(gameID), _onGameChange,
+        sorter: (sc.WatchChange a, sc.WatchChange b) {
+      return a.rowKey.compareTo(b.rowKey);
+    });
 
     print("Now writing to some rows of ${gameID}");
     // Start up the table and write yourself as player 0.
@@ -179,6 +192,13 @@ class SettingsManager {
     return gsd;
   }
 
+  void quitGame() {
+    if (_gameSubscription != null) {
+      _gameSubscription.cancel();
+      _gameSubscription = null;
+    }
+  }
+
   Future joinGameSyncgroup(String sgName, int gameID) async {
     print("Now joining game syncgroup at ${sgName} and ${gameID}");
 
@@ -186,7 +206,7 @@ class SettingsManager {
     sc.SyncbaseTable gameTable = await _cc.createTable(db, util.tableNameGames);
 
     // Watch for the players in the game.
-    await _cc.watchEverything(
+    _gameSubscription = await _cc.watchEverything(
         db, util.tableNameGames, util.syncgamePrefix(gameID), _onGameChange);
 
     await _cc.joinSyncgroup(sgName);

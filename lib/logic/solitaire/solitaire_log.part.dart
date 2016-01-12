@@ -19,6 +19,8 @@ class SolitaireLog extends GameLog {
     logWriter = new LogWriter(handleSyncUpdate, [0]);
     logWriter.associatedUser = this.game.playerNumber;
     logWriter.logPrefix = "${game.gameID}/log";
+
+    watchUpdateCb = logWriter.onChange;
   }
 
   void handleSyncUpdate(String key, String cmd) {
@@ -44,10 +46,5 @@ class SolitaireLog extends GameLog {
     // Note: The Solitaire schema avoids all conflict, so this should never be called.
     assert(false);
     return current;
-  }
-
-  @override
-  void close() {
-    logWriter.close();
   }
 }

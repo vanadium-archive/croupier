@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+import 'dart:async';
 import 'dart:convert' show JSON;
 
 enum SimulLevel { TURN_BASED, INDEPENDENT, DEPENDENT }
@@ -25,6 +26,8 @@ class LogWriter {
   LogWriter(this.updateCallback, this.users);
 
   Map<String, String> _data = new Map<String, String>();
+
+  Future onChange(String rowKey, String value, bool duringScan) async {}
 
   void write(SimulLevel s, String value) {
     assert(!inProposalMode);
@@ -120,6 +123,4 @@ class LogWriter {
     }
     return true;
   }
-
-  void close() {}
 }

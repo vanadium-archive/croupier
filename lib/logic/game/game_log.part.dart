@@ -9,7 +9,8 @@ abstract class GameLog {
   List<GameCommand> log = new List<GameCommand>();
   // This list is normally empty, but may grow if multiple commands arrive.
   List<GameCommand> pendingCommands = new List<GameCommand>();
-  bool hasFired = false; // if true, halts processing of later pendingCommands
+  bool hasFired = false; // if true, halts processing of later pendingCommands}
+  asyncKeyValueCallback watchUpdateCb; // May be null.
 
   void setGame(Game g) {
     this.game = g;
@@ -101,5 +102,4 @@ abstract class GameLog {
   void addToLogCb(List<GameCommand> log, GameCommand newCommand);
   List<GameCommand> updateLogCb(
       List<GameCommand> current, List<GameCommand> other, int mismatchIndex);
-  void close();
 }

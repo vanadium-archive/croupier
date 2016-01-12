@@ -149,10 +149,6 @@ abstract class Game {
     deck.addAll(Card.All);
   }
 
-  void quit() {
-    this.gamelog.close();
-  }
-
   // UNIMPLEMENTED
   void move(Card card, List<Card> dest);
   void triggerEvents();

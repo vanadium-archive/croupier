@@ -189,13 +189,16 @@ endif
 mock:
 	mv lib/src/syncbase/log_writer.dart lib/src/syncbase/log_writer.dart.backup
 	mv lib/src/syncbase/settings_manager.dart lib/src/syncbase/settings_manager.dart.backup
+	mv lib/src/syncbase/util.dart lib/src/syncbase/util.dart.backup
 	cp lib/src/mocks/log_writer.dart lib/src/syncbase/
 	cp lib/src/mocks/settings_manager.dart lib/src/syncbase/
+	cp lib/src/mocks/util.dart lib/src/syncbase/
 
 .PHONY: unmock
 unmock:
 	mv lib/src/syncbase/log_writer.dart.backup lib/src/syncbase/log_writer.dart
 	mv lib/src/syncbase/settings_manager.dart.backup lib/src/syncbase/settings_manager.dart
+	mv lib/src/syncbase/util.dart.backup lib/src/syncbase/util.dart
 
 .PHONY: env-check
 env-check:

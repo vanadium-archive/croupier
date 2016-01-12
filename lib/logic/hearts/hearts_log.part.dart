@@ -19,6 +19,8 @@ class HeartsLog extends GameLog {
     logWriter = new LogWriter(handleSyncUpdate, [0, 1, 2, 3]);
     logWriter.associatedUser = this.game.playerNumber;
     logWriter.logPrefix = "${game.gameID}/log";
+
+    watchUpdateCb = logWriter.onChange;
   }
 
   void handleSyncUpdate(String key, String cmd) {
@@ -44,10 +46,5 @@ class HeartsLog extends GameLog {
     // Note: The Hearts schema avoids all conflict, so this should never be called.
     assert(false);
     return current;
-  }
-
-  @override
-  void close() {
-    logWriter.close();
   }
 }

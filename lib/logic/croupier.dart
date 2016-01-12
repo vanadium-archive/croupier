@@ -51,7 +51,8 @@ class Croupier {
         _updateSettingsEveryoneCb,
         _updateGamesFoundCb,
         _updatePlayerFoundCb,
-        _updateGameStatusCb);
+        _updateGameStatusCb,
+        _gameLogUpdateCb);
 
     settings_manager.load().then((String csString) {
       settings = new CroupierSettings.fromJSONString(csString);
@@ -84,6 +85,12 @@ class Croupier {
     }
   }
 
+  Future _gameLogUpdateCb(String key, String value, bool duringScan) async {
+    if (game != null && game.gamelog.watchUpdateCb != null) {
+      await game.gamelog.watchUpdateCb(key, value, duringScan);
+    }
+  }
+
   int userIDFromPlayerNumber(int playerNumber) {
     return players_found.keys.firstWhere(
         (int user) => players_found[user] == playerNumber,
@@ -107,7 +114,7 @@ class Croupier {
 
   void _quitGame() {
     if (game != null) {
-      game.quit();
+      settings_manager.quitGame();
       game = null;
     }
   }

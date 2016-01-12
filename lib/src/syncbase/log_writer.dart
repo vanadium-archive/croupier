@@ -43,10 +43,6 @@ class LogWriter {
   // Affects read/write/watch locations of the log writer.
   String logPrefix = ''; // This is usually set to <game_id>/log
 
-  // An internal StreamSubscription that should be canceled once we are done
-  // watching on this log.
-  StreamSubscription<WatchChange> _watchSubscription;
-
   // When a proposal is made (or received), this flag is set to true.
   // Once a consensus has been reached, this is set to false again.
   bool inProposalMode = false;
@@ -119,16 +115,9 @@ class LogWriter {
 
     SyncbaseDatabase db = await _cc.createDatabase();
     tb = await _cc.createTable(db, tbName);
-
-    // Start to watch the stream.
-    this._watchSubscription = await _cc.watchEverything(
-        db, tbName, this.logPrefix, _onChange,
-        sorter: (WatchChange a, WatchChange b) {
-      return a.rowKey.compareTo(b.rowKey);
-    });
   }
 
-  Future _onChange(String rowKey, String value, bool duringScan) async {
+  Future onChange(String rowKey, String value, bool duringScan) async {
     String key = rowKey.replaceFirst("${this.logPrefix}/", "");
     String timeStr = key.split("-")[0];
     DateTime keyTime = _parseTime(timeStr);
@@ -145,13 +134,6 @@ class LogWriter {
     } else {
       print("Update callback: ${key}, ${value}");
       this.updateCallback(key, value);
-    }
-  }
-
-  void close() {
-    if (this._watchSubscription != null) {
-      this._watchSubscription.cancel();
-      this._watchSubscription = null;
     }
   }
 
