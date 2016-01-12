@@ -11,6 +11,7 @@ import '../logic/card.dart' as logic_card;
 import '../logic/croupier.dart' show Croupier;
 import '../logic/game/game.dart' show Game, GameType, NoArgCb;
 import '../logic/hearts/hearts.dart' show HeartsGame, HeartsPhase;
+import '../sound/sound_assets.dart';
 import '../styles/common.dart' as style;
 import 'card.dart' as component_card;
 import 'card_collection.dart'
@@ -50,13 +51,14 @@ abstract class Board extends StatefulComponent {
 /// cards each player has, and the cards they are currently playing.
 class HeartsBoard extends Board {
   final Croupier croupier;
+  final SoundAssets sounds;
   final bool isMini;
   final AcceptCb gameAcceptCallback;
   final List<logic_card.Card> bufferedPlay;
 
   HeartsGame get game => super.game;
 
-  HeartsBoard(Croupier croupier,
+  HeartsBoard(Croupier croupier, this.sounds,
       {double height,
       double width,
       double cardHeight,
@@ -77,8 +79,87 @@ class HeartsBoard extends Board {
 }
 
 class HeartsBoardState extends State<HeartsBoard> {
+  static const double PROFILE_SIZE = 0.18; // multiplier of config.height
+
+  // Every time the counter changes, a sound will be played.
+  // For example, in the pass/take phase, the counter does this:
+  // 0->1->2->3->4->3->2->1->0.
+  // We play 4 whooshIn sounds followed by 4 whooshOut sounds upon detecting
+  // the change. Each sound only occurs during the very first build (the first
+  // opportunity to detect the change).
+  // In the play phase, we have this instead: 0->1->2->3->4->0
+  // This 5-cycle is 4 played cards (whooshIn) and 1 take trick (whooshOut).
+  int cardCounter = 0;
+  bool passing = true;
+
+  void _handleCardCounterSounds() {
+    // Ensure we have the right state while we deal and score.
+    if (config.game.phase == HeartsPhase.Deal ||
+        config.game.phase == HeartsPhase.Score) {
+      cardCounter = 0;
+      passing = true;
+    }
+
+    // Passing
+    if (passing) {
+      // If it is now someone's turn, we should no longer be passing.
+      if (config.game.whoseTurn != null) {
+        passing = false;
+
+        // Special: Play a sound for the last take command of the pass phase.
+        if (cardCounter > 0) {
+          cardCounter = 0;
+          _playSoundOut();
+        }
+        return;
+      }
+
+      // Passing: If somebody passed cards recently...
+      if (config.game.numPassed > cardCounter) {
+        cardCounter = config.game.numPassed;
+        _playSoundIn();
+        return;
+      }
+
+      // Passing: If somebody took cards recently...
+      if (config.game.numPassed < cardCounter) {
+        cardCounter = config.game.numPassed;
+        _playSoundOut();
+        return;
+      }
+      return;
+    }
+
+    // Playing: If somebody played a card...
+    if (config.game.numPlayed > cardCounter) {
+      cardCounter = config.game.numPlayed;
+      _playSoundIn();
+      return;
+    }
+
+    // Playing: If somebody took the trick...
+    if (config.game.numPlayed == 0 && cardCounter != 0) {
+      cardCounter = 0;
+      _playSoundOut();
+    }
+  }
+
+  void _playSoundIn() {
+    if (!config.isMini) {
+      config.sounds.play("whooshIn");
+    }
+  }
+
+  void _playSoundOut() {
+    if (!config.isMini) {
+      config.sounds.play("whooshOut");
+    }
+  }
+
   Widget build(BuildContext context) {
     double offscreenDelta = config.isMini ? 5.0 : 1.5;
+
+    _handleCardCounterSounds();
 
     Widget boardChild;
     if (config.game.phase == HeartsPhase.Play) {
@@ -203,21 +284,21 @@ class HeartsBoardState extends State<HeartsBoard> {
         height: config.height,
         width: config.width,
         child: new Column([
-          new Flexible(child: _playerProfile(2, 0.2), flex: 0),
+          new Flexible(child: _playerProfile(2, PROFILE_SIZE), flex: 0),
           new Flexible(child: _getPass(2), flex: 0),
           new Flexible(
               child: new Row([
-                new Flexible(child: _playerProfile(1, 0.2), flex: 0),
+                new Flexible(child: _playerProfile(1, PROFILE_SIZE), flex: 0),
                 new Flexible(child: _getPass(1), flex: 0),
                 new Flexible(child: new Block([]), flex: 1),
                 new Flexible(child: _getPass(3), flex: 0),
-                new Flexible(child: _playerProfile(3, 0.2), flex: 0)
+                new Flexible(child: _playerProfile(3, PROFILE_SIZE), flex: 0)
               ],
                   alignItems: FlexAlignItems.center,
                   justifyContent: FlexJustifyContent.spaceAround),
               flex: 1),
           new Flexible(child: _getPass(0), flex: 0),
-          new Flexible(child: _playerProfile(0, 0.2), flex: 0)
+          new Flexible(child: _playerProfile(0, PROFILE_SIZE), flex: 0)
         ],
             alignItems: FlexAlignItems.center,
             justifyContent: FlexJustifyContent.spaceAround));
@@ -315,21 +396,21 @@ class HeartsBoardState extends State<HeartsBoard> {
         height: config.height,
         width: config.width,
         child: new Column([
-          new Flexible(child: _playerProfile(2, 0.2), flex: 0),
+          new Flexible(child: _playerProfile(2, PROFILE_SIZE), flex: 0),
           new Flexible(child: _showTrickText(2), flex: 0),
           new Flexible(
               child: new Row([
-                new Flexible(child: _playerProfile(1, 0.2), flex: 0),
+                new Flexible(child: _playerProfile(1, PROFILE_SIZE), flex: 0),
                 new Flexible(child: _showTrickText(1), flex: 0),
                 new Flexible(child: _buildCenterCards(), flex: 1),
                 new Flexible(child: _showTrickText(3), flex: 0),
-                new Flexible(child: _playerProfile(3, 0.2), flex: 0)
+                new Flexible(child: _playerProfile(3, PROFILE_SIZE), flex: 0)
               ],
                   alignItems: FlexAlignItems.center,
                   justifyContent: FlexJustifyContent.spaceAround),
               flex: 1),
           new Flexible(child: _showTrickText(0), flex: 0),
-          new Flexible(child: _playerProfile(0, 0.2), flex: 0)
+          new Flexible(child: _playerProfile(0, PROFILE_SIZE), flex: 0)
         ],
             alignItems: FlexAlignItems.center,
             justifyContent: FlexJustifyContent.spaceAround));
@@ -362,8 +443,15 @@ class HeartsBoardState extends State<HeartsBoard> {
   }
 
   double get _centerScaleFactor {
-    return math.min(config.height * 0.6 / (config.cardHeight * 3),
-        config.width - config.height * 0.4 / (config.cardWidth * 3));
+    bool wide = (config.width >= config.height);
+    double heightUsage = (1 - 2 * PROFILE_SIZE);
+
+    if (wide) {
+      return config.height * heightUsage / (config.cardHeight * 3);
+    } else {
+      return (config.width - config.height * heightUsage) /
+          (config.cardWidth * 3);
+    }
   }
 
   Widget _buildCenterCard(int playerNumber) {

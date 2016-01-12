@@ -255,3 +255,5 @@ assets:
   - images/splash/background.png
   - images/splash/flutter.png
   - images/splash/vanadium.png
+  - sounds/whooshIn.wav
+  - sounds/whooshOut.wav

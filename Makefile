@@ -143,6 +143,9 @@ SYNCBASE_MOJO_DIR := $(PWD)/packages/syncbase/mojo_services
 DISCOVERY_MOJO_DIR := $(PWD)/packages/v23discovery/mojo_services
 GS_BUCKET_PATH := gs://mojo_services
 
+# Note: The deploy assumes that the media_service.mojo file, which is used for
+# audio, is already present at $(GS_BUCKET_PATH)/media_service.mojo.
+# This file is developed separately from Croupier.
 .PHONY: deploy
 deploy: build
 	gsutil cp $(APP_ICON) $(GS_BUCKET_PATH)/croupier

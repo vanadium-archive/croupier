@@ -5,9 +5,9 @@
 part of game_component;
 
 class ProtoGameComponent extends GameComponent {
-  ProtoGameComponent(Croupier croupier, NoArgCb cb,
+  ProtoGameComponent(Croupier croupier, SoundAssets sounds, NoArgCb cb,
       {Key key, double width, double height})
-      : super(croupier, cb, key: key, width: width, height: height);
+      : super(croupier, sounds, cb, key: key, width: width, height: height);
 
   ProtoGameComponentState createState() => new ProtoGameComponentState();
 }

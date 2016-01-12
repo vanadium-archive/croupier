@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import '../logic/croupier.dart' as logic_croupier;
 import '../logic/croupier_settings.dart' show CroupierSettings;
 import '../logic/game/game.dart' as logic_game;
+import '../sound/sound_assets.dart';
 import '../styles/common.dart' as style;
 import 'croupier_game_advertisement.dart'
     show CroupierGameAdvertisementComponent;
@@ -21,8 +22,9 @@ GlobalObjectKey _gameKey = new GlobalObjectKey("CroupierGameKey");
 
 class CroupierComponent extends StatefulComponent {
   final logic_croupier.Croupier croupier;
+  final SoundAssets sounds;
 
-  CroupierComponent(this.croupier);
+  CroupierComponent(this.croupier, this.sounds);
 
   CroupierComponentState createState() => new CroupierComponentState();
 }
@@ -125,7 +127,9 @@ class CroupierComponentState extends State<CroupierComponent> {
       case logic_croupier.CroupierState.PlayGame:
         return new Container(
             padding: new EdgeDims.only(top: ui.window.padding.top),
-            child: component_game.createGameComponent(config.croupier,
+            child: component_game.createGameComponent(
+                config.croupier,
+                config.sounds,
                 makeSetStateCallback(logic_croupier.CroupierState.Welcome),
                 width: ui.window.size.width,
                 height: ui.window.size.height - ui.window.padding.top,

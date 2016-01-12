@@ -23,6 +23,7 @@ import 'card.dart' as component_card;
 import 'card_collection.dart'
     show CardCollectionComponent, DropType, CardCollectionOrientation, AcceptCb;
 import 'croupier_profile.dart' show CroupierProfileComponent;
+import '../sound/sound_assets.dart';
 
 part 'hearts/hearts.part.dart';
 part 'proto/proto.part.dart';
@@ -32,12 +33,13 @@ typedef void NoArgCb();
 
 abstract class GameComponent extends StatefulComponent {
   final Croupier croupier;
+  final SoundAssets sounds;
   Game get game => croupier.game;
   final NoArgCb gameEndCallback;
   final double width;
   final double height;
 
-  GameComponent(this.croupier, this.gameEndCallback,
+  GameComponent(this.croupier, this.sounds, this.gameEndCallback,
       {Key key, this.width, this.height})
       : super(key: key);
 }
@@ -200,17 +202,18 @@ abstract class GameComponentState<T extends GameComponent> extends State<T> {
   }
 }
 
-GameComponent createGameComponent(Croupier croupier, NoArgCb gameEndCallback,
+GameComponent createGameComponent(
+    Croupier croupier, SoundAssets sounds, NoArgCb gameEndCallback,
     {Key key, double width, double height}) {
   switch (croupier.game.gameType) {
     case GameType.Proto:
-      return new ProtoGameComponent(croupier, gameEndCallback,
+      return new ProtoGameComponent(croupier, sounds, gameEndCallback,
           key: key, width: width, height: height);
     case GameType.Hearts:
-      return new HeartsGameComponent(croupier, gameEndCallback,
+      return new HeartsGameComponent(croupier, sounds, gameEndCallback,
           key: key, width: width, height: height);
     case GameType.Solitaire:
-      return new SolitaireGameComponent(croupier, gameEndCallback,
+      return new SolitaireGameComponent(croupier, sounds, gameEndCallback,
           key: key, width: width, height: height);
     default:
       // We're probably not ready to serve the other games yet.

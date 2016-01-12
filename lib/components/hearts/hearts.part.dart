@@ -5,9 +5,9 @@
 part of game_component;
 
 class HeartsGameComponent extends GameComponent {
-  HeartsGameComponent(Croupier croupier, NoArgCb cb,
+  HeartsGameComponent(Croupier croupier, SoundAssets sounds, NoArgCb cb,
       {Key key, double width, double height})
-      : super(croupier, cb, key: key, width: width, height: height);
+      : super(croupier, sounds, cb, key: key, width: width, height: height);
 
   HeartsGame get game => super.game;
 
@@ -223,6 +223,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
       try {
         config.game.passCards(_combinePassing());
         config.game.debugString = null;
+        config.sounds.play("whooshOut");
       } catch (e) {
         print("You can't do that! ${e.toString()}");
         config.game.debugString = "You must pass 3 cards";
@@ -240,6 +241,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
         _clearPassing();
         config.game.takeCards();
         config.game.debugString = null;
+        config.sounds.play("whooshIn");
       } catch (e) {
         print("You can't do that! ${e.toString()}");
         config.game.debugString = e.toString();
@@ -262,12 +264,22 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
           bufferedPlay.add(card);
         } else {
           game.move(card, dest);
+          config.sounds.play("whooshOut");
         }
         game.debugString = null;
       } else {
         print("You can't do that! ${reason}");
         game.debugString = reason;
       }
+    });
+  }
+
+  void _makeTakeTrickCallback() {
+    HeartsGame game = config.game;
+    setState(() {
+      game.takeTrickUI();
+      game.debugString = null;
+      config.sounds.play("whooshIn");
     });
   }
 
@@ -352,8 +364,8 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
   }
 
   Widget showBoard() {
-    return new HeartsBoard(config.croupier,
-        width: config.width, height: 0.80 * config.height);
+    return new HeartsBoard(config.croupier, config.sounds,
+        width: config.width, height: 0.825 * config.height);
   }
 
   String _getName(int playerNumber) {
@@ -445,12 +457,8 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
             game.determineTrickWinner() == game.playerNumber) {
           statusBarWidgets.add(new Flexible(
               flex: 0,
-              child: new GestureDetector(onTap: () {
-                setState(() {
-                  game.takeTrickUI();
-                  game.debugString = null;
-                });
-              },
+              child: new GestureDetector(
+                  onTap: _makeTakeTrickCallback,
                   child: new Container(
                       decoration: style.Box.brightBackground,
                       margin: style.Spacing.smallPaddingSide,
@@ -512,7 +520,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     return new Container(
         width: config.width * 0.5,
         height: config.height * 0.25,
-        child: new HeartsBoard(config.croupier,
+        child: new HeartsBoard(config.croupier, config.sounds,
             width: config.width * 0.5,
             height: config.height * 0.25,
             cardWidth: config.height * 0.1,

@@ -5,9 +5,9 @@
 part of game_component;
 
 class SolitaireGameComponent extends GameComponent {
-  SolitaireGameComponent(Croupier croupier, NoArgCb cb,
+  SolitaireGameComponent(Croupier croupier, SoundAssets sounds, NoArgCb cb,
       {Key key, double width, double height})
-      : super(croupier, cb, key: key, width: width, height: height);
+      : super(croupier, sounds, cb, key: key, width: width, height: height);
 
   SolitaireGameComponentState createState() =>
       new SolitaireGameComponentState();

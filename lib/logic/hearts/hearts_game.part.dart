@@ -209,10 +209,17 @@ class HeartsGame extends Game {
 
   bool hasPassed(int player) =>
       cardCollections[player + OFFSET_PASS].length == 3;
-  bool get allPassed => cardCollections[PLAYER_A_PASS].length == 3 &&
-      cardCollections[PLAYER_B_PASS].length == 3 &&
-      cardCollections[PLAYER_C_PASS].length == 3 &&
-      cardCollections[PLAYER_D_PASS].length == 3;
+  int get numPassed {
+    int count = 0;
+    for (int i = 0; i < 4; i++) {
+      if (cardCollections[i + OFFSET_PASS].length == 3) {
+        count++;
+      }
+    }
+    return count;
+  }
+
+  bool get allPassed => numPassed == 4;
   bool hasTaken(int player) =>
       cardCollections[getTakeTarget(player) + OFFSET_PASS].length == 0;
   bool get allTaken => cardCollections[PLAYER_A_PASS].length == 0 &&

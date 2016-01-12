@@ -8,13 +8,15 @@ import '../logic/croupier.dart' show Croupier;
 import '../styles/common.dart' as style;
 import 'croupier.dart' show CroupierComponent;
 import 'croupier_profile.dart' show CroupierProfileComponent;
+import '../sound/sound_assets.dart';
 
 final GlobalKey _scaffoldKey = new GlobalKey();
 
 class MainRoute extends StatefulComponent {
   final Croupier croupier;
+  final SoundAssets sounds;
 
-  MainRoute(this.croupier);
+  MainRoute(this.croupier, this.sounds);
 
   MainRouteState createState() => new MainRouteState();
 }
@@ -47,7 +49,8 @@ class MainRouteState extends State<MainRoute> {
                 icon: "navigation/menu",
                 onPressed: () => _scaffoldKey.currentState?.openDrawer()),
             center: new Text('Croupier')),
-        body: new Material(child: new CroupierComponent(config.croupier)),
+        body: new Material(
+            child: new CroupierComponent(config.croupier, config.sounds)),
         drawer: _buildDrawer());
   }
 

@@ -1,5 +1,6 @@
---map-origin=http://flutter/=https://storage.googleapis.com/mojo/flutter/e5c866cd9573c4a8fe893ddcf196be5aaef4df38/android-arm/
---url-mappings=mojo:flutter=http://flutter/flutter.mojo
+--map-origin=http://flutter/=https://storage.googleapis.com/mojo/flutter/90ef9fa39c36f4027b82e62262e5c0c43a0466a1/android-arm/
+--url-mappings=mojo:flutter=http://flutter/flutter.mojo,mojo:media_service=https://mojo3.v.io/media_service.mojo
+--map-origin=https://mojo3.v.io=https://storage.googleapis.com/mojo_services/
 --debug
 --verbose
 --args-for=mojo:flutter --enable-checked-mode

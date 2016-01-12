@@ -20,7 +20,7 @@ packages:
   async:
     description: async
     source: hosted
-    version: "1.5.0"
+    version: "1.6.0"
   barback:
     description: barback
     source: hosted
@@ -29,6 +29,10 @@ packages:
     description: bignum
     source: hosted
     version: "0.0.7"
+  box2d:
+    description: box2d
+    source: hosted
+    version: "0.2.0"
   cassowary:
     description:
       path: "../../../flutter/packages/cassowary"
@@ -77,6 +81,12 @@ packages:
       relative: true
     source: path
     version: "0.0.21"
+  flutter_sprites:
+    description:
+      path: "../../../flutter/packages/flutter_sprites"
+      relative: true
+    source: path
+    version: "0.0.15"
   flutter_tools:
     description:
       path: "../../../flutter/packages/flutter_tools"
@@ -230,7 +240,7 @@ packages:
   stack_trace:
     description: stack_trace
     source: hosted
-    version: "1.5.0"
+    version: "1.5.1"
   string_scanner:
     description: string_scanner
     source: hosted
@@ -238,7 +248,7 @@ packages:
   syncbase:
     description: syncbase
     source: hosted
-    version: "0.0.26"
+    version: "0.0.27"
   test:
     description: test
     source: hosted
@@ -254,7 +264,7 @@ packages:
   v23discovery:
     description: v23discovery
     source: hosted
-    version: "0.0.8"
+    version: "0.0.9"
   vector_math:
     description: vector_math
     source: hosted
