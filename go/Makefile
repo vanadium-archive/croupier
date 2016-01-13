@@ -49,7 +49,8 @@ vet: src/golang.org/x/mobile/cmd/gomobile
 # Note: Since this Makefile prepends "./go" to the GOPATH, gomobile will be
 # installed in go/src/golang.org, which makes it easier to delete.
 src/golang.org/x/mobile/cmd/gomobile:
-	go get golang.org/x/mobile/cmd/gomobile
+	jiri go get golang.org/x/mobile/cmd/gomobile
+	sudo apt-get -y install libopenal-dev
 
 # Builds the Hearts binary.
 bin/hearts: $(go_files) src/golang.org/x/mobile/cmd/gomobile | fmt
@@ -74,6 +75,7 @@ clean:
 	rm -rf pkg
 	rm -rf src/golang.org/x/mobile
 	rm -rf tmp/syncbase
+	sudo apt-get -y remove libopenal-dev
 
 all: bin/hearts
 

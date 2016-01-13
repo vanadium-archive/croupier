@@ -18,6 +18,7 @@ import (
 	"hearts/logic/card"
 	"hearts/logic/table"
 
+	"golang.org/x/mobile/exp/audio"
 	"golang.org/x/mobile/exp/gl/glutil"
 	"golang.org/x/mobile/exp/sprite"
 
@@ -112,6 +113,8 @@ type UIState struct {
 	GameChan         chan bool                      // pass in a bool to stop receiving updates from the current game
 	DiscGroups       map[string]*DiscStruct         // contains a set of addresses and game start data for each advertised game found
 	M                sync.Mutex
+	Audio            *PlayerStruct // audio players for app sounds
+	LatestTimestamp  int64         // highest timestamp seen so far
 }
 
 func MakeUIState() *UIState {
@@ -149,6 +152,8 @@ func MakeUIState() *UIState {
 		AnimChans:        make([]chan bool, 0),
 		DiscGroups:       make(map[string]*DiscStruct),
 		CurPlayerIndex:   -1,
+		Audio:            makePlayerStruct([]string{"whooshIn.wav", "whooshOut.wav"}),
+		LatestTimestamp:  0,
 	}
 }
 
@@ -196,5 +201,17 @@ func MakeDiscStruct(s, l, g string) *DiscStruct {
 		SettingsAddr:  s,
 		LogAddr:       l,
 		GameStartData: dataMap,
+	}
+}
+
+type PlayerStruct struct {
+	Players []*audio.Player
+	Sounds  []string
+}
+
+func makePlayerStruct(s []string) *PlayerStruct {
+	return &PlayerStruct{
+		Players: make([]*audio.Player, len(s)),
+		Sounds:  s,
 	}
 }

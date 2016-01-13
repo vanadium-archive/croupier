@@ -20,6 +20,7 @@ import (
 	"hearts/img/uistate"
 	"hearts/img/view"
 	"hearts/logic/card"
+	"hearts/sound"
 	"hearts/sync"
 )
 
@@ -256,11 +257,11 @@ func endClickArrange(t touch.Event, u *uistate.UIState) {
 
 func beginClickTable(t touch.Event, u *uistate.UIState) {
 	buttonList := findClickedButton(t, u)
-	if len(buttonList) > 0 {
-		if buttonList[0] == u.Buttons["takeTrick"] {
-			pressButton(buttonList[0], u)
+	for _, b := range buttonList {
+		if b == u.Buttons["takeTrick"] {
+			pressButton(b, u)
 		} else {
-			updateViewFromTable(buttonList[0], u)
+			handleDebugButtonClick(b, u)
 		}
 	}
 }
@@ -289,14 +290,10 @@ func beginClickPass(t touch.Event, u *uistate.UIState) {
 	}
 	buttonList := findClickedButton(t, u)
 	for _, b := range buttonList {
-		if b == u.Buttons["table"] {
-			view.LoadTableView(u)
-		} else if b == u.Buttons["hand"] {
-			view.LoadPassOrTakeOrPlay(u)
-		} else if b == u.Buttons["restart"] {
-			sync.ResetGame(u.LogSG, u.IsOwner, u)
-		} else if b == u.Buttons["pass"] {
+		if b == u.Buttons["pass"] {
 			pressButton(b, u)
+		} else {
+			handleDebugButtonClick(b, u)
 		}
 	}
 }
@@ -332,21 +329,25 @@ func endClickPass(t touch.Event, u *uistate.UIState) {
 		if readyToPass {
 			if passButton.GetDisplayingImage() {
 				u.Eng.SetSubTex(passButton.GetNode(), passButton.GetImage())
+				passButton.SetHidden(false)
 				passButton.SetDisplayingImage(true)
 			}
 			for _, img := range u.Other {
 				if img.GetDisplayingImage() {
 					u.Eng.SetSubTex(img.GetNode(), img.GetAlt())
+					img.SetHidden(false)
 					img.SetDisplayingImage(false)
 				}
 			}
 		} else {
 			var emptyTex sprite.SubTex
 			u.Eng.SetSubTex(passButton.GetNode(), emptyTex)
+			passButton.SetHidden(true)
 			passButton.SetDisplayingImage(true)
 			for _, img := range u.Other {
 				if !img.GetDisplayingImage() {
 					u.Eng.SetSubTex(img.GetNode(), img.GetImage())
+					img.SetHidden(false)
 					img.SetDisplayingImage(true)
 				}
 			}
@@ -377,14 +378,10 @@ func endClickPass(t touch.Event, u *uistate.UIState) {
 func beginClickTake(t touch.Event, u *uistate.UIState) {
 	buttonList := findClickedButton(t, u)
 	for _, b := range buttonList {
-		if b == u.Buttons["table"] {
-			view.LoadTableView(u)
-		} else if b == u.Buttons["hand"] {
-			view.LoadPassOrTakeOrPlay(u)
-		} else if b == u.Buttons["restart"] {
-			sync.ResetGame(u.LogSG, u.IsOwner, u)
-		} else if b == u.Buttons["take"] {
+		if b == u.Buttons["take"] {
 			pressButton(b, u)
+		} else {
+			handleDebugButtonClick(b, u)
 		}
 	}
 }
@@ -443,14 +440,10 @@ func beginClickPlay(t touch.Event, u *uistate.UIState) {
 	for _, b := range buttonList {
 		if b == u.Buttons["toggleSplit"] && !u.SwitchingViews {
 			view.LoadSplitView(false, u)
-		} else if b == u.Buttons["table"] {
-			view.LoadTableView(u)
-		} else if b == u.Buttons["hand"] {
-			view.LoadPassOrTakeOrPlay(u)
-		} else if b == u.Buttons["restart"] {
-			sync.ResetGame(u.LogSG, u.IsOwner, u)
 		} else if b == u.Buttons["takeTrick"] {
 			pressButton(b, u)
+		} else {
+			handleDebugButtonClick(b, u)
 		}
 	}
 }
@@ -512,6 +505,7 @@ func endClickPlay(t touch.Event, u *uistate.UIState) {
 		if b == u.Buttons["takeTrick"] {
 			var emptyTex sprite.SubTex
 			u.Eng.SetSubTex(b.GetNode(), emptyTex)
+			b.SetHidden(true)
 			u.Buttons["takeTrick"] = nil
 			for _, takenCard := range u.TableCards {
 				sync.RemoveCardFromTarget(takenCard, u)
@@ -555,12 +549,8 @@ func beginClickSplit(t touch.Event, u *uistate.UIState) {
 			}()
 		} else if b == u.Buttons["takeTrick"] {
 			pressButton(b, u)
-		} else if b == u.Buttons["table"] {
-			view.LoadTableView(u)
-		} else if b == u.Buttons["hand"] {
-			view.LoadPassOrTakeOrPlay(u)
-		} else if b == u.Buttons["restart"] {
-			sync.ResetGame(u.LogSG, u.IsOwner, u)
+		} else {
+			handleDebugButtonClick(b, u)
 		}
 	}
 }
@@ -572,7 +562,15 @@ func moveClickSplit(t touch.Event, u *uistate.UIState) {
 	curPressed := findClickedButton(t, u)
 	alreadyPressed := getPressed(u)
 	if len(alreadyPressed) > 0 && len(curPressed) == 0 {
-		unpressButtons(u)
+		unpress := true
+		for _, b := range alreadyPressed {
+			if b == u.Buttons["toggleSplit"] {
+				unpress = false
+			}
+		}
+		if unpress {
+			unpressButtons(u)
+		}
 	}
 }
 
@@ -589,6 +587,7 @@ func endClickSplit(t touch.Event, u *uistate.UIState) {
 							u.BackgroundImgs[0].GetNode().Arranger = nil
 							var emptyTex sprite.SubTex
 							u.Eng.SetSubTex(u.BackgroundImgs[0].GetNode(), emptyTex)
+							u.BackgroundImgs[0].SetHidden(true)
 						}
 						// add card back to hand
 						reposition.ResetCardPosition(u.CurCard, u.Eng)
@@ -604,6 +603,7 @@ func endClickSplit(t touch.Event, u *uistate.UIState) {
 					u.BackgroundImgs[0].GetNode().Arranger = nil
 					var emptyTex sprite.SubTex
 					u.Eng.SetSubTex(u.BackgroundImgs[0].GetNode(), emptyTex)
+					u.BackgroundImgs[0].SetHidden(true)
 				}
 				reposition.ResetCardPosition(u.CurCard, u.Eng)
 				reposition.RealignSuit(u.CurCard.GetSuit(), u.CurCard.GetInitial().Y, u)
@@ -614,11 +614,17 @@ func endClickSplit(t touch.Event, u *uistate.UIState) {
 			reposition.RealignSuit(u.CurCard.GetSuit(), u.CurCard.GetInitial().Y, u)
 		}
 	}
-	pressed := unpressButtons(u)
+	pressed := getPressed(u)
+	unpress := true
 	for _, b := range pressed {
 		if b == u.Buttons["takeTrick"] {
 			sync.LogTakeTrick(u)
+		} else if b == u.Buttons["toggleSplit"] {
+			unpress = false
 		}
+	}
+	if unpress {
+		unpressButtons(u)
 	}
 }
 
@@ -698,6 +704,7 @@ func passCards(ch chan bool, playerId int, u *uistate.UIState) bool {
 	if !u.CurTable.ValidPass(cardsPassed) || u.CurTable.GetPlayers()[playerId].GetDonePassing() {
 		return false
 	}
+	sound.PlaySound(1, u)
 	success := sync.LogPass(u, cardsPassed)
 	for !success {
 		success = sync.LogPass(u, cardsPassed)
@@ -714,6 +721,7 @@ func takeCards(ch chan bool, playerId int, u *uistate.UIState) bool {
 	if len(passedCards) != 3 {
 		return false
 	}
+	sound.PlaySound(0, u)
 	success := sync.LogTake(u)
 	for !success {
 		success = sync.LogTake(u)
@@ -724,15 +732,18 @@ func takeCards(ch chan bool, playerId int, u *uistate.UIState) bool {
 }
 
 func pressButton(b *staticimg.StaticImg, u *uistate.UIState) {
-	u.Eng.SetSubTex(b.GetNode(), b.GetAlt())
-	b.SetDisplayingImage(false)
+	if !b.GetHidden() {
+		u.Eng.SetSubTex(b.GetNode(), b.GetAlt())
+		b.SetHidden(false)
+		b.SetDisplayingImage(false)
+	}
 }
 
 // returns buttons that were pressed
 func unpressButtons(u *uistate.UIState) []*staticimg.StaticImg {
 	pressed := make([]*staticimg.StaticImg, 0)
 	for _, b := range u.Buttons {
-		if b != nil && b.GetDisplayingImage() == false {
+		if b != nil && !b.GetDisplayingImage() && !b.GetHidden() {
 			u.Eng.SetSubTex(b.GetNode(), b.GetImage())
 			b.SetDisplayingImage(true)
 			pressed = append(pressed, b)
@@ -745,7 +756,7 @@ func unpressButtons(u *uistate.UIState) []*staticimg.StaticImg {
 func getPressed(u *uistate.UIState) []*staticimg.StaticImg {
 	pressed := make([]*staticimg.StaticImg, 0)
 	for _, b := range u.Buttons {
-		if b.GetDisplayingImage() == false {
+		if b != nil && !b.GetDisplayingImage() && !b.GetHidden() {
 			pressed = append(pressed, b)
 		}
 	}
@@ -805,7 +816,7 @@ func touchingStaticImg(t touch.Event, s *staticimg.StaticImg, u *uistate.UIState
 	return withinXBounds && withinYBounds
 }
 
-func updateViewFromTable(b *staticimg.StaticImg, u *uistate.UIState) {
+func handleDebugButtonClick(b *staticimg.StaticImg, u *uistate.UIState) {
 	if b == u.Buttons["player0"] {
 		u.CurPlayerIndex = 0
 		view.LoadPassOrTakeOrPlay(u)

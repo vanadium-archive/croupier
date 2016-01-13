@@ -16,7 +16,9 @@ import (
 
 // Returns a new StaticImg object, with no variables set
 func MakeStaticImg() *StaticImg {
-	return &StaticImg{}
+	return &StaticImg{
+		hidden: false,
+	}
 }
 
 // Static Images may be buttons, drop targets, or any other image that is not a card object
@@ -29,6 +31,8 @@ type StaticImg struct {
 	alt sprite.SubTex
 	// displayingImage is true is image is currently being displayed, and false if alt is currently being displayed
 	displayingImage bool
+	// hidden is true if no image is currently being displayed
+	hidden bool
 	// XY coordinates of the initial placement of the image
 	initial *coords.Vec
 	// current XY coordinates of the image
@@ -58,6 +62,10 @@ func (s *StaticImg) GetAlt() sprite.SubTex {
 
 func (s *StaticImg) GetDisplayingImage() bool {
 	return s.displayingImage
+}
+
+func (s *StaticImg) GetHidden() bool {
+	return s.hidden
 }
 
 // Returns a vector containing the current x- and y-coordinate of the upper left corner of s
@@ -102,6 +110,10 @@ func (s *StaticImg) SetAlt(t sprite.SubTex) {
 
 func (s *StaticImg) SetDisplayingImage(disp bool) {
 	s.displayingImage = disp
+}
+
+func (s *StaticImg) SetHidden(h bool) {
+	s.hidden = h
 }
 
 // Moves s to a new position and size

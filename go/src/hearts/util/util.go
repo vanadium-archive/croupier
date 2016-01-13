@@ -8,13 +8,13 @@ package util
 
 const (
 	// switch back to my mountpoint with the following code:
-	MountPoint = "users/emshack@google.com"
-	//MountPoint        = "/192.168.86.254:8101"
-	UserID            = 1112
+	//MountPoint = "users/emshack@google.com"
+	MountPoint        = "/192.168.86.254:8101"
+	UserID            = 323432
 	UserColor         = 16777215
-	UserAvatar        = "woman.png"
-	UserName          = "Bob"
-	SBName            = "syncbase"
+	UserAvatar        = "man.png"
+	UserName          = "Bruce"
+	SBName            = "syncbase1"
 	AppName           = "app"
 	DbName            = "db"
 	LogName           = "games"

@@ -89,6 +89,7 @@ func LoadArrangeView(u *uistate.UIState) {
 		var emptyTex sprite.SubTex
 		if !display {
 			u.Eng.SetSubTex(u.Buttons["start"].GetNode(), emptyTex)
+			u.Buttons["start"].SetHidden(true)
 		}
 	}
 }
@@ -106,6 +107,9 @@ func LoadWaitingView(u *uistate.UIState) {
 	textImgs := texture.MakeStringImgCenterAlign("Waiting...", "", "", true, center, scaler, maxWidth, u)
 	for _, img := range textImgs {
 		u.BackgroundImgs = append(u.BackgroundImgs, img)
+	}
+	if u.Debug {
+		addDebugBar(u)
 	}
 }
 
@@ -216,6 +220,7 @@ func LoadTableView(u *uistate.UIState) {
 	if !u.CurTable.TrickOver() {
 		var emptyTex sprite.SubTex
 		u.Eng.SetSubTex(u.Buttons["takeTrick"].GetNode(), emptyTex)
+		u.Buttons["takeTrick"].SetHidden(true)
 	}
 	// card on top of first drop target
 	dropCard := u.CurTable.GetTrick()[0]
@@ -624,6 +629,7 @@ func addSplitViewPlayerIcons(beforeSplitAnimation bool, u *uistate.UIState) {
 	if u.CardToPlay == nil {
 		var emptyTex sprite.SubTex
 		u.Eng.SetSubTex(b.GetNode(), emptyTex)
+		b.SetHidden(true)
 	}
 	// first player icon
 	playerIconImage := uistate.GetAvatar(u.CurPlayerIndex, u)
@@ -781,6 +787,7 @@ func addPlayHeader(message string, beforeSplitAnimation bool, u *uistate.UIState
 	if !display {
 		var emptyTex sprite.SubTex
 		u.Eng.SetSubTex(u.Buttons["takeTrick"].GetNode(), emptyTex)
+		u.Buttons["takeTrick"].SetHidden(true)
 	}
 }
 
@@ -878,6 +885,7 @@ func addGrayPassBar(u *uistate.UIState) {
 	b := texture.MakeImgWithAlt(passImg, passAlt, passPos, passDim, true, u)
 	var emptyTex sprite.SubTex
 	u.Eng.SetSubTex(b.GetNode(), emptyTex)
+	b.SetHidden(true)
 	u.Buttons["pass"] = b
 }
 

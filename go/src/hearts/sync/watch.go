@@ -25,6 +25,7 @@ import (
 	"hearts/img/uistate"
 	"hearts/img/view"
 	"hearts/logic/card"
+	"hearts/sound"
 	"hearts/util"
 
 	"v.io/v23/syncbase/nosql"
@@ -160,6 +161,9 @@ func handleGameUpdate(file *os.File, key string, value []byte, u *uistate.UIStat
 	tmp := strings.Split(key, "/")
 	if len(tmp) == 3 {
 		keyTime, _ := strconv.ParseInt(strings.Split(tmp[2], "-")[0], 10, 64)
+		if keyTime > u.LatestTimestamp {
+			u.LatestTimestamp = keyTime
+		}
 		fmt.Fprintf(file, fmt.Sprintf("diff: %d milliseconds\n\n", curTime-keyTime))
 	} else {
 		fmt.Fprintf(file, "\n")
@@ -208,6 +212,7 @@ func onPlayerNum(key, value string, u *uistate.UIState) {
 		if u.CurTable.AllReadyForNewRound() && u.IsOwner {
 			b := u.Buttons["start"]
 			u.Eng.SetSubTex(b.GetNode(), b.GetImage())
+			b.SetHidden(false)
 			b.SetDisplayingImage(true)
 			if u.SGChan != nil {
 				u.SGChan <- true
@@ -322,6 +327,7 @@ func onPlay(value string, u *uistate.UIState) {
 	}
 	// UI
 	if u.CurView == uistate.Table {
+		sound.PlaySound(0, u)
 		quit := make(chan bool)
 		u.AnimChans = append(u.AnimChans, quit)
 		reposition.AnimateTableCardPlay(playedCard, playerInt, quit, u)
@@ -330,6 +336,7 @@ func onPlay(value string, u *uistate.UIState) {
 			// display take trick button
 			b := u.Buttons["takeTrick"]
 			u.Eng.SetSubTex(b.GetNode(), b.GetImage())
+			b.SetHidden(false)
 		}
 	} else if u.CurView == uistate.Split {
 		if playerInt != u.CurPlayerIndex {
@@ -344,6 +351,7 @@ func onPlay(value string, u *uistate.UIState) {
 				// display take trick button
 				b := u.Buttons["takeTrick"]
 				u.Eng.SetSubTex(b.GetNode(), b.GetImage())
+				b.SetHidden(false)
 			}
 		} else if u.CardToPlay != nil && u.CurTable.WhoseTurn() == u.CurPlayerIndex {
 			ch := make(chan bool)
@@ -357,6 +365,7 @@ func onPlay(value string, u *uistate.UIState) {
 			u.BackgroundImgs[0].GetNode().Arranger = nil
 			var emptyTex sprite.SubTex
 			u.Eng.SetSubTex(u.BackgroundImgs[0].GetNode(), emptyTex)
+			u.BackgroundImgs[0].SetHidden(true)
 		}
 	} else if u.CurView == uistate.Play && u.CurPlayerIndex != playerInt {
 		view.LoadPlayView(true, u)
@@ -393,8 +402,10 @@ func onTakeTrick(value string, u *uistate.UIState) {
 	}
 	// UI
 	if u.CurView == uistate.Table {
+		sound.PlaySound(1, u)
 		var emptyTex sprite.SubTex
 		u.Eng.SetSubTex(u.Buttons["takeTrick"].GetNode(), emptyTex)
+		u.Buttons["takeTrick"].SetHidden(true)
 		var trickDir direction.Direction
 		switch recipient {
 		case 0:
@@ -414,12 +425,14 @@ func onTakeTrick(value string, u *uistate.UIState) {
 	} else if u.CurView == uistate.Split {
 		var emptyTex sprite.SubTex
 		u.Eng.SetSubTex(u.Buttons["takeTrick"].GetNode(), emptyTex)
+		u.Buttons["takeTrick"].SetHidden(true)
 		if roundOver {
 			view.LoadScoreView(u)
 		} else {
 			var trickDir direction.Direction
 			switch recipient {
 			case u.CurPlayerIndex:
+				sound.PlaySound(0, u)
 				trickDir = direction.Down
 			case (u.CurPlayerIndex + 1) % u.NumPlayers:
 				trickDir = direction.Left
@@ -437,6 +450,9 @@ func onTakeTrick(value string, u *uistate.UIState) {
 		if roundOver {
 			view.LoadScoreView(u)
 		} else {
+			if recipient == u.CurPlayerIndex {
+				sound.PlaySound(0, u)
+			}
 			view.LoadPlayView(true, u)
 		}
 	}
@@ -455,6 +471,7 @@ func onReady(value string, u *uistate.UIState) {
 		if u.CurView == uistate.Arrange {
 			b := u.Buttons["start"]
 			u.Eng.SetSubTex(b.GetNode(), b.GetImage())
+			b.SetHidden(false)
 			b.SetDisplayingImage(true)
 			if u.SGChan != nil {
 				u.SGChan <- true
@@ -547,6 +564,7 @@ func PlayCard(ch chan bool, playerId int, u *uistate.UIState) string {
 	if err := u.CurTable.ValidPlayLogic(c, playerId); err != "" {
 		return err
 	}
+	sound.PlaySound(1, u)
 	success := LogPlay(u, c)
 	for !success {
 		success = LogPlay(u, c)

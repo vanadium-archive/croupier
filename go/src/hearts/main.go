@@ -21,6 +21,7 @@ import (
 	"hearts/img/uistate"
 	"hearts/img/view"
 	"hearts/logic/table"
+	"hearts/sound"
 	"hearts/sync"
 	"hearts/touchhandler"
 	"hearts/util"
@@ -105,6 +106,7 @@ func onStart(glctx gl.Context, u *uistate.UIState) {
 	u.Eng = glsprite.Engine(u.Images)
 	u.Texs = texture.LoadTextures(u.Eng)
 	u.CurTable = table.InitializeGame(u.NumPlayers, u.Texs)
+	sound.InitPlayers(u)
 	sync.CreateTables(u)
 	// Create watch stream to update game state based on Syncbase updates
 	go sync.UpdateSettings(u)
@@ -114,6 +116,7 @@ func onStop(u *uistate.UIState) {
 	u.Eng.Release()
 	fps.Release()
 	u.Images.Release()
+	sound.ClosePlayers(u)
 	u.Done = true
 	u.Shutdown()
 }
