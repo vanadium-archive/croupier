@@ -79,7 +79,7 @@ class HeartsBoard extends Board {
 }
 
 class HeartsBoardState extends State<HeartsBoard> {
-  static const double PROFILE_SIZE = 0.18; // multiplier of config.height
+  static const double PROFILE_SIZE = 0.17; // multiplier of config.height
 
   // Every time the counter changes, a sound will be played.
   // For example, in the pass/take phase, the counter does this:
@@ -392,65 +392,121 @@ class HeartsBoardState extends State<HeartsBoard> {
   }
 
   Widget _buildBoardLayout() {
-    return new Container(
-        height: config.height,
-        width: config.width,
-        child: new Column([
-          new Flexible(child: _playerProfile(2, PROFILE_SIZE), flex: 0),
-          new Flexible(child: _showTrickText(2), flex: 0),
-          new Flexible(
-              child: new Row([
-                new Flexible(child: _playerProfile(1, PROFILE_SIZE), flex: 0),
-                new Flexible(child: _showTrickText(1), flex: 0),
-                new Flexible(child: _buildCenterCards(), flex: 1),
-                new Flexible(child: _showTrickText(3), flex: 0),
-                new Flexible(child: _playerProfile(3, PROFILE_SIZE), flex: 0)
-              ],
-                  alignItems: FlexAlignItems.center,
-                  justifyContent: FlexJustifyContent.spaceAround),
-              flex: 1),
-          new Flexible(child: _showTrickText(0), flex: 0),
-          new Flexible(child: _playerProfile(0, PROFILE_SIZE), flex: 0)
-        ],
-            alignItems: FlexAlignItems.center,
-            justifyContent: FlexJustifyContent.spaceAround));
+    int activePlayer = config.game.allPlayed
+        ? config.game.determineTrickWinner()
+        : config.game.whoseTurn;
+
+    return new GestureDetector(
+        onTap: config.game.asking ? null : config.game.askUI,
+        child: new Container(
+            height: config.height,
+            width: config.width,
+            decoration: new BoxDecoration(
+                border: new Border(
+                    top: new BorderSide(
+                        color: activePlayer == 2
+                            ? style.theme.accentColor
+                            : style.transparentColor,
+                        width: 5.0),
+                    right: new BorderSide(
+                        color: activePlayer == 3
+                            ? style.theme.accentColor
+                            : style.transparentColor,
+                        width: 5.0),
+                    left: new BorderSide(
+                        color: activePlayer == 1
+                            ? style.theme.accentColor
+                            : style.transparentColor,
+                        width: 5.0),
+                    bottom: new BorderSide(
+                        color: activePlayer == 0
+                            ? style.theme.accentColor
+                            : style.transparentColor,
+                        width: 5.0))),
+            child: new Column([
+              new Flexible(child: _playerProfile(2, PROFILE_SIZE), flex: 0),
+              new Flexible(child: _showTrickText(2), flex: 0),
+              new Flexible(
+                  child: new Row([
+                    new Flexible(
+                        child: _playerProfile(1, PROFILE_SIZE), flex: 0),
+                    new Flexible(child: _showTrickText(1), flex: 0),
+                    new Flexible(
+                        child: new Center(child: _buildCenterCards()), flex: 1),
+                    new Flexible(child: _showTrickText(3), flex: 0),
+                    new Flexible(
+                        child: _playerProfile(3, PROFILE_SIZE), flex: 0)
+                  ],
+                      alignItems: FlexAlignItems.center,
+                      justifyContent: FlexJustifyContent.spaceAround),
+                  flex: 1),
+              new Flexible(child: _showTrickText(0), flex: 0),
+              new Flexible(child: _playerProfile(0, PROFILE_SIZE), flex: 0)
+            ],
+                alignItems: FlexAlignItems.center,
+                justifyContent: FlexJustifyContent.spaceAround)));
   }
 
   Widget _buildCenterCards() {
-    bool wide = (config.width >= config.height);
+    //bool wide = (config.width >= config.height);
 
-    if (wide) {
-      return new Row([
-        _buildCenterCard(1),
-        new Column([_buildCenterCard(2), _buildCenterCard(0)],
-            alignItems: FlexAlignItems.center,
-            justifyContent: FlexJustifyContent.spaceAround),
-        _buildCenterCard(3)
-      ],
-          alignItems: FlexAlignItems.center,
-          justifyContent: FlexJustifyContent.spaceAround);
-    } else {
-      return new Column([
-        _buildCenterCard(2),
-        new Row([_buildCenterCard(1), _buildCenterCard(3)],
-            alignItems: FlexAlignItems.center,
-            justifyContent: FlexJustifyContent.spaceAround),
-        _buildCenterCard(0)
-      ],
-          alignItems: FlexAlignItems.center,
-          justifyContent: FlexJustifyContent.spaceAround);
+    double height = config.cardHeight * this._centerScaleFactor;
+    double width = config.cardWidth * this._centerScaleFactor;
+    Widget centerPiece =
+        new Container(height: height, width: width, child: new Block([]));
+    if (config.game.allPlayed) {
+      int rotateNum = config.game.determineTrickWinner();
+
+      centerPiece = _rotate(
+          new Container(
+              height: height,
+              width: width,
+              child: new RaisedButton(
+                  child: new Text("Take", style: style.Text.largeStyle),
+                  onPressed: config.game.takeTrickUI,
+                  color: style.theme.accentColor)),
+          rotateNum);
     }
+
+    return new Column([
+      new Flexible(
+          child: new Row([
+        new Flexible(child: new Block([])),
+        new Flexible(child: new Center(child: _buildCenterCard(2))),
+        new Flexible(child: new Block([])),
+      ],
+              alignItems: FlexAlignItems.center,
+              justifyContent: FlexJustifyContent.center)),
+      new Flexible(
+          child: new Row([
+        new Flexible(child: new Center(child: _buildCenterCard(1))),
+        new Flexible(child: new Block([centerPiece])),
+        new Flexible(child: new Center(child: _buildCenterCard(3))),
+      ],
+              alignItems: FlexAlignItems.center,
+              justifyContent: FlexJustifyContent.center)),
+      new Flexible(
+          child: new Row([
+        new Flexible(child: new Block([])),
+        new Flexible(child: new Center(child: _buildCenterCard(0))),
+        new Flexible(child: new Block([])),
+      ],
+              alignItems: FlexAlignItems.center,
+              justifyContent: FlexJustifyContent.center))
+    ],
+        alignItems: FlexAlignItems.center,
+        justifyContent: FlexJustifyContent.center);
   }
 
   double get _centerScaleFactor {
     bool wide = (config.width >= config.height);
-    double heightUsage = (1 - 2 * PROFILE_SIZE);
+    double heightUsed = 2 * PROFILE_SIZE;
 
     if (wide) {
-      return config.height * heightUsage / (config.cardHeight * 3);
+      return config.height * (1 - heightUsed) / (config.cardHeight * 4);
     } else {
-      return (config.width - config.height * heightUsage) /
-          (config.cardWidth * 3);
+      return (config.width - (1.5 * config.height * heightUsed)) /
+          (config.cardWidth * 4);
     }
   }
 
@@ -462,13 +518,38 @@ class HeartsBoardState extends State<HeartsBoard> {
     bool hasPlayed = cards.length > 0;
     bool isTurn = game.whoseTurn == playerNumber && !hasPlayed;
 
-    return new CardCollectionComponent(
-        cards, true, CardCollectionOrientation.show1,
-        widthCard: config.cardWidth * this._centerScaleFactor,
-        heightCard: config.cardHeight * this._centerScaleFactor,
-        rotation: _rotationAngle(playerNumber),
-        useKeys: true,
-        backgroundColor: isTurn ? style.theme.accentColor : null);
+    double height = config.cardHeight * this._centerScaleFactor;
+    double width = config.cardWidth * this._centerScaleFactor;
+
+    List<Widget> stackWidgets = <Widget>[
+      new Positioned(
+          top: 0.0,
+          left: 0.0,
+          child: new CardCollectionComponent(
+              cards, true, CardCollectionOrientation.show1,
+              widthCard: width - 6,
+              heightCard: height - 6,
+              rotation: _rotationAngle(playerNumber),
+              useKeys: true))
+    ];
+
+    if (isTurn) {
+      stackWidgets.add(new Positioned(
+          top: 0.0,
+          left: 0.0,
+          child: _rotate(
+              new Container(
+                  height: height,
+                  width: width,
+                  child: new RaisedButton(
+                      child: new Text("Play", style: style.Text.largeStyle),
+                      onPressed: config.game.asking ? null : config.game.askUI,
+                      color: style.theme.accentColor)),
+              playerNumber)));
+    }
+
+    return new Container(
+        height: height, width: width, child: new Stack(stackWidgets));
   }
 
   // The off-screen cards consist of trick cards and play cards.
@@ -500,7 +581,7 @@ class HeartsBoardState extends State<HeartsBoard> {
     }
 
     return new CardCollectionComponent(
-        cards, isPlay, CardCollectionOrientation.show1,
+        cards, alreadyPlaying, CardCollectionOrientation.show1,
         widthCard: config.cardWidth * sizeFactor,
         heightCard: config.cardHeight * sizeFactor,
         useKeys: true,

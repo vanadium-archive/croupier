@@ -22,93 +22,145 @@ Take|3:END
 # 3 has all hearts except for c4 and c5
 
 # Trick 1 (2 leads with 2 of clubs)
+Ask|END
 Play|2:classic c2:END
+Ask|END
 Play|3:classic c4:END
+Ask|END
 Play|0:classic d1:END
+Ask|END
 Play|1:classic s1:END
 TakeTrick|END
 
 # Trick 2 (3 won last round with 4 of clubs)
+Ask|END
 Play|3:classic c5:END
+Ask|END
 Play|0:classic d2:END
+Ask|END
 Play|1:classic s2:END
+Ask|END
 Play|2:classic c1:END
 TakeTrick|END
 
 # Trick 3 (2 won with ace of clubs)
+Ask|END
 Play|2:classic s4:END
+Ask|END
 Play|3:classic h1:END
+Ask|END
 Play|0:classic h5:END
+Ask|END
 Play|1:classic s3:END
 TakeTrick|END
 
 # Trick 4 (2 won with s4)
+Ask|END
 Play|2:classic s5:END
+Ask|END
 Play|3:classic hk:END
+Ask|END
 Play|0:classic h4:END
+Ask|END
 Play|1:classic sk:END
 TakeTrick|END
 
 # Trick 5 (1 won with sk)
+Ask|END
 Play|1:classic d5:END
+Ask|END
 Play|2:classic ck:END
+Ask|END
 Play|3:classic hq:END
+Ask|END
 Play|0:classic d3:END
 TakeTrick|END
 
 # Trick 6 (1 won with d5)
+Ask|END
 Play|1:classic d4:END
+Ask|END
 Play|2:classic cq:END
+Ask|END
 Play|3:classic hj:END
+Ask|END
 Play|0:classic dk:END
 TakeTrick|END
 
 # Trick 7 (0 won with dk)
+Ask|END
 Play|0:classic dq:END
+Ask|END
 Play|1:classic sq:END
+Ask|END
 Play|2:classic c3:END
+Ask|END
 Play|3:classic h2:END
 TakeTrick|END
 
 # Trick 8 (0 won with dq)
+Ask|END
 Play|0:classic dj:END
+Ask|END
 Play|1:classic sj:END
+Ask|END
 Play|2:classic cj:END
+Ask|END
 Play|3:classic h3:END
 TakeTrick|END
 
 # Trick 9 (0 won with dj)
+Ask|END
 Play|0:classic d10:END
+Ask|END
 Play|1:classic s10:END
+Ask|END
 Play|2:classic c10:END
+Ask|END
 Play|3:classic h10:END
 TakeTrick|END
 
 # Trick 10 (0 won with d10)
+Ask|END
 Play|0:classic d9:END
+Ask|END
 Play|1:classic s9:END
+Ask|END
 Play|2:classic c9:END
+Ask|END
 Play|3:classic h9:END
 TakeTrick|END
 
 # Trick 11 (0 won with d9)
+Ask|END
 Play|0:classic d8:END
+Ask|END
 Play|1:classic s8:END
+Ask|END
 Play|2:classic c8:END
+Ask|END
 Play|3:classic h8:END
 TakeTrick|END
 
 # Trick 12 (0 won with d8)
+Ask|END
 Play|0:classic d7:END
+Ask|END
 Play|1:classic s7:END
+Ask|END
 Play|2:classic c7:END
+Ask|END
 Play|3:classic h7:END
 TakeTrick|END
 
 # Trick 13 (0 won with d7)
+Ask|END
 Play|0:classic d6:END
+Ask|END
 Play|1:classic s6:END
+Ask|END
 Play|2:classic c6:END
+Ask|END
 Play|3:classic h6:END
 TakeTrick|END
 
@@ -141,93 +193,145 @@ Take|0:END
 Take|3:END
 
 # Trick 1
+Ask|END
 Play|0:classic c2:END
+Ask|END
 Play|1:classic d2:END
+Ask|END
 Play|2:classic d4:END
+Ask|END
 Play|3:classic s2:END
 TakeTrick|END
 
 # Trick 2
+Ask|END
 Play|0:classic c3:END
+Ask|END
 Play|1:classic d3:END
+Ask|END
 Play|2:classic h3:END
+Ask|END
 Play|3:classic s3:END
 TakeTrick|END
 
 # Trick 3
+Ask|END
 Play|0:classic c4:END
+Ask|END
 Play|1:classic s4:END
+Ask|END
 Play|2:classic h2:END
+Ask|END
 Play|3:classic h4:END
 TakeTrick|END
 
 # Trick 4
+Ask|END
 Play|0:classic c5:END
+Ask|END
 Play|1:classic d5:END
+Ask|END
 Play|2:classic h5:END
+Ask|END
 Play|3:classic s5:END
 TakeTrick|END
 
 # Trick 5
+Ask|END
 Play|0:classic c6:END
+Ask|END
 Play|1:classic d6:END
+Ask|END
 Play|2:classic h6:END
+Ask|END
 Play|3:classic s6:END
 TakeTrick|END
 
 # Trick 6
+Ask|END
 Play|0:classic c7:END
+Ask|END
 Play|1:classic d7:END
+Ask|END
 Play|2:classic h7:END
+Ask|END
 Play|3:classic s7:END
 TakeTrick|END
 
 # Trick 7
+Ask|END
 Play|0:classic c8:END
+Ask|END
 Play|1:classic d8:END
+Ask|END
 Play|2:classic h8:END
+Ask|END
 Play|3:classic s8:END
 TakeTrick|END
 
 # Trick 8
+Ask|END
 Play|0:classic c9:END
+Ask|END
 Play|1:classic d9:END
+Ask|END
 Play|2:classic h9:END
+Ask|END
 Play|3:classic s9:END
 TakeTrick|END
 
 # Trick 9
+Ask|END
 Play|0:classic c1:END
+Ask|END
 Play|1:classic d1:END
+Ask|END
 Play|2:classic h1:END
+Ask|END
 Play|3:classic s1:END
 TakeTrick|END
 
 # Trick 10
+Ask|END
 Play|0:classic c10:END
+Ask|END
 Play|1:classic d10:END
+Ask|END
 Play|2:classic h10:END
+Ask|END
 Play|3:classic s10:END
 TakeTrick|END
 
 # Trick 11
+Ask|END
 Play|0:classic cj:END
+Ask|END
 Play|1:classic dj:END
+Ask|END
 Play|2:classic hj:END
+Ask|END
 Play|3:classic sj:END
 TakeTrick|END
 
 # Trick 12
+Ask|END
 Play|0:classic cq:END
+Ask|END
 Play|1:classic dq:END
+Ask|END
 Play|2:classic hq:END
+Ask|END
 Play|3:classic sq:END
 TakeTrick|END
 
 # Trick 13
+Ask|END
 Play|0:classic ck:END
+Ask|END
 Play|1:classic dk:END
+Ask|END
 Play|2:classic hk:END
+Ask|END
 Play|3:classic sk:END
 TakeTrick|END
 
@@ -258,93 +362,145 @@ Take|0:END
 Take|3:END
 
 # Trick 1
+Ask|END
 Play|0:classic c2:END
+Ask|END
 Play|1:classic d2:END
+Ask|END
 Play|2:classic d4:END
+Ask|END
 Play|3:classic s2:END
 TakeTrick|END
 
 # Trick 2
+Ask|END
 Play|0:classic c3:END
+Ask|END
 Play|1:classic d3:END
+Ask|END
 Play|2:classic h3:END
+Ask|END
 Play|3:classic s3:END
 TakeTrick|END
 
 # Trick 3
+Ask|END
 Play|0:classic c4:END
+Ask|END
 Play|1:classic s4:END
+Ask|END
 Play|2:classic h2:END
+Ask|END
 Play|3:classic h4:END
 TakeTrick|END
 
 # Trick 4
+Ask|END
 Play|0:classic c5:END
+Ask|END
 Play|1:classic d5:END
+Ask|END
 Play|2:classic h5:END
+Ask|END
 Play|3:classic s5:END
 TakeTrick|END
 
 # Trick 5
+Ask|END
 Play|0:classic c6:END
+Ask|END
 Play|1:classic d6:END
+Ask|END
 Play|2:classic h6:END
+Ask|END
 Play|3:classic s6:END
 TakeTrick|END
 
 # Trick 6
+Ask|END
 Play|0:classic c7:END
+Ask|END
 Play|1:classic d7:END
+Ask|END
 Play|2:classic h7:END
+Ask|END
 Play|3:classic s7:END
 TakeTrick|END
 
 # Trick 7
+Ask|END
 Play|0:classic c8:END
+Ask|END
 Play|1:classic d8:END
+Ask|END
 Play|2:classic h8:END
+Ask|END
 Play|3:classic s8:END
 TakeTrick|END
 
 # Trick 8
+Ask|END
 Play|0:classic c9:END
+Ask|END
 Play|1:classic d9:END
+Ask|END
 Play|2:classic h9:END
+Ask|END
 Play|3:classic s9:END
 TakeTrick|END
 
 # Trick 9
+Ask|END
 Play|0:classic c1:END
+Ask|END
 Play|1:classic d1:END
+Ask|END
 Play|2:classic h1:END
+Ask|END
 Play|3:classic s1:END
 TakeTrick|END
 
 # Trick 10
+Ask|END
 Play|0:classic c10:END
+Ask|END
 Play|1:classic d10:END
+Ask|END
 Play|2:classic h10:END
+Ask|END
 Play|3:classic s10:END
 TakeTrick|END
 
 # Trick 11
+Ask|END
 Play|0:classic cj:END
+Ask|END
 Play|1:classic dj:END
+Ask|END
 Play|2:classic hj:END
+Ask|END
 Play|3:classic sj:END
 TakeTrick|END
 
 # Trick 12
+Ask|END
 Play|0:classic cq:END
+Ask|END
 Play|1:classic dq:END
+Ask|END
 Play|2:classic hq:END
+Ask|END
 Play|3:classic sq:END
 TakeTrick|END
 
 # Trick 13
+Ask|END
 Play|0:classic ck:END
+Ask|END
 Play|1:classic dk:END
+Ask|END
 Play|2:classic hk:END
+Ask|END
 Play|3:classic sk:END
 TakeTrick|END
 
@@ -363,93 +519,145 @@ Deal|2:classic h1:classic h2:classic h3:classic d4:classic h5:classic h6:classic
 Deal|3:classic s1:classic s2:classic s3:classic h4:classic s5:classic s6:classic s7:classic s8:classic s9:classic s10:classic sj:classic sq:classic sk:END
 
 # Trick 1
+Ask|END
 Play|0:classic c2:END
+Ask|END
 Play|1:classic d2:END
+Ask|END
 Play|2:classic d4:END
+Ask|END
 Play|3:classic s2:END
 TakeTrick|END
 
 # Trick 2
+Ask|END
 Play|0:classic c3:END
+Ask|END
 Play|1:classic d3:END
+Ask|END
 Play|2:classic h3:END
+Ask|END
 Play|3:classic s3:END
 TakeTrick|END
 
 # Trick 3
+Ask|END
 Play|0:classic c4:END
+Ask|END
 Play|1:classic s4:END
+Ask|END
 Play|2:classic h2:END
+Ask|END
 Play|3:classic h4:END
 TakeTrick|END
 
 # Trick 4
+Ask|END
 Play|0:classic c5:END
+Ask|END
 Play|1:classic d5:END
+Ask|END
 Play|2:classic h5:END
+Ask|END
 Play|3:classic s5:END
 TakeTrick|END
 
 # Trick 5
+Ask|END
 Play|0:classic c6:END
+Ask|END
 Play|1:classic d6:END
+Ask|END
 Play|2:classic h6:END
+Ask|END
 Play|3:classic s6:END
 TakeTrick|END
 
 # Trick 6
+Ask|END
 Play|0:classic c7:END
+Ask|END
 Play|1:classic d7:END
+Ask|END
 Play|2:classic h7:END
+Ask|END
 Play|3:classic s7:END
 TakeTrick|END
 
 # Trick 7
+Ask|END
 Play|0:classic c8:END
+Ask|END
 Play|1:classic d8:END
+Ask|END
 Play|2:classic h8:END
+Ask|END
 Play|3:classic s8:END
 TakeTrick|END
 
 # Trick 8
+Ask|END
 Play|0:classic c9:END
+Ask|END
 Play|1:classic d9:END
+Ask|END
 Play|2:classic h9:END
+Ask|END
 Play|3:classic s9:END
 TakeTrick|END
 
 # Trick 9
+Ask|END
 Play|0:classic c1:END
+Ask|END
 Play|1:classic d1:END
+Ask|END
 Play|2:classic h1:END
+Ask|END
 Play|3:classic s1:END
 TakeTrick|END
 
 # Trick 10
+Ask|END
 Play|0:classic c10:END
+Ask|END
 Play|1:classic d10:END
+Ask|END
 Play|2:classic h10:END
+Ask|END
 Play|3:classic s10:END
 TakeTrick|END
 
 # Trick 11
+Ask|END
 Play|0:classic cj:END
+Ask|END
 Play|1:classic dj:END
+Ask|END
 Play|2:classic hj:END
+Ask|END
 Play|3:classic sj:END
 TakeTrick|END
 
 # Trick 12
+Ask|END
 Play|0:classic cq:END
+Ask|END
 Play|1:classic dq:END
+Ask|END
 Play|2:classic hq:END
+Ask|END
 Play|3:classic sq:END
 TakeTrick|END
 
 # Trick 13
+Ask|END
 Play|0:classic ck:END
+Ask|END
 Play|1:classic dk:END
+Ask|END
 Play|2:classic hk:END
+Ask|END
 Play|3:classic sk:END
 TakeTrick|END
 
@@ -480,93 +688,145 @@ Take|0:END
 Take|3:END
 
 # Trick 1
+Ask|END
 Play|0:classic c2:END
+Ask|END
 Play|1:classic d2:END
+Ask|END
 Play|2:classic d4:END
+Ask|END
 Play|3:classic s2:END
 TakeTrick|END
 
 # Trick 2
+Ask|END
 Play|0:classic c3:END
+Ask|END
 Play|1:classic d3:END
+Ask|END
 Play|2:classic h3:END
+Ask|END
 Play|3:classic s3:END
 TakeTrick|END
 
 # Trick 3
+Ask|END
 Play|0:classic c4:END
+Ask|END
 Play|1:classic s4:END
+Ask|END
 Play|2:classic h2:END
+Ask|END
 Play|3:classic h4:END
 TakeTrick|END
 
 # Trick 4
+Ask|END
 Play|0:classic c5:END
+Ask|END
 Play|1:classic d5:END
+Ask|END
 Play|2:classic h5:END
+Ask|END
 Play|3:classic s5:END
 TakeTrick|END
 
 # Trick 5
+Ask|END
 Play|0:classic c6:END
+Ask|END
 Play|1:classic d6:END
+Ask|END
 Play|2:classic h6:END
+Ask|END
 Play|3:classic s6:END
 TakeTrick|END
 
 # Trick 6
+Ask|END
 Play|0:classic c7:END
+Ask|END
 Play|1:classic d7:END
+Ask|END
 Play|2:classic h7:END
+Ask|END
 Play|3:classic s7:END
 TakeTrick|END
 
 # Trick 7
+Ask|END
 Play|0:classic c8:END
+Ask|END
 Play|1:classic d8:END
+Ask|END
 Play|2:classic h8:END
+Ask|END
 Play|3:classic s8:END
 TakeTrick|END
 
 # Trick 8
+Ask|END
 Play|0:classic c9:END
+Ask|END
 Play|1:classic d9:END
+Ask|END
 Play|2:classic h9:END
+Ask|END
 Play|3:classic s9:END
 TakeTrick|END
 
 # Trick 9
+Ask|END
 Play|0:classic c1:END
+Ask|END
 Play|1:classic d1:END
+Ask|END
 Play|2:classic h1:END
+Ask|END
 Play|3:classic s1:END
 TakeTrick|END
 
 # Trick 10
+Ask|END
 Play|0:classic c10:END
+Ask|END
 Play|1:classic d10:END
+Ask|END
 Play|2:classic h10:END
+Ask|END
 Play|3:classic s10:END
 TakeTrick|END
 
 # Trick 11
+Ask|END
 Play|0:classic cj:END
+Ask|END
 Play|1:classic dj:END
+Ask|END
 Play|2:classic hj:END
+Ask|END
 Play|3:classic sj:END
 TakeTrick|END
 
 # Trick 12
+Ask|END
 Play|0:classic cq:END
+Ask|END
 Play|1:classic dq:END
+Ask|END
 Play|2:classic hq:END
+Ask|END
 Play|3:classic sq:END
 TakeTrick|END
 
 # Trick 13
+Ask|END
 Play|0:classic ck:END
+Ask|END
 Play|1:classic dk:END
+Ask|END
 Play|2:classic hk:END
+Ask|END
 Play|3:classic sk:END
 TakeTrick|END
 

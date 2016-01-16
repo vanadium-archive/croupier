@@ -30,6 +30,9 @@ class HeartsCommand extends GameCommand {
       : super("Play", computePlay(playerId, c),
             simultaneity: SimulLevel.TURN_BASED);
 
+  HeartsCommand.ask()
+      : super("Ask", computeAsk(), simultaneity: SimulLevel.TURN_BASED);
+
   HeartsCommand.takeTrick()
       : super("TakeTrick", computeTakeTrick(),
             simultaneity: SimulLevel.TURN_BASED);
@@ -47,6 +50,8 @@ class HeartsCommand extends GameCommand {
       case "Take":
         return SimulLevel.INDEPENDENT;
       case "Play":
+        return SimulLevel.TURN_BASED;
+      case "Ask":
         return SimulLevel.TURN_BASED;
       case "TakeTrick":
         return SimulLevel.TURN_BASED;
@@ -81,6 +86,10 @@ class HeartsCommand extends GameCommand {
 
   static String computePlay(int playerId, Card c) {
     return "${playerId}:${c.toString()}:END";
+  }
+
+  static String computeAsk() {
+    return "END";
   }
 
   static String computeTakeTrick() {
@@ -155,6 +164,11 @@ class HeartsCommand extends GameCommand {
           return false;
         }
 
+        // Can play if the game is asking for a card to be played.
+        if (!game.asking) {
+          return false;
+        }
+
         // Play the card from the player's hand to their play pile.
         int playerId = int.parse(parts[0]);
         int targetId = playerId + HeartsGame.OFFSET_PLAY;
@@ -170,6 +184,14 @@ class HeartsCommand extends GameCommand {
         }
         bool canTransfer = this.transferCheck(hand, discard, c);
         return canTransfer;
+      case "Ask":
+        if (game.phase != HeartsPhase.Play) {
+          return false;
+        }
+        if (game.allPlayed) {
+          return false;
+        }
+        return !game.asking; // Can ask if you're not asking.
       case "TakeTrick":
         if (game.phase != HeartsPhase.Play) {
           return false;
@@ -257,6 +279,11 @@ class HeartsCommand extends GameCommand {
               "Cannot process play commands when not in Play phase");
         }
 
+        // Can play if the game is asking for a card to be played.
+        if (!game.asking) {
+          throw new StateError("Cannot play if not asking");
+        }
+
         // Play the card from the player's hand to their play pile.
         int playerId = int.parse(parts[0]);
         int targetId = playerId + HeartsGame.OFFSET_PLAY;
@@ -272,6 +299,20 @@ class HeartsCommand extends GameCommand {
               "Player ${playerId} cannot play ${c.toString()} because ${reason}");
         }
         this.transfer(hand, discard, c);
+        game.asking = false;
+        return;
+      case "Ask":
+        if (game.phase != HeartsPhase.Play) {
+          throw new StateError(
+              "Cannot process ask commands when not in Play phase");
+        }
+        if (game.asking) {
+          throw new StateError("Cannot ask while already asking");
+        }
+        if (game.allPlayed) {
+          throw new StateError("Cannot ask if all cards are played");
+        }
+        game.asking = true;
         return;
       case "TakeTrick":
         if (game.phase != HeartsPhase.Play) {

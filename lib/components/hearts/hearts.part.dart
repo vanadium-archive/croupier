@@ -30,11 +30,13 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
 
     // If someone sat at the table, they would have the value 4.
     // If nobody sat at the table, then we should show the split view.
-    if (!config.croupier.players_found.values.contains(4)) {
+    if (!_isBoardPresent) {
       _showSplitView = true;
     }
     _reset();
   }
+
+  bool get _isBoardPresent => config.croupier.players_found.values.contains(4);
 
   @override
   void _reset() {
@@ -51,9 +53,11 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
 
   bool get _shouldUnbuffer {
     HeartsGame game = config.game;
+    bool hasPermission = game.asking || !_isBoardPresent;
     return game.whoseTurn == game.playerNumber &&
         bufferedPlay.length > 0 &&
-        !bufferedPlaying;
+        !bufferedPlaying &&
+        hasPermission;
   }
 
   @override
@@ -263,6 +267,10 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
           _clearBufferedPlay();
           bufferedPlay.add(card);
         } else {
+          // Automatically ask (for when there is no board).
+          if (!game.asking && !_isBoardPresent) {
+            game.askUI();
+          }
           game.move(card, dest);
           config.sounds.play("whooshOut");
         }
@@ -454,7 +462,8 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     switch (game.phase) {
       case HeartsPhase.Play:
         if (game.allPlayed &&
-            game.determineTrickWinner() == game.playerNumber) {
+            game.determineTrickWinner() == game.playerNumber &&
+            _showSplitView) {
           statusBarWidgets.add(new Flexible(
               flex: 0,
               child: new GestureDetector(

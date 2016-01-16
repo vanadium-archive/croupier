@@ -60,6 +60,7 @@ class HeartsGame extends Game {
   int lastTrickTaker;
   bool heartsBroken;
   int trickNumber;
+  bool asking; // Is the game ready to play a card?
 
   // Used by the score screen to track scores and see which players are ready to continue to the next round.
   List<int> scores = [0, 0, 0, 0];
@@ -78,6 +79,7 @@ class HeartsGame extends Game {
     heartsBroken = false;
     lastTrickTaker = null;
     trickNumber = 0;
+    asking = false;
   }
 
   void dealCards() {
@@ -275,6 +277,16 @@ class HeartsGame extends Game {
     } else if (this.isPlayer) {
       gamelog.add(new HeartsCommand.ready(playerNumber));
     }
+  }
+
+  // Note that this will be called by the UI.
+  void askUI() {
+    assert(phase == HeartsPhase.Play);
+    if (this.asking) {
+      print("Already asked...");
+      return; // just don't call it again.
+    }
+    gamelog.add(new HeartsCommand.ask());
   }
 
   // Note that this will be called by the UI.
