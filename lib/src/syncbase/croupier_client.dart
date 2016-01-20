@@ -9,7 +9,6 @@ import 'dart:io' show Platform;
 import 'package:flutter/services.dart' show shell;
 import 'package:syncbase/src/naming/util.dart' as naming;
 import 'package:syncbase/syncbase_client.dart' as sc;
-import 'package:v23discovery/discovery.dart' as discovery;
 
 import '../../settings/client.dart' as settings_client;
 import 'discovery_client.dart' show DiscoveryClient;
@@ -45,16 +44,6 @@ class CroupierClient {
             new sc.SyncbaseClient(shell.connectToService, syncbaseServerUrl),
         _discoveryClient = new DiscoveryClient() {
     print('Fetching syncbase_server.mojo from $syncbaseServerUrl');
-
-    // TODO(alexfandrianto): Remove this test advertisement once we are more
-    // comfortable with Discovery.
-    String interfaceName = "HelloWorld!";
-    _discoveryClient.scan(discoveryTestKey,
-        'v.InterfaceName="${interfaceName}"', new MyScanHandler());
-    _discoveryClient.advertise(
-        discoveryTestKey,
-        DiscoveryClient.serviceMaker(
-            interfaceName: interfaceName, addrs: ["dummy address"]));
   }
 
   DiscoveryClient get discoveryClient => _discoveryClient;
@@ -240,16 +229,5 @@ class CroupierClient {
 
     // Start listening on the watch stream using the change handler.
     return watchStream.listen((sc.WatchChange wc) => _handleChange(wc));
-  }
-}
-
-// Example implementation of a ScanHandler.
-class MyScanHandler extends discovery.ScanHandler {
-  void found(discovery.Service s) {
-    util.log("MYSCANHANDLER Found ${s.instanceId} ${s.instanceName}");
-  }
-
-  void lost(String instanceId) {
-    util.log("MYSCANHANDLER Lost ${instanceId}");
   }
 }

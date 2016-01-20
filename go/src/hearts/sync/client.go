@@ -66,13 +66,13 @@ func GetSG(instances map[string]string, update discovery.Update, u *uistate.UISt
 		}
 	case discovery.UpdateLost:
 		lost := uType.Value
-		name, ok := instances[string(lost.InstanceId)]
+		name, ok := instances[string(lost.Service.InstanceId)]
 		if !ok {
 			name = "unknown"
 		}
-		delete(instances, string(lost.InstanceId))
-		u.DiscGroups[lost.InstanceId] = nil
-		fmt.Printf("Lost %q: Instance=%x\n", name, lost.InstanceId)
+		delete(instances, string(lost.Service.InstanceId))
+		u.DiscGroups[lost.Service.InstanceId] = nil
+		fmt.Printf("Lost %q: Instance=%x\n", name, lost.Service.InstanceId)
 	}
 }
 

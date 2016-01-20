@@ -269,8 +269,11 @@ class SettingsManager {
   Future scanSettings() async {
     SettingsScanHandler ssh =
         new SettingsScanHandler(_cc, this.updateGamesCallback);
-    return _cc.discoveryClient.scan(_discoveryGameAdKey,
-        'v.InterfaceName="${util.discoveryInterfaceName}"', ssh);
+    return _cc.discoveryClient.scan(
+        _discoveryGameAdKey,
+        'v.InterfaceName="${util.discoveryInterfaceName}"',
+        ssh.found,
+        ssh.lost);
   }
 
   Future stopScanSettings() {
@@ -314,10 +317,10 @@ class SettingsManager {
   }
 }
 
-// Implementation of the ScanHandler for Settings information.
-// Upon finding a settings advertiser, you want to join the syncgroup that
+// Manages found and lost settings advertisements.
+// Upon finding a settings advertisement, you want to join the syncgroup that
 // they're advertising.
-class SettingsScanHandler extends discovery.ScanHandler {
+class SettingsScanHandler {
   CroupierClient _cc;
   Map<String, String> settingsAddrs;
   Map<String, String> gameAddrs;

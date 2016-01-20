@@ -1,6 +1,6 @@
 name: croupier
 dependencies:
-  v23discovery: ">=0.0.0 <0.1.0"
+  v23discovery: ">=0.0.10 <0.1.0"
   syncbase: ">=0.0.0 <0.1.0"
   flutter:
     path: ../../../flutter/packages/flutter
