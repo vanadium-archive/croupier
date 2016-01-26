@@ -264,7 +264,7 @@ packages:
   v23discovery:
     description: v23discovery
     source: hosted
-    version: "0.0.10"
+    version: "0.0.11"
   vector_math:
     description: vector_math
     source: hosted

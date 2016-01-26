@@ -46,8 +46,13 @@ class DiscoveryClient {
     discovery.Scanner scanner = await _discoveryClient.scan(query);
     _scanners[key] = scanner;
 
-    scanner.onFound.listen(onFound);
-    scanner.onLost.listen(onLost);
+    scanner.onUpdate.listen((discovery.Update update) {
+      if (update.updateType == discovery.UpdateType.found) {
+        onFound(update.service);
+      } else {
+        onLost(update.service.instanceId);
+      }
+    });
 
     print('Scanning begins!');
     return _scanners[key];
