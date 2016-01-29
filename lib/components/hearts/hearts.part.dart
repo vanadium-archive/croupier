@@ -53,7 +53,9 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
 
   bool get _shouldUnbuffer {
     HeartsGame game = config.game;
-    bool hasPermission = game.asking || !_isBoardPresent;
+    bool hasPermission = true;
+    // TODO(alexfandrianto): https://github.com/vanadium/issues/issues/1098
+    // bool hasPermission = game.asking || !_isBoardPresent;
     return game.whoseTurn == game.playerNumber &&
         bufferedPlay.length > 0 &&
         !bufferedPlaying &&
@@ -267,10 +269,13 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
           _clearBufferedPlay();
           bufferedPlay.add(card);
         } else {
+          // TODO(alexfandrianto): Clean up soon.
+          // https://github.com/vanadium/issues/issues/1098
           // Automatically ask (for when there is no board).
-          if (!game.asking && !_isBoardPresent) {
+          /*if (!game.asking && !_isBoardPresent) {
             game.askUI();
-          }
+          }*/
+          game.askUI();
           game.move(card, dest);
           config.sounds.play("whooshOut");
         }
@@ -373,7 +378,10 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
 
   Widget showBoard() {
     return new HeartsBoard(config.croupier, config.sounds,
-        width: config.width, height: 0.825 * config.height);
+        width: config.width,
+        height: 0.825 * config.height, setGameStateCallback: () {
+      setState(() {});
+    });
   }
 
   String _getName(int playerNumber) {

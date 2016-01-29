@@ -3,6 +3,7 @@
 // license that can be found in the LICENSE file.
 
 import 'dart:math' as math;
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:vector_math/vector_math_64.dart' as vector_math;
@@ -54,6 +55,7 @@ class HeartsBoard extends Board {
   final SoundAssets sounds;
   final bool isMini;
   final AcceptCb gameAcceptCallback;
+  final NoArgCb setGameStateCallback;
   final List<logic_card.Card> bufferedPlay;
 
   HeartsGame get game => super.game;
@@ -65,6 +67,7 @@ class HeartsBoard extends Board {
       double cardWidth,
       this.isMini: false,
       this.gameAcceptCallback,
+      this.setGameStateCallback,
       this.bufferedPlay})
       : super(croupier.game,
             height: height,
@@ -91,6 +94,9 @@ class HeartsBoardState extends State<HeartsBoard> {
   // This 5-cycle is 4 played cards (whooshIn) and 1 take trick (whooshOut).
   int cardCounter = 0;
   bool passing = true;
+
+  // Used to hide the cards played until it has been incremented enough.
+  int localAsking = 0;
 
   void _handleCardCounterSounds() {
     // Ensure we have the right state while we deal and score.
@@ -160,6 +166,7 @@ class HeartsBoardState extends State<HeartsBoard> {
     double offscreenDelta = config.isMini ? 5.0 : 1.5;
 
     _handleCardCounterSounds();
+    _handleLocalAskingReset();
 
     Widget boardChild;
     if (config.game.phase == HeartsPhase.Play) {
@@ -388,16 +395,46 @@ class HeartsBoardState extends State<HeartsBoard> {
     return _rotate(new Text("${numTricks} trick${s}"), pNum);
   }
 
+  void _handleLocalAskingReset() {
+    // If the trick was taken, we can reset localAsking.
+    if (config.game.numPlayed == 0) {
+      localAsking = 0;
+    }
+  }
+
+  bool _incrementLocalAsking() {
+    if (localAsking < config.game.numPlayed) {
+      setState(() {
+        localAsking++;
+        if (config.setGameStateCallback != null) {
+          config.setGameStateCallback(); // Required for ZCards to redraw.
+        }
+      });
+      return true;
+    }
+    return false;
+  }
+
+  void localAskCb() {
+    // Try to increment. If it fails, be lenient! Give 0.5 seconds to check this
+    // condition again.
+    if (!_incrementLocalAsking()) {
+      new Future.delayed(const Duration(milliseconds: 500), () {
+        _incrementLocalAsking(); // give it one more shot
+      });
+    }
+  }
+
   Widget _buildBoardLayout() {
     int activePlayer = config.game.allPlayed
         ? config.game.determineTrickWinner()
         : config.game.whoseTurn;
 
-    // You can tap anywhere on the board to "Ask" or "Take Trick".
+    // You can tap anywhere on the board to fake "Ask" or "Take Trick".
     NoArgCb tapCb;
-    if (!config.game.asking && !config.game.allPlayed) {
-      tapCb = config.game.askUI;
-    } else if (config.game.allPlayed) {
+    if (localAsking < 4) {
+      tapCb = localAskCb;
+    } else if (localAsking == 4) {
       tapCb = config.game.takeTrickUI;
     }
 
@@ -459,7 +496,8 @@ class HeartsBoardState extends State<HeartsBoard> {
     double width = config.cardWidth * this._centerScaleFactor;
     Widget centerPiece =
         new Container(height: height, width: width, child: new Block([]));
-    if (config.game.allPlayed) {
+    if (localAsking == 4) {
+      // If all cards played are revealed, show Take Trick button.
       int rotateNum = config.game.determineTrickWinner();
 
       centerPiece = _rotate(
@@ -521,24 +559,31 @@ class HeartsBoardState extends State<HeartsBoard> {
         game.cardCollections[playerNumber + HeartsGame.OFFSET_PLAY];
 
     bool hasPlayed = cards.length > 0;
-    bool isTurn = game.whoseTurn == playerNumber && !hasPlayed;
+    // TODO(alexfandrianto): Clean up soon.
+    // https://github.com/vanadium/issues/issues/1098
+    //bool isTurn = game.whoseTurn == playerNumber && !hasPlayed;
 
     double height = config.cardHeight * this._centerScaleFactor;
     double width = config.cardWidth * this._centerScaleFactor;
+
+    bool canShow =
+        (playerNumber - config.game.lastTrickTaker) % 4 < localAsking;
 
     List<Widget> stackWidgets = <Widget>[
       new Positioned(
           top: 0.0,
           left: 0.0,
           child: new CardCollectionComponent(
-              cards, true, CardCollectionOrientation.show1,
+              cards, canShow, CardCollectionOrientation.show1,
               widthCard: width - 6,
               heightCard: height - 6,
               rotation: _rotationAngle(playerNumber),
               useKeys: true))
     ];
 
-    if (isTurn) {
+    // TODO(alexfandrianto): Clean up soon.
+    // https://github.com/vanadium/issues/issues/1098
+    /*if (isTurn) {
       stackWidgets.add(new Positioned(
           top: 0.0,
           left: 0.0,
@@ -551,7 +596,7 @@ class HeartsBoardState extends State<HeartsBoard> {
                       onPressed: config.game.asking ? null : config.game.askUI,
                       color: style.theme.accentColor)),
               playerNumber)));
-    }
+    }*/
 
     return new Container(
         height: height, width: width, child: new Stack(stackWidgets));
