@@ -12,7 +12,7 @@ packages:
   args:
     description: args
     source: hosted
-    version: "0.13.2"
+    version: "0.13.3+1"
   asn1lib:
     description: asn1lib
     source: hosted
@@ -20,7 +20,7 @@ packages:
   async:
     description: async
     source: hosted
-    version: "1.6.0"
+    version: "1.8.0"
   barback:
     description: barback
     source: hosted
@@ -50,7 +50,7 @@ packages:
   collection:
     description: collection
     source: hosted
-    version: "1.2.0"
+    version: "1.4.0"
   contrast:
     description: contrast
     source: hosted
@@ -102,11 +102,11 @@ packages:
   github:
     description: github
     source: hosted
-    version: "2.3.1"
+    version: "2.3.1+1"
   glob:
     description: glob
     source: hosted
-    version: "1.0.5"
+    version: "1.1.0"
   html:
     description: html
     source: hosted
@@ -126,7 +126,7 @@ packages:
   intl:
     description: intl
     source: hosted
-    version: "0.12.5"
+    version: "0.12.6"
   logging:
     description: logging
     source: hosted
@@ -184,7 +184,7 @@ packages:
   petitparser:
     description: petitparser
     source: hosted
-    version: "1.5.0"
+    version: "1.5.1"
   plugin:
     description: plugin
     source: hosted
@@ -240,11 +240,11 @@ packages:
   stack_trace:
     description: stack_trace
     source: hosted
-    version: "1.5.1"
+    version: "1.6.0"
   string_scanner:
     description: string_scanner
     source: hosted
-    version: "0.1.4"
+    version: "0.1.4+1"
   syncbase:
     description: syncbase
     source: hosted
@@ -268,7 +268,7 @@ packages:
   vector_math:
     description: vector_math
     source: hosted
-    version: "1.4.4"
+    version: "1.4.6"
   watcher:
     description: watcher
     source: hosted
@@ -284,8 +284,8 @@ packages:
   xml:
     description: xml
     source: hosted
-    version: "2.4.0"
+    version: "2.4.1"
   yaml:
     description: yaml
     source: hosted
-    version: "2.1.7"
+    version: "2.1.8"

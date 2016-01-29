@@ -207,7 +207,10 @@ class SettingsManager {
 
     // Watch for the players in the game.
     _gameSubscription = await _cc.watchEverything(
-        db, util.tableNameGames, util.syncgamePrefix(gameID), _onGameChange);
+        db, util.tableNameGames, util.syncgamePrefix(gameID), _onGameChange,
+        sorter: (sc.WatchChange a, sc.WatchChange b) {
+      return a.rowKey.compareTo(b.rowKey);
+    });
 
     await _cc.joinSyncgroup(sgName);
 

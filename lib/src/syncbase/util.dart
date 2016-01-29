@@ -10,9 +10,6 @@ const String dbName = 'db';
 const String tableNameGames = 'games';
 const String tableNameSettings = 'table_settings';
 
-// TODO(alexfandrianto): This may need to be the global mount table with a
-// proxy. Otherwise, it will be difficult for other users to run.
-// https://github.com/vanadium/issues/issues/782
 String makeSgPrefix(String mounttable, String deviceID) {
   return "${mounttable}/croupier-${deviceID}/%%sync";
 }

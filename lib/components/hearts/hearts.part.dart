@@ -821,50 +821,196 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
 }
 
 class HeartsArrangeComponent extends GameArrangeComponent {
-  HeartsArrangeComponent(Croupier croupier, {double width, double height})
-      : super(croupier, width: width, height: height);
+  HeartsArrangeComponent(Croupier croupier,
+      {double width, double height, Key key})
+      : super(croupier, width: width, height: height, key: key);
+
+  HeartsArrangeComponentState createState() =>
+      new HeartsArrangeComponentState();
+}
+
+class HeartsArrangeComponentState extends State<HeartsArrangeComponent> {
+  bool isTable = null; // Must first ask what kind of device this is.
+  bool fallback = false; // Set to true to switch to the old arrange players.
+
+  static final String personIcon = "social/person_outline";
+  static final String tableIcon = "hardware/tablet";
 
   Widget build(BuildContext context) {
-    int numAtTable = croupier.players_found.values
-        .where((int playerNumber) => playerNumber == 4)
-        .length;
+    if (isTable == null) {
+      return _buildAskDeviceType();
+    }
+    if (isTable) {
+      return _buildTableArrangePlayers();
+    }
+    if (fallback) {
+      return _buildFallbackArrangePlayers();
+    }
+    return _buildPlayerArrangePlayers();
+  }
+
+  Widget _buildAskDeviceType() {
+    return new Container(
+        decoration: style.Box.liveNow,
+        height: config.height,
+        width: config.width,
+        child: new Column([
+          new Text("Play Hearts as a...", style: style.Text.hugeStyle),
+          new FlatButton(
+              child: new Row([
+                new Icon(size: IconSize.s48, icon: personIcon),
+                new Text("Player", style: style.Text.largeStyle)
+              ], justifyContent: FlexJustifyContent.collapse),
+              color: style.secondaryTextColor, onPressed: () {
+            setState(() {
+              isTable = false;
+            });
+          }),
+          new FlatButton(
+              child: new Row([
+                new Icon(size: IconSize.s48, icon: tableIcon),
+                new Text("Table", style: style.Text.largeStyle)
+              ], justifyContent: FlexJustifyContent.collapse),
+              color: style.secondaryTextColor, onPressed: () {
+            setState(() {
+              isTable = true;
+            });
+            // Also sit at the table.
+            config.croupier.settings_manager.setPlayerNumber(
+                config.croupier.game.gameID,
+                config.croupier.settings.userID,
+                4);
+          })
+        ], alignItems: FlexAlignItems.center));
+  }
+
+  int get numSitting => config.croupier.players_found.values.where((int index) {
+        return index != null && index >= 0 && index < 4;
+      }).length;
+
+  Widget _buildTableArrangePlayers() {
+    int arrangeID = null;
+    String status = "";
+    bool canStart = false;
+    if (numSitting < 4) {
+      // We still need people to sit.
+      // Only include non-table and non-sitting devices in this search.
+      // Note that this means it's possible arrangeID is null.
+      arrangeID = config.croupier.players_found.keys.firstWhere((int playerID) {
+        int index = config.croupier.players_found[playerID];
+        return index == null || index < 0;
+      }, orElse: () => null);
+      status = arrangeID != null ? "Tap to place" : "Waiting for players...";
+    } else {
+      status = "Play Hearts!";
+      canStart = true;
+    }
+
+    List<Widget> children = [new Text(status, style: style.Text.hugeStyle)];
+    // Also add the player's name (using a placeholder if that's not possible).
+    if (arrangeID != null) {
+      children.add(new CroupierProfileComponent.textOnly(
+          settings: config.croupier.settings_everyone[arrangeID]));
+    }
+
+    // You will need to show a Start Game button if the table isn't the creator.
+    // Replace the status text with a status button instead.
+    if (canStart && !config.croupier.game.isCreator) {
+      children = [
+        new FlatButton(
+            child: new Text(status, style: style.Text.hugeStyle),
+            color: style.theme.accentColor, onPressed: () {
+          config.croupier.settings_manager
+              .setGameStatus(config.croupier.game.gameID, "RUNNING");
+        })
+      ];
+    }
+    Widget firstChild =
+        new Row(children, justifyContent: FlexJustifyContent.collapse);
 
     return new Container(
         decoration: style.Box.liveNow,
-        height: height,
-        width: width,
+        height: config.height,
+        width: config.width,
         child: new Column([
-          new Flexible(
-              flex: 1,
-              child: new Row(
-                  [_buildEmptySlot(), _buildSlot("social/person_outline", 2), _buildEmptySlot()],
-                  justifyContent: FlexJustifyContent.spaceAround,
-                  alignItems: FlexAlignItems.stretch)),
-          new Flexible(
-              flex: 1,
-              child: new Row([
-                _buildSlot("social/person_outline", 1),
-                _buildSlot("hardware/tablet", 4, extra: "x${numAtTable}"),
-                _buildSlot("social/person_outline", 3)
-              ],
-                  justifyContent: FlexJustifyContent.spaceAround,
-                  alignItems: FlexAlignItems.stretch)),
-          new Flexible(
-              flex: 1,
-              child: new Row(
-                  [_buildEmptySlot(), _buildSlot("social/person_outline", 0), _buildEmptySlot()],
-                  justifyContent: FlexJustifyContent.spaceAround,
-                  alignItems: FlexAlignItems.stretch))
-        ],
-            justifyContent: FlexJustifyContent.spaceAround,
-            alignItems: FlexAlignItems.stretch));
+          firstChild,
+          new Flexible(child: _buildArrangeTable(activeID: arrangeID))
+        ], alignItems: FlexAlignItems.center));
+  }
+
+  Widget _buildPlayerArrangePlayers() {
+    List<Widget> children = <Widget>[
+      new Text("Waiting for game setup...", style: style.Text.hugeStyle)
+    ];
+    if (config.croupier.game.isCreator) {
+      children.add(new FlatButton(
+          child: new Text("Manual Setup", style: style.Text.largeStyle),
+          color: style.theme.accentColor, onPressed: () {
+        setState(() {
+          fallback = true;
+        });
+      }));
+    }
+
+    return new Container(
+        decoration: style.Box.liveNow,
+        height: config.height,
+        width: config.width,
+        child: new Column(children, alignItems: FlexAlignItems.center));
+  }
+
+  Widget _buildFallbackArrangePlayers() {
+    return new Container(
+        decoration: style.Box.liveNow,
+        height: config.height,
+        width: config.width,
+        child: _buildArrangeTable(canDragTo: true));
+  }
+
+  Widget _buildArrangeTable({int activeID: null, bool canDragTo: false}) {
+    int numAtTable = config.croupier.players_found.values
+        .where((int playerNumber) => playerNumber == 4)
+        .length;
+    return new Column([
+      new Flexible(
+          flex: 1,
+          child: new Row([
+            _buildEmptySlot(),
+            _buildSlot(personIcon, 2, activeID, canDragTo),
+            _buildEmptySlot()
+          ],
+              justifyContent: FlexJustifyContent.spaceAround,
+              alignItems: FlexAlignItems.stretch)),
+      new Flexible(
+          flex: 1,
+          child: new Row([
+            _buildSlot(personIcon, 1, activeID, canDragTo),
+            _buildSlot(tableIcon, 4, activeID, canDragTo,
+                extra: "x${numAtTable}"),
+            _buildSlot(personIcon, 3, activeID, canDragTo)
+          ],
+              justifyContent: FlexJustifyContent.spaceAround,
+              alignItems: FlexAlignItems.stretch)),
+      new Flexible(
+          flex: 1,
+          child: new Row([
+            _buildEmptySlot(),
+            _buildSlot(personIcon, 0, activeID, canDragTo),
+            _buildEmptySlot()
+          ],
+              justifyContent: FlexJustifyContent.spaceAround,
+              alignItems: FlexAlignItems.stretch))
+    ],
+        justifyContent: FlexJustifyContent.spaceAround,
+        alignItems: FlexAlignItems.stretch);
   }
 
   Widget _buildEmptySlot() {
     return new Flexible(flex: 1, child: new Text(""));
   }
 
-  Widget _buildSlot(String name, int index, {String extra: ""}) {
+  Widget _buildSlot(String name, int index, int activeID, bool canDragTo,
+      {String extra: ""}) {
     Widget slotWidget = new Row([
       new Icon(size: IconSize.s48, icon: name),
       new Text(extra, style: style.Text.largeStyle)
@@ -872,29 +1018,36 @@ class HeartsArrangeComponent extends GameArrangeComponent {
         alignItems: FlexAlignItems.center,
         justifyContent: FlexJustifyContent.center);
 
-    bool isMe = croupier.game.playerNumber == index;
+    bool isMe = config.croupier.game.playerNumber == index;
     bool isPlayerIndex = index >= 0 && index < 4;
     bool isTableIndex = index == 4;
     bool seatTaken = (isPlayerIndex || (isTableIndex && isMe)) &&
-        croupier.players_found.containsValue(index);
+        config.croupier.players_found.containsValue(index);
     if (seatTaken) {
       // Note: If more than 1 person is in the seat, it may no longer show you.
-      CroupierSettings cs = croupier.settingsFromPlayerNumber(index);
-      CroupierProfileComponent cpc = new CroupierProfileComponent(settings: cs);
+      CroupierSettings cs = config.croupier.settingsFromPlayerNumber(index);
+      CroupierProfileComponent cpc =
+          new CroupierProfileComponent.horizontal(settings: cs);
       slotWidget =
           new Draggable<CroupierSettings>(child: cpc, feedback: cpc, data: cs);
     }
 
     Widget dragTarget = new DragTarget<CroupierSettings>(
         builder: (BuildContext context, List<CroupierSettings> data, _) {
-      return new Container(
-          constraints: const BoxConstraints.expand(),
-          decoration: isMe ? style.Box.liveBackground : style.Box.border,
-          child: slotWidget);
+      return new GestureDetector(onTap: () {
+        if (activeID != null) {
+          config.croupier.settings_manager
+              .setPlayerNumber(config.croupier.game.gameID, activeID, index);
+        }
+      },
+          child: new Container(
+              constraints: const BoxConstraints.expand(),
+              decoration: isMe ? style.Box.liveBackground : style.Box.border,
+              child: new Center(child: slotWidget)));
     }, onAccept: (CroupierSettings cs) {
-      croupier.settings_manager
-          .setPlayerNumber(croupier.game.gameID, cs.userID, index);
-    }, onWillAccept: (_) => true);
+      config.croupier.settings_manager
+          .setPlayerNumber(config.croupier.game.gameID, cs.userID, index);
+    }, onWillAccept: (_) => canDragTo);
 
     return new Flexible(flex: 1, child: dragTarget);
   }

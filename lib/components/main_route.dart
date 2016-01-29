@@ -81,8 +81,8 @@ class MainRouteState extends State<MainRoute> {
           child: new BlockBody([
         new CroupierProfileComponent(
             settings: config.croupier.settings,
-            width: style.Size.settingsSize,
-            height: style.Size.settingsSize),
+            width: style.Size.settingsWidth,
+            height: style.Size.settingsHeight),
         new Text('Croupier', style: style.Text.titleStyle)
       ])),
       new DrawerItem(

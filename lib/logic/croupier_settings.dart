@@ -151,7 +151,7 @@ class RandomSettings {
     int nameIndex = rng.nextInt(names.length);
     int appIndex = rng.nextInt(appellations.length);
 
-    return "${names[nameIndex]} the ${appellations[appIndex]}";
+    return "${names[nameIndex]} ${appellations[appIndex]}";
   }
 
   // Return something between 0x00000000 and 0xffffffff

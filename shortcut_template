@@ -6,6 +6,6 @@
 --args-for=mojo:flutter --enable-checked-mode
 --enable-multiprocess
 --map-origin=https://mojo2.v.io=https://storage.googleapis.com/mojo_services/v23discovery/mojo_services/android/
---args-for=https://mojo2.v.io/discovery.mojo host%DEVICE_ID% mdns
+--args-for=https://mojo2.v.io/discovery.mojo host%DEVICE_ID%
 --map-origin=https://mojo.v.io=https://storage.googleapis.com/mojo_services/syncbase/mojo_services/android/
---args-for=https://mojo.v.io/syncbase_server.mojo --v=0 --logtostderr=true --root-dir=/data/data/org.chromium.mojo.shell/app_home/syncbase_data --v23.credentials=/sdcard/v23creds %SYNCBASE_NAME_FLAG%
+--args-for=https://mojo.v.io/syncbase_server.mojo --v=0 --logtostderr=true --root-dir=/data/data/org.chromium.mojo.shell/app_home/syncbase_data --v23.credentials=/sdcard/v23creds %SYNCBASE_NAME_FLAG% %PROXY_FLAG%

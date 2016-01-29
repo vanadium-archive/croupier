@@ -24,7 +24,11 @@ class CroupierGameAdvertisementComponent extends StatelessComponent {
     return new GestureDetector(
         child: new Card(
             child: new Row([
-          new Card(child: new CroupierProfileComponent(settings: settings)),
+          new Card(
+              child: new CroupierProfileComponent(
+                  settings: settings,
+                  height: style.Size.settingsHeight,
+                  width: style.Size.settingsWidth)),
           new Text(game.gameTypeToString(gameStartData.gameType),
               style: style.Text.hugeStyle),
         ])),

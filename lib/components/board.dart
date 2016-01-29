@@ -269,10 +269,8 @@ class HeartsBoardState extends State<HeartsBoard> {
   }
 
   Widget _getProfile(int pNum, double sizeFactor) {
-    return new CroupierProfileComponent(
-        settings: config.croupier.settingsFromPlayerNumber(pNum),
-        height: config.height * sizeFactor,
-        width: config.height * sizeFactor * 1.5);
+    return new CroupierProfileComponent.horizontal(
+        settings: config.croupier.settingsFromPlayerNumber(pNum));
   }
 
   Widget _playerProfile(int pNum, double sizeFactor) {
@@ -365,12 +363,11 @@ class HeartsBoardState extends State<HeartsBoard> {
           top: 0.0,
           left: 0.0,
           child: new IgnorePointer(
-              child: new CroupierProfileComponent(
+              child: new CroupierProfileComponent.mini(
                   settings:
                       config.croupier.settingsFromPlayerNumber(playerNumber),
                   height: config.cardHeight,
-                  width: config.cardWidth,
-                  isMini: true))));
+                  width: config.cardWidth))));
     }
 
     return new Container(
@@ -396,8 +393,16 @@ class HeartsBoardState extends State<HeartsBoard> {
         ? config.game.determineTrickWinner()
         : config.game.whoseTurn;
 
+    // You can tap anywhere on the board to "Ask" or "Take Trick".
+    NoArgCb tapCb;
+    if (!config.game.asking && !config.game.allPlayed) {
+      tapCb = config.game.askUI;
+    } else if (config.game.allPlayed) {
+      tapCb = config.game.takeTrickUI;
+    }
+
     return new GestureDetector(
-        onTap: config.game.asking ? null : config.game.askUI,
+        onTap: tapCb,
         child: new Container(
             height: config.height,
             width: config.width,

@@ -19,6 +19,7 @@ import 'game.dart' as component_game;
 typedef void NoArgCb();
 
 GlobalObjectKey _gameKey = new GlobalObjectKey("CroupierGameKey");
+GlobalObjectKey _gameArrangeKey = new GlobalObjectKey("CroupierGameArrangeKey");
 
 class CroupierComponent extends StatefulComponent {
   final logic_croupier.Croupier croupier;
@@ -61,8 +62,8 @@ class CroupierComponentState extends State<CroupierComponent> {
                       : null),
               new CroupierProfileComponent(
                   settings: config.croupier.settings,
-                  width: style.Size.settingsSize,
-                  height: style.Size.settingsSize)
+                  width: style.Size.settingsWidth,
+                  height: style.Size.settingsHeight)
             ]));
       case logic_croupier.CroupierState.ChooseGame:
         // in which we let them pick a game out of the many possible games... There aren't that many.
@@ -151,24 +152,23 @@ class CroupierComponentState extends State<CroupierComponent> {
   // shown if the person has not sat down yet.
   Widget _buildPlayerProfiles(bool needsArrangement) {
     List<Widget> profileWidgets = new List<Widget>();
-    double size = style.Size.settingsSize;
     config.croupier.players_found.forEach((int userID, int playerNumber) {
-      if (!needsArrangement || playerNumber == null) {
-        // Note: Even if cs is null, a placeholder will be shown instead.
-        CroupierSettings cs = config.croupier.settings_everyone[userID];
-        bool isMe = config.croupier.settings.userID == userID;
-        Widget cpc = new Container(
-            decoration: isMe ? style.Box.liveNow : null,
-            child: new CroupierProfileComponent(
-                settings: cs, height: size, width: size));
+      // Note: Even if cs is null, a placeholder will be shown instead.
+      CroupierSettings cs = config.croupier.settings_everyone[userID];
+      bool isMe = config.croupier.settings.userID == userID;
+      Widget cpc = new Container(
+          decoration: isMe ? style.Box.liveNow : null,
+          child: new CroupierProfileComponent(
+              settings: cs,
+              height: style.Size.settingsHeight,
+              width: style.Size.settingsWidth));
 
-        // If the player profiles can be arranged, they should be draggable too.
-        if (needsArrangement) {
-          profileWidgets.add(new Draggable<CroupierSettings>(
-              child: cpc, feedback: cpc, data: cs));
-        } else {
-          profileWidgets.add(cpc);
-        }
+      // If the player profiles can be arranged, they should be draggable too.
+      if (needsArrangement) {
+        profileWidgets.add(new Draggable<CroupierSettings>(
+            child: cpc, feedback: cpc, data: cs));
+      } else {
+        profileWidgets.add(cpc);
       }
     });
 
@@ -177,7 +177,8 @@ class CroupierComponentState extends State<CroupierComponent> {
           child: new Row(profileWidgets),
           scrollDirection: ScrollDirection.horizontal);
     }
-    return new MaxTileWidthGrid(profileWidgets, maxTileWidth: size);
+    return new MaxTileWidthGrid(profileWidgets,
+        maxTileWidth: style.Size.settingsWidth);
   }
 
   Widget _buildArrangePlayers() {
@@ -202,7 +203,8 @@ class CroupierComponentState extends State<CroupierComponent> {
       // Games that need arrangement can show their game arrange component.
       allWidgets.add(component_game.createGameArrangeComponent(config.croupier,
           width: ui.window.size.width * 0.90,
-          height: ui.window.size.height * 0.50));
+          height: ui.window.size.height * 0.50,
+          key: _gameArrangeKey));
     }
 
     // Allow games that can start with these players to begin.
@@ -224,15 +226,10 @@ class CroupierComponentState extends State<CroupierComponent> {
       allWidgets.add(new Flexible(
           flex: 0,
           child: new Row([
-            new Container(
-                decoration: new BoxDecoration(
-                    backgroundColor: startCb != null
-                        ? style.theme.accentColor
-                        : Colors.grey[300]),
-                padding: style.Spacing.smallPadding,
-                child: new FlatButton(
-                    child: new Text("Start Game", style: style.Text.hugeStyle),
-                    onPressed: startCb))
+            new FlatButton(
+                child: new Text("Start Game", style: style.Text.hugeStyle),
+                onPressed: startCb,
+                color: style.theme.accentColor)
           ], justifyContent: FlexJustifyContent.spaceAround)));
     }
     allWidgets.add(new Flexible(

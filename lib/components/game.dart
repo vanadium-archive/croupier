@@ -222,18 +222,20 @@ GameComponent createGameComponent(
   }
 }
 
-abstract class GameArrangeComponent extends StatelessComponent {
+abstract class GameArrangeComponent extends StatefulComponent {
   final Croupier croupier;
   final double width;
   final double height;
-  GameArrangeComponent(this.croupier, {this.width, this.height});
+  GameArrangeComponent(this.croupier, {this.width, this.height, Key key})
+      : super(key: key);
 }
 
 GameArrangeComponent createGameArrangeComponent(Croupier croupier,
-    {double width, double height}) {
+    {double width, double height, Key key}) {
   switch (croupier.game.gameType) {
     case GameType.Hearts:
-      return new HeartsArrangeComponent(croupier, width: width, height: height);
+      return new HeartsArrangeComponent(croupier,
+          width: width, height: height, key: key);
     default:
       // We can't arrange this game.
       throw new UnimplementedError(

@@ -21,13 +21,20 @@ ifdef ANDROID
 	DEVICE_ID := $(shell adb devices | sed -n $(ANDROID_PLUS_ONE)p | awk '{ print $$1; }')
 endif
 
+# The default mount table location. Note: May not always exist.
+MOUNTTABLE := /192.168.86.254:8101
+
+# If defined, use the proxy and global mount table.
+ifdef GLOBAL
+	PROXY_FLAG := --v23.proxy=/ns.dev.v.io:8101/proxy
+	MOUNTTABLE := /ns.dev.v.io:8101/tmp/croupier
+endif
+
 ifdef ANDROID
 	MOJO_ANDROID_FLAGS := --android
 	SYNCBASE_MOJO_BIN_DIR := packages/syncbase/mojo_services/android
 	DISCOVERY_MOJO_BIN_DIR := packages/v23discovery/mojo_services/android
 
-	# Location of mounttable on syncslides-alpha network.
-	MOUNTTABLE := /192.168.86.254:8101
 	# Name to mount under.
 	SYNCBASE_NAME_FLAG := --name=$(MOUNTTABLE)/croupier-$(DEVICE_ID)
 	SYNCBASE_FLAGS += $(SYNCBASE_NAME_FLAG)
@@ -37,13 +44,8 @@ ifdef ANDROID
 
 	SYNCBASE_FLAGS += --logtostderr=true \
 		--root-dir=$(APP_HOME_DIR)/syncbase_data \
-		--v23.credentials=$(ANDROID_CREDS_DIR)
-
-# If this is not the first mojo shell, then you must reuse the dev servers
-# to avoid a "port in use" error.
-ifneq ($(shell fuser 31841/tcp),)
-	REUSE_FLAG := --reuse-servers
-endif
+		--v23.credentials=$(ANDROID_CREDS_DIR) \
+		$(PROXY_FLAG)
 
 else
 	SYNCBASE_MOJO_BIN_DIR := packages/syncbase/mojo_services/linux_amd64
@@ -51,12 +53,18 @@ else
 	SYNCBASE_FLAGS += --root-dir=$(PWD)/tmp/syncbase_data --v23.credentials=$(PWD)/creds
 endif
 
+# If this is not the first mojo shell, then you must reuse the dev servers
+# to avoid a "port in use" error.
+ifneq ($(shell fuser 31841/tcp),)
+	REUSE_FLAG := --reuse-servers
+endif
+
 # We should consider combining these URLs and hosting our *.mojo files.
 # https://github.com/vanadium/issues/issues/834
 export SYNCBASE_SERVER_URL := https://mojo.v.io/syncbase_server.mojo
 export DISCOVERY_SERVER_URL := https://mojo2.v.io/discovery.mojo
 MOJO_SHELL_FLAGS := --enable-multiprocess \
-	--map-origin="https://mojo2.v.io=$(DISCOVERY_MOJO_BIN_DIR)" --args-for="$(DISCOVERY_SERVER_URL) host$(DEVICE_ID) mdns" \
+	--map-origin="https://mojo2.v.io=$(DISCOVERY_MOJO_BIN_DIR)" --args-for="$(DISCOVERY_SERVER_URL) host$(DEVICE_ID)" \
 	--map-origin="https://mojo.v.io=$(SYNCBASE_MOJO_BIN_DIR)" --args-for="$(SYNCBASE_SERVER_URL) $(SYNCBASE_FLAGS)"
 
 ifdef ANDROID
@@ -164,7 +172,7 @@ MOJO_SHELL_CMD_PATH := /data/local/tmp/org.chromium.mojo.shell.cmd
 # Creates a shortcut on the phone that runs the hosted version of croupier.flx
 # Does nothing if ANDROID is not defined.
 define GENERATE_SHORTCUT_FILE
-	sed -e "s;%DEVICE_ID%;$1;g" -e "s;%SYNCBASE_NAME_FLAG%;$2;g" \
+	sed -e "s;%DEVICE_ID%;$1;g" -e "s;%SYNCBASE_NAME_FLAG%;$2;g" -e "s;%PROXY_FLAG%;$3;g" \
 	shortcut_template > shortcut_commands
 endef
 
