@@ -673,15 +673,12 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
                 child: new Center(
                     child: new Text("${game.scores[i]}", style: scoreStyle)),
                 flex: 1)
-          ], direction: crossDirection),
+          ], direction: crossDirection, alignItems: FlexAlignItems.stretch),
           flex: 2));
     }
     return new Column([
-      new Flexible(child: new Flex(scores, direction: mainDirection), flex: 5),
-      new Flexible(
-          child: new Row([w, _makeButton("Return to Lobby", _quitGameCallback)],
-              justifyContent: FlexJustifyContent.spaceAround),
-          flex: 1),
+      new Flexible(child: new Flex(scores, direction: mainDirection), flex: 7),
+      new Flexible(child: w, flex: 1),
       new Flexible(child: _makeDebugButtons(), flex: 1)
     ]);
   }
