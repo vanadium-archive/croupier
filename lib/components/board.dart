@@ -417,13 +417,18 @@ class HeartsBoardState extends State<HeartsBoard> {
     return false;
   }
 
-  void localAskCb() {
-    // Try to increment. If it fails, be lenient! Give 0.5 seconds to check this
-    // condition again.
-    if (!_incrementLocalAsking()) {
-      new Future.delayed(const Duration(milliseconds: 500), () {
-        _incrementLocalAsking(); // give it one more shot
-      });
+  void _boardLayoutTapCb() {
+    // You can tap anywhere on the board to fake "Ask" or "Take Trick".
+    if (localAsking < 4) {
+      // Try to increment. If it fails, be lenient! Give 0.5 seconds to check
+      // this condition again.
+      if (!_incrementLocalAsking()) {
+        new Future.delayed(const Duration(milliseconds: 500), () {
+          _incrementLocalAsking(); // give it one more shot
+        });
+      }
+    } else {
+      config.game.takeTrickUI();
     }
   }
 
@@ -432,16 +437,8 @@ class HeartsBoardState extends State<HeartsBoard> {
         ? config.game.determineTrickWinner()
         : config.game.whoseTurn;
 
-    // You can tap anywhere on the board to fake "Ask" or "Take Trick".
-    NoArgCb tapCb;
-    if (localAsking < 4) {
-      tapCb = localAskCb;
-    } else if (localAsking == 4) {
-      tapCb = config.game.takeTrickUI;
-    }
-
     return new GestureDetector(
-        onTap: tapCb,
+        onTap: _boardLayoutTapCb,
         child: new Container(
             height: config.height,
             width: config.width,
@@ -494,8 +491,6 @@ class HeartsBoardState extends State<HeartsBoard> {
   }
 
   Widget _buildCenterCards() {
-    //bool wide = (config.width >= config.height);
-
     double height = config.cardHeight * this._centerScaleFactor;
     double width = config.cardWidth * this._centerScaleFactor;
     Widget centerPiece = new Container(
@@ -503,15 +498,20 @@ class HeartsBoardState extends State<HeartsBoard> {
     if (localAsking == 4) {
       // If all cards played are revealed, show Take Trick button.
       int rotateNum = config.game.determineTrickWinner();
+      double smaller = math.min(height, width);
 
+      // TODO(alexfandrianto): The Text looks great within the square
+      // container, but this is supposed to be pressable like a button.
+      // The reason why I did it this way is that the button's disappearance
+      // prevents the board's onTap handler from firing.
+      // https://github.com/flutter/flutter/issues/1497
       centerPiece = _rotate(
           new Container(
-              height: height,
-              width: width,
-              child: new RaisedButton(
-                  child: new Text("Take", style: style.Text.largeStyle),
-                  onPressed: config.game.takeTrickUI,
-                  color: style.theme.accentColor)),
+              height: smaller,
+              width: smaller,
+              decoration: style.Box.liveBackground,
+              child: new Center(
+                  child: new Text("Take", style: style.Text.largeStyle))),
           rotateNum);
     }
 
@@ -530,7 +530,11 @@ class HeartsBoardState extends State<HeartsBoard> {
           child: new Row(
               children: [
         new Flexible(child: new Center(child: _buildCenterCard(1))),
-        new Flexible(child: new Block(children: [centerPiece])),
+        new Flexible(
+            child: new Row(
+                children: [centerPiece],
+                alignItems: FlexAlignItems.center,
+                justifyContent: FlexJustifyContent.center)),
         new Flexible(child: new Center(child: _buildCenterCard(3))),
       ],
               alignItems: FlexAlignItems.center,
