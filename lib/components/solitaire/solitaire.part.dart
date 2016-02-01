@@ -39,7 +39,9 @@ class SolitaireGameComponentState
     }
 
     return new Container(
-        width: config.width, height: config.height, child: new Stack(children));
+        width: config.width,
+        height: config.height,
+        child: new Stack(children: children));
   }
 
   void _cheatCallback() {
@@ -58,11 +60,11 @@ class SolitaireGameComponentState
 
   Widget _makeDebugButtons() {
     if (config.game.debugMode == false) {
-      return new Row([
+      return new Row(children: [
         new Flexible(flex: 4, child: _makeButton('Quit', _quitGameCallback))
       ]);
     }
-    return new Row([
+    return new Row(children: [
       new Flexible(flex: 1, child: new Text('P${config.game.playerNumber}')),
       new Flexible(flex: 5, child: _makeButton('Cheat', _cheatCallback)),
       new Flexible(
@@ -139,9 +141,9 @@ class SolitaireGameComponentState
           acceptType: DropType.card,
           useKeys: true);
     }).toList();
-    row1.add(new Row(aces));
+    row1.add(new Row(children: aces));
 
-    row1.add(new Row([
+    row1.add(new Row(children: [
       new CardCollectionComponent(
           game.cardCollections[SolitaireGame.OFFSET_DISCARD],
           true,
@@ -190,10 +192,10 @@ class SolitaireGameComponentState
           useKeys: true));
     }
 
-    return new Column([
-      new Row(row1, justifyContent: FlexJustifyContent.spaceBetween),
-      new Row(row2, justifyContent: FlexJustifyContent.spaceBetween),
-      new Row(row3, justifyContent: FlexJustifyContent.spaceBetween),
+    return new Column(children: [
+      new Row(children: row1, justifyContent: FlexJustifyContent.spaceBetween),
+      new Row(children: row2, justifyContent: FlexJustifyContent.spaceBetween),
+      new Row(children: row3, justifyContent: FlexJustifyContent.spaceBetween),
       _makeDebugButtons()
     ]);
   }
@@ -203,7 +205,7 @@ class SolitaireGameComponentState
 
     return new Container(
         decoration: new BoxDecoration(backgroundColor: Colors.pink[500]),
-        child: new Column([
+        child: new Column(children: [
           new Text('Player ${game.playerNumber}'),
           _makeButton("Return to Lobby", _quitGameCallback),
           _makeDebugButtons()
@@ -215,7 +217,7 @@ class SolitaireGameComponentState
 
     return new Container(
         decoration: new BoxDecoration(backgroundColor: Colors.pink[500]),
-        child: new Column([
+        child: new Column(children: [
           new Text('Player ${game.playerNumber}'),
           _makeButton('Deal', game.dealCardsUI),
           _makeDebugButtons()

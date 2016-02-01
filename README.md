@@ -26,6 +26,9 @@ Development now also depends on the alpha branch of the Flutter repo. It is
 possible that the `pubspec.yaml` file will need to be modified to accomodate
 your installation of Flutter. Instructions are available [here](http://flutter.io/getting-started/).
 
+The last known version of Flutter guaranteed to work with this project is
+present inside the FLUTTER_VERSION file.
+
 ## Dart
 
 Flutter depends on a relatively new version of the Dart SDK. Therefore, please
@@ -85,8 +88,7 @@ __Note:__ Running Croupier on multiple Android devices simultaneously is still a
 The workaround is to launch Croupier on a single device at a time.
 
 __Note:__ This example currently relies on a mount table on the local network at
-`192.168.86.254:8101`. This may be changed to the global mount table at a later time.
-https://github.com/vanadium/issues/issues/782
+`192.168.86.254:8101`. To avoid this, use the set the `GLOBAL` environment variable to true (see below).
 
 ## Start
 
@@ -98,6 +100,32 @@ ANDROID=1 make start
 Alternatively, use a different integer. Since the first device creates a
 syncbase instance that the others are mounted upon, it is recommended that this
 one is started before the other devices.
+
+# Shortcuts
+
+In order to run the app without being connected to a workstation, you need to
+load a shortcut onto your Android devices.
+```
+ANDROID=1 make shortcut
+```
+
+Note: The command above loads a file that affects how `make start` runs. To
+return to normal development, you should clean up the shortcut file.
+```
+ANDROID=1 make shortcut-remove
+```
+
+# Global Flag
+
+If you want to run the app on the global public mount table (recommended), you
+should set the GLOBAL environment variable to true.
+```
+GLOBAL=true ANDROID=1 make start
+GLOBAL=true ANDROID=1 make shortcut
+```
+
+Using the global mount table can make app performance a little slower, but you
+will not need to run a local mount table at `192.168.86.254:8101`.
 
 ## Deleting Mojo Shell
 

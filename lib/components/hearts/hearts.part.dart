@@ -143,7 +143,9 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     children.add(this.buildCardAnimationLayer(visibleCardCollectionIndexes));
 
     return new Container(
-        width: config.width, height: config.height, child: new Stack(children));
+        width: config.width,
+        height: config.height,
+        child: new Stack(children: children));
   }
 
   void _switchViewCallback() {
@@ -305,11 +307,11 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
 
   Widget _makeDebugButtons() {
     if (config.game.debugMode == false) {
-      return new Row([
+      return new Row(children: [
         new Flexible(flex: 4, child: _makeButton('Quit', _quitGameCallback))
       ]);
     }
-    return new Row([
+    return new Row(children: [
       new Flexible(flex: 1, child: new Text('P${config.game.playerNumber}')),
       new Flexible(
           flex: 5, child: _makeButton('Switch Player', _switchPlayersCallback)),
@@ -373,7 +375,8 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
         return null;
     }
     kids.add(_makeDebugButtons());
-    return new Column(kids, justifyContent: FlexJustifyContent.spaceBetween);
+    return new Column(
+        children: kids, justifyContent: FlexJustifyContent.spaceBetween);
   }
 
   Widget showBoard() {
@@ -529,7 +532,8 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     return new Container(
         padding: new EdgeDims.all(10.0),
         decoration: decoration,
-        child: new Row(statusBarWidgets,
+        child: new Row(
+            children: statusBarWidgets,
             justifyContent: FlexJustifyContent.spaceBetween));
   }
 
@@ -562,7 +566,8 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     if (_showSplitView) {
       cardCollections.add(new Container(
           decoration: style.Box.background,
-          child: new Column([_buildFullMiniBoard(), _buildStatusBar()])));
+          child: new Column(
+              children: [_buildFullMiniBoard(), _buildStatusBar()])));
     } else {
       Widget playArea = new Container(
           decoration: new BoxDecoration(backgroundColor: Colors.teal[500]),
@@ -583,7 +588,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
 
       cardCollections.add(new Container(
           decoration: style.Box.background,
-          child: new BlockBody([_buildStatusBar(), playArea])));
+          child: new BlockBody(children: [_buildStatusBar(), playArea])));
     }
 
     List<logic_card.Card> cards = game.cardCollections[p];
@@ -609,9 +614,10 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
         comparator: _compareCards,
         width: config.width,
         useKeys: true);
-    cardCollections.add(new BlockBody([c, _makeDebugButtons()]));
+    cardCollections.add(new BlockBody(children: [c, _makeDebugButtons()]));
 
-    return new Column(cardCollections,
+    return new Column(
+        children: cardCollections,
         justifyContent: FlexJustifyContent.spaceBetween);
   }
 
@@ -638,7 +644,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
 
     List<Widget> scores = new List<Widget>();
     scores.add(new Flexible(
-        child: new Flex([
+        child: new Flex(children: [
           new Flexible(
               child: new Center(child: new Text("Score:", style: bigStyle)),
               flex: 1),
@@ -659,7 +665,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
       TextStyle scoreStyle = isMaxOverall ? bigRedStyle : bigStyle;
 
       scores.add(new Flexible(
-          child: new Flex([
+          child: new Flex(children: [
             new Flexible(
                 child: new CroupierProfileComponent(
                     settings: config.croupier.settingsFromPlayerNumber(i)),
@@ -676,8 +682,9 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
           ], direction: crossDirection, alignItems: FlexAlignItems.stretch),
           flex: 2));
     }
-    return new Column([
-      new Flexible(child: new Flex(scores, direction: mainDirection), flex: 7),
+    return new Column(children: [
+      new Flexible(
+          child: new Flex(children: scores, direction: mainDirection), flex: 7),
       new Flexible(child: w, flex: 1),
       new Flexible(child: _makeDebugButtons(), flex: 1)
     ]);
@@ -686,7 +693,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
   Widget showDeal() {
     return new Container(
         decoration: new BoxDecoration(backgroundColor: Colors.pink[500]),
-        child: new Column([
+        child: new Column(children: [
           new Text('Player ${config.game.playerNumber}'),
           new Text('Waiting for Deal...'),
           _makeDebugButtons()
@@ -719,9 +726,10 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
         decoration: new BoxDecoration(backgroundColor: bgColor),
         padding: new EdgeDims.all(10.0),
         width: config.width,
-        child: new Row(topCardWidgets,
+        child: new Row(
+            children: topCardWidgets,
             justifyContent: FlexJustifyContent.spaceBetween));
-    Widget combinedTopArea = new BlockBody([statusBar, topArea]);
+    Widget combinedTopArea = new BlockBody(children: [statusBar, topArea]);
 
     List<logic_card.Card> emptyC;
     if (c1.length == 0) {
@@ -745,9 +753,11 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
         altColor: Colors.grey[700],
         useKeys: true);
 
-    Widget combinedBottomArea = new BlockBody([handArea, _makeDebugButtons()]);
+    Widget combinedBottomArea =
+        new BlockBody(children: [handArea, _makeDebugButtons()]);
 
-    return new Column(<Widget>[combinedTopArea, combinedBottomArea],
+    return new Column(
+        children: <Widget>[combinedTopArea, combinedBottomArea],
         justifyContent: FlexJustifyContent.spaceBetween);
   }
 
@@ -859,10 +869,10 @@ class HeartsArrangeComponentState extends State<HeartsArrangeComponent> {
         decoration: style.Box.liveNow,
         height: config.height,
         width: config.width,
-        child: new Column([
+        child: new Column(children: [
           new Text("Play Hearts as a...", style: style.Text.hugeStyle),
           new FlatButton(
-              child: new Row([
+              child: new Row(children: [
                 new Icon(size: IconSize.s48, icon: personIcon),
                 new Text("Player", style: style.Text.largeStyle)
               ], justifyContent: FlexJustifyContent.collapse),
@@ -872,7 +882,7 @@ class HeartsArrangeComponentState extends State<HeartsArrangeComponent> {
             });
           }),
           new FlatButton(
-              child: new Row([
+              child: new Row(children: [
                 new Icon(size: IconSize.s48, icon: tableIcon),
                 new Text("Table", style: style.Text.largeStyle)
               ], justifyContent: FlexJustifyContent.collapse),
@@ -930,14 +940,14 @@ class HeartsArrangeComponentState extends State<HeartsArrangeComponent> {
         })
       ];
     }
-    Widget firstChild =
-        new Row(children, justifyContent: FlexJustifyContent.collapse);
+    Widget firstChild = new Row(
+        children: children, justifyContent: FlexJustifyContent.collapse);
 
     return new Container(
         decoration: style.Box.liveNow,
         height: config.height,
         width: config.width,
-        child: new Column([
+        child: new Column(children: [
           firstChild,
           new Flexible(child: _buildArrangeTable(activeID: arrangeID))
         ], alignItems: FlexAlignItems.center));
@@ -961,7 +971,8 @@ class HeartsArrangeComponentState extends State<HeartsArrangeComponent> {
         decoration: style.Box.liveNow,
         height: config.height,
         width: config.width,
-        child: new Column(children, alignItems: FlexAlignItems.center));
+        child:
+            new Column(children: children, alignItems: FlexAlignItems.center));
   }
 
   Widget _buildFallbackArrangePlayers() {
@@ -976,10 +987,12 @@ class HeartsArrangeComponentState extends State<HeartsArrangeComponent> {
     int numAtTable = config.croupier.players_found.values
         .where((int playerNumber) => playerNumber == 4)
         .length;
-    return new Column([
+    return new Column(
+        children: [
       new Flexible(
           flex: 1,
-          child: new Row([
+          child: new Row(
+              children: [
             _buildEmptySlot(),
             _buildSlot(personIcon, 2, activeID, canDragTo),
             _buildEmptySlot()
@@ -988,7 +1001,8 @@ class HeartsArrangeComponentState extends State<HeartsArrangeComponent> {
               alignItems: FlexAlignItems.stretch)),
       new Flexible(
           flex: 1,
-          child: new Row([
+          child: new Row(
+              children: [
             _buildSlot(personIcon, 1, activeID, canDragTo),
             _buildSlot(tableIcon, 4, activeID, canDragTo,
                 extra: "x${numAtTable}"),
@@ -998,7 +1012,8 @@ class HeartsArrangeComponentState extends State<HeartsArrangeComponent> {
               alignItems: FlexAlignItems.stretch)),
       new Flexible(
           flex: 1,
-          child: new Row([
+          child: new Row(
+              children: [
             _buildEmptySlot(),
             _buildSlot(personIcon, 0, activeID, canDragTo),
             _buildEmptySlot()
@@ -1016,7 +1031,8 @@ class HeartsArrangeComponentState extends State<HeartsArrangeComponent> {
 
   Widget _buildSlot(String name, int index, int activeID, bool canDragTo,
       {String extra: ""}) {
-    Widget slotWidget = new Row([
+    Widget slotWidget = new Row(
+        children: [
       new Icon(size: IconSize.s48, icon: name),
       new Text(extra, style: style.Text.largeStyle)
     ],

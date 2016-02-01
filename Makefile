@@ -74,7 +74,7 @@ endif
 # Runs a sky app.
 # $1 is location of flx file.
 define RUN_SKY_APP
-	pub run flutter_tools -v --very-verbose run_mojo \
+	pub run flutter_tools -v run_mojo \
 	--app $1 \
 	$(MOJO_ANDROID_FLAGS) \
 	--mojo-path $(MOJO_DIR)/src \

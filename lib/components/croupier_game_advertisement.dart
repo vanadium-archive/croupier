@@ -23,7 +23,7 @@ class CroupierGameAdvertisementComponent extends StatelessComponent {
   Widget build(BuildContext context) {
     return new GestureDetector(
         child: new Card(
-            child: new Row([
+            child: new Row(children: [
           new Card(
               child: new CroupierProfileComponent(
                   settings: settings,

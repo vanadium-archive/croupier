@@ -146,23 +146,23 @@ packages:
   mojo:
     description: mojo
     source: hosted
-    version: "0.4.8"
+    version: "0.4.12"
   mojo_apptest:
     description: mojo_apptest
     source: hosted
-    version: "0.2.12"
+    version: "0.2.16"
   mojo_sdk:
     description: mojo_sdk
     source: hosted
-    version: "0.2.7"
+    version: "0.2.11"
   mojo_services:
     description: mojo_services
     source: hosted
-    version: "0.4.10"
+    version: "0.4.14"
   mojom:
     description: mojom
     source: hosted
-    version: "0.2.12"
+    version: "0.2.16"
   mustache4dart:
     description: mustache4dart
     source: hosted
@@ -208,7 +208,7 @@ packages:
   shelf:
     description: shelf
     source: hosted
-    version: "0.6.4+3"
+    version: "0.6.5"
   shelf_static:
     description: shelf_static
     source: hosted
@@ -220,11 +220,11 @@ packages:
   sky_engine:
     description: sky_engine
     source: hosted
-    version: "0.0.75"
+    version: "0.0.89"
   sky_services:
     description: sky_services
     source: hosted
-    version: "0.0.75"
+    version: "0.0.89"
   source_map_stack_trace:
     description: source_map_stack_trace
     source: hosted
@@ -241,6 +241,10 @@ packages:
     description: stack_trace
     source: hosted
     version: "1.6.0"
+  stream_channel:
+    description: stream_channel
+    source: hosted
+    version: "1.0.1"
   string_scanner:
     description: string_scanner
     source: hosted
@@ -248,7 +252,7 @@ packages:
   syncbase:
     description: syncbase
     source: hosted
-    version: "0.0.27"
+    version: "0.0.28"
   test:
     description: test
     source: hosted
@@ -264,7 +268,7 @@ packages:
   v23discovery:
     description: v23discovery
     source: hosted
-    version: "0.0.11"
+    version: "0.0.12"
   vector_math:
     description: vector_math
     source: hosted

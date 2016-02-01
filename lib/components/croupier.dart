@@ -44,7 +44,7 @@ class CroupierComponentState extends State<CroupierComponent> {
         // in which we show them a UI to start a new game, join a game, or change some settings.
         return new Container(
             padding: new EdgeDims.only(top: ui.window.padding.top),
-            child: new Column([
+            child: new Column(children: [
               new FlatButton(
                   child: new Text('Create Game', style: style.Text.titleStyle),
                   onPressed: makeSetStateCallback(
@@ -69,7 +69,7 @@ class CroupierComponentState extends State<CroupierComponent> {
         // in which we let them pick a game out of the many possible games... There aren't that many.
         return new Container(
             padding: new EdgeDims.only(top: ui.window.padding.top),
-            child: new Flex([
+            child: new Column(children: [
               new FlatButton(
                   child: new Text('Proto', style: style.Text.titleStyle),
                   onPressed: makeSetStateCallback(
@@ -91,7 +91,7 @@ class CroupierComponentState extends State<CroupierComponent> {
                   child: new Text('Back', style: style.Text.subtitleStyle),
                   onPressed: makeSetStateCallback(
                       logic_croupier.CroupierState.Welcome))
-            ], direction: FlexDirection.vertical));
+            ]));
       case logic_croupier.CroupierState.JoinGame:
         // A stateful view, showing the game ads discovered.
         List<Widget> gameAdWidgets = new List<Widget>();
@@ -120,7 +120,7 @@ class CroupierComponentState extends State<CroupierComponent> {
         // in which players wait for game invitations to arrive.
         return new Container(
             padding: new EdgeDims.only(top: ui.window.padding.top),
-            child: new Column(gameAdWidgets));
+            child: new Column(children: gameAdWidgets));
       case logic_croupier.CroupierState.ArrangePlayers:
         return new Container(
             padding: new EdgeDims.only(top: ui.window.padding.top),
@@ -174,11 +174,11 @@ class CroupierComponentState extends State<CroupierComponent> {
 
     if (needsArrangement) {
       return new ScrollableViewport(
-          child: new Row(profileWidgets),
-          scrollDirection: ScrollDirection.horizontal);
+          child: new Row(children: profileWidgets),
+          scrollDirection: Axis.horizontal);
     }
-    return new MaxTileWidthGrid(profileWidgets,
-        maxTileWidth: style.Size.settingsWidth);
+    return new MaxTileWidthGrid(
+        children: profileWidgets, maxTileWidth: style.Size.settingsWidth);
   }
 
   Widget _buildArrangePlayers() {
@@ -189,7 +189,7 @@ class CroupierComponentState extends State<CroupierComponent> {
 
     allWidgets.add(new Flexible(
         flex: 0,
-        child: new Row([
+        child: new Row(children: [
           new Text("${config.croupier.game.gameTypeName}",
               style: style.Text.hugeStyle)
         ], justifyContent: FlexJustifyContent.spaceAround)));
@@ -225,7 +225,7 @@ class CroupierComponentState extends State<CroupierComponent> {
     if (config.croupier.game.isCreator) {
       allWidgets.add(new Flexible(
           flex: 0,
-          child: new Row([
+          child: new Row(children: [
             new FlatButton(
                 child: new Text("Start Game", style: style.Text.hugeStyle),
                 onPressed: startCb,
@@ -239,6 +239,6 @@ class CroupierComponentState extends State<CroupierComponent> {
             onPressed:
                 makeSetStateCallback(logic_croupier.CroupierState.Welcome))));
 
-    return new Column(allWidgets);
+    return new Column(children: allWidgets);
   }
 }

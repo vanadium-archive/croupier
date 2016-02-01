@@ -56,7 +56,7 @@ class CroupierProfileComponent extends StatelessComponent {
             padding: const EdgeDims.all(padAmount),
             child: new Card(
                 color: new Color(settings.color),
-                child: new Column([
+                child: new Column(children: [
                   new AssetImage(
                       name: CroupierSettings.makeAvatarUrl(settings.avatar)),
                   new Text(settings.name, style: style.Text.largeStyle)
@@ -68,7 +68,7 @@ class CroupierProfileComponent extends StatelessComponent {
             padding: const EdgeDims.all(padAmount),
             child: new Card(
                 color: new Color(settings.color),
-                child: new Row([
+                child: new Row(children: [
                   new AssetImage(
                       name: CroupierSettings.makeAvatarUrl(settings.avatar),
                       fit: ImageFit.scaleDown)
@@ -78,7 +78,7 @@ class CroupierProfileComponent extends StatelessComponent {
             color: new Color(settings.color),
             child: new Container(
                 padding: const EdgeDims.all(padAmount),
-                child: new Row([
+                child: new Row(children: [
                   new AssetImage(
                       name: CroupierSettings.makeAvatarUrl(settings.avatar),
                       fit: ImageFit.scaleDown),
@@ -89,9 +89,9 @@ class CroupierProfileComponent extends StatelessComponent {
             color: new Color(settings.color),
             child: new Container(
                 padding: const EdgeDims.all(padAmount),
-                child: new Row(
-                    [new Text(settings.name, style: style.Text.largeStyle)],
-                    justifyContent: FlexJustifyContent.collapse)));
+                child: new Row(children: [
+                  new Text(settings.name, style: style.Text.largeStyle)
+                ], justifyContent: FlexJustifyContent.collapse)));
     }
   }
 }

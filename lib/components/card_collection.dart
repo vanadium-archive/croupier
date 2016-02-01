@@ -180,7 +180,7 @@ class CardCollectionComponentState extends State<CardCollectionComponent> {
         decoration: new BoxDecoration(backgroundColor: config.backgroundColor),
         height: config.height,
         width: _produceColumnWidth,
-        child: new Stack(draggableKids));
+        child: new Stack(children: draggableKids));
   }
 
   double get _produceRowHeight => config.heightCard + CARD_MARGIN * 2;
@@ -217,7 +217,7 @@ class CardCollectionComponentState extends State<CardCollectionComponent> {
         decoration: new BoxDecoration(backgroundColor: config.backgroundColor),
         height: _produceRowHeight,
         width: config.width,
-        child: new Stack(draggableKids));
+        child: new Stack(children: draggableKids));
   }
 
   Widget _produceSingle(List<component_card.Card> cardWidgets) {
@@ -230,7 +230,7 @@ class CardCollectionComponentState extends State<CardCollectionComponent> {
         decoration: new BoxDecoration(backgroundColor: config.backgroundColor),
         height: _produceRowHeight,
         width: _produceColumnWidth,
-        child: new Stack(draggableKids));
+        child: new Stack(children: draggableKids));
   }
 
   double get _whiteLineHeight => WHITE_LINE_HEIGHT;
@@ -276,7 +276,7 @@ class CardCollectionComponentState extends State<CardCollectionComponent> {
         }
         return new Container(
             decoration: new BoxDecoration(backgroundColor: Colors.white),
-            child: new Stack(<Widget>[
+            child: new Stack(children: <Widget>[
               new Positioned(
                   top: 2 * _produceRowHeight + 2 * _whiteLineHeight,
                   child: _produceRow(ss,

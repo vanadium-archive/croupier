@@ -179,7 +179,7 @@ class HeartsBoardState extends State<HeartsBoard> {
     return new Container(
         height: config.height,
         width: config.width,
-        child: new Stack([
+        child: new Stack(children: [
           new Positioned(top: 0.0, left: 0.0, child: boardChild),
           new Positioned(
               top: config.height * (offscreenDelta + 0.5),
@@ -225,7 +225,7 @@ class HeartsBoardState extends State<HeartsBoard> {
     return new Container(
         height: config.height,
         width: config.width,
-        child: new Stack([
+        child: new Stack(children: [
           new Positioned(
               top: 0.0,
               left: 0.0,
@@ -288,14 +288,16 @@ class HeartsBoardState extends State<HeartsBoard> {
     return new Container(
         height: config.height,
         width: config.width,
-        child: new Column([
+        child: new Column(
+            children: [
           new Flexible(child: _playerProfile(2, PROFILE_SIZE), flex: 0),
           new Flexible(child: _getPass(2), flex: 0),
           new Flexible(
-              child: new Row([
+              child: new Row(
+                  children: [
                 new Flexible(child: _playerProfile(1, PROFILE_SIZE), flex: 0),
                 new Flexible(child: _getPass(1), flex: 0),
-                new Flexible(child: new Block([]), flex: 1),
+                new Flexible(child: new Block(children: []), flex: 1),
                 new Flexible(child: _getPass(3), flex: 0),
                 new Flexible(child: _playerProfile(3, PROFILE_SIZE), flex: 0)
               ],
@@ -314,14 +316,14 @@ class HeartsBoardState extends State<HeartsBoard> {
         height: config.height,
         width: config.width,
         child: new Center(
-            child: new Row([
+            child: new Row(children: [
           new Flexible(
               flex: 1,
               child: new Center(
                   child: _buildAvatarSlotCombo(rotateByGamePlayerNumber(1)))),
           new Flexible(
               flex: 1,
-              child: new Column([
+              child: new Column(children: [
                 new Flexible(
                     flex: 1,
                     child: _buildAvatarSlotCombo(rotateByGamePlayerNumber(2))),
@@ -380,7 +382,7 @@ class HeartsBoardState extends State<HeartsBoard> {
     return new Container(
         width: config.cardWidth,
         height: config.cardHeight,
-        child: new Stack(items));
+        child: new Stack(children: items));
   }
 
   Widget _showTrickText(int pNum) {
@@ -465,11 +467,13 @@ class HeartsBoardState extends State<HeartsBoard> {
                             ? style.theme.accentColor
                             : style.transparentColor,
                         width: 5.0))),
-            child: new Column([
+            child: new Column(
+                children: [
               new Flexible(child: _playerProfile(2, PROFILE_SIZE), flex: 0),
               new Flexible(child: _showTrickText(2), flex: 0),
               new Flexible(
-                  child: new Row([
+                  child: new Row(
+                      children: [
                     new Flexible(
                         child: _playerProfile(1, PROFILE_SIZE), flex: 0),
                     new Flexible(child: _showTrickText(1), flex: 0),
@@ -494,8 +498,8 @@ class HeartsBoardState extends State<HeartsBoard> {
 
     double height = config.cardHeight * this._centerScaleFactor;
     double width = config.cardWidth * this._centerScaleFactor;
-    Widget centerPiece =
-        new Container(height: height, width: width, child: new Block([]));
+    Widget centerPiece = new Container(
+        height: height, width: width, child: new Block(children: []));
     if (localAsking == 4) {
       // If all cards played are revealed, show Take Trick button.
       int rotateNum = config.game.determineTrickWinner();
@@ -511,28 +515,32 @@ class HeartsBoardState extends State<HeartsBoard> {
           rotateNum);
     }
 
-    return new Column([
+    return new Column(
+        children: [
       new Flexible(
-          child: new Row([
-        new Flexible(child: new Block([])),
+          child: new Row(
+              children: [
+        new Flexible(child: new Block(children: [])),
         new Flexible(child: new Center(child: _buildCenterCard(2))),
-        new Flexible(child: new Block([])),
+        new Flexible(child: new Block(children: [])),
       ],
               alignItems: FlexAlignItems.center,
               justifyContent: FlexJustifyContent.center)),
       new Flexible(
-          child: new Row([
+          child: new Row(
+              children: [
         new Flexible(child: new Center(child: _buildCenterCard(1))),
-        new Flexible(child: new Block([centerPiece])),
+        new Flexible(child: new Block(children: [centerPiece])),
         new Flexible(child: new Center(child: _buildCenterCard(3))),
       ],
               alignItems: FlexAlignItems.center,
               justifyContent: FlexJustifyContent.center)),
       new Flexible(
-          child: new Row([
-        new Flexible(child: new Block([])),
+          child: new Row(
+              children: [
+        new Flexible(child: new Block(children: [])),
         new Flexible(child: new Center(child: _buildCenterCard(0))),
-        new Flexible(child: new Block([])),
+        new Flexible(child: new Block(children: [])),
       ],
               alignItems: FlexAlignItems.center,
               justifyContent: FlexJustifyContent.center))
@@ -558,9 +566,9 @@ class HeartsBoardState extends State<HeartsBoard> {
     List<logic_card.Card> cards =
         game.cardCollections[playerNumber + HeartsGame.OFFSET_PLAY];
 
-    bool hasPlayed = cards.length > 0;
     // TODO(alexfandrianto): Clean up soon.
     // https://github.com/vanadium/issues/issues/1098
+    //bool hasPlayed = cards.length > 0;
     //bool isTurn = game.whoseTurn == playerNumber && !hasPlayed;
 
     double height = config.cardHeight * this._centerScaleFactor;
@@ -599,7 +607,7 @@ class HeartsBoardState extends State<HeartsBoard> {
     }*/
 
     return new Container(
-        height: height, width: width, child: new Stack(stackWidgets));
+        height: height, width: width, child: new Stack(children: stackWidgets));
   }
 
   // The off-screen cards consist of trick cards and play cards.

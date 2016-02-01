@@ -88,14 +88,14 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
         new AssetImage(
             name: CroupierSettings.makeAvatarUrl(config.settings.avatar))));
 
-    return new Column(w);
+    return new Column(children: w);
   }
 
   Widget _makeButtonRow(String type, Widget child) {
     String capType = _capitalize(type);
     return new FlatButton(
         onPressed: () => _handlePressed(type),
-        child: new Row([
+        child: new Row(children: [
           new Flexible(
               flex: 1,
               child: new Text(capType, style: Theme.of(context).text.subhead)),
@@ -114,9 +114,9 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
             title: new Text(capType),
             content: new Input(
                 key: globalKeys[type],
-                placeholder: capType,
+                hintText: capType,
                 initialValue: config.settings.getStringValue(type),
-                keyboardType: KeyboardType.TEXT,
+                keyboardType: KeyboardType.text,
                 onChanged: _makeHandleChanged(type)),
             actions: [
               new FlatButton(child: new Text('CANCEL'), onPressed: () {
@@ -150,7 +150,8 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
 
         dialog = new Dialog(
             title: new Text(capType),
-            content: new MaxTileWidthGrid(flexColors, maxTileWidth: 75.0),
+            content:
+                new MaxTileWidthGrid(children: flexColors, maxTileWidth: 75.0),
             actions: [
               new FlatButton(child: new Text('CANCEL'), onPressed: () {
                 Navigator.pop(context);
@@ -168,7 +169,8 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
 
         dialog = new Dialog(
             title: new Text(capType),
-            content: new MaxTileWidthGrid(flexAvatars, maxTileWidth: 75.0),
+            content:
+                new MaxTileWidthGrid(children: flexAvatars, maxTileWidth: 75.0),
             actions: [
               new FlatButton(child: new Text('CANCEL'), onPressed: () {
                 Navigator.pop(context);

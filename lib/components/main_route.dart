@@ -56,9 +56,9 @@ class MainRouteState extends State<MainRoute> {
 
   // TODO(alexfandrianto): Can we do better than this?
   Widget _buildSplashScreen() {
-    var stack = new Stack([
+    var stack = new Stack(children: [
       new AssetImage(name: 'images/splash/background.png', fit: ImageFit.cover),
-      new Row([
+      new Row(children: [
         new AssetImage(
             name: 'images/splash/flutter.png', width: style.Size.splashLogo),
         new AssetImage(
@@ -66,7 +66,8 @@ class MainRouteState extends State<MainRoute> {
       ], justifyContent: FlexJustifyContent.center),
       new Container(
           child: new Row(
-              [new Text('Loading Croupier...', style: style.Text.splash)],
+              children:
+                  [new Text('Loading Croupier...', style: style.Text.splash)],
               alignItems: FlexAlignItems.end,
               justifyContent: FlexJustifyContent.center),
           padding: style.Spacing.normalPadding)
@@ -76,9 +77,9 @@ class MainRouteState extends State<MainRoute> {
 
   Widget _buildDrawer() {
     return new Drawer(
-        child: new Block(<Widget>[
+        child: new Block(children: <Widget>[
       new DrawerHeader(
-          child: new BlockBody([
+          child: new BlockBody(children: [
         new CroupierProfileComponent(
             settings: config.croupier.settings,
             width: style.Size.settingsWidth,
@@ -95,7 +96,7 @@ class MainRouteState extends State<MainRoute> {
           child: new Text('Settings')),
       new DrawerItem(
           icon: 'action/build',
-          child: new Row([
+          child: new Row(children: [
             new Text('Debug Mode'),
             new Switch(
                 value: config.croupier.debugMode, onChanged: _handleDebugMode)

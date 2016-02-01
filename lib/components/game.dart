@@ -198,7 +198,7 @@ abstract class GameComponentState<T extends GameComponent> extends State<T> {
         child: new Container(
             width: config.width,
             height: config.height,
-            child: new Stack(positionedCards)));
+            child: new Stack(children: positionedCards)));
   }
 }
 

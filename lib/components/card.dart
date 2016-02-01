@@ -154,7 +154,8 @@ widgets.Widget _imageFromCard(
 }
 
 class ZCardState extends widgets.State<ZCard> {
-  ValuePerformance<Point> _performance;
+  Tween<Point> _positionTween;
+  AnimationController _animationController;
   List<
       Point> _pointQueue; // at least 1 longer than the current animation index.
   int _animationIndex;
@@ -173,11 +174,10 @@ class ZCardState extends widgets.State<ZCard> {
       _pointQueue.add(config.startingPosition);
     }
     _pointQueue.add(config.endingPosition);
-    _performance = new ValuePerformance<Point>(
-        variable: new AnimatedValue<Point>(Point.origin, curve: Curves.easeOut),
-        duration: this.animationDuration);
-    _performance.addStatusListener((PerformanceStatus status) {
-      if (status == PerformanceStatus.completed) {
+    _animationController =
+        new AnimationController(duration: this.animationDuration);
+    _animationController.addStatusListener((AnimationStatus status) {
+      if (status == AnimationStatus.completed) {
         _animationIndex++;
         _tryAnimate();
       }
@@ -220,11 +220,9 @@ class ZCardState extends widgets.State<ZCard> {
     if (config.animationType == CardAnimationType.NONE ||
         _pointQueue.length == 1) {
       Point endingLocation = config.endingPosition;
-      _performance.variable
-        ..begin = endingLocation
-        ..value = endingLocation
-        ..end = endingLocation;
-      _performance.progress = 0.0;
+      _positionTween =
+          new Tween<Point>(begin: endingLocation, end: endingLocation);
+      _animationController.value = 0.0;
       _animationIndex = _pointQueue.length - 1;
       return;
     }
@@ -238,21 +236,19 @@ class ZCardState extends widgets.State<ZCard> {
 
   // Return the current animation position of the ZCard.
   Point get localPosition {
-    return _performance.variable.value;
+    return _positionTween.evaluate(_animationController);
   }
 
   void _tryAnimate() {
     // Let animations finish... (Is this a good idea?)
-    if (!_performance.isAnimating && _needsAnimation()) {
+    if (!_animationController.isAnimating && _needsAnimation()) {
       Point startingLocation = _pointQueue[_animationIndex];
       Point endingLocation = _pointQueue[_animationIndex + 1];
-      _performance.variable
-        ..begin = startingLocation
-        ..value = startingLocation
-        ..end = endingLocation;
-      _performance.progress = 0.0;
-      _performance.duration = this.animationDuration;
-      _performance.play();
+      _positionTween =
+          new Tween<Point>(begin: startingLocation, end: endingLocation);
+      _animationController.value = 0.0;
+      _animationController.duration = this.animationDuration;
+      _animationController.play(AnimationDirection.forward);
     }
   }
 
@@ -264,14 +260,13 @@ class ZCardState extends widgets.State<ZCard> {
         alignment: new FractionalOffset(0.5, 0.5));
 
     // Prepare the transition, which is a fixed pixel translation.
-    widgets.Widget retWidget = new widgets.BuilderTransition(
-        variables: <AnimatedValue>[_performance.variable],
-        builder: (widgets.BuildContext c) {
+    widgets.Widget retWidget = new widgets.AnimatedBuilder(
+        animation: _animationController,
+        builder: (widgets.BuildContext c, widgets.Widget child) {
       Matrix4 transform = new Matrix4.identity()
-        ..translate(
-            _performance.variable.value.x, _performance.variable.value.y);
-      return new widgets.Transform(transform: transform, child: image);
-    }, performance: _performance.view);
+        ..translate(localPosition.x, localPosition.y);
+      return new widgets.Transform(transform: transform, child: child);
+    }, child: image);
 
     return retWidget;
   }
