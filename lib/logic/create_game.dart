@@ -10,15 +10,15 @@ import 'solitaire/solitaire.dart' as solitaire_impl;
 game_impl.Game createGame(game_impl.GameType gt, bool debugMode,
     {int gameID, bool isCreator, int playerNumber}) {
   switch (gt) {
-    case game_impl.GameType.Proto:
+    case game_impl.GameType.proto:
       return new proto_impl.ProtoGame(gameID: gameID, isCreator: isCreator)
         ..debugMode = debugMode
         ..playerNumber = playerNumber;
-    case game_impl.GameType.Hearts:
+    case game_impl.GameType.hearts:
       return new hearts_impl.HeartsGame(gameID: gameID, isCreator: isCreator)
         ..debugMode = debugMode
         ..playerNumber = playerNumber;
-    case game_impl.GameType.Solitaire:
+    case game_impl.GameType.solitaire:
       return new solitaire_impl.SolitaireGame(
           gameID: gameID, isCreator: isCreator)
         ..debugMode = debugMode

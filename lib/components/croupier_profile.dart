@@ -8,10 +8,10 @@ import '../logic/croupier_settings.dart' show CroupierSettings;
 import '../styles/common.dart' as style;
 
 enum CroupierProfileComponentOrientation {
-  DEFAULT,
-  MINI,
-  HORIZONTAL,
-  TEXT_ONLY
+  standard,
+  mini,
+  horizontal,
+  textOnly
 }
 
 class CroupierProfileComponent extends StatelessComponent {
@@ -26,7 +26,7 @@ class CroupierProfileComponent extends StatelessComponent {
       {CroupierSettings settings,
       this.height,
       this.width,
-      this.orientation: CroupierProfileComponentOrientation.DEFAULT})
+      this.orientation: CroupierProfileComponentOrientation.standard})
       : settings = settings ?? new CroupierSettings.placeholder();
 
   CroupierProfileComponent.mini(
@@ -35,21 +35,21 @@ class CroupierProfileComponent extends StatelessComponent {
             settings: settings,
             height: height,
             width: width,
-            orientation: CroupierProfileComponentOrientation.MINI);
+            orientation: CroupierProfileComponentOrientation.mini);
 
   CroupierProfileComponent.horizontal({CroupierSettings settings})
       : this(
             settings: settings,
-            orientation: CroupierProfileComponentOrientation.HORIZONTAL);
+            orientation: CroupierProfileComponentOrientation.horizontal);
 
   CroupierProfileComponent.textOnly({CroupierSettings settings})
       : this(
             settings: settings,
-            orientation: CroupierProfileComponentOrientation.TEXT_ONLY);
+            orientation: CroupierProfileComponentOrientation.textOnly);
 
   Widget build(BuildContext context) {
     switch (orientation) {
-      case CroupierProfileComponentOrientation.DEFAULT:
+      case CroupierProfileComponentOrientation.standard:
         return new Container(
             height: this.height,
             width: this.width,
@@ -61,7 +61,7 @@ class CroupierProfileComponent extends StatelessComponent {
                       name: CroupierSettings.makeAvatarUrl(settings.avatar)),
                   new Text(settings.name, style: style.Text.largeStyle)
                 ], justifyContent: FlexJustifyContent.spaceAround)));
-      case CroupierProfileComponentOrientation.MINI:
+      case CroupierProfileComponentOrientation.mini:
         return new Container(
             width: this.width,
             height: this.height,
@@ -73,7 +73,7 @@ class CroupierProfileComponent extends StatelessComponent {
                       name: CroupierSettings.makeAvatarUrl(settings.avatar),
                       fit: ImageFit.scaleDown)
                 ], justifyContent: FlexJustifyContent.spaceAround)));
-      case CroupierProfileComponentOrientation.HORIZONTAL:
+      case CroupierProfileComponentOrientation.horizontal:
         return new Card(
             color: new Color(settings.color),
             child: new Container(
@@ -84,7 +84,7 @@ class CroupierProfileComponent extends StatelessComponent {
                       fit: ImageFit.scaleDown),
                   new Text(settings.name, style: style.Text.hugeStyle)
                 ], justifyContent: FlexJustifyContent.collapse)));
-      case CroupierProfileComponentOrientation.TEXT_ONLY:
+      case CroupierProfileComponentOrientation.textOnly:
         return new Card(
             color: new Color(settings.color),
             child: new Container(

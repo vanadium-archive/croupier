@@ -4,4 +4,4 @@
 
 part of hearts;
 
-enum HeartsType { Player, Board }
+enum HeartsType { player, board }

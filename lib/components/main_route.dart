@@ -36,9 +36,6 @@ class MainRouteState extends State<MainRoute> {
   }
 
   Widget build(BuildContext context) {
-    // TODO(alexfandrianto): A better way to do this is to show the splash
-    // screen while the Store is initializing.
-    // https://github.com/vanadium/issues/issues/958
     if (config.croupier.settings == null) {
       return _buildSplashScreen();
     }
@@ -54,7 +51,6 @@ class MainRouteState extends State<MainRoute> {
         drawer: _buildDrawer());
   }
 
-  // TODO(alexfandrianto): Can we do better than this?
   Widget _buildSplashScreen() {
     var stack = new Stack(children: [
       new AssetImage(name: 'images/splash/background.png', fit: ImageFit.cover),

@@ -47,22 +47,22 @@ void main() {
       // 0 to 6 in each down pile
       // 1 in each up pile
       for (int i = 0; i < 4; i++) {
-        expect(game.cardCollections[SolitaireGame.OFFSET_ACES + i].length,
+        expect(game.cardCollections[SolitaireGame.offsetAces + i].length,
             equals(0),
             reason: "Ace piles start empty");
       }
       expect(
-          game.cardCollections[SolitaireGame.OFFSET_DISCARD].length, equals(0),
+          game.cardCollections[SolitaireGame.offsetDiscard].length, equals(0),
           reason: "Discard pile starts empty");
-      expect(game.cardCollections[SolitaireGame.OFFSET_DRAW].length, equals(24),
+      expect(game.cardCollections[SolitaireGame.offsetDraw].length, equals(24),
           reason: "Draw pile gets the remaining 24 cards");
 
       for (int i = 0; i < 7; i++) {
-        expect(game.cardCollections[SolitaireGame.OFFSET_DOWN + i].length,
+        expect(game.cardCollections[SolitaireGame.offsetDown + i].length,
             equals(i),
             reason: "Down pile ${i} starts with ${i} cards");
         expect(
-            game.cardCollections[SolitaireGame.OFFSET_UP + i].length, equals(1),
+            game.cardCollections[SolitaireGame.offsetUp + i].length, equals(1),
             reason: "Up piles start with 1 card");
       }
     });
@@ -78,7 +78,7 @@ void main() {
       for (int cheatNum = 0; cheatNum < 13; cheatNum++) {
         game.cheatUI();
         for (int i = 0; i < 4; i++) {
-          expect(game.cardCollections[SolitaireGame.OFFSET_ACES + i].length,
+          expect(game.cardCollections[SolitaireGame.offsetAces + i].length,
               equals(cheatNum + 1));
         }
       }
@@ -94,13 +94,13 @@ void main() {
     SolitaireGame game = new SolitaireGame();
 
     test("Has not won pre-deal", () {
-      expect(game.phase, equals(SolitairePhase.Deal));
+      expect(game.phase, equals(SolitairePhase.deal));
       expect(game.isGameWon, isFalse);
     });
 
     test("Has not won immediately after deal", () {
       game.dealCardsUI(); // What we run when starting the game.
-      expect(game.phase, equals(SolitairePhase.Play));
+      expect(game.phase, equals(SolitairePhase.play));
       expect(game.isGameWon, isFalse);
     });
 
@@ -108,17 +108,17 @@ void main() {
       for (int i = 0; i < 13; i++) {
         game.cheatUI(); // What we run when cheating.
       }
-      expect(game.phase, equals(SolitairePhase.Score));
+      expect(game.phase, equals(SolitairePhase.score));
       expect(game.isGameWon, isTrue);
 
       // Now check an alternative suit order.
       List<Card> aces0 =
-          new List<Card>.from(game.cardCollections[SolitaireGame.OFFSET_ACES]);
+          new List<Card>.from(game.cardCollections[SolitaireGame.offsetAces]);
       List<Card> aces1 = new List<Card>.from(
-          game.cardCollections[SolitaireGame.OFFSET_ACES + 1]);
+          game.cardCollections[SolitaireGame.offsetAces + 1]);
 
-      game.cardCollections[SolitaireGame.OFFSET_ACES].clear();
-      game.cardCollections[SolitaireGame.OFFSET_ACES + 1].clear();
+      game.cardCollections[SolitaireGame.offsetAces].clear();
+      game.cardCollections[SolitaireGame.offsetAces + 1].clear();
 
       // This expectation can be removed if isGameWon becomes a parameter, as
       // opposed to a computed property. However, if that happens, this test
@@ -126,8 +126,8 @@ void main() {
       expect(game.isGameWon, isFalse);
 
       // Swap the piles
-      game.cardCollections[SolitaireGame.OFFSET_ACES].addAll(aces1);
-      game.cardCollections[SolitaireGame.OFFSET_ACES + 1].addAll(aces0);
+      game.cardCollections[SolitaireGame.offsetAces].addAll(aces1);
+      game.cardCollections[SolitaireGame.offsetAces + 1].addAll(aces0);
 
       expect(game.isGameWon, isTrue);
     });
@@ -145,11 +145,11 @@ void main() {
       bool keepGoing = true;
       for (int i = 0; keepGoing; i++) {
         if (i == 0) {
-          expect(game.phase, equals(SolitairePhase.Deal));
+          expect(game.phase, equals(SolitairePhase.deal));
         } else if (!game.isGameWon) {
-          expect(game.phase, equals(SolitairePhase.Play));
+          expect(game.phase, equals(SolitairePhase.play));
         } else {
-          expect(game.phase, equals(SolitairePhase.Score));
+          expect(game.phase, equals(SolitairePhase.score));
         }
 
         // Play the next step of the game until we run out.
@@ -160,7 +160,7 @@ void main() {
     // Naturally, we should ensure that we haven't won the game.
     test("Solitaire Win == False", () {
       expect(game.isGameWon, isFalse);
-      expect(game.phase, equals(SolitairePhase.Play));
+      expect(game.phase, equals(SolitairePhase.play));
     });
   });
 
@@ -176,11 +176,11 @@ void main() {
       bool keepGoing = true;
       for (int i = 0; keepGoing; i++) {
         if (i == 0) {
-          expect(game.phase, equals(SolitairePhase.Deal));
+          expect(game.phase, equals(SolitairePhase.deal));
         } else if (!game.isGameWon) {
-          expect(game.phase, equals(SolitairePhase.Play));
+          expect(game.phase, equals(SolitairePhase.play));
         } else {
-          expect(game.phase, equals(SolitairePhase.Score));
+          expect(game.phase, equals(SolitairePhase.score));
         }
 
         // Play the next step of the game until we run out.
@@ -191,7 +191,7 @@ void main() {
     // Check that we won the game.
     test("Solitaire Win == True", () {
       expect(game.isGameWon, isTrue);
-      expect(game.phase, equals(SolitairePhase.Score));
+      expect(game.phase, equals(SolitairePhase.score));
     });
   });
 
@@ -199,7 +199,7 @@ void main() {
     test("Dealing - wrong phase", () {
       expect(() {
         SolitaireGame game = new SolitaireGame();
-        game.phase = SolitairePhase.Score;
+        game.phase = SolitairePhase.score;
         game.gamelog
             .add(new SolitaireCommand.deal(new List<Card>.from(Card.All)));
       }, throwsA(new isInstanceOf<StateError>()));
@@ -248,20 +248,20 @@ void main() {
         SolitaireGame g = new SolitaireGame();
 
         // Top row
-        g.cardCollections[SolitaireGame.OFFSET_ACES].add(s2);
-        g.cardCollections[SolitaireGame.OFFSET_ACES + 2].add(h2);
-        g.cardCollections[SolitaireGame.OFFSET_DISCARD].add(d2);
-        g.cardCollections[SolitaireGame.OFFSET_DRAW].add(c11);
+        g.cardCollections[SolitaireGame.offsetAces].add(s2);
+        g.cardCollections[SolitaireGame.offsetAces + 2].add(h2);
+        g.cardCollections[SolitaireGame.offsetDiscard].add(d2);
+        g.cardCollections[SolitaireGame.offsetDraw].add(c11);
 
         // Bottom row
-        g.cardCollections[SolitaireGame.OFFSET_UP + 1].add(c3);
-        g.cardCollections[SolitaireGame.OFFSET_UP + 2].add(h3);
-        g.cardCollections[SolitaireGame.OFFSET_UP + 3].add(d1);
-        g.cardCollections[SolitaireGame.OFFSET_UP + 4].add(s13);
-        g.cardCollections[SolitaireGame.OFFSET_UP + 5].add(d3);
-        g.cardCollections[SolitaireGame.OFFSET_UP + 6].add(d12);
+        g.cardCollections[SolitaireGame.offsetUp + 1].add(c3);
+        g.cardCollections[SolitaireGame.offsetUp + 2].add(h3);
+        g.cardCollections[SolitaireGame.offsetUp + 3].add(d1);
+        g.cardCollections[SolitaireGame.offsetUp + 4].add(s13);
+        g.cardCollections[SolitaireGame.offsetUp + 5].add(d3);
+        g.cardCollections[SolitaireGame.offsetUp + 6].add(d12);
 
-        g.phase = SolitairePhase.Play;
+        g.phase = SolitairePhase.play;
 
         return g;
       }
@@ -269,9 +269,9 @@ void main() {
       // Cannot move d1 up to empty ACES slot if not in Play phase.
       expect(() {
         SolitaireGame game = _makeArbitrarySolitaireGame();
-        game.phase = SolitairePhase.Deal;
+        game.phase = SolitairePhase.deal;
         game.gamelog
-            .add(new SolitaireCommand.move(d1, SolitaireGame.OFFSET_ACES + 1));
+            .add(new SolitaireCommand.move(d1, SolitaireGame.offsetAces + 1));
       }, throwsA(new isInstanceOf<StateError>()));
 
       // Cannot move d1 to nonexistent slot.
@@ -284,7 +284,7 @@ void main() {
       expect(() {
         SolitaireGame game = _makeArbitrarySolitaireGame();
         game.gamelog
-            .add(new SolitaireCommand.move(d1, SolitaireGame.OFFSET_ACES + 2));
+            .add(new SolitaireCommand.move(d1, SolitaireGame.offsetAces + 2));
       }, throwsA(new isInstanceOf<StateError>()));
 
       // However, we can move d1 to the unused ACES slot in the Play phase.
@@ -294,21 +294,21 @@ void main() {
       expect(() {
         SolitaireGame game = _makeArbitrarySolitaireGame();
         game.gamelog
-            .add(new SolitaireCommand.move(c11, SolitaireGame.OFFSET_UP + 6));
+            .add(new SolitaireCommand.move(c11, SolitaireGame.offsetUp + 6));
       }, throwsA(new isInstanceOf<StateError>()));
 
       // We cannot move d2 (discard) to the DRAW pile.
       expect(() {
         SolitaireGame game = _makeArbitrarySolitaireGame();
         game.gamelog
-            .add(new SolitaireCommand.move(d2, SolitaireGame.OFFSET_DRAW));
+            .add(new SolitaireCommand.move(d2, SolitaireGame.offsetDraw));
       }, throwsA(new isInstanceOf<StateError>()));
 
       // We cannot move d1 (up) to the DISCARD pile either.
       expect(() {
         SolitaireGame game = _makeArbitrarySolitaireGame();
         game.gamelog
-            .add(new SolitaireCommand.move(d1, SolitaireGame.OFFSET_DISCARD));
+            .add(new SolitaireCommand.move(d1, SolitaireGame.offsetDiscard));
       }, throwsA(new isInstanceOf<StateError>()));
 
       // There are restrictions on what can be played on ACES piles.
@@ -316,14 +316,14 @@ void main() {
       expect(() {
         SolitaireGame game = _makeArbitrarySolitaireGame();
         game.gamelog
-            .add(new SolitaireCommand.move(h3, SolitaireGame.OFFSET_ACES));
+            .add(new SolitaireCommand.move(h3, SolitaireGame.offsetAces));
       }, throwsA(new isInstanceOf<StateError>()));
 
       // Next, non-ace on empty ACES slot. (c3 to empty ACE)
       expect(() {
         SolitaireGame game = _makeArbitrarySolitaireGame();
         game.gamelog
-            .add(new SolitaireCommand.move(c3, SolitaireGame.OFFSET_ACES + 3));
+            .add(new SolitaireCommand.move(c3, SolitaireGame.offsetAces + 3));
       }, throwsA(new isInstanceOf<StateError>()));
 
       // Below, we'll show that moving to ACES works for various cases.
@@ -333,21 +333,21 @@ void main() {
       expect(() {
         SolitaireGame game = _makeArbitrarySolitaireGame();
         game.gamelog
-            .add(new SolitaireCommand.move(h2, SolitaireGame.OFFSET_ACES + 5));
+            .add(new SolitaireCommand.move(h2, SolitaireGame.offsetAces + 5));
       }, throwsA(new isInstanceOf<StateError>()));
 
       // Next, number that isn't 1 lower. (c3 to h3)
       expect(() {
         SolitaireGame game = _makeArbitrarySolitaireGame();
         game.gamelog
-            .add(new SolitaireCommand.move(c3, SolitaireGame.OFFSET_ACES + 2));
+            .add(new SolitaireCommand.move(c3, SolitaireGame.offsetAces + 2));
       }, throwsA(new isInstanceOf<StateError>()));
 
       // Last, an empty that doesn't receive a king. (c3 to empty UP)
       expect(() {
         SolitaireGame game = _makeArbitrarySolitaireGame();
         game.gamelog
-            .add(new SolitaireCommand.move(c3, SolitaireGame.OFFSET_ACES));
+            .add(new SolitaireCommand.move(c3, SolitaireGame.offsetAces));
       }, throwsA(new isInstanceOf<StateError>()));
 
       // Below, we'll show that moving to UP works for various cases.
@@ -359,19 +359,19 @@ void main() {
       // Going to UP (empty) with a king. (s13 to empty)
       SolitaireGame game = _makeArbitrarySolitaireGame();
       game.gamelog
-          .add(new SolitaireCommand.move(d1, SolitaireGame.OFFSET_ACES + 1));
+          .add(new SolitaireCommand.move(d1, SolitaireGame.offsetAces + 1));
       game.gamelog
-          .add(new SolitaireCommand.move(h3, SolitaireGame.OFFSET_ACES + 2));
+          .add(new SolitaireCommand.move(h3, SolitaireGame.offsetAces + 2));
       game.gamelog
-          .add(new SolitaireCommand.move(d2, SolitaireGame.OFFSET_ACES + 1));
+          .add(new SolitaireCommand.move(d2, SolitaireGame.offsetAces + 1));
       game.gamelog
-          .add(new SolitaireCommand.move(d12, SolitaireGame.OFFSET_UP + 4));
+          .add(new SolitaireCommand.move(d12, SolitaireGame.offsetUp + 4));
       game.gamelog
-          .add(new SolitaireCommand.move(s2, SolitaireGame.OFFSET_UP + 5));
+          .add(new SolitaireCommand.move(s2, SolitaireGame.offsetUp + 5));
       game.gamelog
-          .add(new SolitaireCommand.move(d2, SolitaireGame.OFFSET_UP + 1));
+          .add(new SolitaireCommand.move(d2, SolitaireGame.offsetUp + 1));
       game.gamelog
-          .add(new SolitaireCommand.move(s13, SolitaireGame.OFFSET_UP + 0));
+          .add(new SolitaireCommand.move(s13, SolitaireGame.offsetUp + 0));
     });
 
     // Consider various situations in which you cannot flip.
@@ -390,7 +390,7 @@ void main() {
         game.dealCardsUI();
 
         // Remove some cards...
-        game.cardCollections[SolitaireGame.OFFSET_UP + 1].clear();
+        game.cardCollections[SolitaireGame.offsetUp + 1].clear();
 
         // Try to flip a pile that doesn't exist.
         game.gamelog.add(new SolitaireCommand.flip(-1));
@@ -404,7 +404,7 @@ void main() {
         game.dealCardsUI();
 
         // Remove some cards...
-        game.cardCollections[SolitaireGame.OFFSET_UP + 1].clear();
+        game.cardCollections[SolitaireGame.offsetUp + 1].clear();
 
         // Try to flip a pile that doesn't exist.
         game.gamelog.add(new SolitaireCommand.flip(7));
@@ -418,8 +418,8 @@ void main() {
         game.dealCardsUI();
 
         // Remove some cards...
-        game.cardCollections[SolitaireGame.OFFSET_UP + 1].clear();
-        game.cardCollections[SolitaireGame.OFFSET_DOWN + 1].clear();
+        game.cardCollections[SolitaireGame.offsetUp + 1].clear();
+        game.cardCollections[SolitaireGame.offsetDown + 1].clear();
 
         // Try to flip a pile that doesn't exist.
         game.gamelog.add(new SolitaireCommand.flip(1));
@@ -442,7 +442,7 @@ void main() {
 
       // Deal. Clear away pile 1. Flip pile 1.
       game.dealCardsUI();
-      game.cardCollections[SolitaireGame.OFFSET_UP + 1].clear();
+      game.cardCollections[SolitaireGame.offsetUp + 1].clear();
       game.gamelog.add(new SolitaireCommand.flip(1));
     });
 
@@ -460,7 +460,7 @@ void main() {
         game.dealCardsUI();
 
         // Remove all draw cards.
-        game.cardCollections[SolitaireGame.OFFSET_DRAW].clear();
+        game.cardCollections[SolitaireGame.offsetDraw].clear();
 
         game.gamelog.add(new SolitaireCommand.draw());
       }, throwsA(new isInstanceOf<StateError>()));

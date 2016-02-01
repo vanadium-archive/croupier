@@ -9,9 +9,9 @@ import 'package:vector_math/vector_math_64.dart' as vector_math;
 
 import '../logic/card.dart' as logic_card;
 
-enum CardAnimationType { NONE, NORMAL, LONG }
+enum CardAnimationType { none, normal, long }
 
-enum CardUIType { CARD, ZCARD }
+enum CardUIType { card, zCard }
 
 typedef void TapCallback(logic_card.Card card);
 
@@ -48,7 +48,7 @@ class ZCard extends widgets.StatefulComponent {
   final Point endingPosition;
 
   ZCard(Card dataComponent, this.startingPosition, this.endingPosition)
-      : super(key: new GlobalCardKey(dataComponent.card, CardUIType.ZCARD)),
+      : super(key: new GlobalCardKey(dataComponent.card, CardUIType.zCard)),
         card = dataComponent.card,
         faceUp = dataComponent.faceUp,
         width = dataComponent.width ?? 40.0,
@@ -81,13 +81,13 @@ class Card extends widgets.StatefulComponent {
       CardAnimationType animationType,
       this.tapCallback,
       this.z})
-      : animationType = animationType ?? CardAnimationType.NONE,
+      : animationType = animationType ?? CardAnimationType.none,
         card = card,
         width = width ?? 40.0,
         height = height ?? 40.0,
         rotation = rotation ?? 0.0,
         useKey = useKey,
-        super(key: useKey ? new GlobalCardKey(card, CardUIType.CARD) : null);
+        super(key: useKey ? new GlobalCardKey(card, CardUIType.card) : null);
 
   // Use this helper to help create a Card clone.
   // Used by the drag and drop layer.
@@ -98,7 +98,7 @@ class Card extends widgets.StatefulComponent {
         rotation: rotation,
         useKey: false,
         visible: visible ?? this.visible,
-        animationType: CardAnimationType.NONE,
+        animationType: CardAnimationType.none,
         z: z);
   }
 
@@ -120,8 +120,6 @@ class Card extends widgets.StatefulComponent {
 }
 
 class CardState extends widgets.State<Card> {
-  // TODO(alexfandrianto): This bug is why some cards appear slightly off.
-  // https://github.com/flutter/engine/issues/1939
   Point getGlobalPosition() {
     RenderBox box = context.findRenderObject();
     return box.localToGlobal(Point.origin);
@@ -186,11 +184,11 @@ class ZCardState extends widgets.State<ZCard> {
 
   Duration get animationDuration {
     switch (config.animationType) {
-      case CardAnimationType.NONE:
+      case CardAnimationType.none:
         return const Duration(milliseconds: 0);
-      case CardAnimationType.NORMAL:
+      case CardAnimationType.normal:
         return const Duration(milliseconds: 200);
-      case CardAnimationType.LONG:
+      case CardAnimationType.long:
         return const Duration(milliseconds: 1000);
       default:
         print("Unexpected animation type: ${config.animationType}");
@@ -217,7 +215,7 @@ class ZCardState extends widgets.State<ZCard> {
 
   // A callback that sets up the animation from point a to point b.
   void _updatePosition() {
-    if (config.animationType == CardAnimationType.NONE ||
+    if (config.animationType == CardAnimationType.none ||
         _pointQueue.length == 1) {
       Point endingLocation = config.endingPosition;
       _positionTween =

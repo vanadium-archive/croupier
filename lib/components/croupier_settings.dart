@@ -6,7 +6,6 @@ import '../logic/croupier_settings.dart' show CroupierSettings, RandomSettings;
 
 import 'package:flutter/material.dart';
 
-typedef void NoArgCb();
 typedef void OneStringCb(String data);
 typedef void SaveDataCb(int userID, String jsonData);
 
@@ -53,13 +52,13 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
     _tempData[avatarKey] = config.settings.avatar;
   }
 
-  Widget _makeColoredRectangle(int colorInfo, String text, NoArgCb cb) {
+  Widget _makeColoredRectangle(int colorInfo, String text, VoidCallback cb) {
     return new Container(
         decoration: new BoxDecoration(backgroundColor: new Color(colorInfo)),
         child: new FlatButton(child: new Text(""), onPressed: cb));
   }
 
-  Widget _makeImageButton(String url, NoArgCb cb) {
+  Widget _makeImageButton(String url, VoidCallback cb) {
     return new FlatButton(
         child: new AssetImage(name: CroupierSettings.makeAvatarUrl(url)),
         onPressed: cb);

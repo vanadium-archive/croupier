@@ -28,7 +28,7 @@ import 'dart:math' as math;
 import 'package:syncbase/syncbase_client.dart'
     show SyncbaseDatabase, SyncbaseTable, WatchChange, WatchChangeTypes;
 
-enum SimulLevel { TURN_BASED, INDEPENDENT, DEPENDENT }
+enum SimulLevel { turnBased, independent, dependent }
 
 class LogWriter {
   // This callback is called on each watch update, passing the key and value.
@@ -143,7 +143,7 @@ class LogWriter {
 
     assert(!inProposalMode);
     String key = _logKey(associatedUser);
-    if (s == SimulLevel.DEPENDENT) {
+    if (s == SimulLevel.dependent) {
       inProposalMode = true;
       proposalsKnown = new Map<String, String>();
 

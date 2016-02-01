@@ -13,15 +13,13 @@ class ProtoGame extends Game {
   GameArrangeData get gameArrangeData => _arrangeData;
 
   ProtoGame({int gameID, bool isCreator})
-      : super.create(GameType.Proto, new ProtoLog(), 6,
+      : super.create(GameType.proto, new ProtoLog(), 6,
             gameID: gameID, isCreator: isCreator) {
     // playerNumber would be used in a real game, but I have to ignore it for debugging.
     // It would determine faceUp/faceDown status.faceDown
 
-    // TODO: Set the number of piles created to either 9 (1x per player, 1 discard, 4 play piles) or 12 (2x per player, 4 play piles)
-    // But for now, we will deal with 6. 1x per player, 1 discard, and 1 undrawn pile.
-
     // We do some arbitrary things here... Just for setup.
+    // The first 4 of our 6 piles will get some random cards.
     deck.shuffle();
     deal(0, 8);
     deal(1, 5);

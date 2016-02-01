@@ -5,7 +5,7 @@
 import 'dart:async';
 import 'dart:convert' show JSON;
 
-enum SimulLevel { TURN_BASED, INDEPENDENT, DEPENDENT }
+enum SimulLevel { turnBased, independent, dependent }
 
 typedef void keyValueCallback(String key, String value);
 
@@ -33,7 +33,7 @@ class LogWriter {
     assert(!inProposalMode);
 
     String key = _logKey(associatedUser);
-    if (s == SimulLevel.DEPENDENT) {
+    if (s == SimulLevel.dependent) {
       // We have to do extra work with "proposals".
       inProposalMode = true;
       String proposalData = JSON.encode({"key": key, "value": value});

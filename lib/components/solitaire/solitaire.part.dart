@@ -5,7 +5,7 @@
 part of game_component;
 
 class SolitaireGameComponent extends GameComponent {
-  SolitaireGameComponent(Croupier croupier, SoundAssets sounds, NoArgCb cb,
+  SolitaireGameComponent(Croupier croupier, SoundAssets sounds, VoidCallback cb,
       {Key key, double width, double height})
       : super(croupier, sounds, cb, key: key, width: width, height: height);
 
@@ -30,7 +30,7 @@ class SolitaireGameComponentState
         width: config.width,
         height: config.height,
         child: solitaireWidget));
-    if (game.phase == SolitairePhase.Play) {
+    if (game.phase == SolitairePhase.play) {
       // All cards are visible.
       List<int> visibleCardCollectionIndexes =
           game.cardCollections.asMap().keys.toList();
@@ -74,7 +74,8 @@ class SolitaireGameComponentState
   }
 
   @override
-  Widget _makeButton(String text, NoArgCb callback, {bool inactive: false}) {
+  Widget _makeButton(String text, VoidCallback callback,
+      {bool inactive: false}) {
     var borderColor = inactive ? Colors.grey[500] : Colors.white;
     var backgroundColor = inactive ? Colors.grey[500] : null;
     return new FlatButton(
@@ -91,11 +92,11 @@ class SolitaireGameComponentState
     SolitaireGame game = config.game as SolitaireGame;
 
     switch (game.phase) {
-      case SolitairePhase.Deal:
+      case SolitairePhase.deal:
         return showDeal();
-      case SolitairePhase.Play:
+      case SolitairePhase.play:
         return showPlay();
-      case SolitairePhase.Score:
+      case SolitairePhase.score:
         return showScore();
       default:
         assert(false);
@@ -103,7 +104,7 @@ class SolitaireGameComponentState
     }
   }
 
-  NoArgCb _makeFlipCallback(int index) {
+  VoidCallback _makeFlipCallback(int index) {
     SolitaireGame game = config.game as SolitaireGame;
     return () {
       game.flipCardUI(index);
@@ -131,7 +132,7 @@ class SolitaireGameComponentState
     List<Widget> row1 = new List<Widget>();
     List<CardCollectionComponent> aces = [0, 1, 2, 3].map((int i) {
       return new CardCollectionComponent(
-          game.cardCollections[SolitaireGame.OFFSET_ACES + i],
+          game.cardCollections[SolitaireGame.offsetAces + i],
           true,
           CardCollectionOrientation.show1,
           widthCard: cardSize,
@@ -145,7 +146,7 @@ class SolitaireGameComponentState
 
     row1.add(new Row(children: [
       new CardCollectionComponent(
-          game.cardCollections[SolitaireGame.OFFSET_DISCARD],
+          game.cardCollections[SolitaireGame.offsetDiscard],
           true,
           CardCollectionOrientation.show1,
           widthCard: cardSize,
@@ -154,7 +155,7 @@ class SolitaireGameComponentState
           useKeys: true),
       new GestureDetector(
           child: new CardCollectionComponent(
-              game.cardCollections[SolitaireGame.OFFSET_DRAW],
+              game.cardCollections[SolitaireGame.offsetDraw],
               false,
               CardCollectionOrientation.show1,
               widthCard: cardSize,
@@ -167,20 +168,20 @@ class SolitaireGameComponentState
     for (int i = 0; i < 7; i++) {
       row2.add(new GestureDetector(
           child: new CardCollectionComponent(
-              game.cardCollections[SolitaireGame.OFFSET_DOWN + i],
+              game.cardCollections[SolitaireGame.offsetDown + i],
               false,
               CardCollectionOrientation.show1,
               widthCard: cardSize,
               heightCard: cardSize,
               useKeys: true),
-          onTap: game.cardCollections[SolitaireGame.OFFSET_UP + i].length == 0
+          onTap: game.cardCollections[SolitaireGame.offsetUp + i].length == 0
               ? _makeFlipCallback(i)
               : null));
     }
     List<Widget> row3 = new List<Widget>();
     for (int i = 0; i < 7; i++) {
       row3.add(new CardCollectionComponent(
-          game.cardCollections[SolitaireGame.OFFSET_UP + i],
+          game.cardCollections[SolitaireGame.offsetUp + i],
           true,
           CardCollectionOrientation.vert,
           widthCard: cardSize,

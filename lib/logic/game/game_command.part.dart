@@ -10,7 +10,7 @@ abstract class GameCommand {
   final SimulLevel simultaneity;
 
   GameCommand(this.phase, this.data,
-      {this.simultaneity: SimulLevel.INDEPENDENT});
+      {this.simultaneity: SimulLevel.independent});
 
   // UNIMPLEMENTED
   bool canExecute(Game game);

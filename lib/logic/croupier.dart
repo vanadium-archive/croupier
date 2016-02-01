@@ -13,15 +13,15 @@ import 'game/game.dart'
     show Game, GameType, GameStartData, stringToGameType, gameTypeToString;
 
 enum CroupierState {
-  Welcome,
-  ChooseGame,
-  JoinGame,
-  ArrangePlayers,
-  PlayGame,
-  ResumeGame
+  welcome,
+  chooseGame,
+  joinGame,
+  arrangePlayers,
+  playGame,
+  resumeGame
 }
 
-typedef void NoArgCb();
+typedef void VoidCallback();
 
 class Croupier {
   AppSettings appSettings;
@@ -33,7 +33,7 @@ class Croupier {
   Map<String, GameStartData> games_found; // empty, but loads asynchronously
   Map<int, int> players_found; // empty, but loads asynchronously
   Game game; // null until chosen
-  NoArgCb informUICb;
+  VoidCallback informUICb;
 
   // Futures to use in order to cancel scans and advertisements.
   Future _scanFuture;
@@ -42,7 +42,7 @@ class Croupier {
   bool debugMode = false; // whether to show debug buttons or not
 
   Croupier(this.appSettings) {
-    state = CroupierState.Welcome;
+    state = CroupierState.welcome;
     settings_everyone = new Map<int, CroupierSettings>();
     games_found = new Map<String, GameStartData>();
     players_found = new Map<int, int>();
@@ -160,10 +160,10 @@ class Croupier {
     }
     switch (newStatus) {
       case "RUNNING":
-        if (state == CroupierState.ArrangePlayers) {
+        if (state == CroupierState.arrangePlayers) {
           game.startGameSignal();
-          setState(CroupierState.PlayGame, null);
-        } else if (state == CroupierState.ResumeGame) {
+          setState(CroupierState.playGame, null);
+        } else if (state == CroupierState.resumeGame) {
           game.startGameSignal();
         }
         break;
@@ -179,18 +179,18 @@ class Croupier {
   // Depending on the originating state, data can contain extra information that we need.
   void setState(CroupierState nextState, var data) {
     switch (state) {
-      case CroupierState.Welcome:
+      case CroupierState.welcome:
         // data should be empty unless nextState is ResumeGame.
-        if (nextState != CroupierState.ResumeGame) {
+        if (nextState != CroupierState.resumeGame) {
           assert(data == null);
         }
         break;
-      case CroupierState.ChooseGame:
+      case CroupierState.chooseGame:
         if (data == null) {
           // Back button pressed.
           break;
         }
-        assert(nextState == CroupierState.ArrangePlayers);
+        assert(nextState == CroupierState.arrangePlayers);
 
         // data should be the game id here.
         GameType gt = data as GameType;
@@ -204,7 +204,7 @@ class Croupier {
         }); // don't wait for this future.
 
         break;
-      case CroupierState.JoinGame:
+      case CroupierState.joinGame:
         // Note that if we were in join game, we must have been scanning.
         _scanFuture.then((_) {
           settings_manager.stopScanSettings();
@@ -233,7 +233,7 @@ class Croupier {
         settings_manager.joinGameSyncgroup(sgName, gsd.gameID);
 
         break;
-      case CroupierState.ArrangePlayers:
+      case CroupierState.arrangePlayers:
         // Note that if we were arranging players, we might have been advertising.
         if (_advertiseFuture != null) {
           _advertiseFuture.then((_) {
@@ -246,9 +246,9 @@ class Croupier {
         // data should be empty.
         assert(data == null);
         break;
-      case CroupierState.PlayGame:
+      case CroupierState.playGame:
         break;
-      case CroupierState.ResumeGame:
+      case CroupierState.resumeGame:
         // Data might be GameStartData. If so, then we must advertise it.
         GameStartData gsd = data;
         if (gsd != null) {
@@ -262,17 +262,17 @@ class Croupier {
     // A simplified way of clearing out the games and players found.
     // They will need to be re-discovered in the future.
     switch (nextState) {
-      case CroupierState.Welcome:
+      case CroupierState.welcome:
         games_found.clear();
         players_found.clear();
         _quitGame();
         break;
-      case CroupierState.JoinGame:
+      case CroupierState.joinGame:
         // Start scanning for games since that's what's next for you.
         _scanFuture =
             settings_manager.scanSettings(); // don't wait for this future.
         break;
-      case CroupierState.ResumeGame:
+      case CroupierState.resumeGame:
         // We need to create the game again.
         int gameIDData = data;
         _resumeGameAsynchronously(gameIDData);
@@ -305,12 +305,12 @@ class Croupier {
     switch (gameStatus) {
       case "RUNNING":
         // The game is running, so let's play it!
-        setState(CroupierState.PlayGame, null);
+        setState(CroupierState.playGame, null);
         break;
       default:
         // We are still arranging players, so we need to advertise our game
         // start data.
-        setState(CroupierState.ArrangePlayers, gsd);
+        setState(CroupierState.arrangePlayers, gsd);
         break;
     }
 

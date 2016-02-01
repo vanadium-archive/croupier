@@ -4,16 +4,15 @@
 
 part of game;
 
-// Note: Proto and Board are "fake" games intended to demonstrate what we can do.
+// Note: Proto and Poker are "fake" games intended to demonstrate what we can do.
 // Proto is just a drag cards around "game".
-// Board is meant to show how one _could_ layout a game of Hearts. This one is not hooked up very well yet.
-enum GameType { Proto, Hearts, Poker, Solitaire, Board }
+enum GameType { proto, hearts, poker, solitaire }
 
 Map<GameType, String> _gameTypeMap = <GameType, String>{
-  GameType.Proto: "Proto",
-  GameType.Hearts: "Hearts",
-  GameType.Poker: "Poker",
-  GameType.Solitaire: "Solitaire",
+  GameType.proto: "Proto",
+  GameType.hearts: "Hearts",
+  GameType.poker: "Poker",
+  GameType.solitaire: "Solitaire",
 };
 String gameTypeToString(GameType t) {
   return _gameTypeMap[t];
@@ -83,7 +82,7 @@ class GameArrangeData {
   }
 }
 
-typedef void NoArgCb();
+typedef void VoidCallback();
 
 /// A game consists of multiple decks and tracks a single deck of cards.
 /// It also handles events; when cards are dragged to and from decks.
@@ -109,7 +108,7 @@ abstract class Game {
   bool debugMode = false;
   String debugString;
 
-  NoArgCb updateCallback; // Used to inform components of when a change has occurred. This is especially important when something non-UI related changes what should be drawn.
+  VoidCallback updateCallback; // Used to inform components of when a change has occurred. This is especially important when something non-UI related changes what should be drawn.
 
   // A super constructor, don't call this unless you're a subclass.
   Game.create(this.gameType, this.gamelog, int numCollections,

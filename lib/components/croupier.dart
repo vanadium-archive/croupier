@@ -16,8 +16,6 @@ import 'croupier_game_advertisement.dart'
 import 'croupier_profile.dart' show CroupierProfileComponent;
 import 'game.dart' as component_game;
 
-typedef void NoArgCb();
-
 GlobalObjectKey _gameKey = new GlobalObjectKey("CroupierGameKey");
 GlobalObjectKey _gameArrangeKey = new GlobalObjectKey("CroupierGameArrangeKey");
 
@@ -31,7 +29,7 @@ class CroupierComponent extends StatefulComponent {
 }
 
 class CroupierComponentState extends State<CroupierComponent> {
-  NoArgCb makeSetStateCallback(logic_croupier.CroupierState s,
+  VoidCallback makeSetStateCallback(logic_croupier.CroupierState s,
       [var data = null]) {
     return () => setState(() {
           config.croupier.setState(s, data);
@@ -40,7 +38,7 @@ class CroupierComponentState extends State<CroupierComponent> {
 
   Widget build(BuildContext context) {
     switch (config.croupier.state) {
-      case logic_croupier.CroupierState.Welcome:
+      case logic_croupier.CroupierState.welcome:
         // in which we show them a UI to start a new game, join a game, or change some settings.
         return new Container(
             padding: new EdgeDims.only(top: ui.window.padding.top),
@@ -48,16 +46,16 @@ class CroupierComponentState extends State<CroupierComponent> {
               new FlatButton(
                   child: new Text('Create Game', style: style.Text.titleStyle),
                   onPressed: makeSetStateCallback(
-                      logic_croupier.CroupierState.ChooseGame)),
+                      logic_croupier.CroupierState.chooseGame)),
               new FlatButton(
                   child: new Text('Join Game', style: style.Text.titleStyle),
                   onPressed: makeSetStateCallback(
-                      logic_croupier.CroupierState.JoinGame)),
+                      logic_croupier.CroupierState.joinGame)),
               new FlatButton(
                   child: new Text('Resume Game', style: style.Text.titleStyle),
                   onPressed: config.croupier.settings.hasLastGame
                       ? makeSetStateCallback(
-                          logic_croupier.CroupierState.ResumeGame,
+                          logic_croupier.CroupierState.resumeGame,
                           config.croupier.settings.lastGameID)
                       : null),
               new CroupierProfileComponent(
@@ -65,7 +63,7 @@ class CroupierComponentState extends State<CroupierComponent> {
                   width: style.Size.settingsWidth,
                   height: style.Size.settingsHeight)
             ]));
-      case logic_croupier.CroupierState.ChooseGame:
+      case logic_croupier.CroupierState.chooseGame:
         // in which we let them pick a game out of the many possible games... There aren't that many.
         return new Container(
             padding: new EdgeDims.only(top: ui.window.padding.top),
@@ -73,26 +71,26 @@ class CroupierComponentState extends State<CroupierComponent> {
               new FlatButton(
                   child: new Text('Proto', style: style.Text.titleStyle),
                   onPressed: makeSetStateCallback(
-                      logic_croupier.CroupierState.ArrangePlayers,
-                      logic_game.GameType.Proto)),
+                      logic_croupier.CroupierState.arrangePlayers,
+                      logic_game.GameType.proto)),
               new FlatButton(
                   child: new Text('Hearts', style: style.Text.titleStyle),
                   onPressed: makeSetStateCallback(
-                      logic_croupier.CroupierState.ArrangePlayers,
-                      logic_game.GameType.Hearts)),
+                      logic_croupier.CroupierState.arrangePlayers,
+                      logic_game.GameType.hearts)),
               new FlatButton(
                   child: new Text('Poker', style: style.Text.titleStyle)),
               new FlatButton(
                   child: new Text('Solitaire', style: style.Text.titleStyle),
                   onPressed: makeSetStateCallback(
-                      logic_croupier.CroupierState.ArrangePlayers,
-                      logic_game.GameType.Solitaire)),
+                      logic_croupier.CroupierState.arrangePlayers,
+                      logic_game.GameType.solitaire)),
               new FlatButton(
                   child: new Text('Back', style: style.Text.subtitleStyle),
                   onPressed: makeSetStateCallback(
-                      logic_croupier.CroupierState.Welcome))
+                      logic_croupier.CroupierState.welcome))
             ]));
-      case logic_croupier.CroupierState.JoinGame:
+      case logic_croupier.CroupierState.joinGame:
         // A stateful view, showing the game ads discovered.
         List<Widget> gameAdWidgets = new List<Widget>();
         if (config.croupier.games_found.length == 0) {
@@ -108,35 +106,35 @@ class CroupierComponentState extends State<CroupierComponent> {
           CroupierSettings cs = config.croupier.settings_everyone[gsd.ownerID];
           gameAdWidgets.add(new CroupierGameAdvertisementComponent(gsd,
               onTap: makeSetStateCallback(
-                  logic_croupier.CroupierState.ArrangePlayers, gsd),
+                  logic_croupier.CroupierState.arrangePlayers, gsd),
               settings: cs));
         });
 
         gameAdWidgets.add(new FlatButton(
             child: new Text('Back', style: style.Text.subtitleStyle),
             onPressed:
-                makeSetStateCallback(logic_croupier.CroupierState.Welcome)));
+                makeSetStateCallback(logic_croupier.CroupierState.welcome)));
 
         // in which players wait for game invitations to arrive.
         return new Container(
             padding: new EdgeDims.only(top: ui.window.padding.top),
             child: new Column(children: gameAdWidgets));
-      case logic_croupier.CroupierState.ArrangePlayers:
+      case logic_croupier.CroupierState.arrangePlayers:
         return new Container(
             padding: new EdgeDims.only(top: ui.window.padding.top),
             child: _buildArrangePlayers());
-      case logic_croupier.CroupierState.PlayGame:
+      case logic_croupier.CroupierState.playGame:
         return new Container(
             padding: new EdgeDims.only(top: ui.window.padding.top),
             child: component_game.createGameComponent(
                 config.croupier,
                 config.sounds,
-                makeSetStateCallback(logic_croupier.CroupierState.Welcome),
+                makeSetStateCallback(logic_croupier.CroupierState.welcome),
                 width: ui.window.size.width,
                 height: ui.window.size.height - ui.window.padding.top,
                 key: _gameKey));
 
-      case logic_croupier.CroupierState.ResumeGame:
+      case logic_croupier.CroupierState.resumeGame:
         return new Container(
             padding: new EdgeDims.only(top: ui.window.padding.top),
             child: new Text("Resuming Game...", style: style.Text.titleStyle),
@@ -209,7 +207,7 @@ class CroupierComponentState extends State<CroupierComponent> {
 
     // Allow games that can start with these players to begin.
     // Debug Mode should also go through.
-    NoArgCb startCb;
+    VoidCallback startCb;
     if (gad.canStart(playerNumbers) || config.croupier.debugMode) {
       startCb = () {
         config.croupier.settings_manager
@@ -237,7 +235,7 @@ class CroupierComponentState extends State<CroupierComponent> {
         child: new FlatButton(
             child: new Text('Back'),
             onPressed:
-                makeSetStateCallback(logic_croupier.CroupierState.Welcome))));
+                makeSetStateCallback(logic_croupier.CroupierState.welcome))));
 
     return new Column(children: allWidgets);
   }

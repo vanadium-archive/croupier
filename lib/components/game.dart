@@ -29,13 +29,11 @@ part 'hearts/hearts.part.dart';
 part 'proto/proto.part.dart';
 part 'solitaire/solitaire.part.dart';
 
-typedef void NoArgCb();
-
 abstract class GameComponent extends StatefulComponent {
   final Croupier croupier;
   final SoundAssets sounds;
   Game get game => croupier.game;
-  final NoArgCb gameEndCallback;
+  final VoidCallback gameEndCallback;
   final double width;
   final double height;
 
@@ -74,7 +72,7 @@ abstract class GameComponentState<T extends GameComponent> extends State<T> {
   }
 
   // A helper that subclasses might override to create buttons.
-  Widget _makeButton(String text, NoArgCb callback) {
+  Widget _makeButton(String text, VoidCallback callback) {
     return new FlatButton(
         child: new Text(text, style: style.Text.liveNow), onPressed: callback);
   }
@@ -95,7 +93,7 @@ abstract class GameComponentState<T extends GameComponent> extends State<T> {
 
   void _cardLevelMapProcess(logic_card.Card logicCard) {
     component_card.GlobalCardKey key = new component_card.GlobalCardKey(
-        logicCard, component_card.CardUIType.CARD);
+        logicCard, component_card.CardUIType.card);
     component_card.CardState cardState = key.currentState;
     if (cardState == null) {
       return; // There's nothing we can really do about this card since it hasn't drawn yet.
@@ -130,7 +128,7 @@ abstract class GameComponentState<T extends GameComponent> extends State<T> {
 
     // We also need confirmation from the ZCard that we are moving.
     component_card.GlobalCardKey zCardKey =
-        new component_card.GlobalCardKey(c, component_card.CardUIType.ZCARD);
+        new component_card.GlobalCardKey(c, component_card.CardUIType.zCard);
     component_card.ZCardState zCardKeyState = zCardKey.currentState;
 
     // It is moving if there is an old position, the new one isn't equal to the
@@ -203,16 +201,16 @@ abstract class GameComponentState<T extends GameComponent> extends State<T> {
 }
 
 GameComponent createGameComponent(
-    Croupier croupier, SoundAssets sounds, NoArgCb gameEndCallback,
+    Croupier croupier, SoundAssets sounds, VoidCallback gameEndCallback,
     {Key key, double width, double height}) {
   switch (croupier.game.gameType) {
-    case GameType.Proto:
+    case GameType.proto:
       return new ProtoGameComponent(croupier, sounds, gameEndCallback,
           key: key, width: width, height: height);
-    case GameType.Hearts:
+    case GameType.hearts:
       return new HeartsGameComponent(croupier, sounds, gameEndCallback,
           key: key, width: width, height: height);
-    case GameType.Solitaire:
+    case GameType.solitaire:
       return new SolitaireGameComponent(croupier, sounds, gameEndCallback,
           key: key, width: width, height: height);
     default:
@@ -233,7 +231,7 @@ abstract class GameArrangeComponent extends StatefulComponent {
 GameArrangeComponent createGameArrangeComponent(Croupier croupier,
     {double width, double height, Key key}) {
   switch (croupier.game.gameType) {
-    case GameType.Hearts:
+    case GameType.hearts:
       return new HeartsArrangeComponent(croupier,
           width: width, height: height, key: key);
     default:

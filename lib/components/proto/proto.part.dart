@@ -5,7 +5,7 @@
 part of game_component;
 
 class ProtoGameComponent extends GameComponent {
-  ProtoGameComponent(Croupier croupier, SoundAssets sounds, NoArgCb cb,
+  ProtoGameComponent(Croupier croupier, SoundAssets sounds, VoidCallback cb,
       {Key key, double width, double height})
       : super(croupier, sounds, cb, key: key, width: width, height: height);
 

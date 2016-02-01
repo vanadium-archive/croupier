@@ -5,41 +5,41 @@
 part of hearts;
 
 class HeartsGame extends Game {
-  static const PLAYER_A = 0;
-  static const PLAYER_B = 1;
-  static const PLAYER_C = 2;
-  static const PLAYER_D = 3;
-  static const PLAYER_A_PLAY = 4;
-  static const PLAYER_B_PLAY = 5;
-  static const PLAYER_C_PLAY = 6;
-  static const PLAYER_D_PLAY = 7;
-  static const PLAYER_A_TRICK = 8;
-  static const PLAYER_B_TRICK = 9;
-  static const PLAYER_C_TRICK = 10;
-  static const PLAYER_D_TRICK = 11;
-  static const PLAYER_A_PASS = 12;
-  static const PLAYER_B_PASS = 13;
-  static const PLAYER_C_PASS = 14;
-  static const PLAYER_D_PASS = 15;
+  static const playerA = 0;
+  static const playerB = 1;
+  static const playerC = 2;
+  static const playerD = 3;
+  static const playerPlayA = 4;
+  static const playerPlayB = 5;
+  static const playerPlayC = 6;
+  static const playerPlayD = 7;
+  static const playerTrickA = 8;
+  static const playerTrickB = 9;
+  static const playerTrickC = 10;
+  static const playerTrickD = 11;
+  static const playerPassA = 12;
+  static const playerPassB = 13;
+  static const playerPassC = 14;
+  static const playerPassD = 15;
 
-  static const OFFSET_HAND = 0;
-  static const OFFSET_PLAY = 4;
-  static const OFFSET_TRICK = 8;
-  static const OFFSET_PASS = 12;
+  static const offsetHand = 0;
+  static const offsetPlay = 4;
+  static const offsetTrick = 8;
+  static const offsetPass = 12;
 
-  static const MAX_SCORE = 100; // Play until someone gets to 100.
+  static const maxScore = 100; // Play until someone gets to 100.
 
   // Note: These cards are final because the "classic" deck has 52 cards.
   // It is up to the renderer to reskin those cards as needed.
-  final Card TWO_OF_CLUBS = new Card("classic", "c2");
-  final Card QUEEN_OF_SPADES = new Card("classic", "sq");
+  final Card twoOfClubs = new Card("classic", "c2");
+  final Card queenOfSpades = new Card("classic", "sq");
 
   @override
   String get gameTypeName => "Hearts";
 
-  HeartsType viewType = HeartsType.Player;
+  HeartsType viewType = HeartsType.player;
 
-  HeartsPhase _phase = HeartsPhase.Deal;
+  HeartsPhase _phase = HeartsPhase.deal;
   HeartsPhase get phase => _phase;
   void set phase(HeartsPhase other) {
     print('setting phase from ${_phase} to ${other}');
@@ -68,7 +68,7 @@ class HeartsGame extends Game {
   List<bool> ready;
 
   HeartsGame({int gameID, bool isCreator})
-      : super.create(GameType.Hearts, new HeartsLog(), 16,
+      : super.create(GameType.hearts, new HeartsLog(), 16,
             gameID: gameID, isCreator: isCreator) {
     resetGame();
     unsetReady();
@@ -91,10 +91,10 @@ class HeartsGame extends Game {
     List<Card> forC = this.deckPeek(13, 26);
     List<Card> forD = this.deckPeek(13, 39);
 
-    deal(PLAYER_A, forA);
-    deal(PLAYER_B, forB);
-    deal(PLAYER_C, forC);
-    deal(PLAYER_D, forD);
+    deal(playerA, forA);
+    deal(playerB, forB);
+    deal(playerC, forC);
+    deal(playerD, forD);
   }
 
   bool get isPlayer => this.playerNumber >= 0 && this.playerNumber < 4;
@@ -136,7 +136,7 @@ class HeartsGame extends Game {
 
   // Please only call this in the Play phase. Otherwise, it's pretty useless.
   int get whoseTurn {
-    if (phase != HeartsPhase.Play) {
+    if (phase != HeartsPhase.play) {
       return null;
     }
     return (lastTrickTaker + this.numPlayed) % 4;
@@ -167,11 +167,11 @@ class HeartsGame extends Game {
   }
 
   bool isQSCard(Card c) {
-    return c == QUEEN_OF_SPADES;
+    return c == queenOfSpades;
   }
 
   bool isFirstCard(Card c) {
-    return c == TWO_OF_CLUBS;
+    return c == twoOfClubs;
   }
 
   bool isPenaltyCard(Card c) {
@@ -179,7 +179,7 @@ class HeartsGame extends Game {
   }
 
   bool hasSuit(int player, String suit) {
-    Card matchesSuit = this.cardCollections[player + OFFSET_HAND].firstWhere(
+    Card matchesSuit = this.cardCollections[player + offsetHand].firstWhere(
         (Card element) => (getCardSuit(element) == suit),
         orElse: () => null);
     return matchesSuit != null;
@@ -187,7 +187,7 @@ class HeartsGame extends Game {
 
   Card get leadingCard {
     if (this.numPlayed >= 1) {
-      return cardCollections[this.lastTrickTaker + OFFSET_PLAY][0];
+      return cardCollections[this.lastTrickTaker + offsetPlay][0];
     }
     return null;
   }
@@ -195,26 +195,26 @@ class HeartsGame extends Game {
   int get numPlayed {
     int count = 0;
     for (int i = 0; i < 4; i++) {
-      if (cardCollections[i + OFFSET_PLAY].length == 1) {
+      if (cardCollections[i + offsetPlay].length == 1) {
         count++;
       }
     }
     return count;
   }
 
-  bool get hasGameEnded => this.scores.reduce(math.max) >= HeartsGame.MAX_SCORE;
+  bool get hasGameEnded => this.scores.reduce(math.max) >= HeartsGame.maxScore;
 
-  bool get allDealt => cardCollections[PLAYER_A].length == 13 &&
-      cardCollections[PLAYER_B].length == 13 &&
-      cardCollections[PLAYER_C].length == 13 &&
-      cardCollections[PLAYER_D].length == 13;
+  bool get allDealt => cardCollections[playerA].length == 13 &&
+      cardCollections[playerB].length == 13 &&
+      cardCollections[playerC].length == 13 &&
+      cardCollections[playerD].length == 13;
 
   bool hasPassed(int player) =>
-      cardCollections[player + OFFSET_PASS].length == 3;
+      cardCollections[player + offsetPass].length == 3;
   int get numPassed {
     int count = 0;
     for (int i = 0; i < 4; i++) {
-      if (cardCollections[i + OFFSET_PASS].length == 3) {
+      if (cardCollections[i + offsetPass].length == 3) {
         count++;
       }
     }
@@ -223,11 +223,11 @@ class HeartsGame extends Game {
 
   bool get allPassed => numPassed == 4;
   bool hasTaken(int player) =>
-      cardCollections[getTakeTarget(player) + OFFSET_PASS].length == 0;
-  bool get allTaken => cardCollections[PLAYER_A_PASS].length == 0 &&
-      cardCollections[PLAYER_B_PASS].length == 0 &&
-      cardCollections[PLAYER_C_PASS].length == 0 &&
-      cardCollections[PLAYER_D_PASS].length == 0;
+      cardCollections[getTakeTarget(player) + offsetPass].length == 0;
+  bool get allTaken => cardCollections[playerPassA].length == 0 &&
+      cardCollections[playerPassB].length == 0 &&
+      cardCollections[playerPassC].length == 0 &&
+      cardCollections[playerPassD].length == 0;
   bool get allPlayed => this.numPlayed == 4;
 
   bool get allReady => ready[0] && ready[1] && ready[2] && ready[3];
@@ -246,7 +246,7 @@ class HeartsGame extends Game {
   // Note that this will be called by the UI.
   // It won't be possible to pass for other players, except via the GameLog.
   void passCards(List<Card> cards) {
-    assert(phase == HeartsPhase.Pass);
+    assert(phase == HeartsPhase.pass);
     assert(this.passTarget != null);
     if (cards.length != 3) {
       throw new StateError('3 cards expected, but got: ${cards.toString()}');
@@ -257,9 +257,9 @@ class HeartsGame extends Game {
   // Note that this will be called by the UI.
   // It won't be possible to take cards for other players, except via the GameLog.
   void takeCards() {
-    assert(phase == HeartsPhase.Take);
+    assert(phase == HeartsPhase.take);
     assert(this.takeTarget != null);
-    List<Card> cards = this.cardCollections[takeTarget + OFFSET_PASS];
+    List<Card> cards = this.cardCollections[takeTarget + offsetPass];
     assert(cards.length == 3);
 
     gamelog.add(new HeartsCommand.take(playerNumber));
@@ -268,7 +268,7 @@ class HeartsGame extends Game {
   // Note that this will be called by the UI.
   // It won't be possible to set the readiness for other players, except via the GameLog.
   void setReadyUI() {
-    assert(phase == HeartsPhase.Score);
+    assert(phase == HeartsPhase.score);
     if (this.debugMode) {
       // Debug Mode should pretend this device is all players.
       for (int i = 0; i < 4; i++) {
@@ -281,7 +281,7 @@ class HeartsGame extends Game {
 
   // Note that this will be called by the UI.
   void askUI() {
-    assert(phase == HeartsPhase.Play);
+    assert(phase == HeartsPhase.play);
     if (this.asking) {
       print("Already asked...");
       return; // just don't call it again.
@@ -291,7 +291,7 @@ class HeartsGame extends Game {
 
   // Note that this will be called by the UI.
   void takeTrickUI() {
-    assert(phase == HeartsPhase.Play);
+    assert(phase == HeartsPhase.play);
     assert(this.allPlayed);
     gamelog.add(new HeartsCommand.takeTrick());
   }
@@ -306,7 +306,7 @@ class HeartsGame extends Game {
       this.playerNumber = 0;
     }
     if (!this.isPlayer) {
-      this.viewType = HeartsType.Board;
+      this.viewType = HeartsType.board;
     }
     // Only the creator should deal the cards once everyone is ready.
     if (this.isCreator) {
@@ -322,7 +322,7 @@ class HeartsGame extends Game {
   // The UI will initiate pass separately.
   @override
   void move(Card card, List<Card> dest) {
-    assert(phase == HeartsPhase.Play);
+    assert(phase == HeartsPhase.play);
     assert(whoseTurn == playerNumber);
 
     int i = findCard(card);
@@ -335,7 +335,7 @@ class HeartsGame extends Game {
       throw new StateError(
           'destination list does not exist: ${dest.toString()}');
     }
-    if (destId != playerNumber + OFFSET_PLAY) {
+    if (destId != playerNumber + offsetPlay) {
       throw new StateError(
           'player ${playerNumber} is not playing to the correct list: ${destId}');
     }
@@ -355,42 +355,42 @@ class HeartsGame extends Game {
   @override
   void triggerEvents() {
     switch (this.phase) {
-      case HeartsPhase.Deal:
+      case HeartsPhase.deal:
         if (this.allDealt) {
           if (this.passTarget != null) {
-            phase = HeartsPhase.Pass;
+            phase = HeartsPhase.pass;
           } else {
             // All cards are dealt. The person who "won" the last trick goes first.
             // In this case, we'll just pretend it's the person with the 2 of clubs.
-            this.lastTrickTaker = this.findCard(TWO_OF_CLUBS);
-            phase = HeartsPhase.Play;
+            this.lastTrickTaker = this.findCard(twoOfClubs);
+            phase = HeartsPhase.play;
           }
         }
         return;
-      case HeartsPhase.Pass:
+      case HeartsPhase.pass:
         if (this.allPassed) {
-          phase = HeartsPhase.Take;
+          phase = HeartsPhase.take;
         }
         return;
-      case HeartsPhase.Take:
+      case HeartsPhase.take:
         if (this.allTaken) {
           // All cards are dealt. The person who "won" the last trick goes first.
           // In this case, we'll just pretend it's the person with the 2 of clubs.
-          this.lastTrickTaker = this.findCard(TWO_OF_CLUBS);
-          phase = HeartsPhase.Play;
+          this.lastTrickTaker = this.findCard(twoOfClubs);
+          phase = HeartsPhase.play;
         }
         return;
-      case HeartsPhase.Play:
+      case HeartsPhase.play:
         // If that was the last trick, move onto the score phase.
         if (this.trickNumber == 13) {
-          phase = HeartsPhase.Score;
+          phase = HeartsPhase.score;
           this.prepareScore();
         }
         return;
-      case HeartsPhase.Score:
+      case HeartsPhase.score:
         if (!this.hasGameEnded && this.allReady) {
           this.roundNumber++;
-          phase = HeartsPhase.Deal;
+          phase = HeartsPhase.deal;
           this.resetGame();
 
           // Only the creator should deal the cards once everyone is ready.
@@ -406,7 +406,7 @@ class HeartsGame extends Game {
 
   // Returns null or the reason that the player cannot play the card.
   String canPlay(int player, Card c, {bool lenient: false}) {
-    if (phase != HeartsPhase.Play) {
+    if (phase != HeartsPhase.play) {
       return "It is not the Play phase of Hearts.";
     }
     if (!cardCollections[player].contains(c)) {
@@ -418,7 +418,7 @@ class HeartsGame extends Game {
     if (this.whoseTurn != player && !lenient) {
       return "It is not Player ${player}'s turn.";
     }
-    if (trickNumber == 0 && this.numPlayed == 0 && c != TWO_OF_CLUBS) {
+    if (trickNumber == 0 && this.numPlayed == 0 && c != twoOfClubs) {
       return "You must play the 2 of Clubs";
     }
     if (this.numPlayed == 0 && isHeartsCard(c) && !heartsBroken) {
@@ -444,7 +444,7 @@ class HeartsGame extends Game {
     int highestIndex;
     int highestValue; // oh no, aces are highest.
     for (int i = 0; i < 4; i++) {
-      Card c = cardCollections[i + OFFSET_PLAY][0];
+      Card c = cardCollections[i + offsetPlay][0];
       int value = this.getCardValue(c);
       String suit = this.getCardSuit(c);
       if (suit == leadingSuit &&
@@ -499,7 +499,7 @@ class HeartsGame extends Game {
 
   int computeScore(int player) {
     int total = 0;
-    List<Card> trickCards = this.cardCollections[player + OFFSET_TRICK];
+    List<Card> trickCards = this.cardCollections[player + offsetTrick];
     for (int i = 0; i < trickCards.length; i++) {
       Card c = trickCards[i];
       if (isHeartsCard(c)) {
@@ -518,16 +518,16 @@ class HeartsGame extends Game {
     for (int i = 0; i < 4; i++) {
       // Move the hand cards, pass cards, etc. to the tricks for each player.
       // If you're in the deal phase, this will probably do nothing.
-      List<Card> trick = cardCollections[i + OFFSET_TRICK];
-      trick.addAll(cardCollections[i + OFFSET_HAND]);
-      cardCollections[i + OFFSET_HAND].clear();
-      trick.addAll(cardCollections[i + OFFSET_PLAY]);
-      cardCollections[i + OFFSET_PLAY].clear();
-      trick.addAll(cardCollections[i + OFFSET_PASS]);
-      cardCollections[i + OFFSET_PASS].clear();
+      List<Card> trick = cardCollections[i + offsetTrick];
+      trick.addAll(cardCollections[i + offsetHand]);
+      cardCollections[i + offsetHand].clear();
+      trick.addAll(cardCollections[i + offsetPlay]);
+      cardCollections[i + offsetPlay].clear();
+      trick.addAll(cardCollections[i + offsetPass]);
+      cardCollections[i + offsetPass].clear();
     }
 
-    phase = HeartsPhase.Score;
+    phase = HeartsPhase.score;
     this.prepareScore();
   }
 }

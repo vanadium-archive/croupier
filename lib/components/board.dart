@@ -10,7 +10,7 @@ import 'package:vector_math/vector_math_64.dart' as vector_math;
 
 import '../logic/card.dart' as logic_card;
 import '../logic/croupier.dart' show Croupier;
-import '../logic/game/game.dart' show Game, GameType, NoArgCb;
+import '../logic/game/game.dart' show Game, GameType;
 import '../logic/hearts/hearts.dart' show HeartsGame, HeartsPhase;
 import '../sound/sound_assets.dart';
 import '../styles/common.dart' as style;
@@ -55,7 +55,7 @@ class HeartsBoard extends Board {
   final SoundAssets sounds;
   final bool isMini;
   final AcceptCb gameAcceptCallback;
-  final NoArgCb setGameStateCallback;
+  final VoidCallback setGameStateCallback;
   final List<logic_card.Card> bufferedPlay;
 
   HeartsGame get game => super.game;
@@ -100,8 +100,8 @@ class HeartsBoardState extends State<HeartsBoard> {
 
   void _handleCardCounterSounds() {
     // Ensure we have the right state while we deal and score.
-    if (config.game.phase == HeartsPhase.Deal ||
-        config.game.phase == HeartsPhase.Score) {
+    if (config.game.phase == HeartsPhase.deal ||
+        config.game.phase == HeartsPhase.score) {
       cardCounter = 0;
       passing = true;
     }
@@ -169,7 +169,7 @@ class HeartsBoardState extends State<HeartsBoard> {
     _handleLocalAskingReset();
 
     Widget boardChild;
-    if (config.game.phase == HeartsPhase.Play) {
+    if (config.game.phase == HeartsPhase.play) {
       boardChild =
           config.isMini ? _buildMiniBoardLayout() : _buildBoardLayout();
     } else {
@@ -217,8 +217,8 @@ class HeartsBoardState extends State<HeartsBoard> {
 
   Widget _buildPassLayout() {
     String passBackground = ""; // It's possible to have no background.
-    if (config.game.phase == HeartsPhase.Pass ||
-        config.game.phase == HeartsPhase.Take) {
+    if (config.game.phase == HeartsPhase.pass ||
+        config.game.phase == HeartsPhase.take) {
       passBackground = passBackgrounds[config.game.roundNumber % 4];
     }
 
@@ -258,7 +258,7 @@ class HeartsBoardState extends State<HeartsBoard> {
     int takeTarget = game.getTakeTarget(playerNumber);
     if (takeTarget != null) {
       cardsToTake = game.cardCollections[
-          game.getTakeTarget(playerNumber) + HeartsGame.OFFSET_PASS];
+          game.getTakeTarget(playerNumber) + HeartsGame.offsetPass];
     }
 
     bool isHorz = playerNumber % 2 == 0;
@@ -346,7 +346,7 @@ class HeartsBoardState extends State<HeartsBoard> {
     bool isMe = playerNumber == p;
 
     List<logic_card.Card> showCard =
-        game.cardCollections[playerNumber + HeartsGame.OFFSET_PLAY];
+        game.cardCollections[playerNumber + HeartsGame.offsetPlay];
     bool hasPlayed = showCard.length > 0;
     bool isTurn = playerNumber == game.whoseTurn && !hasPlayed;
     if (isMe && config.bufferedPlay != null) {
@@ -389,7 +389,7 @@ class HeartsBoardState extends State<HeartsBoard> {
     HeartsGame game = config.game;
 
     int numTrickCards =
-        game.cardCollections[HeartsGame.OFFSET_TRICK + pNum].length;
+        game.cardCollections[HeartsGame.offsetTrick + pNum].length;
     int numTricks = numTrickCards ~/ 4;
 
     String s = numTricks != 1 ? "s" : "";
@@ -568,7 +568,7 @@ class HeartsBoardState extends State<HeartsBoard> {
   Widget _buildCenterCard(int playerNumber) {
     HeartsGame game = config.game;
     List<logic_card.Card> cards =
-        game.cardCollections[playerNumber + HeartsGame.OFFSET_PLAY];
+        game.cardCollections[playerNumber + HeartsGame.offsetPlay];
 
     // TODO(alexfandrianto): Clean up soon.
     // https://github.com/vanadium/issues/issues/1098
@@ -620,9 +620,9 @@ class HeartsBoardState extends State<HeartsBoard> {
     HeartsGame game = config.game;
 
     List<logic_card.Card> cards = new List.from(
-        game.cardCollections[playerNumber + HeartsGame.OFFSET_TRICK]);
+        game.cardCollections[playerNumber + HeartsGame.offsetTrick]);
 
-    bool isPlay = game.phase == HeartsPhase.Play;
+    bool isPlay = game.phase == HeartsPhase.play;
 
     // Prevent over-expansion of cards until a card has been played.
     bool alreadyPlaying =
@@ -631,11 +631,11 @@ class HeartsBoardState extends State<HeartsBoard> {
     double sizeFactor = 1.0;
     if (config.isMini) {
       if (playerNumber != game.playerNumber) {
-        cards.addAll(
-            game.cardCollections[playerNumber + HeartsGame.OFFSET_HAND]);
+        cards
+            .addAll(game.cardCollections[playerNumber + HeartsGame.offsetHand]);
       }
     } else {
-      cards.addAll(game.cardCollections[playerNumber + HeartsGame.OFFSET_HAND]);
+      cards.addAll(game.cardCollections[playerNumber + HeartsGame.offsetHand]);
 
       if (alreadyPlaying) {
         sizeFactor = this._centerScaleFactor;
@@ -648,6 +648,6 @@ class HeartsBoardState extends State<HeartsBoard> {
         heightCard: config.cardHeight * sizeFactor,
         useKeys: true,
         rotation: config.isMini ? null : _rotationAngle(playerNumber),
-        animationType: component_card.CardAnimationType.LONG);
+        animationType: component_card.CardAnimationType.long);
   }
 }

@@ -122,7 +122,6 @@ class SettingsManager {
   }
 
   // Forward any player changes and game status signals to Croupier's logic.
-  // TODO(alexfandrianto): This also watches the log (but doesn't process it.
   Future _onGameChange(String key, String value, bool duringScan) async {
     if (key.indexOf("/players") != -1) {
       if (this.updatePlayerFoundCallback != null) {

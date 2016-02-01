@@ -5,7 +5,7 @@
 part of game_component;
 
 class HeartsGameComponent extends GameComponent {
-  HeartsGameComponent(Croupier croupier, SoundAssets sounds, NoArgCb cb,
+  HeartsGameComponent(Croupier croupier, SoundAssets sounds, VoidCallback cb,
       {Key key, double width, double height})
       : super(croupier, sounds, cb, key: key, width: width, height: height);
 
@@ -47,7 +47,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
   bool get _canBuffer {
     HeartsGame game = config.game;
     List<logic_card.Card> playCards =
-        game.cardCollections[HeartsGame.OFFSET_PLAY + game.playerNumber];
+        game.cardCollections[HeartsGame.offsetPlay + game.playerNumber];
     return game.isPlayer && game.numPlayed >= 1 && playCards.length == 0;
   }
 
@@ -75,7 +75,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     // Set a flag to ensure that we only play it once.
     if (_shouldUnbuffer) {
       _makeGameMoveCallback(bufferedPlay[0],
-          game.cardCollections[HeartsGame.OFFSET_PLAY + game.playerNumber]);
+          game.cardCollections[HeartsGame.offsetPlay + game.playerNumber]);
       bufferedPlaying = true;
     }
 
@@ -96,34 +96,31 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
         height: config.height,
         child: heartsWidget));
     List<int> visibleCardCollectionIndexes = new List<int>();
-    if (game.phase != HeartsPhase.Deal && game.phase != HeartsPhase.Score) {
+    if (game.phase != HeartsPhase.deal && game.phase != HeartsPhase.score) {
       int playerNum = game.playerNumber;
-      if (game.viewType == HeartsType.Player) {
+      if (game.viewType == HeartsType.player) {
         switch (game.phase) {
-          case HeartsPhase.Pass:
-            visibleCardCollectionIndexes
-                .add(HeartsGame.OFFSET_PASS + playerNum);
-            visibleCardCollectionIndexes
-                .add(HeartsGame.OFFSET_HAND + playerNum);
+          case HeartsPhase.pass:
+            visibleCardCollectionIndexes.add(HeartsGame.offsetPass + playerNum);
+            visibleCardCollectionIndexes.add(HeartsGame.offsetHand + playerNum);
             break;
-          case HeartsPhase.Take:
+          case HeartsPhase.take:
             visibleCardCollectionIndexes
-                .add(HeartsGame.OFFSET_PASS + game.takeTarget);
-            visibleCardCollectionIndexes
-                .add(HeartsGame.OFFSET_HAND + playerNum);
+                .add(HeartsGame.offsetPass + game.takeTarget);
+            visibleCardCollectionIndexes.add(HeartsGame.offsetHand + playerNum);
             break;
-          case HeartsPhase.Play:
+          case HeartsPhase.play:
             if (_showSplitView) {
               for (int i = 0; i < 4; i++) {
-                visibleCardCollectionIndexes.add(HeartsGame.OFFSET_HAND + i);
-                visibleCardCollectionIndexes.add(HeartsGame.OFFSET_TRICK + i);
-                visibleCardCollectionIndexes.add(HeartsGame.OFFSET_PLAY + i);
+                visibleCardCollectionIndexes.add(HeartsGame.offsetHand + i);
+                visibleCardCollectionIndexes.add(HeartsGame.offsetTrick + i);
+                visibleCardCollectionIndexes.add(HeartsGame.offsetPlay + i);
               }
             } else {
               visibleCardCollectionIndexes
-                  .add(HeartsGame.OFFSET_PLAY + playerNum);
+                  .add(HeartsGame.offsetPlay + playerNum);
               visibleCardCollectionIndexes
-                  .add(HeartsGame.OFFSET_HAND + playerNum);
+                  .add(HeartsGame.offsetHand + playerNum);
             }
 
             break;
@@ -133,10 +130,10 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
       } else {
         // A board will need to see these things.
         for (int i = 0; i < 4; i++) {
-          visibleCardCollectionIndexes.add(HeartsGame.OFFSET_PLAY + i);
-          visibleCardCollectionIndexes.add(HeartsGame.OFFSET_PASS + i);
-          visibleCardCollectionIndexes.add(HeartsGame.OFFSET_HAND + i);
-          visibleCardCollectionIndexes.add(HeartsGame.OFFSET_TRICK + i);
+          visibleCardCollectionIndexes.add(HeartsGame.offsetPlay + i);
+          visibleCardCollectionIndexes.add(HeartsGame.offsetPass + i);
+          visibleCardCollectionIndexes.add(HeartsGame.offsetHand + i);
+          visibleCardCollectionIndexes.add(HeartsGame.offsetTrick + i);
         }
       }
     }
@@ -151,10 +148,10 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
   void _switchViewCallback() {
     HeartsGame game = config.game;
     setState(() {
-      if (game.viewType == HeartsType.Player) {
-        game.viewType = HeartsType.Board;
+      if (game.viewType == HeartsType.player) {
+        game.viewType = HeartsType.board;
       } else {
-        game.viewType = HeartsType.Player;
+        game.viewType = HeartsType.player;
         if (!game.isPlayer) {
           game.playerNumber = 0; // avoid accidental red screen
         }
@@ -324,7 +321,8 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
   }
 
   @override
-  Widget _makeButton(String text, NoArgCb callback, {bool inactive: false}) {
+  Widget _makeButton(String text, VoidCallback callback,
+      {bool inactive: false}) {
     var borderColor = inactive ? Colors.grey[500] : Colors.white;
     var backgroundColor = inactive ? Colors.grey[500] : null;
     return new FlatButton(
@@ -338,20 +336,20 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
   }
 
   Widget buildHearts() {
-    if (config.game.viewType == HeartsType.Board) {
+    if (config.game.viewType == HeartsType.board) {
       return buildHeartsBoard();
     }
 
     switch (config.game.phase) {
-      case HeartsPhase.Deal:
+      case HeartsPhase.deal:
         return showDeal();
-      case HeartsPhase.Pass:
+      case HeartsPhase.pass:
         return showPass();
-      case HeartsPhase.Take:
+      case HeartsPhase.take:
         return showTake();
-      case HeartsPhase.Play:
+      case HeartsPhase.play:
         return showPlay();
-      case HeartsPhase.Score:
+      case HeartsPhase.score:
         return showScore();
       default:
         assert(false);
@@ -362,13 +360,13 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
   Widget buildHeartsBoard() {
     List<Widget> kids = new List<Widget>();
     switch (config.game.phase) {
-      case HeartsPhase.Deal:
-      case HeartsPhase.Pass:
-      case HeartsPhase.Take:
-      case HeartsPhase.Play:
+      case HeartsPhase.deal:
+      case HeartsPhase.pass:
+      case HeartsPhase.take:
+      case HeartsPhase.play:
         kids.add(showBoard());
         break;
-      case HeartsPhase.Score:
+      case HeartsPhase.score:
         return showScore();
       default:
         assert(false);
@@ -398,7 +396,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     bool isPlayer = false;
     bool isError = false;
     switch (game.phase) {
-      case HeartsPhase.Play:
+      case HeartsPhase.play:
         // Who's turn is it?
         String name = _getName(game.whoseTurn) ?? "Player ${game.whoseTurn}";
         isPlayer = game.whoseTurn == game.playerNumber;
@@ -412,7 +410,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
           status = isPlayer ? "Your trick" : "${trickTaker}'s trick";
         }
         break;
-      case HeartsPhase.Pass:
+      case HeartsPhase.pass:
         if (game.hasPassed(game.playerNumber)) {
           status = "Waiting for cards...";
         } else {
@@ -422,7 +420,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
           isPlayer = true;
         }
         break;
-      case HeartsPhase.Take:
+      case HeartsPhase.take:
         if (game.hasTaken(game.playerNumber)) {
           status = "Waiting for other players...";
         } else {
@@ -448,8 +446,8 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
   Widget _buildNumTrickIcon() {
     HeartsGame game = config.game;
 
-    int numTrickCards = game.cardCollections[
-        HeartsGame.OFFSET_TRICK + game.playerNumber].length;
+    int numTrickCards =
+        game.cardCollections[HeartsGame.offsetTrick + game.playerNumber].length;
     int numTricks = numTrickCards ~/ 4;
 
     String iconName = "image/filter_9_plus";
@@ -471,7 +469,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
         flex: 1, child: new Text(status.text, style: style.Text.largeStyle)));
 
     switch (game.phase) {
-      case HeartsPhase.Play:
+      case HeartsPhase.play:
         if (game.allPlayed &&
             game.determineTrickWinner() == game.playerNumber &&
             _showSplitView) {
@@ -494,8 +492,8 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
           });
         }));
         break;
-      case HeartsPhase.Pass:
-      case HeartsPhase.Take:
+      case HeartsPhase.pass:
+      case HeartsPhase.take:
         // TODO(alexfandrianto): Icons for arrow_upward and arrow_downward were
         // just added to the material icon list. However, they are not available
         // through Flutter yet.
@@ -508,7 +506,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
             rotationAngle = -math.PI / 2; // up
             break;
         }
-        if (game.phase == HeartsPhase.Take) {
+        if (game.phase == HeartsPhase.take) {
           rotationAngle = rotationAngle + math.PI; // opposite
         }
         statusBarWidgets.add(new Transform(
@@ -558,7 +556,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     List<Widget> cardCollections = new List<Widget>();
 
     List<logic_card.Card> playOrBuffer =
-        game.cardCollections[p + HeartsGame.OFFSET_PLAY];
+        game.cardCollections[p + HeartsGame.offsetPlay];
     if (playOrBuffer.length == 0) {
       playOrBuffer = bufferedPlay;
     }
@@ -707,7 +705,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
       List<logic_card.Card> c3,
       List<logic_card.Card> hand,
       AcceptCb cb,
-      NoArgCb buttoncb) {
+      VoidCallback buttoncb) {
     bool completed = (buttoncb == null);
     bool draggable = (cb != null) && !completed;
 
@@ -764,7 +762,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
   Widget _topCardWidget(List<logic_card.Card> cards, AcceptCb cb) {
     HeartsGame game = config.game;
     List<logic_card.Card> passCards =
-        game.cardCollections[game.playerNumber + HeartsGame.OFFSET_PASS];
+        game.cardCollections[game.playerNumber + HeartsGame.offsetPass];
 
     Widget ccc = new CardCollectionComponent(
         cards, true, CardCollectionOrientation.show1,
@@ -789,7 +787,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     HeartsGame game = config.game;
 
     List<logic_card.Card> passCards =
-        game.cardCollections[game.playerNumber + HeartsGame.OFFSET_PASS];
+        game.cardCollections[game.playerNumber + HeartsGame.offsetPass];
 
     List<logic_card.Card> playerCards = game.cardCollections[game.playerNumber];
     List<logic_card.Card> remainingCards = new List<logic_card.Card>();
@@ -819,7 +817,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
 
     List<logic_card.Card> playerCards = game.cardCollections[game.playerNumber];
     List<logic_card.Card> takeCards =
-        game.cardCollections[game.takeTarget + HeartsGame.OFFSET_PASS];
+        game.cardCollections[game.takeTarget + HeartsGame.offsetPass];
 
     bool hasTaken = takeCards.length == 0;
 

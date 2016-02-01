@@ -22,7 +22,6 @@ const String discoveryInterfaceName = 'CroupierSettingsAndGame';
 const String settingsPersonalKey = "personal";
 const String settingsWatchSyncPrefix = "users";
 
-typedef void NoArgCb();
 typedef void keyValueCallback(String key, String value);
 typedef Future asyncKeyValueCallback(String key, String value, bool duringScan);
 

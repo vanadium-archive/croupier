@@ -4,7 +4,7 @@
 
 part of solitaire;
 
-enum SolitairePileType { ACES, DISCARD, DRAW, DOWN, UP }
+enum SolitairePileType { aces, discard, draw, down, up }
 
 class SolitaireGame extends Game {
   @override
@@ -12,18 +12,18 @@ class SolitaireGame extends Game {
 
   // Constants for the index-based offsets of the Solitaire Game's card collection.
   // There are 20 piles to track (4 aces, 1 discard, 1 draw, 7 down, 7 up).
-  static const NUM_PILES = 20;
-  static const OFFSET_ACES = 0;
-  static const OFFSET_DISCARD = 4;
-  static const OFFSET_DRAW = 5;
-  static const OFFSET_DOWN = 6;
-  static const OFFSET_UP = 13;
+  static const numPiles = 20;
+  static const offsetAces = 0;
+  static const offsetDiscard = 4;
+  static const offsetDraw = 5;
+  static const offsetDown = 6;
+  static const offsetUp = 13;
 
   static final GameArrangeData _arrangeData =
       new GameArrangeData(false, new Set());
   GameArrangeData get gameArrangeData => _arrangeData;
 
-  SolitairePhase _phase = SolitairePhase.Deal;
+  SolitairePhase _phase = SolitairePhase.deal;
   SolitairePhase get phase => _phase;
   void set phase(SolitairePhase other) {
     print('setting phase from ${_phase} to ${other}');
@@ -31,7 +31,7 @@ class SolitaireGame extends Game {
   }
 
   SolitaireGame({int gameID, bool isCreator})
-      : super.create(GameType.Solitaire, new SolitaireLog(), NUM_PILES,
+      : super.create(GameType.solitaire, new SolitaireLog(), numPiles,
             gameID: gameID, isCreator: isCreator) {
     resetGame();
   }
@@ -74,8 +74,8 @@ class SolitaireGame extends Game {
     return getCardSuit(c) == 's' || getCardSuit(c) == 'c';
   }
 
-  bool get canDrawCard => cardCollections[OFFSET_DISCARD].length +
-          cardCollections[OFFSET_DRAW].length >
+  bool get canDrawCard => cardCollections[offsetDiscard].length +
+          cardCollections[offsetDraw].length >
       0;
 
   bool get isGameWon {
@@ -125,14 +125,14 @@ class SolitaireGame extends Game {
         new Set<String>.from(<String>['c', 'd', 'h', 's']);
     int minLen = null;
     for (int i = 0; i < 4; i++) {
-      int len = cardCollections[OFFSET_ACES + i].length;
+      int len = cardCollections[offsetAces + i].length;
 
       if (minLen == null || len < minLen) {
         minLen = len;
       }
 
       if (len > 0) {
-        suits[i] = getCardSuit(cardCollections[OFFSET_ACES + i][0]);
+        suits[i] = getCardSuit(cardCollections[offsetAces + i][0]);
         remainingSuits.remove(suits[i]);
       }
     }
@@ -148,7 +148,7 @@ class SolitaireGame extends Game {
 
     // With all suits assigned, and the minLen known, we know which cards to pull.
     for (int i = 0; i < 4; i++) {
-      List<Card> cards = cardCollections[OFFSET_ACES + i];
+      List<Card> cards = cardCollections[offsetAces + i];
 
       if (cards.length == minLen) {
         // Let us pull a card from either the down cards, up cards, or deck.
@@ -191,17 +191,17 @@ class SolitaireGame extends Game {
   @override
   void triggerEvents() {
     switch (this.phase) {
-      case SolitairePhase.Deal:
+      case SolitairePhase.deal:
         if (this.deck.length == 0) {
-          phase = SolitairePhase.Play;
+          phase = SolitairePhase.play;
         }
         return;
-      case SolitairePhase.Play:
+      case SolitairePhase.play:
         if (this.isGameWon) {
-          phase = SolitairePhase.Score;
+          phase = SolitairePhase.score;
         }
         return;
-      case SolitairePhase.Score:
+      case SolitairePhase.score:
         return;
       default:
         assert(false);
@@ -209,16 +209,16 @@ class SolitaireGame extends Game {
   }
 
   SolitairePileType pileType(int index) {
-    if (index >= OFFSET_ACES && index < OFFSET_DISCARD) {
-      return SolitairePileType.ACES;
-    } else if (index == OFFSET_DISCARD) {
-      return SolitairePileType.DISCARD;
-    } else if (index == OFFSET_DRAW) {
-      return SolitairePileType.DRAW;
-    } else if (index >= OFFSET_DOWN && index < OFFSET_UP) {
-      return SolitairePileType.DOWN;
-    } else if (index >= OFFSET_UP && index < 20) {
-      return SolitairePileType.UP;
+    if (index >= offsetAces && index < offsetDiscard) {
+      return SolitairePileType.aces;
+    } else if (index == offsetDiscard) {
+      return SolitairePileType.discard;
+    } else if (index == offsetDraw) {
+      return SolitairePileType.draw;
+    } else if (index >= offsetDown && index < offsetUp) {
+      return SolitairePileType.down;
+    } else if (index >= offsetUp && index < 20) {
+      return SolitairePileType.up;
     } else {
       assert(false);
       return null;
@@ -297,7 +297,7 @@ class SolitaireGame extends Game {
     int source = findCard(c);
     print("Can play? ${c}, ${source} ${destination}");
 
-    if (phase != SolitairePhase.Play) {
+    if (phase != SolitairePhase.play) {
       return "It is not the Play phase of Solitaire.";
     }
     if (source == -1) {
@@ -312,26 +312,26 @@ class SolitaireGame extends Game {
     SolitairePileType sType = pileType(source);
     SolitairePileType dType = pileType(destination);
     switch (sType) {
-      case SolitairePileType.ACES:
-        if (dType != SolitairePileType.UP) {
+      case SolitairePileType.aces:
+        if (dType != SolitairePileType.up) {
           return "Destination Pile for ACES pile should be an UP pile.";
         }
         return _checkUpDestination(c, source, destination, true);
-      case SolitairePileType.DISCARD:
-        if (dType == SolitairePileType.UP) {
+      case SolitairePileType.discard:
+        if (dType == SolitairePileType.up) {
           return _checkUpDestination(c, source, destination, true);
-        } else if (dType == SolitairePileType.ACES) {
+        } else if (dType == SolitairePileType.aces) {
           return _checkAcesDestination(c, source, destination);
         }
         return "Destination Pile for DISCARD should be an UP or ACES pile.";
-      case SolitairePileType.DRAW:
+      case SolitairePileType.draw:
         return "Source Pile should not be a DRAW pile.";
-      case SolitairePileType.DOWN:
+      case SolitairePileType.down:
         return "Source Pile should not be a DOWN pile.";
-      case SolitairePileType.UP:
-        if (dType == SolitairePileType.UP) {
+      case SolitairePileType.up:
+        if (dType == SolitairePileType.up) {
           return _checkUpDestination(c, source, destination, false);
-        } else if (dType == SolitairePileType.ACES) {
+        } else if (dType == SolitairePileType.aces) {
           return _checkAcesDestination(c, source, destination);
         }
         return "Destination Pile for UP should be an UP or ACES pile.";

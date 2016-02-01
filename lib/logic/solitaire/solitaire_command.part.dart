@@ -7,27 +7,27 @@ part of solitaire;
 class SolitaireCommand extends GameCommand {
   // Usually this constructor is used when reading from a log/syncbase.
   SolitaireCommand(String phase, String data)
-      : super(phase, data, simultaneity: SimulLevel.TURN_BASED);
+      : super(phase, data, simultaneity: SimulLevel.turnBased);
 
   SolitaireCommand.fromCommand(String cmd)
       : super(cmd.split("|")[0], cmd.split("|")[1],
-            simultaneity: SimulLevel.TURN_BASED);
+            simultaneity: SimulLevel.turnBased);
 
   // The following constructors are used for the player generating the SolitaireCommand.
   SolitaireCommand.deal(List<Card> allCards)
       : super("Deal", computeDeal(allCards),
-            simultaneity: SimulLevel.TURN_BASED);
+            simultaneity: SimulLevel.turnBased);
 
   SolitaireCommand.move(Card target, int targetPile)
       : super("Move", computeMove(target, targetPile),
-            simultaneity: SimulLevel.TURN_BASED);
+            simultaneity: SimulLevel.turnBased);
 
   SolitaireCommand.draw()
-      : super("Draw", computeDraw(), simultaneity: SimulLevel.TURN_BASED);
+      : super("Draw", computeDraw(), simultaneity: SimulLevel.turnBased);
 
   SolitaireCommand.flip(int targetPile)
       : super("Flip", computeFlip(targetPile),
-            simultaneity: SimulLevel.TURN_BASED);
+            simultaneity: SimulLevel.turnBased);
 
   static String computeDeal(List<Card> allCards) {
     StringBuffer buff = new StringBuffer();
@@ -62,9 +62,9 @@ class SolitaireCommand extends GameCommand {
     List<String> parts = data.split(":");
     switch (phase) {
       case "Deal":
-        return game.phase == SolitairePhase.Deal && parts.length - 1 == 52;
+        return game.phase == SolitairePhase.deal && parts.length - 1 == 52;
       case "Move":
-        if (game.phase != SolitairePhase.Play) {
+        if (game.phase != SolitairePhase.play) {
           return false;
         }
 
@@ -89,17 +89,17 @@ class SolitaireCommand extends GameCommand {
         bool canTransfer = this.transferCheck(source, dest, c);
         return canTransfer;
       case "Draw":
-        if (game.phase != SolitairePhase.Play) {
+        if (game.phase != SolitairePhase.play) {
           return false;
         }
 
-        List<Card> drawPile = game.cardCollections[SolitaireGame.OFFSET_DRAW];
+        List<Card> drawPile = game.cardCollections[SolitaireGame.offsetDraw];
         List<Card> discardPile =
-            game.cardCollections[SolitaireGame.OFFSET_DISCARD];
+            game.cardCollections[SolitaireGame.offsetDiscard];
 
         return drawPile.length > 0 || discardPile.length > 0;
       case "Flip":
-        if (game.phase != SolitairePhase.Play) {
+        if (game.phase != SolitairePhase.play) {
           return false;
         }
 
@@ -109,9 +109,9 @@ class SolitaireCommand extends GameCommand {
         }
 
         List<Card> flipSource =
-            game.cardCollections[SolitaireGame.OFFSET_DOWN + flipId];
+            game.cardCollections[SolitaireGame.offsetDown + flipId];
         List<Card> flipDest =
-            game.cardCollections[SolitaireGame.OFFSET_UP + flipId];
+            game.cardCollections[SolitaireGame.offsetUp + flipId];
 
         return flipDest.length == 0 && flipSource.length > 0;
       default:
@@ -129,7 +129,7 @@ class SolitaireCommand extends GameCommand {
     List<String> parts = data.split(":");
     switch (phase) {
       case "Deal":
-        if (game.phase != SolitairePhase.Deal) {
+        if (game.phase != SolitairePhase.deal) {
           throw new StateError(
               "Cannot process deal commands when not in Deal phase");
         }
@@ -144,13 +144,13 @@ class SolitaireCommand extends GameCommand {
           for (int j = 0; j < i; j++) {
             this.transfer(
                 game.deck,
-                game.cardCollections[SolitaireGame.OFFSET_DOWN + i],
+                game.cardCollections[SolitaireGame.offsetDown + i],
                 new Card.fromString(parts[index]));
             index++;
           }
           this.transfer(
               game.deck,
-              game.cardCollections[SolitaireGame.OFFSET_UP + i],
+              game.cardCollections[SolitaireGame.offsetUp + i],
               new Card.fromString(parts[index]));
           index++;
         }
@@ -159,12 +159,12 @@ class SolitaireCommand extends GameCommand {
         for (; index < 52; index++) {
           this.transfer(
               game.deck,
-              game.cardCollections[SolitaireGame.OFFSET_DRAW],
+              game.cardCollections[SolitaireGame.offsetDraw],
               new Card.fromString(parts[index]));
         }
         return;
       case "Move":
-        if (game.phase != SolitairePhase.Play) {
+        if (game.phase != SolitairePhase.play) {
           throw new StateError(
               "Cannot process move commands when not in Play phase");
         }
@@ -191,14 +191,14 @@ class SolitaireCommand extends GameCommand {
         this.transferGroup(source, dest, c);
         return;
       case "Draw":
-        if (game.phase != SolitairePhase.Play) {
+        if (game.phase != SolitairePhase.play) {
           throw new StateError(
               "Cannot process draw commands when not in Play phase");
         }
 
-        List<Card> drawPile = game.cardCollections[SolitaireGame.OFFSET_DRAW];
+        List<Card> drawPile = game.cardCollections[SolitaireGame.offsetDraw];
         List<Card> discardPile =
-            game.cardCollections[SolitaireGame.OFFSET_DISCARD];
+            game.cardCollections[SolitaireGame.offsetDiscard];
 
         if (drawPile.length != 0) {
           this.transfer(drawPile, discardPile, drawPile[0]);
@@ -209,7 +209,7 @@ class SolitaireCommand extends GameCommand {
         }
         return;
       case "Flip":
-        if (game.phase != SolitairePhase.Play) {
+        if (game.phase != SolitairePhase.play) {
           throw new StateError(
               "Cannot process flip commands when not in Play phase");
         }
@@ -221,9 +221,9 @@ class SolitaireCommand extends GameCommand {
         }
 
         List<Card> flipSource =
-            game.cardCollections[SolitaireGame.OFFSET_DOWN + flipId];
+            game.cardCollections[SolitaireGame.offsetDown + flipId];
         List<Card> flipDest =
-            game.cardCollections[SolitaireGame.OFFSET_UP + flipId];
+            game.cardCollections[SolitaireGame.offsetUp + flipId];
 
         if (flipDest.length != 0) {
           throw new StateError(

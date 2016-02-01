@@ -12,7 +12,7 @@ enum CardCollectionOrientation { vert, horz, fan, show1, suit }
 enum DropType {
   none,
   card,
-  card_collection
+  cardCollection
   // I can see that both would be nice, but I'm not sure how to do that yet.
 }
 
@@ -65,7 +65,7 @@ class CardCollectionComponent extends StatefulComponent {
       Color altColor,
       this.rotation: 0.0,
       this.useKeys: false,
-      this.animationType: component_card.CardAnimationType.NORMAL})
+      this.animationType: component_card.CardAnimationType.normal})
       : _acceptType = acceptType,
         _backgroundColor = backgroundColor,
         _altColor = altColor;
@@ -314,8 +314,7 @@ class CardCollectionComponentState extends State<CardCollectionComponent> {
           width: config.widthCard,
           height: config.heightCard,
           rotation: config.rotation,
-          visible:
-              !config.useKeys, // TODO(alexfandrianto): Is there a case where you want an invisible card and a key?
+          visible: !config.useKeys,
           useKey: config.useKeys,
           z: 0.0 + i,
           tapCallback: config.cardTapCallback,
@@ -347,7 +346,7 @@ class CardCollectionComponentState extends State<CardCollectionComponent> {
               width: this.desiredWidth,
               child: wrapCards(cardComponents));
         });
-      case DropType.card_collection:
+      case DropType.cardCollection:
         return new DragTarget<CardCollectionComponent>(
             onWillAccept: _handleWillAcceptMultiple,
             onAccept: _handleAcceptMultiple, builder:

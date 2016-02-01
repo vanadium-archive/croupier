@@ -9,12 +9,10 @@ import '../logic/croupier_settings.dart' show CroupierSettings;
 import '../logic/game/game.dart' as game;
 import '../styles/common.dart' as style;
 
-typedef void NoArgCb();
-
 class CroupierGameAdvertisementComponent extends StatelessComponent {
   final CroupierSettings settings;
   final game.GameStartData gameStartData;
-  final NoArgCb onTap;
+  final VoidCallback onTap;
 
   CroupierGameAdvertisementComponent(this.gameStartData,
       {CroupierSettings settings, this.onTap})

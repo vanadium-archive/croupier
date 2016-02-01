@@ -4,4 +4,4 @@
 
 part of solitaire;
 
-enum SolitairePhase { Deal, Play, Score }
+enum SolitairePhase { deal, play, score }

@@ -16,47 +16,47 @@ class HeartsCommand extends GameCommand {
   // The following constructors are used for the player generating the HeartsCommand.
   HeartsCommand.deal(int playerId, List<Card> cards)
       : super("Deal", computeDeal(playerId, cards),
-            simultaneity: SimulLevel.INDEPENDENT);
+            simultaneity: SimulLevel.independent);
 
   HeartsCommand.pass(int senderId, List<Card> cards)
       : super("Pass", computePass(senderId, cards),
-            simultaneity: SimulLevel.INDEPENDENT);
+            simultaneity: SimulLevel.independent);
 
   HeartsCommand.take(int takerId)
       : super("Take", computeTake(takerId),
-            simultaneity: SimulLevel.INDEPENDENT);
+            simultaneity: SimulLevel.independent);
 
   HeartsCommand.play(int playerId, Card c)
       : super("Play", computePlay(playerId, c),
-            simultaneity: SimulLevel.TURN_BASED);
+            simultaneity: SimulLevel.turnBased);
 
   HeartsCommand.ask()
-      : super("Ask", computeAsk(), simultaneity: SimulLevel.TURN_BASED);
+      : super("Ask", computeAsk(), simultaneity: SimulLevel.turnBased);
 
   HeartsCommand.takeTrick()
       : super("TakeTrick", computeTakeTrick(),
-            simultaneity: SimulLevel.TURN_BASED);
+            simultaneity: SimulLevel.turnBased);
 
   HeartsCommand.ready(int playerId)
       : super("Ready", computeReady(playerId),
-            simultaneity: SimulLevel.INDEPENDENT);
+            simultaneity: SimulLevel.independent);
 
   static SimulLevel computeSimul(String phase) {
     switch (phase) {
       case "Deal":
-        return SimulLevel.INDEPENDENT;
+        return SimulLevel.independent;
       case "Pass":
-        return SimulLevel.INDEPENDENT;
+        return SimulLevel.independent;
       case "Take":
-        return SimulLevel.INDEPENDENT;
+        return SimulLevel.independent;
       case "Play":
-        return SimulLevel.TURN_BASED;
+        return SimulLevel.turnBased;
       case "Ask":
-        return SimulLevel.TURN_BASED;
+        return SimulLevel.turnBased;
       case "TakeTrick":
-        return SimulLevel.TURN_BASED;
+        return SimulLevel.turnBased;
       case "Ready":
-        return SimulLevel.INDEPENDENT;
+        return SimulLevel.independent;
       default:
         print(phase);
         assert(false); // How could this have happened?
@@ -111,7 +111,7 @@ class HeartsCommand extends GameCommand {
     List<String> parts = data.split(":");
     switch (phase) {
       case "Deal":
-        if (game.phase != HeartsPhase.Deal) {
+        if (game.phase != HeartsPhase.deal) {
           return false;
         }
         // Deal appends cards to playerId's hand.
@@ -131,12 +131,12 @@ class HeartsCommand extends GameCommand {
         }
         return true;
       case "Pass":
-        if (game.phase != HeartsPhase.Pass) {
+        if (game.phase != HeartsPhase.pass) {
           return false;
         }
         // Pass moves a set of cards from senderId to receiverId.
         int senderId = int.parse(parts[0]);
-        int receiverId = senderId + HeartsGame.OFFSET_PASS;
+        int receiverId = senderId + HeartsGame.offsetPass;
         List<Card> handS = game.cardCollections[senderId];
         List<Card> handR = game.cardCollections[receiverId];
 
@@ -155,12 +155,12 @@ class HeartsCommand extends GameCommand {
         }
         return true;
       case "Take":
-        if (game.phase != HeartsPhase.Take) {
+        if (game.phase != HeartsPhase.take) {
           return false;
         }
         return true;
       case "Play":
-        if (game.phase != HeartsPhase.Play) {
+        if (game.phase != HeartsPhase.play) {
           return false;
         }
 
@@ -171,7 +171,7 @@ class HeartsCommand extends GameCommand {
 
         // Play the card from the player's hand to their play pile.
         int playerId = int.parse(parts[0]);
-        int targetId = playerId + HeartsGame.OFFSET_PLAY;
+        int targetId = playerId + HeartsGame.offsetPlay;
         List<Card> hand = game.cardCollections[playerId];
         List<Card> discard = game.cardCollections[targetId];
 
@@ -185,7 +185,7 @@ class HeartsCommand extends GameCommand {
         bool canTransfer = this.transferCheck(hand, discard, c);
         return canTransfer;
       case "Ask":
-        if (game.phase != HeartsPhase.Play) {
+        if (game.phase != HeartsPhase.play) {
           return false;
         }
         if (game.allPlayed) {
@@ -193,7 +193,7 @@ class HeartsCommand extends GameCommand {
         }
         return !game.asking; // Can ask if you're not asking.
       case "TakeTrick":
-        if (game.phase != HeartsPhase.Play) {
+        if (game.phase != HeartsPhase.play) {
           return false;
         }
 
@@ -203,7 +203,7 @@ class HeartsCommand extends GameCommand {
         if (game.hasGameEnded) {
           return false;
         }
-        if (game.phase != HeartsPhase.Score) {
+        if (game.phase != HeartsPhase.score) {
           return false;
         }
         return true;
@@ -222,7 +222,7 @@ class HeartsCommand extends GameCommand {
     List<String> parts = data.split(":");
     switch (phase) {
       case "Deal":
-        if (game.phase != HeartsPhase.Deal) {
+        if (game.phase != HeartsPhase.deal) {
           throw new StateError(
               "Cannot process deal commands when not in Deal phase");
         }
@@ -240,13 +240,13 @@ class HeartsCommand extends GameCommand {
         }
         return;
       case "Pass":
-        if (game.phase != HeartsPhase.Pass) {
+        if (game.phase != HeartsPhase.pass) {
           throw new StateError(
               "Cannot process pass commands when not in Pass phase");
         }
         // Pass moves a set of cards from senderId to receiverId.
         int senderId = int.parse(parts[0]);
-        int receiverId = senderId + HeartsGame.OFFSET_PASS;
+        int receiverId = senderId + HeartsGame.offsetPass;
         List<Card> handS = game.cardCollections[senderId];
         List<Card> handR = game.cardCollections[receiverId];
 
@@ -262,19 +262,19 @@ class HeartsCommand extends GameCommand {
         }
         return;
       case "Take":
-        if (game.phase != HeartsPhase.Take) {
+        if (game.phase != HeartsPhase.take) {
           throw new StateError(
               "Cannot process take commands when not in Take phase");
         }
         int takerId = int.parse(parts[0]);
-        int senderPile = game.getTakeTarget(takerId) + HeartsGame.OFFSET_PASS;
+        int senderPile = game.getTakeTarget(takerId) + HeartsGame.offsetPass;
         List<Card> handT = game.cardCollections[takerId];
         List<Card> handS = game.cardCollections[senderPile];
         handT.addAll(handS);
         handS.clear();
         return;
       case "Play":
-        if (game.phase != HeartsPhase.Play) {
+        if (game.phase != HeartsPhase.play) {
           throw new StateError(
               "Cannot process play commands when not in Play phase");
         }
@@ -286,7 +286,7 @@ class HeartsCommand extends GameCommand {
 
         // Play the card from the player's hand to their play pile.
         int playerId = int.parse(parts[0]);
-        int targetId = playerId + HeartsGame.OFFSET_PLAY;
+        int targetId = playerId + HeartsGame.offsetPlay;
         List<Card> hand = game.cardCollections[playerId];
         List<Card> discard = game.cardCollections[targetId];
 
@@ -302,7 +302,7 @@ class HeartsCommand extends GameCommand {
         game.asking = false;
         return;
       case "Ask":
-        if (game.phase != HeartsPhase.Play) {
+        if (game.phase != HeartsPhase.play) {
           throw new StateError(
               "Cannot process ask commands when not in Play phase");
         }
@@ -315,7 +315,7 @@ class HeartsCommand extends GameCommand {
         game.asking = true;
         return;
       case "TakeTrick":
-        if (game.phase != HeartsPhase.Play) {
+        if (game.phase != HeartsPhase.play) {
           throw new StateError(
               "Cannot process take trick commands when not in Play phase");
         }
@@ -331,11 +331,11 @@ class HeartsCommand extends GameCommand {
         // Note: While some variants of Hearts allow the QUEEN_OF_SPADES to
         // break hearts, this version does NOT implement that rule.
         for (int i = 0; i < 4; i++) {
-          List<Card> play = game.cardCollections[i + HeartsGame.OFFSET_PLAY];
+          List<Card> play = game.cardCollections[i + HeartsGame.offsetPlay];
           if (!game.heartsBroken && game.isHeartsCard(play[0])) {
             game.heartsBroken = true;
           }
-          game.cardCollections[winner + HeartsGame.OFFSET_TRICK]
+          game.cardCollections[winner + HeartsGame.offsetTrick]
               .addAll(play); // or add(play[0])
           play.clear();
         }
@@ -350,7 +350,7 @@ class HeartsCommand extends GameCommand {
           throw new StateError(
               "Game has already ended. Start a new one to play again.");
         }
-        if (game.phase != HeartsPhase.Score) {
+        if (game.phase != HeartsPhase.score) {
           throw new StateError(
               "Cannot process ready commands when not in Score phase");
         }
