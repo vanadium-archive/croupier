@@ -1,6 +1,4 @@
 /.jiri
-#TODO(nlacasse): Get rid of .v23 below once v23->jiri transition is complete.
-/.v23
 
 # Don't commit the bundled flutter app or snapshot.
 croupier.flx
