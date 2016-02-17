@@ -53,7 +53,9 @@ Future<SoundAssets> loadAudio() async {
   SoundAssets _sounds = new SoundAssets(_bundle);
 
   // Load sounds in parallel.
-  await Future.wait([_sounds.load("whooshIn"), _sounds.load("whooshOut")]);
+  // TODO(alexfandrianto): Sound is turned off since it's not convenient to get
+  // HEAD Mojo Shell built with the media service.
+  //await Future.wait([_sounds.load("whooshIn"), _sounds.load("whooshOut")]);
   return _sounds;
 }
 

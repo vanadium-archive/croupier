@@ -1,4 +1,4 @@
---map-origin=http://flutter/=https://storage.googleapis.com/mojo/flutter/9ee9721b1b0379da1dae7ed27243da7635d55a3a/android-arm/
+--map-origin=http://flutter/=https://storage.googleapis.com/mojo_services/flutter/
 --url-mappings=mojo:flutter=http://flutter/flutter.mojo,mojo:media_service=https://mojo3.v.io/media_service.mojo
 --map-origin=https://mojo3.v.io=https://storage.googleapis.com/mojo_services/
 --debug

@@ -4,7 +4,7 @@ packages:
   analyzer:
     description: analyzer
     source: hosted
-    version: "0.27.1+2"
+    version: "0.27.2"
   archive:
     description: archive
     source: hosted
@@ -12,7 +12,7 @@ packages:
   args:
     description: args
     source: hosted
-    version: "0.13.3+1"
+    version: "0.13.3+3"
   asn1lib:
     description: asn1lib
     source: hosted
@@ -126,7 +126,7 @@ packages:
   intl:
     description: intl
     source: hosted
-    version: "0.12.6"
+    version: "0.12.7"
   logging:
     description: logging
     source: hosted
@@ -212,7 +212,7 @@ packages:
   shelf_static:
     description: shelf_static
     source: hosted
-    version: "0.2.3+2"
+    version: "0.2.3+3"
   shelf_web_socket:
     description: shelf_web_socket
     source: hosted
@@ -244,7 +244,7 @@ packages:
   stream_channel:
     description: stream_channel
     source: hosted
-    version: "1.0.1"
+    version: "1.3.1"
   string_scanner:
     description: string_scanner
     source: hosted
@@ -252,7 +252,7 @@ packages:
   syncbase:
     description: syncbase
     source: hosted
-    version: "0.0.28"
+    version: "0.0.29"
   test:
     description: test
     source: hosted
@@ -268,11 +268,11 @@ packages:
   v23discovery:
     description: v23discovery
     source: hosted
-    version: "0.0.12"
+    version: "0.0.13"
   vector_math:
     description: vector_math
     source: hosted
-    version: "1.4.6"
+    version: "1.4.7"
   watcher:
     description: watcher
     source: hosted

@@ -46,7 +46,7 @@ class DiscoveryClient {
     discovery.Scanner scanner = await _discoveryClient.scan(query);
     _scanners[key] = scanner;
 
-    scanner.onUpdate.listen((discovery.Update update) {
+    scanner.onUpdate.listen((discovery.ScanUpdate update) {
       if (update.updateType == discovery.UpdateType.found) {
         onFound(update.service);
       } else {
@@ -75,7 +75,6 @@ class DiscoveryClient {
     if (_advertisers.containsKey(key)) {
       return _advertisers[key];
     }
-
     _advertisers[key] =
         await _discoveryClient.advertise(service, visibility: visibility);
 

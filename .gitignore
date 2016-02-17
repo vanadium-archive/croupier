@@ -28,3 +28,4 @@ go/src/golang.org
 
 # Don't commit the generated shortcut commands file.
 shortcut_commands
+artifacts/

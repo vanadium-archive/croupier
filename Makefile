@@ -151,18 +151,26 @@ SYNCBASE_MOJO_DIR := $(PWD)/packages/syncbase/mojo_services
 DISCOVERY_MOJO_DIR := $(PWD)/packages/v23discovery/mojo_services
 GS_BUCKET_PATH := gs://mojo_services
 
+# TODO(alexfandrianto): Group services into same bucket subdirectory.
+# See https://github.com/vanadium/issues/issues/1156
 # Note: The deploy assumes that the media_service.mojo file, which is used for
 # audio, is already present at $(GS_BUCKET_PATH)/media_service.mojo.
 # This file is developed separately from Croupier.
 .PHONY: deploy
 deploy: build
+	wget https://storage.googleapis.com/mojo_infra/flutter/9ee9721b1b0379da1dae7ed27243da7635d55a3a/android-arm/artifacts.zip
+	unzip artifacts.zip -d artifacts
 	gsutil cp $(APP_ICON) $(GS_BUCKET_PATH)/croupier
 	gsutil cp $(APP_FLX_FILE) $(GS_BUCKET_PATH)/croupier
+	gsutil cp $(PWD)/artifacts/flutter.mojo $(GS_BUCKET_PATH)/flutter
 	gsutil cp -r $(SYNCBASE_MOJO_DIR) $(GS_BUCKET_PATH)/syncbase
 	gsutil cp -r $(DISCOVERY_MOJO_DIR) $(GS_BUCKET_PATH)/v23discovery
 	gsutil -m acl set -R -a public-read $(GS_BUCKET_PATH)/croupier
+	gsutil -m acl set -R -a public-read $(GS_BUCKET_PATH)/flutter
 	gsutil -m acl set -R -a public-read $(GS_BUCKET_PATH)/syncbase
 	gsutil -m acl set -R -a public-read $(GS_BUCKET_PATH)/v23discovery
+	rm artifacts.zip
+	rm -r artifacts
 
 CROUPIER_SHORTCUT_NAME := Croupier
 CROUPIER_URL := mojo://storage.googleapis.com/mojo_services/croupier/croupier.flx
