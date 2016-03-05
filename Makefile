@@ -3,7 +3,7 @@ DART_TEST_FILES_ALL := $(shell find test -name *.dart)
 DART_TEST_FILES := $(shell find test -name *.dart ! -name *.part.dart)
 
 # Add Dart SDK to path.
-PATH := $(shell jiri v23-profile env --profiles=dart DART_SDK=)/bin:$(PATH)
+PATH := $(shell jiri profile env --profiles=v23:dart DART_SDK=)/bin:$(PATH)
 
 # This section is used to setup the environment for running with mojo_shell.
 CROUPIER_DIR := $(shell pwd)
@@ -92,6 +92,7 @@ endef
 # Can also use `pub get`, but Sublime occasionally reverts me to an ealier version.
 # Only `pub upgrade` can escape such a thing.
 packages: pubspec.yaml
+	cd $(JIRI_ROOT)/flutter && git show
 	pub upgrade
 
 # Builds mounttabled and principal.
