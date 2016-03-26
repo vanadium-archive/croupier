@@ -21,7 +21,7 @@ import (
 	"v.io/v23/discovery"
 	"v.io/v23/security"
 	"v.io/v23/security/access"
-	wire "v.io/v23/services/syncbase/nosql"
+	wire "v.io/v23/services/syncbase"
 	"v.io/v23/syncbase"
 	ldiscovery "v.io/x/ref/lib/discovery"
 	"v.io/x/ref/lib/discovery/plugins/mdns"
@@ -57,7 +57,7 @@ func Advertise(logAddress, settingsAddress, gameStartData string, quit chan bool
 // Puts key and value into the syncbase gamelog table
 func AddKeyValue(service syncbase.Service, ctx *context.T, key, value string) bool {
 	app := service.App(util.AppName)
-	db := app.NoSQLDatabase(util.DbName, nil)
+	db := app.Database(util.DbName, nil)
 	table := db.Table(util.LogName)
 	valueByte := []byte(value)
 	err := table.Put(ctx, key, valueByte)
@@ -79,7 +79,7 @@ func CreateTables(u *uistate.UIState) {
 			fmt.Println("APP ERROR: ", err)
 		}
 	}
-	db := app.NoSQLDatabase(util.DbName, nil)
+	db := app.Database(util.DbName, nil)
 	if isThere, err := db.Exists(u.Ctx); err != nil {
 		fmt.Println("DB EXISTS ERROR: ", err)
 	} else if !isThere {
@@ -155,7 +155,7 @@ func CreateLogSyncgroup(u *uistate.UIState) (string, string) {
 	}
 	myInfoCreator := wire.SyncgroupMemberInfo{8, true}
 	app := u.Service.App(util.AppName)
-	db := app.NoSQLDatabase(util.DbName, nil)
+	db := app.Database(util.DbName, nil)
 	logSG := db.Syncgroup(logSGName)
 	err = logSG.Create(u.Ctx, logSpec, myInfoCreator)
 	if err != nil {
@@ -191,7 +191,7 @@ func CreateSettingsSyncgroup(u *uistate.UIState) string {
 	tables := []string{util.MountPoint + "/croupier"}
 	myInfoCreator := wire.SyncgroupMemberInfo{8, true}
 	app := u.Service.App(util.AppName)
-	db := app.NoSQLDatabase(util.DbName, nil)
+	db := app.Database(util.DbName, nil)
 	settingsSGName := fmt.Sprintf("%s/croupier/%s/%%%%sync/discovery-%d", util.MountPoint, util.SBName, util.UserID)
 	settingsPref := wire.TableRow{util.SettingsName, fmt.Sprintf("users/%d", util.UserID)}
 	settingsPrefs := []wire.TableRow{settingsPref}

@@ -28,7 +28,7 @@ import (
 	"hearts/sound"
 	"hearts/util"
 
-	"v.io/v23/syncbase/nosql"
+	"v.io/v23/syncbase"
 )
 
 func UpdateSettings(u *uistate.UIState) {
@@ -52,7 +52,7 @@ func UpdateSettings(u *uistate.UIState) {
 		for {
 			if updateExists := stream.Advance(); updateExists {
 				c := stream.Change()
-				if c.ChangeType == nosql.PutChange {
+				if c.ChangeType == syncbase.PutChange {
 					key := c.Row
 					var value []byte
 					if err := c.Value(&value); err != nil {
@@ -122,7 +122,7 @@ func UpdateGame(quit chan bool, u *uistate.UIState) {
 	if err2 != nil {
 		fmt.Println("WatchData error:", err2)
 	}
-	updateBlock := make([]nosql.WatchChange, 0)
+	updateBlock := make([]syncbase.WatchChange, 0)
 	for {
 		if updateExists := stream.Advance(); updateExists {
 			c := stream.Change()
@@ -134,7 +134,7 @@ func UpdateGame(quit chan bool, u *uistate.UIState) {
 					case <-quit:
 						return
 					default:
-						if c.ChangeType == nosql.PutChange {
+						if c.ChangeType == syncbase.PutChange {
 							key := c.Row
 							var value []byte
 							if err := c.Value(&value); err != nil {
@@ -146,7 +146,7 @@ func UpdateGame(quit chan bool, u *uistate.UIState) {
 						}
 					}
 				}
-				updateBlock = make([]nosql.WatchChange, 0)
+				updateBlock = make([]syncbase.WatchChange, 0)
 			}
 		}
 	}
@@ -505,7 +505,7 @@ func parsePlayerAndCards(value string, u *uistate.UIState) (int, []*card.Card) {
 }
 
 // Used to sort an array of watch changes
-type updateSorter []nosql.WatchChange
+type updateSorter []syncbase.WatchChange
 
 // Returns the length of the array
 func (us updateSorter) Len() int {

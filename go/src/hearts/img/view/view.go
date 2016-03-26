@@ -137,7 +137,7 @@ func LoadDiscoveryView(u *uistate.UIState) {
 	addr := scanner.Text()
 	// Search through all the database's syncgroups to see if addr represents a current syncgroup
 	app := u.Service.App(util.AppName)
-	db := app.NoSQLDatabase(util.DbName, nil)
+	db := app.Database(util.DbName, nil)
 	allAddrs, _ := db.GetSyncgroupNames(u.Ctx)
 	fmt.Println(allAddrs)
 	for _, a := range allAddrs {

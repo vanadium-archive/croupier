@@ -15,8 +15,8 @@ import (
 
 	"v.io/v23/context"
 	"v.io/v23/discovery"
-	wire "v.io/v23/services/syncbase/nosql"
-	"v.io/v23/syncbase/nosql"
+	wire "v.io/v23/services/syncbase"
+	"v.io/v23/syncbase"
 	ldiscovery "v.io/x/ref/lib/discovery"
 	"v.io/x/ref/lib/discovery/plugins/mdns"
 	"v.io/x/ref/lib/signals"
@@ -77,8 +77,8 @@ func GetSG(instances map[string]string, update discovery.Update, u *uistate.UISt
 }
 
 // Returns a watchstream of the data in the table
-func WatchData(tableName, prefix string, u *uistate.UIState) (nosql.WatchStream, error) {
-	db := u.Service.App(util.AppName).NoSQLDatabase(util.DbName, nil)
+func WatchData(tableName, prefix string, u *uistate.UIState) (syncbase.WatchStream, error) {
+	db := u.Service.App(util.AppName).Database(util.DbName, nil)
 	resumeMarker, err := db.GetResumeMarker(u.Ctx)
 	if err != nil {
 		fmt.Println("RESUMEMARKER ERR: ", err)
@@ -87,11 +87,11 @@ func WatchData(tableName, prefix string, u *uistate.UIState) (nosql.WatchStream,
 }
 
 // Returns a scanstream of the data in the table
-func ScanData(tableName, prefix string, u *uistate.UIState) nosql.ScanStream {
+func ScanData(tableName, prefix string, u *uistate.UIState) syncbase.ScanStream {
 	app := u.Service.App(util.AppName)
-	db := app.NoSQLDatabase(util.DbName, nil)
+	db := app.Database(util.DbName, nil)
 	table := db.Table(tableName)
-	rowRange := nosql.Range(prefix, "")
+	rowRange := syncbase.Range(prefix, "")
 	return table.Scan(u.Ctx, rowRange)
 }
 
@@ -100,7 +100,7 @@ func JoinLogSyncgroup(logName string, creator bool, u *uistate.UIState) bool {
 	fmt.Println("Joining gamelog syncgroup")
 	u.IsOwner = creator
 	app := u.Service.App(util.AppName)
-	db := app.NoSQLDatabase(util.DbName, nil)
+	db := app.Database(util.DbName, nil)
 	logSg := db.Syncgroup(logName)
 	myInfoJoiner := wire.SyncgroupMemberInfo{8, creator}
 	_, err := logSg.Join(u.Ctx, myInfoJoiner)
@@ -120,7 +120,7 @@ func JoinLogSyncgroup(logName string, creator bool, u *uistate.UIState) bool {
 func JoinSettingsSyncgroup(settingsName string, u *uistate.UIState) {
 	fmt.Println("Joining user settings syncgroup")
 	app := u.Service.App(util.AppName)
-	db := app.NoSQLDatabase(util.DbName, nil)
+	db := app.Database(util.DbName, nil)
 	settingsSg := db.Syncgroup(settingsName)
 	myInfoJoiner := wire.SyncgroupMemberInfo{8, false}
 	_, err := settingsSg.Join(u.Ctx, myInfoJoiner)
@@ -133,7 +133,7 @@ func JoinSettingsSyncgroup(settingsName string, u *uistate.UIState) {
 
 func NumInSG(logName string, u *uistate.UIState) int {
 	app := u.Service.App(util.AppName)
-	db := app.NoSQLDatabase(util.DbName, nil)
+	db := app.Database(util.DbName, nil)
 	sg := db.Syncgroup(logName)
 	members, err := sg.GetMembers(u.Ctx)
 	if err != nil {
