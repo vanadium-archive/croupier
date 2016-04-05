@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+import 'dart:ui' show Color;
 import 'package:flutter/material.dart';
 
 class Text {
@@ -28,10 +29,10 @@ class Size {
 }
 
 class Spacing {
-  static final EdgeDims smallPaddingSide =
-      new EdgeDims.symmetric(horizontal: 5.0);
-  static final EdgeDims smallPadding = new EdgeDims.all(5.0);
-  static final EdgeDims normalPadding = new EdgeDims.all(10.0);
+  static final EdgeInsets smallPaddingSide =
+      new EdgeInsets.symmetric(horizontal: 5.0);
+  static final EdgeInsets smallPadding = new EdgeInsets.all(5.0);
+  static final EdgeInsets normalPadding = new EdgeInsets.all(10.0);
 }
 
 class Box {
@@ -42,7 +43,7 @@ class Box {
   static final BoxDecoration background =
       new BoxDecoration(backgroundColor: theme.primaryColor);
   static final BoxDecoration brightBackground =
-      new BoxDecoration(backgroundColor: theme.primarySwatch[100]);
+      new BoxDecoration(backgroundColor: Colors.blueGrey[100]);
   static final BoxDecoration errorBackground =
       new BoxDecoration(backgroundColor: errorColor);
   static final BoxDecoration border = new BoxDecoration(

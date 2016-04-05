@@ -7,13 +7,12 @@ import 'package:flutter/material.dart';
 import '../logic/croupier.dart' show Croupier;
 import 'croupier_settings.dart' show CroupierSettingsComponent;
 
-class SettingsRoute extends StatelessComponent {
+class SettingsRoute extends StatelessWidget {
   final Croupier croupier;
 
   SettingsRoute(this.croupier);
 
-  Widget build(BuildContext context) {
-    return new CroupierSettingsComponent(
-        croupier.settings, croupier.settings_manager.save);
-  }
+  @override
+  Widget build(BuildContext context) => new CroupierSettingsComponent(
+      croupier.settings, croupier.settingsManager.save);
 }

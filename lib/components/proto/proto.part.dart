@@ -9,7 +9,10 @@ class ProtoGameComponent extends GameComponent {
       {Key key, double width, double height})
       : super(croupier, sounds, cb, key: key, width: width, height: height);
 
-  ProtoGameComponentState createState() => new ProtoGameComponentState();
+  @override
+  ProtoGameComponentState createState() {
+    return new ProtoGameComponentState();
+  }
 }
 
 class ProtoGameComponentState extends GameComponentState<ProtoGameComponent> {

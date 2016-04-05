@@ -9,8 +9,12 @@ class HeartsGameComponent extends GameComponent {
       {Key key, double width, double height})
       : super(croupier, sounds, cb, key: key, width: width, height: height);
 
-  HeartsGame get game => super.game;
+  @override
+  HeartsGame get game {
+    return super.game;
+  }
 
+  @override
   HeartsGameComponentState createState() => new HeartsGameComponentState();
 }
 
@@ -36,7 +40,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     _reset();
   }
 
-  bool get _isBoardPresent => config.croupier.players_found.values.contains(4);
+  bool get _isBoardPresent => config.croupier.playersFound.values.contains(4);
 
   @override
   void _reset() {
@@ -264,7 +268,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
           game.canPlay(game.playerNumber, card, lenient: isBufferAttempt);
       if (reason == null) {
         if (isBufferAttempt) {
-          print("Buffering ${card}...");
+          print("Buffering $card...");
           _clearBufferedPlay();
           bufferedPlay.add(card);
         } else {
@@ -280,7 +284,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
         }
         game.debugString = null;
       } else {
-        print("You can't do that! ${reason}");
+        print("You can't do that! $reason");
         game.debugString = reason;
       }
     });
@@ -330,7 +334,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
             decoration: new BoxDecoration(
                 border: new Border.all(width: 1.0, color: borderColor),
                 backgroundColor: backgroundColor),
-            padding: new EdgeDims.all(10.0),
+            padding: new EdgeInsets.all(10.0),
             child: new Text(text)),
         onPressed: inactive ? null : callback);
   }
@@ -374,7 +378,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     }
     kids.add(_makeDebugButtons());
     return new Column(
-        children: kids, justifyContent: FlexJustifyContent.spaceBetween);
+        children: kids, mainAxisAlignment: MainAxisAlignment.spaceBetween);
   }
 
   Widget showBoard() {
@@ -400,14 +404,14 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
         // Who's turn is it?
         String name = _getName(game.whoseTurn) ?? "Player ${game.whoseTurn}";
         isPlayer = game.whoseTurn == game.playerNumber;
-        status = isPlayer ? "Your turn" : "${name}'s turn";
+        status = isPlayer ? "Your turn" : "$name's turn";
 
         // Override if someone is taking a trick.
         if (game.allPlayed) {
           int winner = game.determineTrickWinner();
-          String trickTaker = _getName(winner) ?? "Player ${winner}";
+          String trickTaker = _getName(winner) ?? "Player $winner";
           isPlayer = winner == game.playerNumber;
-          status = isPlayer ? "Your trick" : "${trickTaker}'s trick";
+          status = isPlayer ? "Your trick" : "$trickTaker's trick";
         }
         break;
       case HeartsPhase.pass:
@@ -416,7 +420,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
         } else {
           String name =
               _getName(game.passTarget) ?? "Player ${game.passTarget}";
-          status = "Pass to ${name}";
+          status = "Pass to $name";
           isPlayer = true;
         }
         break;
@@ -426,7 +430,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
         } else {
           String name =
               _getName(game.takeTarget) ?? "Player ${game.takeTarget}";
-          status = "Take from ${name}";
+          status = "Take from $name";
           isPlayer = true;
         }
         break;
@@ -450,14 +454,30 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
         game.cardCollections[HeartsGame.offsetTrick + game.playerNumber].length;
     int numTricks = numTrickCards ~/ 4;
 
-    String iconName = "image/filter_9_plus";
+    IconData iconData = Icons.filter_9_plus;
     if (numTricks == 0) {
-      iconName = "image/filter_none";
-    } else if (numTricks <= 9) {
-      iconName = "image/filter_${numTricks}";
+      iconData = Icons.filter_none;
+    } else if (numTricks == 1) {
+      iconData = Icons.filter_1;
+    } else if (numTricks == 2) {
+      iconData = Icons.filter_2;
+    } else if (numTricks == 3) {
+      iconData = Icons.filter_3;
+    } else if (numTricks == 4) {
+      iconData = Icons.filter_4;
+    } else if (numTricks == 5) {
+      iconData = Icons.filter_5;
+    } else if (numTricks == 6) {
+      iconData = Icons.filter_6;
+    } else if (numTricks == 7) {
+      iconData = Icons.filter_7;
+    } else if (numTricks == 8) {
+      iconData = Icons.filter_8;
+    } else if (numTricks == 9) {
+      iconData = Icons.filter_9;
     }
 
-    return new Icon(icon: iconName);
+    return new Icon(icon: iconData);
   }
 
   Widget _buildStatusBar() {
@@ -485,12 +505,13 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
                           style: style.Text.largeStyle)))));
         }
         statusBarWidgets.add(_buildNumTrickIcon());
-        statusBarWidgets
-            .add(new IconButton(icon: "action/swap_vert", onPressed: () {
-          setState(() {
-            _showSplitView = !_showSplitView;
-          });
-        }));
+        statusBarWidgets.add(new IconButton(
+            icon: Icons.swap_vert,
+            onPressed: () {
+              setState(() {
+                _showSplitView = !_showSplitView;
+              });
+            }));
         break;
       case HeartsPhase.pass:
       case HeartsPhase.take:
@@ -513,7 +534,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
             transform:
                 new vector_math.Matrix4.identity().rotateZ(rotationAngle),
             alignment: new FractionalOffset(0.5, 0.5),
-            child: new Icon(icon: "navigation/arrow_forward")));
+            child: new Icon(icon: Icons.arrow_forward)));
         break;
       default:
         break;
@@ -528,11 +549,11 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
     }
 
     return new Container(
-        padding: new EdgeDims.all(10.0),
+        padding: new EdgeInsets.all(10.0),
         decoration: decoration,
         child: new Row(
             children: statusBarWidgets,
-            justifyContent: FlexJustifyContent.spaceBetween));
+            mainAxisAlignment: MainAxisAlignment.spaceBetween));
   }
 
   Widget _buildFullMiniBoard() {
@@ -570,19 +591,17 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
       Widget playArea = new Container(
           decoration: new BoxDecoration(backgroundColor: Colors.teal[500]),
           width: config.width,
-          child: new Center(
-              child: new CardCollectionComponent(
-                  playOrBuffer, true, CardCollectionOrientation.show1,
-                  useKeys: true,
-                  acceptCallback: _makeGameMoveCallback,
-                  acceptType: p == game.whoseTurn || this._canBuffer
-                      ? DropType.card
-                      : DropType.none,
-                  backgroundColor:
-                      p == game.whoseTurn ? Colors.white : Colors.grey[500],
-                  altColor: p == game.whoseTurn
-                      ? Colors.grey[200]
-                      : Colors.grey[600])));
+          child: new Center(child: new CardCollectionComponent(
+              playOrBuffer, true, CardCollectionOrientation.show1,
+              useKeys: true,
+              acceptCallback: _makeGameMoveCallback,
+              acceptType: p == game.whoseTurn || this._canBuffer
+                  ? DropType.card
+                  : DropType.none,
+              backgroundColor:
+                  p == game.whoseTurn ? Colors.white : Colors.grey[500],
+              altColor:
+                  p == game.whoseTurn ? Colors.grey[200] : Colors.grey[600])));
 
       cardCollections.add(new Container(
           decoration: style.Box.background,
@@ -616,7 +635,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
 
     return new Column(
         children: cardCollections,
-        justifyContent: FlexJustifyContent.spaceBetween);
+        mainAxisAlignment: MainAxisAlignment.spaceBetween);
   }
 
   Widget showScore() {
@@ -663,21 +682,24 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
       TextStyle scoreStyle = isMaxOverall ? bigRedStyle : bigStyle;
 
       scores.add(new Flexible(
-          child: new Flex(children: [
-            new Flexible(
-                child: new CroupierProfileComponent(
-                    settings: config.croupier.settingsFromPlayerNumber(i)),
-                flex: 1),
-            new Flexible(
-                child: new Center(
-                    child:
-                        new Text("${game.deltaScores[i]}", style: deltaStyle)),
-                flex: 1),
-            new Flexible(
-                child: new Center(
-                    child: new Text("${game.scores[i]}", style: scoreStyle)),
-                flex: 1)
-          ], direction: crossDirection, alignItems: FlexAlignItems.stretch),
+          child: new Flex(
+              children: [
+                new Flexible(
+                    child: new CroupierProfileComponent(
+                        settings: config.croupier.settingsFromPlayerNumber(i)),
+                    flex: 1),
+                new Flexible(
+                    child: new Center(child: new Text("${game.deltaScores[i]}",
+                        style: deltaStyle)),
+                    flex: 1),
+                new Flexible(
+                    child: new Center(
+                        child:
+                            new Text("${game.scores[i]}", style: scoreStyle)),
+                    flex: 1)
+              ],
+              direction: crossDirection,
+              crossAxisAlignment: CrossAxisAlignment.stretch),
           flex: 2));
     }
     return new Column(children: [
@@ -695,7 +717,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
           new Text('Player ${config.game.playerNumber}'),
           new Text('Waiting for Deal...'),
           _makeDebugButtons()
-        ], justifyContent: FlexJustifyContent.spaceBetween));
+        ], mainAxisAlignment: MainAxisAlignment.spaceBetween));
   }
 
   Widget _helpPassTake(
@@ -722,11 +744,11 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
 
     Widget topArea = new Container(
         decoration: new BoxDecoration(backgroundColor: bgColor),
-        padding: new EdgeDims.all(10.0),
+        padding: new EdgeInsets.all(10.0),
         width: config.width,
         child: new Row(
             children: topCardWidgets,
-            justifyContent: FlexJustifyContent.spaceBetween));
+            mainAxisAlignment: MainAxisAlignment.spaceBetween));
     Widget combinedTopArea = new BlockBody(children: [statusBar, topArea]);
 
     List<logic_card.Card> emptyC;
@@ -756,7 +778,7 @@ class HeartsGameComponentState extends GameComponentState<HeartsGameComponent> {
 
     return new Column(
         children: <Widget>[combinedTopArea, combinedBottomArea],
-        justifyContent: FlexJustifyContent.spaceBetween);
+        mainAxisAlignment: MainAxisAlignment.spaceBetween);
   }
 
   Widget _topCardWidget(List<logic_card.Card> cards, AcceptCb cb) {
@@ -838,17 +860,19 @@ class HeartsArrangeComponent extends GameArrangeComponent {
       {double width, double height, Key key})
       : super(croupier, width: width, height: height, key: key);
 
+  @override
   HeartsArrangeComponentState createState() =>
       new HeartsArrangeComponentState();
 }
 
 class HeartsArrangeComponentState extends State<HeartsArrangeComponent> {
-  bool isTable = null; // Must first ask what kind of device this is.
+  bool isTable; // Must first ask what kind of device this is. Starts unset.
   bool fallback = false; // Set to true to switch to the old arrange players.
 
-  static final String personIcon = "social/person_outline";
-  static final String tableIcon = "hardware/tablet";
+  static final IconData personIcon = Icons.person_outline;
+  static final IconData tableIcon = Icons.tablet;
 
+  @override
   Widget build(BuildContext context) {
     if (isTable == null) {
       return _buildAskDeviceType();
@@ -871,46 +895,48 @@ class HeartsArrangeComponentState extends State<HeartsArrangeComponent> {
           new Text("Play Hearts as a...", style: style.Text.hugeStyle),
           new FlatButton(
               child: new Row(children: [
-                new Icon(size: IconSize.s48, icon: personIcon),
+                new Icon(size: 48.0, icon: personIcon),
                 new Text("Player", style: style.Text.largeStyle)
-              ], justifyContent: FlexJustifyContent.collapse),
-              color: style.secondaryTextColor, onPressed: () {
-            setState(() {
-              isTable = false;
-            });
-          }),
+              ], mainAxisAlignment: MainAxisAlignment.collapse),
+              color: style.secondaryTextColor,
+              onPressed: () {
+                setState(() {
+                  isTable = false;
+                });
+              }),
           new FlatButton(
               child: new Row(children: [
-                new Icon(size: IconSize.s48, icon: tableIcon),
+                new Icon(size: 48.0, icon: tableIcon),
                 new Text("Table", style: style.Text.largeStyle)
-              ], justifyContent: FlexJustifyContent.collapse),
-              color: style.secondaryTextColor, onPressed: () {
-            setState(() {
-              isTable = true;
-            });
-            // Also sit at the table.
-            config.croupier.settings_manager.setPlayerNumber(
-                config.croupier.game.gameID,
-                config.croupier.settings.userID,
-                4);
-          })
-        ], alignItems: FlexAlignItems.center));
+              ], mainAxisAlignment: MainAxisAlignment.collapse),
+              color: style.secondaryTextColor,
+              onPressed: () {
+                setState(() {
+                  isTable = true;
+                });
+                // Also sit at the table.
+                config.croupier.settingsManager.setPlayerNumber(
+                    config.croupier.game.gameID,
+                    config.croupier.settings.userID,
+                    4);
+              })
+        ], crossAxisAlignment: CrossAxisAlignment.center));
   }
 
-  int get numSitting => config.croupier.players_found.values.where((int index) {
+  int get numSitting => config.croupier.playersFound.values.where((int index) {
         return index != null && index >= 0 && index < 4;
       }).length;
 
   Widget _buildTableArrangePlayers() {
-    int arrangeID = null;
+    int arrangeID; // Starts unset.
     String status = "";
     bool canStart = false;
     if (numSitting < 4) {
       // We still need people to sit.
       // Only include non-table and non-sitting devices in this search.
       // Note that this means it's possible arrangeID is null.
-      arrangeID = config.croupier.players_found.keys.firstWhere((int playerID) {
-        int index = config.croupier.players_found[playerID];
+      arrangeID = config.croupier.playersFound.keys.firstWhere((int playerID) {
+        int index = config.croupier.playersFound[playerID];
         return index == null || index < 0;
       }, orElse: () => null);
       status = arrangeID != null ? "Tap to place" : "Waiting for players...";
@@ -923,7 +949,7 @@ class HeartsArrangeComponentState extends State<HeartsArrangeComponent> {
     // Also add the player's name (using a placeholder if that's not possible).
     if (arrangeID != null) {
       children.add(new CroupierProfileComponent.textOnly(
-          settings: config.croupier.settings_everyone[arrangeID]));
+          settings: config.croupier.settingsEveryone[arrangeID]));
     }
 
     // You will need to show a Start Game button if the table isn't the creator.
@@ -932,14 +958,15 @@ class HeartsArrangeComponentState extends State<HeartsArrangeComponent> {
       children = [
         new FlatButton(
             child: new Text(status, style: style.Text.hugeStyle),
-            color: style.theme.accentColor, onPressed: () {
-          config.croupier.settings_manager
-              .setGameStatus(config.croupier.game.gameID, "RUNNING");
-        })
+            color: style.theme.accentColor,
+            onPressed: () {
+              config.croupier.settingsManager
+                  .setGameStatus(config.croupier.game.gameID, "RUNNING");
+            })
       ];
     }
     Widget firstChild = new Row(
-        children: children, justifyContent: FlexJustifyContent.collapse);
+        children: children, mainAxisAlignment: MainAxisAlignment.collapse);
 
     return new Container(
         decoration: style.Box.liveNow,
@@ -948,7 +975,7 @@ class HeartsArrangeComponentState extends State<HeartsArrangeComponent> {
         child: new Column(children: [
           firstChild,
           new Flexible(child: _buildArrangeTable(activeID: arrangeID))
-        ], alignItems: FlexAlignItems.center));
+        ], crossAxisAlignment: CrossAxisAlignment.center));
   }
 
   Widget _buildPlayerArrangePlayers() {
@@ -958,19 +985,20 @@ class HeartsArrangeComponentState extends State<HeartsArrangeComponent> {
     if (config.croupier.game.isCreator) {
       children.add(new FlatButton(
           child: new Text("Manual Setup", style: style.Text.largeStyle),
-          color: style.theme.accentColor, onPressed: () {
-        setState(() {
-          fallback = true;
-        });
-      }));
+          color: style.theme.accentColor,
+          onPressed: () {
+            setState(() {
+              fallback = true;
+            });
+          }));
     }
 
     return new Container(
         decoration: style.Box.liveNow,
         height: config.height,
         width: config.width,
-        child:
-            new Column(children: children, alignItems: FlexAlignItems.center));
+        child: new Column(
+            children: children, crossAxisAlignment: CrossAxisAlignment.center));
   }
 
   Widget _buildFallbackArrangePlayers() {
@@ -982,66 +1010,66 @@ class HeartsArrangeComponentState extends State<HeartsArrangeComponent> {
   }
 
   Widget _buildArrangeTable({int activeID: null, bool canDragTo: false}) {
-    int numAtTable = config.croupier.players_found.values
+    int numAtTable = config.croupier.playersFound.values
         .where((int playerNumber) => playerNumber == 4)
         .length;
     return new Column(
         children: [
-      new Flexible(
-          flex: 1,
-          child: new Row(
-              children: [
-            _buildEmptySlot(),
-            _buildSlot(personIcon, 2, activeID, canDragTo),
-            _buildEmptySlot()
-          ],
-              justifyContent: FlexJustifyContent.spaceAround,
-              alignItems: FlexAlignItems.stretch)),
-      new Flexible(
-          flex: 1,
-          child: new Row(
-              children: [
-            _buildSlot(personIcon, 1, activeID, canDragTo),
-            _buildSlot(tableIcon, 4, activeID, canDragTo,
-                extra: "x${numAtTable}"),
-            _buildSlot(personIcon, 3, activeID, canDragTo)
-          ],
-              justifyContent: FlexJustifyContent.spaceAround,
-              alignItems: FlexAlignItems.stretch)),
-      new Flexible(
-          flex: 1,
-          child: new Row(
-              children: [
-            _buildEmptySlot(),
-            _buildSlot(personIcon, 0, activeID, canDragTo),
-            _buildEmptySlot()
-          ],
-              justifyContent: FlexJustifyContent.spaceAround,
-              alignItems: FlexAlignItems.stretch))
-    ],
-        justifyContent: FlexJustifyContent.spaceAround,
-        alignItems: FlexAlignItems.stretch);
+          new Flexible(
+              flex: 1,
+              child: new Row(
+                  children: [
+                    _buildEmptySlot(),
+                    _buildSlot(personIcon, 2, activeID, canDragTo),
+                    _buildEmptySlot()
+                  ],
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  crossAxisAlignment: CrossAxisAlignment.stretch)),
+          new Flexible(
+              flex: 1,
+              child: new Row(
+                  children: [
+                    _buildSlot(personIcon, 1, activeID, canDragTo),
+                    _buildSlot(tableIcon, 4, activeID, canDragTo,
+                        extra: "x$numAtTable"),
+                    _buildSlot(personIcon, 3, activeID, canDragTo)
+                  ],
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  crossAxisAlignment: CrossAxisAlignment.stretch)),
+          new Flexible(
+              flex: 1,
+              child: new Row(
+                  children: [
+                    _buildEmptySlot(),
+                    _buildSlot(personIcon, 0, activeID, canDragTo),
+                    _buildEmptySlot()
+                  ],
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  crossAxisAlignment: CrossAxisAlignment.stretch))
+        ],
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        crossAxisAlignment: CrossAxisAlignment.stretch);
   }
 
   Widget _buildEmptySlot() {
     return new Flexible(flex: 1, child: new Text(""));
   }
 
-  Widget _buildSlot(String name, int index, int activeID, bool canDragTo,
+  Widget _buildSlot(IconData iconData, int index, int activeID, bool canDragTo,
       {String extra: ""}) {
     Widget slotWidget = new Row(
         children: [
-      new Icon(size: IconSize.s48, icon: name),
-      new Text(extra, style: style.Text.largeStyle)
-    ],
-        alignItems: FlexAlignItems.center,
-        justifyContent: FlexJustifyContent.center);
+          new Icon(size: 48.0, icon: iconData),
+          new Text(extra, style: style.Text.largeStyle)
+        ],
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center);
 
     bool isMe = config.croupier.game.playerNumber == index;
     bool isPlayerIndex = index >= 0 && index < 4;
     bool isTableIndex = index == 4;
     bool seatTaken = (isPlayerIndex || (isTableIndex && isMe)) &&
-        config.croupier.players_found.containsValue(index);
+        config.croupier.playersFound.containsValue(index);
     if (seatTaken) {
       // Note: If more than 1 person is in the seat, it may no longer show you.
       CroupierSettings cs = config.croupier.settingsFromPlayerNumber(index);
@@ -1053,20 +1081,24 @@ class HeartsArrangeComponentState extends State<HeartsArrangeComponent> {
 
     Widget dragTarget = new DragTarget<CroupierSettings>(
         builder: (BuildContext context, List<CroupierSettings> data, _) {
-      return new GestureDetector(onTap: () {
-        if (activeID != null) {
-          config.croupier.settings_manager
-              .setPlayerNumber(config.croupier.game.gameID, activeID, index);
-        }
-      },
-          child: new Container(
-              constraints: const BoxConstraints.expand(),
-              decoration: isMe ? style.Box.liveBackground : style.Box.border,
-              child: new Center(child: slotWidget)));
-    }, onAccept: (CroupierSettings cs) {
-      config.croupier.settings_manager
-          .setPlayerNumber(config.croupier.game.gameID, cs.userID, index);
-    }, onWillAccept: (_) => canDragTo);
+          return new GestureDetector(
+              onTap: () {
+                if (activeID != null) {
+                  config.croupier.settingsManager.setPlayerNumber(
+                      config.croupier.game.gameID, activeID, index);
+                }
+              },
+              child: new Container(
+                  constraints: const BoxConstraints.expand(),
+                  decoration:
+                      isMe ? style.Box.liveBackground : style.Box.border,
+                  child: new Center(child: slotWidget)));
+        },
+        onAccept: (CroupierSettings cs) {
+          config.croupier.settingsManager
+              .setPlayerNumber(config.croupier.game.gameID, cs.userID, index);
+        },
+        onWillAccept: (_) => canDragTo);
 
     return new Flexible(flex: 1, child: dragTarget);
   }

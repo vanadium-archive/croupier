@@ -28,7 +28,14 @@ const double defaultCardWidth = 40.0;
 /// While other Widgets may be drawn to accomodate space, a Board is meant to
 /// consume a specific amount of space on the screen, which allows for more
 /// control when positioning elements within the Board's area.
-abstract class Board extends StatefulComponent {
+abstract class Board extends StatefulWidget {
+  Board(this.game,
+      {double height, double width, double cardHeight, double cardWidth})
+      : _height = height,
+        _width = width,
+        _cardHeight = cardHeight,
+        _cardWidth = cardWidth;
+
   final Game game;
   final double _height;
   final double _width;
@@ -39,27 +46,11 @@ abstract class Board extends StatefulComponent {
   double get width => _width ?? defaultBoardWidth;
   double get cardHeight => _cardHeight ?? defaultCardHeight;
   double get cardWidth => _cardWidth ?? defaultCardWidth;
-
-  Board(this.game,
-      {double height, double width, double cardHeight, double cardWidth})
-      : _height = height,
-        _width = width,
-        _cardHeight = cardHeight,
-        _cardWidth = cardWidth;
 }
 
 /// The HeartsBoard represents the Hearts table view, which shows the number of
 /// cards each player has, and the cards they are currently playing.
 class HeartsBoard extends Board {
-  final Croupier croupier;
-  final SoundAssets sounds;
-  final bool isMini;
-  final AcceptCb gameAcceptCallback;
-  final VoidCallback setGameStateCallback;
-  final List<logic_card.Card> bufferedPlay;
-
-  HeartsGame get game => super.game;
-
   HeartsBoard(Croupier croupier, this.sounds,
       {double height,
       double width,
@@ -69,15 +60,26 @@ class HeartsBoard extends Board {
       this.gameAcceptCallback,
       this.setGameStateCallback,
       this.bufferedPlay})
-      : super(croupier.game,
+      : croupier = croupier,
+        super(croupier.game,
             height: height,
             width: width,
             cardHeight: cardHeight,
-            cardWidth: cardWidth),
-        croupier = croupier {
+            cardWidth: cardWidth) {
     assert(this.game is HeartsGame);
   }
 
+  final Croupier croupier;
+  final SoundAssets sounds;
+  final bool isMini;
+  final AcceptCb gameAcceptCallback;
+  final VoidCallback setGameStateCallback;
+  final List<logic_card.Card> bufferedPlay;
+
+  @override
+  HeartsGame get game => super.game;
+
+  @override
   HeartsBoardState createState() => new HeartsBoardState();
 }
 
@@ -162,6 +164,7 @@ class HeartsBoardState extends State<HeartsBoard> {
     }
   }
 
+  @override
   Widget build(BuildContext context) {
     double offscreenDelta = config.isMini ? 5.0 : 1.5;
 
@@ -290,33 +293,34 @@ class HeartsBoardState extends State<HeartsBoard> {
         width: config.width,
         child: new Column(
             children: [
-          new Flexible(child: _playerProfile(2, PROFILE_SIZE), flex: 0),
-          new Flexible(child: _getPass(2), flex: 0),
-          new Flexible(
-              child: new Row(
-                  children: [
-                new Flexible(child: _playerProfile(1, PROFILE_SIZE), flex: 0),
-                new Flexible(child: _getPass(1), flex: 0),
-                new Flexible(child: new Block(children: []), flex: 1),
-                new Flexible(child: _getPass(3), flex: 0),
-                new Flexible(child: _playerProfile(3, PROFILE_SIZE), flex: 0)
-              ],
-                  alignItems: FlexAlignItems.center,
-                  justifyContent: FlexJustifyContent.spaceAround),
-              flex: 1),
-          new Flexible(child: _getPass(0), flex: 0),
-          new Flexible(child: _playerProfile(0, PROFILE_SIZE), flex: 0)
-        ],
-            alignItems: FlexAlignItems.center,
-            justifyContent: FlexJustifyContent.spaceAround));
+              new Flexible(child: _playerProfile(2, PROFILE_SIZE), flex: 0),
+              new Flexible(child: _getPass(2), flex: 0),
+              new Flexible(
+                  child: new Row(
+                      children: [
+                        new Flexible(
+                            child: _playerProfile(1, PROFILE_SIZE), flex: 0),
+                        new Flexible(child: _getPass(1), flex: 0),
+                        new Flexible(child: new Block(children: []), flex: 1),
+                        new Flexible(child: _getPass(3), flex: 0),
+                        new Flexible(
+                            child: _playerProfile(3, PROFILE_SIZE), flex: 0)
+                      ],
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.spaceAround),
+                  flex: 1),
+              new Flexible(child: _getPass(0), flex: 0),
+              new Flexible(child: _playerProfile(0, PROFILE_SIZE), flex: 0)
+            ],
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.spaceAround));
   }
 
   Widget _buildMiniBoardLayout() {
     return new Container(
         height: config.height,
         width: config.width,
-        child: new Center(
-            child: new Row(children: [
+        child: new Center(child: new Row(children: [
           new Flexible(
               flex: 1,
               child: new Center(
@@ -371,12 +375,10 @@ class HeartsBoardState extends State<HeartsBoard> {
       items.add(new Positioned(
           top: 0.0,
           left: 0.0,
-          child: new IgnorePointer(
-              child: new CroupierProfileComponent.mini(
-                  settings:
-                      config.croupier.settingsFromPlayerNumber(playerNumber),
-                  height: config.cardHeight,
-                  width: config.cardWidth))));
+          child: new IgnorePointer(child: new CroupierProfileComponent.mini(
+              settings: config.croupier.settingsFromPlayerNumber(playerNumber),
+              height: config.cardHeight,
+              width: config.cardWidth))));
     }
 
     return new Container(
@@ -394,7 +396,7 @@ class HeartsBoardState extends State<HeartsBoard> {
 
     String s = numTricks != 1 ? "s" : "";
 
-    return _rotate(new Text("${numTricks} trick${s}"), pNum);
+    return _rotate(new Text("$numTricks trick$s"), pNum);
   }
 
   void _handleLocalAskingReset() {
@@ -442,52 +444,53 @@ class HeartsBoardState extends State<HeartsBoard> {
         child: new Container(
             height: config.height,
             width: config.width,
-            decoration: new BoxDecoration(
-                border: new Border(
-                    top: new BorderSide(
-                        color: activePlayer == 2
-                            ? style.theme.accentColor
-                            : style.transparentColor,
-                        width: 5.0),
-                    right: new BorderSide(
-                        color: activePlayer == 3
-                            ? style.theme.accentColor
-                            : style.transparentColor,
-                        width: 5.0),
-                    left: new BorderSide(
-                        color: activePlayer == 1
-                            ? style.theme.accentColor
-                            : style.transparentColor,
-                        width: 5.0),
-                    bottom: new BorderSide(
-                        color: activePlayer == 0
-                            ? style.theme.accentColor
-                            : style.transparentColor,
-                        width: 5.0))),
+            decoration: new BoxDecoration(border: new Border(
+                top: new BorderSide(
+                    color: activePlayer == 2
+                        ? style.theme.accentColor
+                        : style.transparentColor,
+                    width: 5.0),
+                right: new BorderSide(
+                    color: activePlayer == 3
+                        ? style.theme.accentColor
+                        : style.transparentColor,
+                    width: 5.0),
+                left: new BorderSide(
+                    color: activePlayer == 1
+                        ? style.theme.accentColor
+                        : style.transparentColor,
+                    width: 5.0),
+                bottom: new BorderSide(
+                    color: activePlayer == 0
+                        ? style.theme.accentColor
+                        : style.transparentColor,
+                    width: 5.0))),
             child: new Column(
                 children: [
-              new Flexible(child: _playerProfile(2, PROFILE_SIZE), flex: 0),
-              new Flexible(child: _showTrickText(2), flex: 0),
-              new Flexible(
-                  child: new Row(
-                      children: [
-                    new Flexible(
-                        child: _playerProfile(1, PROFILE_SIZE), flex: 0),
-                    new Flexible(child: _showTrickText(1), flex: 0),
-                    new Flexible(
-                        child: new Center(child: _buildCenterCards()), flex: 1),
-                    new Flexible(child: _showTrickText(3), flex: 0),
-                    new Flexible(
-                        child: _playerProfile(3, PROFILE_SIZE), flex: 0)
-                  ],
-                      alignItems: FlexAlignItems.center,
-                      justifyContent: FlexJustifyContent.spaceAround),
-                  flex: 1),
-              new Flexible(child: _showTrickText(0), flex: 0),
-              new Flexible(child: _playerProfile(0, PROFILE_SIZE), flex: 0)
-            ],
-                alignItems: FlexAlignItems.center,
-                justifyContent: FlexJustifyContent.spaceAround)));
+                  new Flexible(child: _playerProfile(2, PROFILE_SIZE), flex: 0),
+                  new Flexible(child: _showTrickText(2), flex: 0),
+                  new Flexible(
+                      child: new Row(
+                          children: [
+                            new Flexible(
+                                child: _playerProfile(1, PROFILE_SIZE),
+                                flex: 0),
+                            new Flexible(child: _showTrickText(1), flex: 0),
+                            new Flexible(
+                                child: new Center(child: _buildCenterCards()),
+                                flex: 1),
+                            new Flexible(child: _showTrickText(3), flex: 0),
+                            new Flexible(
+                                child: _playerProfile(3, PROFILE_SIZE), flex: 0)
+                          ],
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.spaceAround),
+                      flex: 1),
+                  new Flexible(child: _showTrickText(0), flex: 0),
+                  new Flexible(child: _playerProfile(0, PROFILE_SIZE), flex: 0)
+                ],
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceAround)));
   }
 
   Widget _buildCenterCards() {
@@ -517,40 +520,36 @@ class HeartsBoardState extends State<HeartsBoard> {
 
     return new Column(
         children: [
-      new Flexible(
-          child: new Row(
+          new Flexible(child: new Row(
               children: [
-        new Flexible(child: new Block(children: [])),
-        new Flexible(child: new Center(child: _buildCenterCard(2))),
-        new Flexible(child: new Block(children: [])),
-      ],
-              alignItems: FlexAlignItems.center,
-              justifyContent: FlexJustifyContent.center)),
-      new Flexible(
-          child: new Row(
+                new Flexible(child: new Block(children: [])),
+                new Flexible(child: new Center(child: _buildCenterCard(2))),
+                new Flexible(child: new Block(children: [])),
+              ],
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center)),
+          new Flexible(child: new Row(
               children: [
-        new Flexible(child: new Center(child: _buildCenterCard(1))),
-        new Flexible(
-            child: new Row(
-                children: [centerPiece],
-                alignItems: FlexAlignItems.center,
-                justifyContent: FlexJustifyContent.center)),
-        new Flexible(child: new Center(child: _buildCenterCard(3))),
-      ],
-              alignItems: FlexAlignItems.center,
-              justifyContent: FlexJustifyContent.center)),
-      new Flexible(
-          child: new Row(
+                new Flexible(child: new Center(child: _buildCenterCard(1))),
+                new Flexible(child: new Row(
+                    children: [centerPiece],
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center)),
+                new Flexible(child: new Center(child: _buildCenterCard(3))),
+              ],
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center)),
+          new Flexible(child: new Row(
               children: [
-        new Flexible(child: new Block(children: [])),
-        new Flexible(child: new Center(child: _buildCenterCard(0))),
-        new Flexible(child: new Block(children: [])),
-      ],
-              alignItems: FlexAlignItems.center,
-              justifyContent: FlexJustifyContent.center))
-    ],
-        alignItems: FlexAlignItems.center,
-        justifyContent: FlexJustifyContent.center);
+                new Flexible(child: new Block(children: [])),
+                new Flexible(child: new Center(child: _buildCenterCard(0))),
+                new Flexible(child: new Block(children: [])),
+              ],
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center))
+        ],
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center);
   }
 
   double get _centerScaleFactor {

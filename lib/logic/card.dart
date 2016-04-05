@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-import 'dart:collection';
-
 class Card {
   final String deck;
   final String identifier;
@@ -13,15 +11,19 @@ class Card {
       : deck = cardData.split(" ")[0],
         identifier = cardData.split(" ")[1];
 
+  @override
   bool operator ==(Object other) {
     if (other is! Card) return false;
     Card o = other as Card;
     return deck == o.deck && identifier == o.identifier;
   }
 
+  @override
   int get hashCode => 37 * (deck.hashCode + 41 * identifier.hashCode);
 
-  static final List<Card> All = new UnmodifiableListView<Card>([
+  // TODO(alexfandrianto): https://github.com/dart-lang/sdk/issues/26184
+  // Put the UnmodifiableListView<Card> back when dartanalyzer no longer warns.
+  static final List<Card> all = <Card>[
     new Card("classic", "c1"),
     new Card("classic", "c2"),
     new Card("classic", "c3"),
@@ -74,7 +76,7 @@ class Card {
     new Card("classic", "sj"),
     new Card("classic", "sq"),
     new Card("classic", "sk"),
-  ]);
+  ];
 
   toString() => "${deck} ${identifier}";
 

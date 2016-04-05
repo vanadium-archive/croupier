@@ -7,10 +7,12 @@ import 'dart:convert' show JSON;
 
 enum SimulLevel { turnBased, independent, dependent }
 
-typedef void keyValueCallback(String key, String value);
+typedef void KeyValueCallback(String key, String value);
 
 class LogWriter {
-  final keyValueCallback updateCallback;
+  LogWriter(this.updateCallback, this.users);
+
+  final KeyValueCallback updateCallback;
   final List<int> users;
   String logPrefix; // This can be completely ignored.
 
@@ -22,8 +24,6 @@ class LogWriter {
     _fakeTime++;
     return _fakeTime;
   }
-
-  LogWriter(this.updateCallback, this.users);
 
   Map<String, String> _data = new Map<String, String>();
 
@@ -56,7 +56,7 @@ class LogWriter {
   // Helper that returns the log key using a mixture of timestamp + user.
   String _logKey(int user) {
     int ms = _getNextTime();
-    String key = "${ms}-${user}";
+    String key = "$ms-$user";
     return key;
   }
 
@@ -106,7 +106,7 @@ class LogWriter {
 
   // More helpers for proposals.
   String _proposalKey(int user) {
-    return "proposal${user}";
+    return "proposal$user";
   }
 
   bool _checkIsProposalDone() {

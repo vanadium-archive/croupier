@@ -5,13 +5,6 @@
 part of proto;
 
 class ProtoGame extends Game {
-  @override
-  String get gameTypeName => "Proto";
-
-  static final GameArrangeData _arrangeData =
-      new GameArrangeData(false, new Set());
-  GameArrangeData get gameArrangeData => _arrangeData;
-
   ProtoGame({int gameID, bool isCreator})
       : super.create(GameType.proto, new ProtoLog(), 6,
             gameID: gameID, isCreator: isCreator) {
@@ -26,6 +19,14 @@ class ProtoGame extends Game {
     deal(2, 4);
     deal(3, 1);
   }
+
+  @override
+  String get gameTypeName => "Proto";
+
+  static final GameArrangeData _arrangeData =
+      new GameArrangeData(false, new Set());
+  @override
+  GameArrangeData get gameArrangeData => _arrangeData;
 
   void deal(int playerId, int numCards) {
     gamelog.add(new ProtoCommand.deal(playerId, this.deckPeek(numCards)));
@@ -46,7 +47,7 @@ class ProtoGame extends Game {
 
     gamelog.add(new ProtoCommand.pass(i, destId, <Card>[card]));
 
-    debugString = 'Move ${i} ${card.toString()}';
+    debugString = 'Move $i ${card.toString()}';
     print(debugString);
   }
 

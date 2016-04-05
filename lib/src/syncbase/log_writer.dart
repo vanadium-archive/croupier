@@ -31,8 +31,16 @@ import 'package:syncbase/syncbase_client.dart'
 enum SimulLevel { turnBased, independent, dependent }
 
 class LogWriter {
+  // The LogWriter takes a callback for watch updates, the list of users, and
+  // the logPrefix to write at on table.
+  LogWriter(this.updateCallback, this.users)
+      : _cc = new CroupierClient.singleton() {
+    _prepareLog();
+    _diffFileLog("=========Starting Log Writer=========");
+  }
+
   // This callback is called on each watch update, passing the key and value.
-  final util.keyValueCallback updateCallback;
+  final util.KeyValueCallback updateCallback;
 
   // The users that we should look for when coming to a proposal consensus.
   final List<int> users;
@@ -73,14 +81,6 @@ class LogWriter {
   final File _diffFile =
       new File('/data/data/org.chromium.mojo.shell/diffFile.txt');
 
-  // The LogWriter takes a callback for watch updates, the list of users, and
-  // the logPrefix to write at on table.
-  LogWriter(this.updateCallback, this.users)
-      : _cc = new CroupierClient.singleton() {
-    _prepareLog();
-    _diffFileLog("=========Starting Log Writer=========");
-  }
-
   DateTime _getLatestTime() {
     DateTime now = new DateTime.now();
     if (latestTime.isAfter(now)) {
@@ -103,7 +103,7 @@ class LogWriter {
   Future _diffFileLog(String s, [DateTime other]) async {
     DateTime now = _getLatestTime();
     int diff = other != null ? now.difference(other).inMilliseconds : null;
-    String logStr = "${now.millisecondsSinceEpoch}\t${diff}\t${s}\n";
+    String logStr = "${now.millisecondsSinceEpoch}\t$diff\t$s\n";
     print(logStr);
     await _diffFile.writeAsString(logStr, mode: FileMode.APPEND, flush: true);
   }
@@ -121,7 +121,7 @@ class LogWriter {
     String key = rowKey.replaceFirst("${this.logPrefix}/", "");
     String timeStr = key.split("-")[0];
     DateTime keyTime = _parseTime(timeStr);
-    await _diffFileLog("Key: ${key} Value: ${value}", keyTime);
+    await _diffFileLog("Key: $key Value: $value", keyTime);
 
     if (keyTime.isAfter(latestTime)) {
       latestTime = keyTime;
@@ -132,7 +132,7 @@ class LogWriter {
         await _receiveProposal(key, value);
       }
     } else {
-      print("Update callback: ${key}, ${value}");
+      print("Update callback: $key, $value");
       this.updateCallback(key, value);
     }
   }
@@ -164,7 +164,7 @@ class LogWriter {
   }
 
   String _rowKey(String key) {
-    return "${this.logPrefix}/${key}";
+    return "${this.logPrefix}/$key";
   }
 
   Future _deleteData(String key) async {
@@ -179,7 +179,7 @@ class LogWriter {
       latestTime = time;
     }
     int ms = time.millisecondsSinceEpoch;
-    String key = "${ms}-${user}";
+    String key = "$ms-$user";
     return key;
   }
 
@@ -240,7 +240,7 @@ class LogWriter {
       String value = pp["value"];
 
       _acceptedProposals.add(key);
-      print("All proposals accepted. Proceeding with ${key} ${value}");
+      print("All proposals accepted. Proceeding with $key $value");
       // WOULD DO A BATCH!
       for (int i = 0; i < users.length; i++) {
         await _deleteData(_proposalKey(users[i]));
@@ -262,7 +262,7 @@ class LogWriter {
   }
 
   String _proposalKey(int user) {
-    return "proposal/${user}";
+    return "proposal/$user";
   }
 
   Future<bool> _checkIsProposalDone() async {

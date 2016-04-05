@@ -6,7 +6,7 @@ import 'dart:async';
 import 'dart:convert' show UTF8;
 import 'dart:io' show Platform;
 
-import 'package:flutter/services.dart' show shell;
+import 'package:flutter/shell.dart' show shell;
 import 'package:syncbase/src/naming/util.dart' as naming;
 import 'package:syncbase/syncbase_client.dart' as sc;
 
@@ -18,9 +18,9 @@ class CroupierClient {
   final sc.SyncbaseClient _syncbaseClient;
   final DiscoveryClient _discoveryClient;
   final settings_client.AppSettings appSettings;
-  static final String syncbaseServerUrl = Platform.environment[
-          'SYNCBASE_SERVER_URL'] ??
-      'https://mojo.v.io/syncbase_server.mojo';
+  static final String syncbaseServerUrl =
+      Platform.environment['SYNCBASE_SERVER_URL'] ??
+          'https://mojo.v.io/syncbase_server.mojo';
 
   static final String discoveryTestKey = "TEST";
 
@@ -78,7 +78,7 @@ class CroupierClient {
     if (!(await table.exists())) {
       await table.create(util.openPerms);
     }
-    util.log('CroupierClient: ${tableName} is ready');
+    util.log('CroupierClient: $tableName is ready');
     _tableLock[tableName].complete(table);
     return table;
   }
@@ -86,18 +86,18 @@ class CroupierClient {
   // Creates (or joins) a syncgroup with the associated parameters.
   Future<sc.SyncbaseSyncgroup> createSyncgroup(String sgName, String tableName,
       {String prefix, String description, sc.Perms permissions}) async {
-    util.log("CroupierClient: Creating syncgroup ${sgName}");
+    util.log("CroupierClient: Creating syncgroup $sgName");
 
     // TODO(alexfandrianto): destroy is still unimplemented. Thus, we must do a
     // join or create for this syncgroup.
     try {
-      util.log("CroupierClient: But first attempting to join ${sgName}");
+      util.log("CroupierClient: But first attempting to join $sgName");
       sc.SyncbaseSyncgroup sg = await joinSyncgroup(sgName);
-      util.log("CroupierClient: Successfully joined ${sgName}");
+      util.log("CroupierClient: Successfully joined $sgName");
       return sg;
     } catch (e) {
       util.log(
-          "CroupierClient: ${sgName} doesn't exist, so actually creating it.");
+          "CroupierClient: $sgName doesn't exist, so actually creating it.");
     }
 
     var myInfo = sc.SyncbaseClient.syncgroupMemberInfo(syncPriority: 3);
@@ -120,7 +120,7 @@ class CroupierClient {
 
   // Joins a syncgroup with the given name.
   Future<sc.SyncbaseSyncgroup> joinSyncgroup(String sgName) async {
-    util.log("CroupierClient: Joining syncgroup ${sgName}");
+    util.log("CroupierClient: Joining syncgroup $sgName");
     var myInfo = sc.SyncbaseClient.syncgroupMemberInfo(syncPriority: 3);
 
     sc.SyncbaseSyncgroup sg = await _getSyncgroup(sgName);
@@ -151,9 +151,9 @@ class CroupierClient {
       sc.SyncbaseDatabase db,
       String tbName,
       String prefix,
-      util.asyncKeyValueCallback onChange,
+      util.AsyncKeyValueCallback onChange,
       {Comparator<sc.WatchChange> sorter}) async {
-    util.log('Watching for changes on ${tbName}:${prefix}...');
+    util.log('Watching for changes on $tbName:$prefix...');
 
     // For safety, be certain that the syncbase table at tbName exists.
     await createTable(db, tbName);
@@ -176,7 +176,7 @@ class CroupierClient {
       await for (sc.KeyValue kv in scanStream) {
         String key = kv.key;
         String value = UTF8.decode(kv.value);
-        print("Scan found ${key}, ${value}");
+        print("Scan found $key, $value");
         await onChange(key, value, true);
       }
     } finally {
@@ -191,7 +191,7 @@ class CroupierClient {
 
     // Define a change handler that will be applied whenever a WatchChange
     // arrives on the watchStream.
-    _handleChange(sc.WatchChange wc) async {
+    Future _handleChange(sc.WatchChange wc) async {
       // Accumulate the WatchChange's in watchSequence.
       watchSequence.add(wc);
       if (wc.continued) {
@@ -218,7 +218,7 @@ class CroupierClient {
               assert(false);
           }
 
-          print("Watch found ${key}, ${value}");
+          print("Watch found $key, $value");
           await onChange(key, value, false);
         });
 

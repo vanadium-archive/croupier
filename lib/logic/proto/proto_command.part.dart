@@ -12,7 +12,7 @@ class ProtoCommand extends GameCommand {
   ProtoCommand.deal(int playerId, List<Card> cards)
       : super("Deal", computeDeal(playerId, cards));
 
-  // TODO: receiverId is actually implied by the game round. So it may end up being removable.
+  // TODO(alexfandrianto): receiverId is actually implied by the game round. So it may end up being removable.
   ProtoCommand.pass(int senderId, int receiverId, List<Card> cards)
       : super("Pass", computePass(senderId, receiverId, cards));
 
@@ -21,7 +21,7 @@ class ProtoCommand extends GameCommand {
 
   static String computeDeal(int playerId, List<Card> cards) {
     StringBuffer buff = new StringBuffer();
-    buff.write("${playerId}:");
+    buff.write("$playerId:");
     cards.forEach((card) => buff.write("${card.toString()}:"));
     buff.write("END");
     return buff.toString();
@@ -29,14 +29,14 @@ class ProtoCommand extends GameCommand {
 
   static String computePass(int senderId, int receiverId, List<Card> cards) {
     StringBuffer buff = new StringBuffer();
-    buff.write("${senderId}:${receiverId}:");
+    buff.write("$senderId:$receiverId:");
     cards.forEach((card) => buff.write("${card.toString()}:"));
     buff.write("END");
     return buff.toString();
   }
 
   static String computePlay(int playerId, Card c) {
-    return "${playerId}:${c.toString()}:END";
+    return "$playerId:${c.toString()}:END";
   }
 
   @override
@@ -46,7 +46,7 @@ class ProtoCommand extends GameCommand {
 
   @override
   void execute(Game game) {
-    print("ProtoCommand is executing: ${data}");
+    print("ProtoCommand is executing: $data");
     List<String> parts = data.split(":");
     switch (phase) {
       case "Deal":

@@ -10,7 +10,7 @@ abstract class GameLog {
   // This list is normally empty, but may grow if multiple commands arrive.
   List<GameCommand> pendingCommands = new List<GameCommand>();
   bool hasFired = false; // if true, halts processing of later pendingCommands}
-  asyncKeyValueCallback watchUpdateCb; // May be null.
+  AsyncKeyValueCallback watchUpdateCb; // May be null.
 
   void setGame(Game g) {
     this.game = g;
@@ -94,9 +94,8 @@ abstract class GameLog {
     _tryPendingCommand();
   }
 
-  String toString() {
-    return log.toString();
-  }
+  @override
+  String toString() => log.toString();
 
   // UNIMPLEMENTED: Let subclasses override this.
   void addToLogCb(List<GameCommand> log, GameCommand newCommand);

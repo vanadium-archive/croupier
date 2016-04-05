@@ -10,7 +10,8 @@ import 'package:flutter_sprites/flutter_sprites.dart';
 /// SoundAssets are used to play sounds in the game.
 class SoundAssets {
   SoundAssets(this._bundle) {
-    _soundEffectPlayer = new SoundEffectPlayer(20);
+    // TODO(alexfandrianto): We cannot play sounds without a media service.
+    //_soundEffectPlayer = new SoundEffectPlayer(20);
   }
 
   AssetBundle _bundle;
@@ -23,6 +24,7 @@ class SoundAssets {
   }
 
   void play(String name) {
-    _soundEffectPlayer.play(_soundEffects[name]);
+    // TODO(alexfandrianto): We cannot play sounds without a media service.
+    //_soundEffectPlayer.play(_soundEffects[name]);
   }
 }

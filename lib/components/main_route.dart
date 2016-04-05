@@ -12,12 +12,13 @@ import '../sound/sound_assets.dart';
 
 final GlobalKey _scaffoldKey = new GlobalKey();
 
-class MainRoute extends StatefulComponent {
+class MainRoute extends StatefulWidget {
   final Croupier croupier;
   final SoundAssets sounds;
 
   MainRoute(this.croupier, this.sounds);
 
+  @override
   MainRouteState createState() => new MainRouteState();
 }
 
@@ -35,17 +36,18 @@ class MainRouteState extends State<MainRoute> {
     }
   }
 
+  @override
   Widget build(BuildContext context) {
     if (config.croupier.settings == null) {
       return _buildSplashScreen();
     }
     return new Scaffold(
         key: _scaffoldKey,
-        toolBar: new ToolBar(
-            left: new IconButton(
-                icon: "navigation/menu",
+        appBar: new AppBar(
+            leading: new IconButton(
+                icon: Icons.menu,
                 onPressed: () => _scaffoldKey.currentState?.openDrawer()),
-            center: new Text('Croupier')),
+            title: new Text('Croupier')),
         body: new Material(
             child: new CroupierComponent(config.croupier, config.sounds)),
         drawer: _buildDrawer());
@@ -59,23 +61,22 @@ class MainRouteState extends State<MainRoute> {
             name: 'images/splash/flutter.png', width: style.Size.splashLogo),
         new AssetImage(
             name: 'images/splash/vanadium.png', width: style.Size.splashLogo)
-      ], justifyContent: FlexJustifyContent.center),
+      ], mainAxisAlignment: MainAxisAlignment.center),
       new Container(
           child: new Row(
-              children:
-                  [new Text('Loading Croupier...', style: style.Text.splash)],
-              alignItems: FlexAlignItems.end,
-              justifyContent: FlexJustifyContent.center),
+              children: [
+                new Text('Loading Croupier...', style: style.Text.splash)
+              ],
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.center),
           padding: style.Spacing.normalPadding)
     ]);
     return stack;
   }
 
   Widget _buildDrawer() {
-    return new Drawer(
-        child: new Block(children: <Widget>[
-      new DrawerHeader(
-          child: new BlockBody(children: [
+    return new Drawer(child: new Block(children: <Widget>[
+      new DrawerHeader(child: new BlockBody(children: [
         new CroupierProfileComponent(
             settings: config.croupier.settings,
             width: style.Size.settingsWidth,
@@ -83,7 +84,7 @@ class MainRouteState extends State<MainRoute> {
         new Text('Croupier', style: style.Text.titleStyle)
       ])),
       new DrawerItem(
-          icon: 'action/settings',
+          icon: Icons.settings,
           // TODO(alexfandrianto): Fix the Splash Screen, and we won't need
           // to check if settings is null here.
           // https://github.com/vanadium/issues/issues/958
@@ -91,13 +92,13 @@ class MainRouteState extends State<MainRoute> {
               config.croupier.settings != null ? _handleShowSettings : null,
           child: new Text('Settings')),
       new DrawerItem(
-          icon: 'action/build',
+          icon: Icons.build,
           child: new Row(children: [
             new Text('Debug Mode'),
             new Switch(
                 value: config.croupier.debugMode, onChanged: _handleDebugMode)
-          ], justifyContent: FlexJustifyContent.spaceBetween)),
-      new DrawerItem(icon: 'action/help', child: new Text('Help & Feedback'))
+          ], mainAxisAlignment: MainAxisAlignment.spaceBetween)),
+      new DrawerItem(icon: Icons.help, child: new Text('Help & Feedback'))
     ]));
   }
 

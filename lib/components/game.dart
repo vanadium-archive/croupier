@@ -29,22 +29,23 @@ part 'hearts/hearts.part.dart';
 part 'proto/proto.part.dart';
 part 'solitaire/solitaire.part.dart';
 
-abstract class GameComponent extends StatefulComponent {
+abstract class GameComponent extends StatefulWidget {
+  GameComponent(this.croupier, this.sounds, this.gameEndCallback,
+      {Key key, this.width, this.height})
+      : super(key: key);
+
   final Croupier croupier;
   final SoundAssets sounds;
   Game get game => croupier.game;
   final VoidCallback gameEndCallback;
   final double width;
   final double height;
-
-  GameComponent(this.croupier, this.sounds, this.gameEndCallback,
-      {Key key, this.width, this.height})
-      : super(key: key);
 }
 
 abstract class GameComponentState<T extends GameComponent> extends State<T> {
   Map<logic_card.Card, CardAnimationData> cardLevelMap;
 
+  @override
   void initState() {
     super.initState();
 
@@ -109,12 +110,12 @@ abstract class GameComponentState<T extends GameComponent> extends State<T> {
       setState(() {
         cardLevelMap[logicCard] = new CardAnimationData(c, cad?.newPoint, p, z);
       });
-    } else if (!cad.comp_card.isMatchWith(c)) {
+    } else if (!cad.compCard.isMatchWith(c)) {
       // Even if the position or z index didn't change, we can still update the
       // card itself. This can help during screen rotations, since the top-left
       // card likely not change positions or z-index.
       setState(() {
-        cad.comp_card = c;
+        cad.compCard = c;
       });
     }
   }
@@ -188,7 +189,7 @@ abstract class GameComponentState<T extends GameComponent> extends State<T> {
               0.0, // must pass x and y or else it expands to the maximum Stack size.
           left:
               0.0, // must pass x and y or else it expands to the maximum Stack size.
-          child: new component_card.ZCard(data.comp_card, localOld, localNew)));
+          child: new component_card.ZCard(data.compCard, localOld, localNew)));
     });
 
     return new IgnorePointer(
@@ -220,7 +221,7 @@ GameComponent createGameComponent(
   }
 }
 
-abstract class GameArrangeComponent extends StatefulComponent {
+abstract class GameArrangeComponent extends StatefulWidget {
   final Croupier croupier;
   final double width;
   final double height;
@@ -245,10 +246,10 @@ GameArrangeComponent createGameArrangeComponent(Croupier croupier,
 /// It uses the comp_card's properties, the oldPoint, newPoint, and z-index to
 /// determine how it needs to animate.
 class CardAnimationData {
-  component_card.Card comp_card;
+  component_card.Card compCard;
   Point oldPoint;
   Point newPoint;
   double z;
 
-  CardAnimationData(this.comp_card, this.oldPoint, this.newPoint, this.z);
+  CardAnimationData(this.compCard, this.oldPoint, this.newPoint, this.z);
 }

@@ -27,12 +27,13 @@ Map<String, DialogType> dialogTypes = {
   avatarKey: DialogType.ImagePicker
 };
 
-class CroupierSettingsComponent extends StatefulComponent {
+class CroupierSettingsComponent extends StatefulWidget {
   final CroupierSettings settings;
   final SaveDataCb saveDataCb;
 
   CroupierSettingsComponent(this.settings, this.saveDataCb);
 
+  @override
   CroupierSettingsComponentState createState() =>
       new CroupierSettingsComponentState();
 }
@@ -40,6 +41,7 @@ class CroupierSettingsComponent extends StatefulComponent {
 class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
   Map<String, String> _tempData = new Map<String, String>();
 
+  @override
   void initState() {
     super.initState();
 
@@ -64,17 +66,17 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
         onPressed: cb);
   }
 
+  @override
   Widget build(BuildContext context) {
     return new Scaffold(
-        toolBar: _buildToolBar(), body: _buildSettingsPane(context));
+        appBar: _buildAppBar(), body: _buildSettingsPane(context));
   }
 
-  Widget _buildToolBar() {
-    return new ToolBar(
-        left: new IconButton(
-            icon: "navigation/arrow_back",
-            onPressed: () => Navigator.pop(context)),
-        center: new Text("Settings"));
+  Widget _buildAppBar() {
+    return new AppBar(
+        leading: new IconButton(
+            icon: Icons.arrow_back, onPressed: () => Navigator.pop(context)),
+        title: new Text("Settings"));
   }
 
   Widget _buildSettingsPane(BuildContext context) {
@@ -97,9 +99,10 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
         child: new Row(children: [
           new Flexible(
               flex: 1,
-              child: new Text(capType, style: Theme.of(context).text.subhead)),
+              child: new Text(capType,
+                  style: Theme.of(context).textTheme.subhead)),
           new Flexible(flex: 3, child: child)
-        ], justifyContent: FlexJustifyContent.start));
+        ], mainAxisAlignment: MainAxisAlignment.start));
   }
 
   void _handlePressed(String type) {
@@ -114,16 +117,21 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
             content: new Input(
                 key: globalKeys[type],
                 hintText: capType,
-                initialValue: config.settings.getStringValue(type),
+                value: new InputValue(text: _tempData[type] ??
+                    config.settings.getStringValue(type)),
                 keyboardType: KeyboardType.text,
                 onChanged: _makeHandleChanged(type)),
             actions: [
-              new FlatButton(child: new Text('CANCEL'), onPressed: () {
-                Navigator.pop(context);
-              }),
-              new FlatButton(child: new Text('SAVE'), onPressed: () {
-                Navigator.pop(context, _tempData[type]);
-              }),
+              new FlatButton(
+                  child: new Text('CANCEL'),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  }),
+              new FlatButton(
+                  child: new Text('SAVE'),
+                  onPressed: () {
+                    Navigator.pop(context, _tempData[type]);
+                  }),
             ]);
         break;
       case DialogType.ColorPicker:
@@ -152,9 +160,11 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
             content:
                 new MaxTileWidthGrid(children: flexColors, maxTileWidth: 75.0),
             actions: [
-              new FlatButton(child: new Text('CANCEL'), onPressed: () {
-                Navigator.pop(context);
-              })
+              new FlatButton(
+                  child: new Text('CANCEL'),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  })
             ]);
         break;
       case DialogType.ImagePicker:
@@ -171,9 +181,11 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
             content:
                 new MaxTileWidthGrid(children: flexAvatars, maxTileWidth: 75.0),
             actions: [
-              new FlatButton(child: new Text('CANCEL'), onPressed: () {
-                Navigator.pop(context);
-              })
+              new FlatButton(
+                  child: new Text('CANCEL'),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  })
             ]);
         break;
       default:
@@ -197,11 +209,11 @@ class CroupierSettingsComponentState extends State<CroupierSettingsComponent> {
 
   String _capitalize(String s) => s[0].toUpperCase() + s.substring(1);
 
-  OneStringCb _makeHandleChanged(String type) {
-    return (String data) {
+  ValueChanged<InputValue> _makeHandleChanged(String type) {
+    return (InputValue iv) {
       setState(() {
-        print("Updating ${type} with ${data}");
-        _tempData[type] = data;
+        print("Updating $type with ${iv.text}");
+        _tempData[type] = iv.text;
       });
     };
   }

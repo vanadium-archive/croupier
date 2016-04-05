@@ -19,12 +19,13 @@ import 'game.dart' as component_game;
 GlobalObjectKey _gameKey = new GlobalObjectKey("CroupierGameKey");
 GlobalObjectKey _gameArrangeKey = new GlobalObjectKey("CroupierGameArrangeKey");
 
-class CroupierComponent extends StatefulComponent {
+class CroupierComponent extends StatefulWidget {
   final logic_croupier.Croupier croupier;
   final SoundAssets sounds;
 
   CroupierComponent(this.croupier, this.sounds);
 
+  @override
   CroupierComponentState createState() => new CroupierComponentState();
 }
 
@@ -36,12 +37,13 @@ class CroupierComponentState extends State<CroupierComponent> {
         });
   }
 
+  @override
   Widget build(BuildContext context) {
     switch (config.croupier.state) {
       case logic_croupier.CroupierState.welcome:
         // in which we show them a UI to start a new game, join a game, or change some settings.
         return new Container(
-            padding: new EdgeDims.only(top: ui.window.padding.top),
+            padding: new EdgeInsets.only(top: ui.window.padding.top),
             child: new Column(children: [
               new FlatButton(
                   child: new Text('Create Game', style: style.Text.titleStyle),
@@ -66,7 +68,7 @@ class CroupierComponentState extends State<CroupierComponent> {
       case logic_croupier.CroupierState.chooseGame:
         // in which we let them pick a game out of the many possible games... There aren't that many.
         return new Container(
-            padding: new EdgeDims.only(top: ui.window.padding.top),
+            padding: new EdgeInsets.only(top: ui.window.padding.top),
             child: new Column(children: [
               new FlatButton(
                   child: new Text('Proto', style: style.Text.titleStyle),
@@ -93,7 +95,7 @@ class CroupierComponentState extends State<CroupierComponent> {
       case logic_croupier.CroupierState.joinGame:
         // A stateful view, showing the game ads discovered.
         List<Widget> gameAdWidgets = new List<Widget>();
-        if (config.croupier.games_found.length == 0) {
+        if (config.croupier.gamesFound.length == 0) {
           gameAdWidgets.add(
               new Text("Looking for Games...", style: style.Text.titleStyle));
         } else {
@@ -101,9 +103,9 @@ class CroupierComponentState extends State<CroupierComponent> {
               .add(new Text("Available Games", style: style.Text.titleStyle));
         }
 
-        config.croupier.games_found
+        config.croupier.gamesFound
             .forEach((String _, logic_game.GameStartData gsd) {
-          CroupierSettings cs = config.croupier.settings_everyone[gsd.ownerID];
+          CroupierSettings cs = config.croupier.settingsEveryone[gsd.ownerID];
           gameAdWidgets.add(new CroupierGameAdvertisementComponent(gsd,
               onTap: makeSetStateCallback(
                   logic_croupier.CroupierState.arrangePlayers, gsd),
@@ -117,15 +119,15 @@ class CroupierComponentState extends State<CroupierComponent> {
 
         // in which players wait for game invitations to arrive.
         return new Container(
-            padding: new EdgeDims.only(top: ui.window.padding.top),
+            padding: new EdgeInsets.only(top: ui.window.padding.top),
             child: new Column(children: gameAdWidgets));
       case logic_croupier.CroupierState.arrangePlayers:
         return new Container(
-            padding: new EdgeDims.only(top: ui.window.padding.top),
+            padding: new EdgeInsets.only(top: ui.window.padding.top),
             child: _buildArrangePlayers());
       case logic_croupier.CroupierState.playGame:
         return new Container(
-            padding: new EdgeDims.only(top: ui.window.padding.top),
+            padding: new EdgeInsets.only(top: ui.window.padding.top),
             child: component_game.createGameComponent(
                 config.croupier,
                 config.sounds,
@@ -136,7 +138,7 @@ class CroupierComponentState extends State<CroupierComponent> {
 
       case logic_croupier.CroupierState.resumeGame:
         return new Container(
-            padding: new EdgeDims.only(top: ui.window.padding.top),
+            padding: new EdgeInsets.only(top: ui.window.padding.top),
             child: new Text("Resuming Game...", style: style.Text.titleStyle),
             width: ui.window.size.width,
             height: ui.window.size.height - ui.window.padding.top);
@@ -150,9 +152,9 @@ class CroupierComponentState extends State<CroupierComponent> {
   // shown if the person has not sat down yet.
   Widget _buildPlayerProfiles(bool needsArrangement) {
     List<Widget> profileWidgets = new List<Widget>();
-    config.croupier.players_found.forEach((int userID, int playerNumber) {
+    config.croupier.playersFound.forEach((int userID, int playerNumber) {
       // Note: Even if cs is null, a placeholder will be shown instead.
-      CroupierSettings cs = config.croupier.settings_everyone[userID];
+      CroupierSettings cs = config.croupier.settingsEveryone[userID];
       bool isMe = config.croupier.settings.userID == userID;
       Widget cpc = new Container(
           decoration: isMe ? style.Box.liveNow : null,
@@ -176,21 +178,24 @@ class CroupierComponentState extends State<CroupierComponent> {
           scrollDirection: Axis.horizontal);
     }
     return new MaxTileWidthGrid(
-        children: profileWidgets, maxTileWidth: style.Size.settingsWidth);
+        children: profileWidgets,
+        maxTileWidth: style.Size.settingsWidth,
+        columnSpacing: 0.0,
+        rowSpacing: 0.0);
   }
 
   Widget _buildArrangePlayers() {
     List<Widget> allWidgets = new List<Widget>();
 
     logic_game.GameArrangeData gad = config.croupier.game.gameArrangeData;
-    Iterable<int> playerNumbers = config.croupier.players_found.values;
+    Iterable<int> playerNumbers = config.croupier.playersFound.values;
 
     allWidgets.add(new Flexible(
         flex: 0,
         child: new Row(children: [
           new Text("${config.croupier.game.gameTypeName}",
               style: style.Text.hugeStyle)
-        ], justifyContent: FlexJustifyContent.spaceAround)));
+        ], mainAxisAlignment: MainAxisAlignment.spaceAround)));
 
     // Then show the profile widgets of those who have joined the game.
     allWidgets.add(new Flexible(flex: 0, child: new Text("Player List")));
@@ -210,7 +215,7 @@ class CroupierComponentState extends State<CroupierComponent> {
     VoidCallback startCb;
     if (gad.canStart(playerNumbers) || config.croupier.debugMode) {
       startCb = () {
-        config.croupier.settings_manager
+        config.croupier.settingsManager
             .setGameStatus(config.croupier.game.gameID, "RUNNING");
 
         // Since playerNumber starts out as null, we should set it to -1 if
@@ -228,7 +233,7 @@ class CroupierComponentState extends State<CroupierComponent> {
                 child: new Text("Start Game", style: style.Text.hugeStyle),
                 onPressed: startCb,
                 color: style.theme.accentColor)
-          ], justifyContent: FlexJustifyContent.spaceAround)));
+          ], mainAxisAlignment: MainAxisAlignment.spaceAround)));
     }
     allWidgets.add(new Flexible(
         flex: 0,

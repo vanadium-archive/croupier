@@ -7,9 +7,6 @@ part of solitaire;
 enum SolitairePileType { aces, discard, draw, down, up }
 
 class SolitaireGame extends Game {
-  @override
-  String get gameTypeName => "Solitaire";
-
   // Constants for the index-based offsets of the Solitaire Game's card collection.
   // There are 20 piles to track (4 aces, 1 discard, 1 draw, 7 down, 7 up).
   static const numPiles = 20;
@@ -19,21 +16,25 @@ class SolitaireGame extends Game {
   static const offsetDown = 6;
   static const offsetUp = 13;
 
+  SolitaireGame({int gameID, bool isCreator})
+      : super.create(GameType.solitaire, new SolitaireLog(), numPiles,
+            gameID: gameID, isCreator: isCreator) {
+    resetGame();
+  }
+
+  @override
+  String get gameTypeName => "Solitaire";
+
   static final GameArrangeData _arrangeData =
       new GameArrangeData(false, new Set());
+  @override
   GameArrangeData get gameArrangeData => _arrangeData;
 
   SolitairePhase _phase = SolitairePhase.deal;
   SolitairePhase get phase => _phase;
   void set phase(SolitairePhase other) {
-    print('setting phase from ${_phase} to ${other}');
+    print('setting phase from $_phase to $other');
     _phase = other;
-  }
-
-  SolitaireGame({int gameID, bool isCreator})
-      : super.create(GameType.solitaire, new SolitaireLog(), numPiles,
-            gameID: gameID, isCreator: isCreator) {
-    resetGame();
   }
 
   void resetGame() {
@@ -74,7 +75,8 @@ class SolitaireGame extends Game {
     return getCardSuit(c) == 's' || getCardSuit(c) == 'c';
   }
 
-  bool get canDrawCard => cardCollections[offsetDiscard].length +
+  bool get canDrawCard =>
+      cardCollections[offsetDiscard].length +
           cardCollections[offsetDraw].length >
       0;
 
@@ -123,7 +125,7 @@ class SolitaireGame extends Game {
     List<String> suits = new List<String>(4);
     Set<String> remainingSuits =
         new Set<String>.from(<String>['c', 'd', 'h', 's']);
-    int minLen = null;
+    int minLen;
     for (int i = 0; i < 4; i++) {
       int len = cardCollections[offsetAces + i].length;
 
@@ -155,25 +157,25 @@ class SolitaireGame extends Game {
         // Note: If we pull from up cards, the game may not be in a valid state,
         // but this is okay since we are cheating.
 
-        int index_offset;
+        int indexOffset;
         switch (suits[i]) {
           case 'c':
-            index_offset = 0;
+            indexOffset = 0;
             break;
           case 'd':
-            index_offset = 13;
+            indexOffset = 13;
             break;
           case 'h':
-            index_offset = 26;
+            indexOffset = 26;
             break;
           case 's':
-            index_offset = 39;
+            indexOffset = 39;
             break;
           default:
             print('the suit was ${suits[i]}');
             assert(false);
         }
-        Card c = Card.All[index_offset + minLen];
+        Card c = Card.all[indexOffset + minLen];
         int pileIndex = findCard(c);
 
         cardCollections[pileIndex].remove(c);
@@ -295,7 +297,7 @@ class SolitaireGame extends Game {
   String canPlay(Card c, List<Card> dest) {
     int destination = cardCollections.indexOf(dest);
     int source = findCard(c);
-    print("Can play? ${c}, ${source} ${destination}");
+    print("Can play? $c, $source $destination");
 
     if (phase != SolitairePhase.play) {
       return "It is not the Play phase of Solitaire.";
@@ -304,7 +306,7 @@ class SolitaireGame extends Game {
       return "Unknown card: (${c.toString()})";
     }
     if (dest == -1) {
-      return "Unknown destination: ${dest}";
+      return "Unknown destination: $dest";
     }
     if (source == destination) {
       return "Source Pile is same as Destination Pile";

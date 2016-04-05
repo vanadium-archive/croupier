@@ -5,9 +5,14 @@ DART_TEST_FILES := $(shell find test -name *.dart ! -name *.part.dart)
 # Add Dart SDK to path.
 PATH := $(shell jiri profile env --profiles=v23:dart DART_SDK=)/bin:$(PATH)
 
+# Point to where FLUTTER_ROOT lives.
+export FLUTTER_ROOT := $(JIRI_ROOT)/flutter
+
 # This section is used to setup the environment for running with mojo_shell.
-CROUPIER_DIR := $(shell pwd)
-DISCOVERY_DIR := $(JIRI_ROOT)/release/mojo/discovery
+ifdef ANDROID
+	MOJO_DEVTOOLS := $(shell jiri profile env --profiles=v23:mojo --target=arm-android MOJO_DEVTOOLS=)
+	MOJO_SHELL := $(shell jiri profile env --profiles=v23:mojo --target=arm-android MOJO_SHELL=)
+endif
 SHELL := /bin/bash -euo pipefail
 
 # Flags for Syncbase service running as Mojo service.
@@ -33,7 +38,7 @@ endif
 ifdef ANDROID
 	MOJO_ANDROID_FLAGS := --android
 	SYNCBASE_MOJO_BIN_DIR := packages/syncbase/mojo_services/android
-	DISCOVERY_MOJO_BIN_DIR := packages/v23discovery/mojo_services/android
+	DISCOVERY_MOJO_BIN_DIR := packages/v23discovery/mojo_services/arm_android
 
 	# Name to mount under.
 	SYNCBASE_NAME_FLAG := --name=$(MOUNTTABLE)/croupier-$(DEVICE_ID)
@@ -64,7 +69,7 @@ endif
 export SYNCBASE_SERVER_URL := https://mojo.v.io/syncbase_server.mojo
 export DISCOVERY_SERVER_URL := https://mojo2.v.io/discovery.mojo
 MOJO_SHELL_FLAGS := --enable-multiprocess \
-	--map-origin="https://mojo2.v.io=$(DISCOVERY_MOJO_BIN_DIR)" --args-for="$(DISCOVERY_SERVER_URL) host$(DEVICE_ID)" \
+	--map-origin="https://mojo2.v.io=$(DISCOVERY_MOJO_BIN_DIR)" \
 	--map-origin="https://mojo.v.io=$(SYNCBASE_MOJO_BIN_DIR)" --args-for="$(SYNCBASE_SERVER_URL) $(SYNCBASE_FLAGS)"
 
 ifdef ANDROID
@@ -77,7 +82,7 @@ define RUN_SKY_APP
 	pub run flutter_tools -v run_mojo \
 	--app $1 \
 	$(MOJO_ANDROID_FLAGS) \
-	--mojo-path $(MOJO_DIR)/src \
+	--devtools-path $(MOJO_DEVTOOLS)/mojo_run \
 	--checked \
 	--mojo-debug \
 	-- $(TARGET_DEVICE_FLAG) \
@@ -93,6 +98,7 @@ endef
 # Only `pub upgrade` can escape such a thing.
 packages: pubspec.yaml
 	cd $(JIRI_ROOT)/flutter && git show
+	cd $(JIRI_ROOT)/flutter && bin/flutter --version
 	pub upgrade
 
 # Builds mounttabled and principal.
@@ -112,14 +118,14 @@ dartfmt:
 
 .PHONY: lint
 lint: packages
-	dartanalyzer lib/main.dart | grep -v "\[warning\] The imported libraries"
-	dartanalyzer $(DART_TEST_FILES) | grep -v "\[warning\] The imported libraries"
+	dartanalyzer lib/main.dart | grep -vE "(\[warning\]\ The\ imported\ libraries|TODO\(alexfandrianto\):)"
+	dartanalyzer $(DART_TEST_FILES) | grep -vE "(\[warning\]\ The\ imported\ libraries|TODO\(alexfandrianto\):)"
 
 .PHONY: build
 build: croupier.flx
 
 croupier.flx: packages $(DART_LIB_FILES_ALL)
-	pub run flutter_tools -v build --manifest manifest.yaml --output-file $@
+	pub run flutter_tools -v build flx --manifest manifest.yaml --output-file $@
 
 SETTINGS_FILE := /sdcard/croupier_settings.json
 SETTINGS_JSON := {\"deviceID\": \"$(DEVICE_ID)\", \"mounttable\": \"$(MOUNTTABLE)\"}
@@ -132,7 +138,7 @@ endif
 # Starts the app on the specified ANDROID device.
 # Don't forget to make creds first if they are not present.
 .PHONY: start
-start: croupier.flx env-check packages push-settings
+start: croupier.flx install-shell env-check packages push-settings
 ifdef ANDROID
 	# Make creds dir if it does not exist.
 	mkdir -p creds
@@ -159,19 +165,15 @@ GS_BUCKET_PATH := gs://mojo_services
 # This file is developed separately from Croupier.
 .PHONY: deploy
 deploy: build
-	wget https://storage.googleapis.com/mojo_infra/flutter/9ee9721b1b0379da1dae7ed27243da7635d55a3a/android-arm/artifacts.zip
-	unzip artifacts.zip -d artifacts
 	gsutil cp $(APP_ICON) $(GS_BUCKET_PATH)/croupier
 	gsutil cp $(APP_FLX_FILE) $(GS_BUCKET_PATH)/croupier
-	gsutil cp $(PWD)/artifacts/flutter.mojo $(GS_BUCKET_PATH)/flutter
+	gsutil cp $(FLUTTER_ROOT)/bin/cache/artifacts/engine/android-arm/flutter.mojo $(GS_BUCKET_PATH)/flutter
 	gsutil cp -r $(SYNCBASE_MOJO_DIR) $(GS_BUCKET_PATH)/syncbase
 	gsutil cp -r $(DISCOVERY_MOJO_DIR) $(GS_BUCKET_PATH)/v23discovery
 	gsutil -m acl set -R -a public-read $(GS_BUCKET_PATH)/croupier
 	gsutil -m acl set -R -a public-read $(GS_BUCKET_PATH)/flutter
 	gsutil -m acl set -R -a public-read $(GS_BUCKET_PATH)/syncbase
 	gsutil -m acl set -R -a public-read $(GS_BUCKET_PATH)/v23discovery
-	rm artifacts.zip
-	rm -r artifacts
 
 CROUPIER_SHORTCUT_NAME := Croupier
 CROUPIER_URL := mojo://storage.googleapis.com/mojo_services/croupier/croupier.flx
@@ -185,7 +187,7 @@ define GENERATE_SHORTCUT_FILE
 	shortcut_template > shortcut_commands
 endef
 
-shortcut: env-check push-settings
+shortcut: install-shell env-check push-settings
 ifdef ANDROID
 	# Create the shortcut file.
 	$(call GENERATE_SHORTCUT_FILE,$(DEVICE_ID),$(SYNCBASE_NAME_FLAG))
@@ -203,6 +205,18 @@ endif
 shortcut-remove: env-check
 ifdef ANDROID
 	adb -s $(DEVICE_ID) shell rm -f $(MOJO_SHELL_CMD_PATH)
+endif
+
+.PHONY: install-shell
+install-shell: shortcut-remove
+ifdef ANDROID
+	adb -s $(DEVICE_ID) install $(MOJO_SHELL)
+endif
+
+.PHONY: uninstall-shell
+uninstall-shell: clear-shortcut
+ifdef ANDROID
+	adb -s $(DEVICE_ID) uninstall org.chromium.mojo.shell
 endif
 
 .PHONY: mock

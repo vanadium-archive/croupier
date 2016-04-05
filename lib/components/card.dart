@@ -21,6 +21,7 @@ class GlobalCardKey extends widgets.GlobalKey {
 
   GlobalCardKey(this.card, this.type) : super.constructor();
 
+  @override
   bool operator ==(Object other) {
     if (other is! GlobalCardKey) {
       return false;
@@ -29,12 +30,13 @@ class GlobalCardKey extends widgets.GlobalKey {
     return k.card == card && k.type == type;
   }
 
+  @override
   int get hashCode {
     return 17 * card.hashCode + 33 * type.hashCode;
   }
 }
 
-class ZCard extends widgets.StatefulComponent {
+class ZCard extends widgets.StatefulWidget {
   final logic_card.Card card;
   final bool faceUp;
   final double width;
@@ -48,19 +50,20 @@ class ZCard extends widgets.StatefulComponent {
   final Point endingPosition;
 
   ZCard(Card dataComponent, this.startingPosition, this.endingPosition)
-      : super(key: new GlobalCardKey(dataComponent.card, CardUIType.zCard)),
-        card = dataComponent.card,
+      : card = dataComponent.card,
         faceUp = dataComponent.faceUp,
         width = dataComponent.width ?? 40.0,
         height = dataComponent.height ?? 40.0,
         rotation = dataComponent.rotation ?? 0.0,
         animationType = dataComponent.animationType,
-        z = dataComponent.z;
+        z = dataComponent.z,
+        super(key: new GlobalCardKey(dataComponent.card, CardUIType.zCard));
 
+  @override
   ZCardState createState() => new ZCardState();
 }
 
-class Card extends widgets.StatefulComponent {
+class Card extends widgets.StatefulWidget {
   final logic_card.Card card;
   final bool faceUp;
   final double width;
@@ -116,6 +119,7 @@ class Card extends widgets.StatefulComponent {
         c.z == z;
   }
 
+  @override
   CardState createState() => new CardState();
 }
 
@@ -125,6 +129,7 @@ class CardState extends widgets.State<Card> {
     return box.localToGlobal(Point.origin);
   }
 
+  @override
   widgets.Widget build(widgets.BuildContext context) {
     widgets.Widget image = new widgets.GestureDetector(
         onTap: config.tapCallback != null
@@ -154,8 +159,8 @@ widgets.Widget _imageFromCard(
 class ZCardState extends widgets.State<ZCard> {
   Tween<Point> _positionTween;
   AnimationController _animationController;
-  List<
-      Point> _pointQueue; // at least 1 longer than the current animation index.
+  List<Point>
+      _pointQueue; // at least 1 longer than the current animation index.
   int _animationIndex;
 
   @override
@@ -244,12 +249,12 @@ class ZCardState extends widgets.State<ZCard> {
       Point endingLocation = _pointQueue[_animationIndex + 1];
       _positionTween =
           new Tween<Point>(begin: startingLocation, end: endingLocation);
-      _animationController.value = 0.0;
       _animationController.duration = this.animationDuration;
-      _animationController.play(AnimationDirection.forward);
+      _animationController.forward(from: 0.0);
     }
   }
 
+  @override
   widgets.Widget build(widgets.BuildContext context) {
     widgets.Widget image = new widgets.Transform(
         child: _imageFromCard(
@@ -261,10 +266,11 @@ class ZCardState extends widgets.State<ZCard> {
     widgets.Widget retWidget = new widgets.AnimatedBuilder(
         animation: _animationController,
         builder: (widgets.BuildContext c, widgets.Widget child) {
-      Matrix4 transform = new Matrix4.identity()
-        ..translate(localPosition.x, localPosition.y);
-      return new widgets.Transform(transform: transform, child: child);
-    }, child: image);
+          Matrix4 transform = new Matrix4.identity()
+            ..translate(localPosition.x, localPosition.y);
+          return new widgets.Transform(transform: transform, child: child);
+        },
+        child: image);
 
     return retWidget;
   }

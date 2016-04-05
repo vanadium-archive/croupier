@@ -28,29 +28,7 @@ const double CARD_MARGIN = 3.0; // transparent
 const double WHITE_LINE_HEIGHT = 2.0; // white
 const double WHITE_LINE_MARGIN = 4.0; // each side
 
-class CardCollectionComponent extends StatefulComponent {
-  final List<logic_card.Card> cards;
-  final CardCollectionOrientation orientation;
-  final bool faceUp;
-  final AcceptCb acceptCallback;
-  final bool dragChildren;
-  final component_card.TapCallback cardTapCallback;
-  final DropType _acceptType;
-  final Comparator<logic_card.Card> comparator;
-  final double width;
-  final double height;
-  final double widthCard;
-  final double heightCard;
-  final Color _backgroundColor;
-  final Color _altColor;
-  final double rotation; // This angle is in radians.
-  final bool useKeys; // If set, every Card created in this collection will be keyed.
-  final component_card.CardAnimationType animationType;
-
-  DropType get acceptType => _acceptType ?? DropType.none;
-  Color get backgroundColor => _backgroundColor ?? Colors.grey[500];
-  Color get altColor => _altColor ?? Colors.grey[500];
-
+class CardCollectionComponent extends StatefulWidget {
   CardCollectionComponent(this.cards, this.faceUp, this.orientation,
       {this.dragChildren: false,
       this.cardTapCallback: null,
@@ -70,8 +48,33 @@ class CardCollectionComponent extends StatefulComponent {
         _backgroundColor = backgroundColor,
         _altColor = altColor;
 
-  CardCollectionComponentState createState() =>
-      new CardCollectionComponentState();
+  final List<logic_card.Card> cards;
+  final CardCollectionOrientation orientation;
+  final bool faceUp;
+  final AcceptCb acceptCallback;
+  final bool dragChildren;
+  final component_card.TapCallback cardTapCallback;
+  final DropType _acceptType;
+  final Comparator<logic_card.Card> comparator;
+  final double width;
+  final double height;
+  final double widthCard;
+  final double heightCard;
+  final Color _backgroundColor;
+  final Color _altColor;
+  final double rotation; // This angle is in radians.
+  final bool
+      useKeys; // If set, every Card created in this collection will be keyed.
+  final component_card.CardAnimationType animationType;
+
+  DropType get acceptType => _acceptType ?? DropType.none;
+  Color get backgroundColor => _backgroundColor ?? Colors.grey[500];
+  Color get altColor => _altColor ?? Colors.grey[500];
+
+  @override
+  CardCollectionComponentState createState() {
+    return new CardCollectionComponentState();
+  }
 }
 
 class CardCollectionComponentState extends State<CardCollectionComponent> {
@@ -193,15 +196,14 @@ class CardCollectionComponentState extends State<CardCollectionComponent> {
               new BoxDecoration(backgroundColor: config.backgroundColor),
           height: _produceRowHeight,
           width: config.width,
-          child: new Center(
-              child: new Opacity(
-                  opacity: 0.45,
-                  child: emptyBackgroundImage == ""
-                      ? null
-                      : new AssetImage(
-                          name: emptyBackgroundImage,
-                          fit: ImageFit.scaleDown,
-                          height: config.heightCard))));
+          child: new Center(child: new Opacity(
+              opacity: 0.45,
+              child: emptyBackgroundImage == ""
+                  ? null
+                  : new AssetImage(
+                      name: emptyBackgroundImage,
+                      fit: ImageFit.scaleDown,
+                      height: config.heightCard))));
     }
 
     double w = config.width ?? config.widthCard * 5;
@@ -300,9 +302,8 @@ class CardCollectionComponentState extends State<CardCollectionComponent> {
     }
   }
 
-  Widget build(BuildContext context) {
-    return _buildCollection();
-  }
+  @override
+  Widget build(BuildContext context) => _buildCollection();
 
   Widget _buildCollection() {
     List<component_card.Card> cardComponents = new List<component_card.Card>();
@@ -336,29 +337,31 @@ class CardCollectionComponentState extends State<CardCollectionComponent> {
             child: wrapCards(cardComponents));
       case DropType.card:
         return new DragTarget<component_card.Card>(
-            onWillAccept: _handleWillAccept, onAccept: _handleAccept,
+            onWillAccept: _handleWillAccept,
+            onAccept: _handleAccept,
             builder: (BuildContext context, List<component_card.Card> data, _) {
-          return new Container(
-              decoration: new BoxDecoration(
-                  backgroundColor:
-                      data.isEmpty ? config.backgroundColor : config.altColor),
-              height: this.desiredHeight,
-              width: this.desiredWidth,
-              child: wrapCards(cardComponents));
-        });
+              return new Container(
+                  decoration: new BoxDecoration(backgroundColor: data.isEmpty
+                      ? config.backgroundColor
+                      : config.altColor),
+                  height: this.desiredHeight,
+                  width: this.desiredWidth,
+                  child: wrapCards(cardComponents));
+            });
       case DropType.cardCollection:
         return new DragTarget<CardCollectionComponent>(
             onWillAccept: _handleWillAcceptMultiple,
-            onAccept: _handleAcceptMultiple, builder:
+            onAccept: _handleAcceptMultiple,
+            builder:
                 (BuildContext context, List<CardCollectionComponent> data, _) {
-          return new Container(
-              decoration: new BoxDecoration(
-                  backgroundColor:
-                      data.isEmpty ? config.backgroundColor : config.altColor),
-              height: this.desiredHeight,
-              width: this.desiredWidth,
-              child: wrapCards(cardComponents));
-        });
+              return new Container(
+                  decoration: new BoxDecoration(backgroundColor: data.isEmpty
+                      ? config.backgroundColor
+                      : config.altColor),
+                  height: this.desiredHeight,
+                  width: this.desiredWidth,
+                  child: wrapCards(cardComponents));
+            });
       default:
         assert(false);
         return null;

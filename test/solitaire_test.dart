@@ -60,7 +60,7 @@ void main() {
       for (int i = 0; i < 7; i++) {
         expect(game.cardCollections[SolitaireGame.offsetDown + i].length,
             equals(i),
-            reason: "Down pile ${i} starts with ${i} cards");
+            reason: "Down pile $i starts with $i cards");
         expect(
             game.cardCollections[SolitaireGame.offsetUp + i].length, equals(1),
             reason: "Up piles start with 1 card");
@@ -201,7 +201,7 @@ void main() {
         SolitaireGame game = new SolitaireGame();
         game.phase = SolitairePhase.score;
         game.gamelog
-            .add(new SolitaireCommand.deal(new List<Card>.from(Card.All)));
+            .add(new SolitaireCommand.deal(new List<Card>.from(Card.all)));
       }, throwsA(new isInstanceOf<StateError>()));
     });
     test("Dealing - fake cards", () {
@@ -216,13 +216,13 @@ void main() {
       expect(() {
         SolitaireGame game = new SolitaireGame();
         game.gamelog.add(new SolitaireCommand.deal(
-            new List<Card>.from(Card.All)..addAll(Card.All)));
+            new List<Card>.from(Card.all)..addAll(Card.all)));
       }, throwsA(new isInstanceOf<StateError>()));
       // missing cards
       expect(() {
         SolitaireGame game = new SolitaireGame();
         game.gamelog.add(new SolitaireCommand.deal(
-            new List<Card>.from(Card.All.getRange(0, 40))));
+            new List<Card>.from(Card.all.getRange(0, 40))));
       }, throwsA(new isInstanceOf<StateError>()));
     });
 
@@ -233,16 +233,16 @@ void main() {
       // s2 _ h2 _   d2 c11
       // _ c3 h3 d1 s13 d3 d12
 
-      Card c3 = Card.All[0 + 2];
-      Card c11 = Card.All[0 + 10];
-      Card d1 = Card.All[13 + 0];
-      Card d2 = Card.All[13 + 1];
-      Card d3 = Card.All[13 + 2];
-      Card h2 = Card.All[26 + 1];
-      Card h3 = Card.All[26 + 2];
-      Card d12 = Card.All[13 + 11];
-      Card s2 = Card.All[39 + 1];
-      Card s13 = Card.All[39 + 12];
+      Card c3 = Card.all[0 + 2];
+      Card c11 = Card.all[0 + 10];
+      Card d1 = Card.all[13 + 0];
+      Card d2 = Card.all[13 + 1];
+      Card d3 = Card.all[13 + 2];
+      Card h2 = Card.all[26 + 1];
+      Card h3 = Card.all[26 + 2];
+      Card d12 = Card.all[13 + 11];
+      Card s2 = Card.all[39 + 1];
+      Card s13 = Card.all[39 + 12];
 
       SolitaireGame _makeArbitrarySolitaireGame() {
         SolitaireGame g = new SolitaireGame();

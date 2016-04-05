@@ -18,6 +18,7 @@ abstract class GameCommand {
 
   String get command => toString();
 
+  @override
   bool operator ==(Object other) {
     if (other is GameCommand) {
       return this.command == other.command;
@@ -25,7 +26,12 @@ abstract class GameCommand {
     return false;
   }
 
+  @override
+  int get hashCode =>
+      23 * phase.hashCode + 37 * data.hashCode + 41 * simultaneity.hashCode;
+
+  @override
   String toString() {
-    return "${phase}|${data}";
+    return "$phase|$data";
   }
 }

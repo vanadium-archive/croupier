@@ -1,26 +1,5 @@
 name: croupier
-material-design-icons:
-  - name: action/build
-  - name: action/help
-  - name: action/settings
-  - name: av/play_arrow
-  - name: action/swap_vert
-  - name: hardware/tablet
-  - name: image/filter_none
-  - name: image/filter_1
-  - name: image/filter_2
-  - name: image/filter_3
-  - name: image/filter_4
-  - name: image/filter_5
-  - name: image/filter_6
-  - name: image/filter_7
-  - name: image/filter_8
-  - name: image/filter_9
-  - name: image/filter_9_plus
-  - name: navigation/arrow_back
-  - name: navigation/arrow_forward
-  - name: navigation/menu
-  - name: social/person_outline
+uses-material-design: true
 assets:
   - images/default/classic/down/c10.png
   - images/default/classic/down/c1.png

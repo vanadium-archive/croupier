@@ -28,11 +28,11 @@ import 'package:v23discovery/discovery.dart' as discovery;
 import 'package:syncbase/syncbase_client.dart' as sc;
 
 class SettingsManager {
-  final util.keyValueCallback updateSettingsCallback;
-  final util.keyValueCallback updateGamesCallback;
-  final util.keyValueCallback updatePlayerFoundCallback;
-  final util.keyValueCallback updateGameStatusCallback;
-  final util.asyncKeyValueCallback updateGameLogCallback;
+  final util.KeyValueCallback updateSettingsCallback;
+  final util.KeyValueCallback updateGamesCallback;
+  final util.KeyValueCallback updatePlayerFoundCallback;
+  final util.KeyValueCallback updateGameStatusCallback;
+  final util.AsyncKeyValueCallback updateGameLogCallback;
   final CroupierClient _cc;
   sc.SyncbaseTable tb;
 
@@ -89,7 +89,7 @@ class SettingsManager {
   Future<String> _tryReadData(sc.SyncbaseTable st, String rowkey) async {
     var row = st.row(rowkey);
     if (!(await row.exists())) {
-      print("${rowkey} did not exist");
+      print("$rowkey did not exist");
       return null;
     }
     return UTF8.decode(await row.get());
@@ -102,7 +102,7 @@ class SettingsManager {
     util.log('SettingsManager.save');
     await _prepareSettingsTable();
 
-    await tb.row(util.settingsPersonalKey).put(UTF8.encode("${userID}"));
+    await tb.row(util.settingsPersonalKey).put(UTF8.encode("$userID"));
     await tb
         .row(util.settingsDataKeyFromUserID(userID))
         .put(UTF8.encode(jsonString));
@@ -139,7 +139,7 @@ class SettingsManager {
             this.updatePlayerFoundCallback(key, null);
             break;
           default:
-            print("Unexpected key: ${key} with value ${value}");
+            print("Unexpected key: $key with value $value");
             assert(false);
         }
       }
@@ -156,7 +156,7 @@ class SettingsManager {
 
   Future<logic_game.GameStartData> createGameSyncgroup(
       String type, int gameID) async {
-    print("Creating game syncgroup for ${type} and ${gameID}");
+    print("Creating game syncgroup for $type and $gameID");
     sc.SyncbaseDatabase db = await _cc.createDatabase();
     sc.SyncbaseTable gameTable = await _cc.createTable(db, util.tableNameGames);
 
@@ -168,12 +168,12 @@ class SettingsManager {
       return a.rowKey.compareTo(b.rowKey);
     });
 
-    print("Now writing to some rows of ${gameID}");
+    print("Now writing to some rows of $gameID");
     // Start up the table and write yourself as player 0.
-    await gameTable.row(util.gameTypeKey(gameID)).put(UTF8.encode("${type}"));
+    await gameTable.row(util.gameTypeKey(gameID)).put(UTF8.encode("$type"));
 
     int id = await _getUserID();
-    await gameTable.row(util.gameOwnerKey(gameID)).put(UTF8.encode("${id}"));
+    await gameTable.row(util.gameOwnerKey(gameID)).put(UTF8.encode("$id"));
     await gameTable
         .row(util.playerSettingsKeyFromData(gameID, id))
         .put(UTF8.encode(await _mySettingsSyncgroupName()));
@@ -199,7 +199,7 @@ class SettingsManager {
   }
 
   Future joinGameSyncgroup(String sgName, int gameID) async {
-    print("Now joining game syncgroup at ${sgName} and ${gameID}");
+    print("Now joining game syncgroup at $sgName and $gameID");
 
     sc.SyncbaseDatabase db = await _cc.createDatabase();
     sc.SyncbaseTable gameTable = await _cc.createTable(db, util.tableNameGames);
@@ -225,7 +225,7 @@ class SettingsManager {
 
     await gameTable
         .row(util.playerNumberKeyFromData(gameID, userID))
-        .put(UTF8.encode("${playerNumber}"));
+        .put(UTF8.encode("$playerNumber"));
   }
 
   Future setGameStatus(int gameID, String status) async {
@@ -288,13 +288,15 @@ class SettingsManager {
     String gameSuffix = util.syncgameSuffix("${gsd.gameID}");
     return _cc.discoveryClient.advertise(
         _discoveryGameAdKey,
-        DiscoveryClient.serviceMaker(
+        DiscoveryClient.advertisementMaker(
             interfaceName: util.discoveryInterfaceName,
             attrs: <String, String>{
               util.syncgameSettingsAttr: _cc.makeSyncgroupName(settingsSuffix),
               util.syncgameGameStartDataAttr: gsd.toJSONString()
             },
-            addrs: <String>[_cc.makeSyncgroupName(gameSuffix)]));
+            addrs: <String>[
+              _cc.makeSyncgroupName(gameSuffix)
+            ]));
   }
 
   Future stopAdvertiseSettings() {
@@ -315,7 +317,7 @@ class SettingsManager {
       id = await _getUserID();
     }
 
-    return "${util.sgSuffix}-${id}";
+    return "${util.sgSuffix}-$id";
   }
 }
 
@@ -326,26 +328,27 @@ class SettingsScanHandler {
   CroupierClient _cc;
   Map<String, String> settingsAddrs;
   Map<String, String> gameAddrs;
-  util.keyValueCallback updateGamesCallback;
+  util.KeyValueCallback updateGamesCallback;
 
   SettingsScanHandler(this._cc, this.updateGamesCallback) {
     settingsAddrs = new Map<String, String>();
     gameAddrs = new Map<String, String>();
   }
 
-  void found(discovery.Service s) {
+  void found(discovery.Update s) {
     util.log(
-        "SettingsScanHandler Found ${s.instanceId} ${s.instanceName} ${s.addrs}");
+        "SettingsScanHandler Found ${s.id} ${s.interfaceName} ${s.addresses}");
 
-    if (s.addrs.length == 1 && s.attrs != null) {
+    if (s.addresses.length == 1 && s.attributes != null) {
       // Note: Assumes 1 address and attributes for the game.
-      settingsAddrs[s.instanceId] = s.attrs[util.syncgameSettingsAttr];
-      gameAddrs[s.instanceId] = s.addrs[0];
+      String id = s.id.toString();
+      settingsAddrs[id] = s.attributes[util.syncgameSettingsAttr];
+      gameAddrs[id] = s.addresses[0];
 
-      String gameSettingsJSON = s.attrs[util.syncgameGameStartDataAttr];
-      updateGamesCallback(gameAddrs[s.instanceId], gameSettingsJSON);
+      String gameSettingsJSON = s.attributes[util.syncgameGameStartDataAttr];
+      updateGamesCallback(gameAddrs[id], gameSettingsJSON);
 
-      _cc.joinSyncgroup(settingsAddrs[s.instanceId]);
+      _cc.joinSyncgroup(settingsAddrs[id]);
     } else {
       // An unexpected service was found. Who is advertising it?
       // https://github.com/vanadium/issues/issues/846
@@ -353,16 +356,17 @@ class SettingsScanHandler {
     }
   }
 
-  void lost(String instanceId) {
-    util.log("SettingsScanHandler Lost ${instanceId}");
+  void lost(List<int> idList) {
+    util.log("SettingsScanHandler Lost $idList");
 
     // TODO(alexfandrianto): Leave the syncgroup?
     // Looks like leave isn't actually implemented, so we can't do this.
-    String addr = gameAddrs[instanceId];
+    String id = idList.toString();
+    String addr = gameAddrs[id];
     if (addr != null) {
       updateGamesCallback(addr, null);
     }
-    settingsAddrs.remove(instanceId);
-    gameAddrs.remove(instanceId);
+    settingsAddrs.remove(id);
+    gameAddrs.remove(id);
   }
 }

@@ -26,12 +26,12 @@ typedef void VoidCallback();
 class Croupier {
   AppSettings appSettings;
   CroupierState state;
-  SettingsManager settings_manager;
+  SettingsManager settingsManager;
   CroupierSettings settings; // null, but loaded asynchronously.
-  Map<int,
-      CroupierSettings> settings_everyone; // empty, but loaded asynchronously
-  Map<String, GameStartData> games_found; // empty, but loads asynchronously
-  Map<int, int> players_found; // empty, but loads asynchronously
+  Map<int, CroupierSettings>
+      settingsEveryone; // empty, but loaded asynchronously
+  Map<String, GameStartData> gamesFound; // empty, but loads asynchronously
+  Map<int, int> playersFound; // empty, but loads asynchronously
   Game game; // null until chosen
   VoidCallback informUICb;
 
@@ -43,10 +43,10 @@ class Croupier {
 
   Croupier(this.appSettings) {
     state = CroupierState.welcome;
-    settings_everyone = new Map<int, CroupierSettings>();
-    games_found = new Map<String, GameStartData>();
-    players_found = new Map<int, int>();
-    settings_manager = new SettingsManager(
+    settingsEveryone = new Map<int, CroupierSettings>();
+    gamesFound = new Map<String, GameStartData>();
+    playersFound = new Map<int, int>();
+    settingsManager = new SettingsManager(
         appSettings,
         _updateSettingsEveryoneCb,
         _updateGamesFoundCb,
@@ -54,19 +54,19 @@ class Croupier {
         _updateGameStatusCb,
         _gameLogUpdateCb);
 
-    settings_manager.load().then((String csString) {
+    settingsManager.load().then((String csString) {
       settings = new CroupierSettings.fromJSONString(csString);
       if (this.informUICb != null) {
         this.informUICb();
       }
-      settings_manager.createSettingsSyncgroup(); // don't wait for this future.
+      settingsManager.createSettingsSyncgroup(); // don't wait for this future.
     });
   }
 
   // Updates the settings_everyone map as people join the main Croupier syncgroup
   // and change their settings.
   void _updateSettingsEveryoneCb(String key, String json) {
-    settings_everyone[int.parse(key)] =
+    settingsEveryone[int.parse(key)] =
         new CroupierSettings.fromJSONString(json);
     if (this.informUICb != null) {
       this.informUICb();
@@ -75,10 +75,10 @@ class Croupier {
 
   void _updateGamesFoundCb(String gameAddr, String jsonData) {
     if (jsonData == null) {
-      games_found.remove(gameAddr);
+      gamesFound.remove(gameAddr);
     } else {
       GameStartData gsd = new GameStartData.fromJSONString(jsonData);
-      games_found[gameAddr] = gsd;
+      gamesFound[gameAddr] = gsd;
     }
     if (this.informUICb != null) {
       this.informUICb();
@@ -92,15 +92,15 @@ class Croupier {
   }
 
   int userIDFromPlayerNumber(int playerNumber) {
-    return players_found.keys.firstWhere(
-        (int user) => players_found[user] == playerNumber,
+    return playersFound.keys.firstWhere(
+        (int user) => playersFound[user] == playerNumber,
         orElse: () => null);
   }
 
   void _setCurrentGame(Game g) {
     game = g;
     settings.lastGameID = g.gameID;
-    settings_manager.save(settings.userID, settings.toJSONString()); // async
+    settingsManager.save(settings.userID, settings.toJSONString()); // async
   }
 
   Game _createNewGame(GameType gt) {
@@ -114,7 +114,7 @@ class Croupier {
 
   void _quitGame() {
     if (game != null) {
-      settings_manager.quitGame();
+      settingsManager.quitGame();
       game = null;
     }
   }
@@ -122,7 +122,7 @@ class Croupier {
   CroupierSettings settingsFromPlayerNumber(int playerNumber) {
     int userID = userIDFromPlayerNumber(playerNumber);
     if (userID != null) {
-      return settings_everyone[userID];
+      return settingsEveryone[userID];
     }
     return null;
   }
@@ -135,13 +135,13 @@ class Croupier {
     String playerID = sync_util.playerIDFromPlayerKey(playerKey);
     int id = int.parse(playerID);
     if (playerNum == null) {
-      if (!players_found.containsKey(id)) {
+      if (!playersFound.containsKey(id)) {
         // The player exists but has not sat down yet.
-        players_found[id] = null;
+        playersFound[id] = null;
       }
     } else {
       int playerNumber = int.parse(playerNum);
-      players_found[id] = playerNumber;
+      playersFound[id] = playerNumber;
 
       // If the player number changed was ours, then set it on our game.
       if (id == settings.userID) {
@@ -168,7 +168,7 @@ class Croupier {
         }
         break;
       default:
-        print("Ignoring new status: ${newStatus}");
+        print("Ignoring new status: $newStatus");
     }
     if (this.informUICb != null) {
       this.informUICb();
@@ -196,19 +196,19 @@ class Croupier {
         GameType gt = data as GameType;
         _setCurrentGame(_createNewGame(gt));
 
-        _advertiseFuture = settings_manager
+        _advertiseFuture = settingsManager
             .createGameSyncgroup(gameTypeToString(gt), game.gameID)
             .then((GameStartData gsd) {
           // Only the game chooser should be advertising the game.
-          return settings_manager.advertiseSettings(gsd);
+          return settingsManager.advertiseSettings(gsd);
         }); // don't wait for this future.
 
         break;
       case CroupierState.joinGame:
         // Note that if we were in join game, we must have been scanning.
         _scanFuture.then((_) {
-          settings_manager.stopScanSettings();
-          games_found.clear();
+          settingsManager.stopScanSettings();
+          gamesFound.clear();
           _scanFuture = null;
         });
 
@@ -222,22 +222,22 @@ class Croupier {
         gsd.playerNumber = null; // At first, there is no player number.
         _setCurrentGame(_createExistingGame(gsd));
         String sgName;
-        games_found.forEach((String name, GameStartData g) {
+        gamesFound.forEach((String name, GameStartData g) {
           if (g == gsd) {
             sgName = name;
           }
         });
         assert(sgName != null);
 
-        players_found[gsd.ownerID] = null;
-        settings_manager.joinGameSyncgroup(sgName, gsd.gameID);
+        playersFound[gsd.ownerID] = null;
+        settingsManager.joinGameSyncgroup(sgName, gsd.gameID);
 
         break;
       case CroupierState.arrangePlayers:
         // Note that if we were arranging players, we might have been advertising.
         if (_advertiseFuture != null) {
           _advertiseFuture.then((_) {
-            settings_manager.stopAdvertiseSettings();
+            settingsManager.stopAdvertiseSettings();
             _advertiseFuture = null;
           });
         }
@@ -252,7 +252,7 @@ class Croupier {
         // Data might be GameStartData. If so, then we must advertise it.
         GameStartData gsd = data;
         if (gsd != null) {
-          _advertiseFuture = settings_manager.advertiseSettings(gsd);
+          _advertiseFuture = settingsManager.advertiseSettings(gsd);
         }
         break;
       default:
@@ -263,14 +263,14 @@ class Croupier {
     // They will need to be re-discovered in the future.
     switch (nextState) {
       case CroupierState.welcome:
-        games_found.clear();
-        players_found.clear();
+        gamesFound.clear();
+        playersFound.clear();
         _quitGame();
         break;
       case CroupierState.joinGame:
         // Start scanning for games since that's what's next for you.
         _scanFuture =
-            settings_manager.scanSettings(); // don't wait for this future.
+            settingsManager.scanSettings(); // don't wait for this future.
         break;
       case CroupierState.resumeGame:
         // We need to create the game again.
@@ -286,21 +286,20 @@ class Croupier {
 
   // Resumes the game from the given gameID.
   Future _resumeGameAsynchronously(int gameIDData) async {
-    GameStartData gsd = await settings_manager.getGameStartData(gameIDData);
+    GameStartData gsd = await settingsManager.getGameStartData(gameIDData);
     bool wasOwner = (gsd.ownerID == settings?.userID);
-    print(
-        "The game was ${gsd.toJSONString()}, and was I the owner? ${wasOwner}");
+    print("The game was ${gsd.toJSONString()}, and was I the owner? $wasOwner");
     _setCurrentGame(_createExistingGame(gsd));
 
-    String sgName = await settings_manager.getGameSyncgroup(gameIDData);
-    print("The sg name was ${sgName}");
-    await settings_manager.joinGameSyncgroup(sgName, gameIDData);
+    String sgName = await settingsManager.getGameSyncgroup(gameIDData);
+    print("The sg name was $sgName");
+    await settingsManager.joinGameSyncgroup(sgName, gameIDData);
 
     // Since initial scan processing is done, we can now set isCreator
     game.isCreator = wasOwner;
-    String gameStatus = await settings_manager.getGameStatus(gameIDData);
+    String gameStatus = await settingsManager.getGameStatus(gameIDData);
 
-    print("The game's status was ${gameStatus}");
+    print("The game's status was $gameStatus");
     // Depending on the game state, we should go to a different screen.
     switch (gameStatus) {
       case "RUNNING":

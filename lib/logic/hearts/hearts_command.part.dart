@@ -66,7 +66,7 @@ class HeartsCommand extends GameCommand {
 
   static String computeDeal(int playerId, List<Card> cards) {
     StringBuffer buff = new StringBuffer();
-    buff.write("${playerId}:");
+    buff.write("$playerId:");
     cards.forEach((card) => buff.write("${card.toString()}:"));
     buff.write("END");
     return buff.toString();
@@ -74,18 +74,18 @@ class HeartsCommand extends GameCommand {
 
   static String computePass(int senderId, List<Card> cards) {
     StringBuffer buff = new StringBuffer();
-    buff.write("${senderId}:");
+    buff.write("$senderId:");
     cards.forEach((card) => buff.write("${card.toString()}:"));
     buff.write("END");
     return buff.toString();
   }
 
   static String computeTake(int takerId) {
-    return "${takerId}:END";
+    return "$takerId:END";
   }
 
   static String computePlay(int playerId, Card c) {
-    return "${playerId}:${c.toString()}:END";
+    return "$playerId:${c.toString()}:END";
   }
 
   static String computeAsk() {
@@ -97,7 +97,7 @@ class HeartsCommand extends GameCommand {
   }
 
   static String computeReady(int playerId) {
-    return "${playerId}:END";
+    return "$playerId:END";
   }
 
   @override
@@ -107,7 +107,7 @@ class HeartsCommand extends GameCommand {
     // logic.
     HeartsGame game = g as HeartsGame;
 
-    print("HeartsCommand is checking: ${data}");
+    print("HeartsCommand is checking: $data");
     List<String> parts = data.split(":");
     switch (phase) {
       case "Deal":
@@ -218,7 +218,7 @@ class HeartsCommand extends GameCommand {
   void execute(Game g) {
     HeartsGame game = g as HeartsGame;
 
-    print("HeartsCommand is executing: ${data}");
+    print("HeartsCommand is executing: $data");
     List<String> parts = data.split(":");
     switch (phase) {
       case "Deal":
@@ -252,7 +252,7 @@ class HeartsCommand extends GameCommand {
 
         int numPassing = parts.length - 2; // not senderId and not end
         if (numPassing != 3) {
-          throw new StateError("Must pass 3 cards, attempted ${numPassing}");
+          throw new StateError("Must pass 3 cards, attempted $numPassing");
         }
 
         // The last part is 'END', but the rest are cards.
@@ -296,7 +296,7 @@ class HeartsCommand extends GameCommand {
         String reason = game.canPlay(playerId, c);
         if (reason != null) {
           throw new StateError(
-              "Player ${playerId} cannot play ${c.toString()} because ${reason}");
+              "Player $playerId cannot play ${c.toString()} because $reason");
         }
         this.transfer(hand, discard, c);
         game.asking = false;

@@ -56,6 +56,7 @@ class GameStartData {
 
   GameType get gameType => stringToGameType(type);
 
+  @override
   bool operator ==(Object other) {
     if (other is! GameStartData) {
       return false;
@@ -66,6 +67,13 @@ class GameStartData {
         gsd.gameID == gameID &&
         gsd.ownerID == ownerID;
   }
+
+  @override
+  int get hashCode =>
+      23 * type.hashCode +
+      37 * playerNumber.hashCode +
+      41 * gameID.hashCode +
+      43 * ownerID.hashCode;
 }
 
 // GameArrangeData details what a game needs before beginning.
@@ -87,40 +95,43 @@ typedef void VoidCallback();
 /// A game consists of multiple decks and tracks a single deck of cards.
 /// It also handles events; when cards are dragged to and from decks.
 abstract class Game {
-  GameArrangeData get gameArrangeData;
-  final GameType gameType;
-  String get gameTypeName; // abstract
-  bool isCreator; // True if this user created the game. Behavior can vary based on this flag, so it can make sense to defer setting it.
-
-  final List<List<Card>> cardCollections = new List<List<Card>>();
-  final List<Card> deck = new List<Card>.from(Card.All);
-  final int gameID;
-
-  final GameLog gamelog;
-
-  int _playerNumber;
-  int get playerNumber => _playerNumber;
-  // Some subclasses may wish to override this setter to do extra work.
-  void set playerNumber(int other) {
-    _playerNumber = other;
-  }
-
-  bool debugMode = false;
-  String debugString;
-
-  VoidCallback updateCallback; // Used to inform components of when a change has occurred. This is especially important when something non-UI related changes what should be drawn.
-
   // A super constructor, don't call this unless you're a subclass.
   Game.create(this.gameType, this.gamelog, int numCollections,
       {int gameID, bool isCreator})
       : gameID = gameID ?? new math.Random().nextInt(0x00FFFFFF),
         isCreator = isCreator ?? false {
-    print("The gameID is ${gameID}");
+    print("The gameID is $gameID");
     gamelog.setGame(this);
     for (int i = 0; i < numCollections; i++) {
       cardCollections.add(new List<Card>());
     }
   }
+
+  GameArrangeData get gameArrangeData;
+  final GameType gameType;
+  String get gameTypeName; // abstract
+  bool
+      isCreator; // True if this user created the game. Behavior can vary based on this flag, so it can make sense to defer setting it.
+
+  final List<List<Card>> cardCollections = new List<List<Card>>();
+  final List<Card> deck = new List<Card>.from(Card.all);
+  final int gameID;
+
+  final GameLog gamelog;
+
+  /*int _playerNumber;
+  int get playerNumber => _playerNumber;
+  // Some subclasses may wish to override this setter to do extra work.
+  void set playerNumber(int other) {
+    _playerNumber = other;
+  }*/
+  int playerNumber;
+
+  bool debugMode = false;
+  String debugString;
+
+  VoidCallback
+      updateCallback; // Used to inform components of when a change has occurred. This is especially important when something non-UI related changes what should be drawn.
 
   List<Card> deckPeek(int numCards, [int start = 0]) {
     assert(deck.length >= numCards);
@@ -145,7 +156,7 @@ abstract class Game {
       cardCollections[i].clear();
     }
     deck.clear();
-    deck.addAll(Card.All);
+    deck.addAll(Card.all);
   }
 
   // UNIMPLEMENTED

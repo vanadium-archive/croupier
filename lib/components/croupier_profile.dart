@@ -14,7 +14,7 @@ enum CroupierProfileComponentOrientation {
   textOnly
 }
 
-class CroupierProfileComponent extends StatelessComponent {
+class CroupierProfileComponent extends StatelessWidget {
   final CroupierSettings settings;
   final double height;
   final double width;
@@ -47,51 +47,52 @@ class CroupierProfileComponent extends StatelessComponent {
             settings: settings,
             orientation: CroupierProfileComponentOrientation.textOnly);
 
+  @override
   Widget build(BuildContext context) {
     switch (orientation) {
       case CroupierProfileComponentOrientation.standard:
         return new Container(
             height: this.height,
             width: this.width,
-            padding: const EdgeDims.all(padAmount),
+            padding: const EdgeInsets.all(padAmount),
             child: new Card(
                 color: new Color(settings.color),
                 child: new Column(children: [
                   new AssetImage(
                       name: CroupierSettings.makeAvatarUrl(settings.avatar)),
                   new Text(settings.name, style: style.Text.largeStyle)
-                ], justifyContent: FlexJustifyContent.spaceAround)));
+                ], mainAxisAlignment: MainAxisAlignment.spaceAround)));
       case CroupierProfileComponentOrientation.mini:
         return new Container(
             width: this.width,
             height: this.height,
-            padding: const EdgeDims.all(padAmount),
+            padding: const EdgeInsets.all(padAmount),
             child: new Card(
                 color: new Color(settings.color),
                 child: new Row(children: [
                   new AssetImage(
                       name: CroupierSettings.makeAvatarUrl(settings.avatar),
                       fit: ImageFit.scaleDown)
-                ], justifyContent: FlexJustifyContent.spaceAround)));
+                ], mainAxisAlignment: MainAxisAlignment.spaceAround)));
       case CroupierProfileComponentOrientation.horizontal:
         return new Card(
             color: new Color(settings.color),
             child: new Container(
-                padding: const EdgeDims.all(padAmount),
+                padding: const EdgeInsets.all(padAmount),
                 child: new Row(children: [
                   new AssetImage(
                       name: CroupierSettings.makeAvatarUrl(settings.avatar),
                       fit: ImageFit.scaleDown),
                   new Text(settings.name, style: style.Text.hugeStyle)
-                ], justifyContent: FlexJustifyContent.collapse)));
+                ], mainAxisAlignment: MainAxisAlignment.collapse)));
       case CroupierProfileComponentOrientation.textOnly:
         return new Card(
             color: new Color(settings.color),
             child: new Container(
-                padding: const EdgeDims.all(padAmount),
+                padding: const EdgeInsets.all(padAmount),
                 child: new Row(children: [
                   new Text(settings.name, style: style.Text.largeStyle)
-                ], justifyContent: FlexJustifyContent.collapse)));
+                ], mainAxisAlignment: MainAxisAlignment.collapse)));
     }
   }
 }

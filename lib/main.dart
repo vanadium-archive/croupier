@@ -14,28 +14,31 @@ import 'settings/client.dart' as settings_client;
 import 'sound/sound_assets.dart';
 import 'styles/common.dart' as style;
 
-class CroupierApp extends StatefulComponent {
+class CroupierApp extends StatefulWidget {
   settings_client.AppSettings appSettings;
   SoundAssets sounds;
   CroupierApp(this.appSettings, this.sounds);
 
+  @override
   CroupierAppState createState() => new CroupierAppState();
 }
 
 class CroupierAppState extends State<CroupierApp> {
   Croupier croupier;
 
+  @override
   void initState() {
     super.initState();
     this.croupier = new Croupier(config.appSettings);
   }
 
+  @override
   Widget build(BuildContext context) {
     return new MaterialApp(
         title: 'Croupier',
-        routes: <String, RouteBuilder>{
-          "/": (RouteArguments args) => new MainRoute(croupier, config.sounds),
-          "/settings": (RouteArguments args) => new SettingsRoute(croupier)
+        routes: <String, WidgetBuilder>{
+          "/": (BuildContext _) => new MainRoute(croupier, config.sounds),
+          "/settings": (BuildContext _) => new SettingsRoute(croupier)
         },
         theme: style.theme);
   }
@@ -49,12 +52,13 @@ AssetBundle _initBundle() {
 }
 
 Future<SoundAssets> loadAudio() async {
+  // TODO(alexfandrianto): Sound is turned off since it's not convenient to get
+  // HEAD Mojo Shell built with the media service.
+
   final AssetBundle _bundle = _initBundle();
   SoundAssets _sounds = new SoundAssets(_bundle);
 
   // Load sounds in parallel.
-  // TODO(alexfandrianto): Sound is turned off since it's not convenient to get
-  // HEAD Mojo Shell built with the media service.
   //await Future.wait([_sounds.load("whooshIn"), _sounds.load("whooshOut")]);
   return _sounds;
 }

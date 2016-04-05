@@ -29,6 +29,13 @@ class HeartsGame extends Game {
 
   static const maxScore = 100; // Play until someone gets to 100.
 
+  HeartsGame({int gameID, bool isCreator})
+      : super.create(GameType.hearts, new HeartsLog(), 16,
+            gameID: gameID, isCreator: isCreator) {
+    resetGame();
+    unsetReady();
+  }
+
   // Note: These cards are final because the "classic" deck has 52 cards.
   // It is up to the renderer to reskin those cards as needed.
   final Card twoOfClubs = new Card("classic", "c2");
@@ -42,7 +49,7 @@ class HeartsGame extends Game {
   HeartsPhase _phase = HeartsPhase.deal;
   HeartsPhase get phase => _phase;
   void set phase(HeartsPhase other) {
-    print('setting phase from ${_phase} to ${other}');
+    print('setting phase from $_phase to $other');
     _phase = other;
   }
 
@@ -66,13 +73,6 @@ class HeartsGame extends Game {
   List<int> scores = [0, 0, 0, 0];
   List<int> deltaScores = [0, 0, 0, 0];
   List<bool> ready;
-
-  HeartsGame({int gameID, bool isCreator})
-      : super.create(GameType.hearts, new HeartsLog(), 16,
-            gameID: gameID, isCreator: isCreator) {
-    resetGame();
-    unsetReady();
-  }
 
   void resetGame() {
     this.resetCards();
@@ -204,7 +204,8 @@ class HeartsGame extends Game {
 
   bool get hasGameEnded => this.scores.reduce(math.max) >= HeartsGame.maxScore;
 
-  bool get allDealt => cardCollections[playerA].length == 13 &&
+  bool get allDealt =>
+      cardCollections[playerA].length == 13 &&
       cardCollections[playerB].length == 13 &&
       cardCollections[playerC].length == 13 &&
       cardCollections[playerD].length == 13;
@@ -224,7 +225,8 @@ class HeartsGame extends Game {
   bool get allPassed => numPassed == 4;
   bool hasTaken(int player) =>
       cardCollections[getTakeTarget(player) + offsetPass].length == 0;
-  bool get allTaken => cardCollections[playerPassA].length == 0 &&
+  bool get allTaken =>
+      cardCollections[playerPassA].length == 0 &&
       cardCollections[playerPassB].length == 0 &&
       cardCollections[playerPassC].length == 0 &&
       cardCollections[playerPassD].length == 0;
@@ -298,6 +300,7 @@ class HeartsGame extends Game {
 
   static final GameArrangeData _arrangeData =
       new GameArrangeData(true, new Set.from([0, 1, 2, 3]));
+  @override
   GameArrangeData get gameArrangeData => _arrangeData;
 
   @override
@@ -315,7 +318,8 @@ class HeartsGame extends Game {
   }
 
   // Note that this will be called by the UI.
-  // TODO: Does this really need to be overridden? That seems like bad structure in GameComponent.
+  // TODO(alexfandrianto): Does this really need to be overridden?
+  // That seems like bad structure in GameComponent.
   // Overrides Game's move method with the "move" logic for Hearts. Used for drag-drop.
   // Note that this can only be called in the Play Phase of your turn.
   // The UI will handle the drag-drop of the Pass Phase with its own state.
@@ -337,12 +341,12 @@ class HeartsGame extends Game {
     }
     if (destId != playerNumber + offsetPlay) {
       throw new StateError(
-          'player ${playerNumber} is not playing to the correct list: ${destId}');
+          'player $playerNumber is not playing to the correct list: $destId');
     }
 
     gamelog.add(new HeartsCommand.play(playerNumber, card));
 
-    debugString = 'Play ${i} ${card.toString()}';
+    debugString = 'Play $i ${card.toString()}';
     print(debugString);
   }
 
@@ -410,13 +414,13 @@ class HeartsGame extends Game {
       return "It is not the Play phase of Hearts.";
     }
     if (!cardCollections[player].contains(c)) {
-      return "Player ${player} does not have the card (${c.toString()})";
+      return "Player $player does not have the card (${c.toString()})";
     }
     if (this.allPlayed) {
       return "Trick not taken yet.";
     }
     if (this.whoseTurn != player && !lenient) {
-      return "It is not Player ${player}'s turn.";
+      return "It is not Player $player's turn.";
     }
     if (trickNumber == 0 && this.numPlayed == 0 && c != twoOfClubs) {
       return "You must play the 2 of Clubs";
@@ -470,7 +474,7 @@ class HeartsGame extends Game {
     deltaScores = [0, 0, 0, 0];
 
     // Count up points and check if someone shot the moon.
-    int shotMoon = null;
+    int shotMoon;
     for (int i = 0; i < 4; i++) {
       int delta = computeScore(i);
       this.deltaScores[i] = delta;

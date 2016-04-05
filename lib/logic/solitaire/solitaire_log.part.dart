@@ -31,7 +31,7 @@ class SolitaireLog extends GameLog {
       this.update(sc);
       seenKeys.add(key);
     } else {
-      print("The log is ignoring repeated key: ${key}");
+      print("The log is ignoring repeated key: $key");
     }
   }
 

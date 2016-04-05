@@ -5,7 +5,7 @@
 import 'dart:async';
 
 import 'package:v23discovery/discovery.dart' as discovery;
-import 'package:flutter/services.dart' show shell;
+import 'package:flutter/shell.dart' show shell;
 
 /// Make this into the Dart Discovery client
 /// https://github.com/vanadium/issues/issues/835
@@ -17,21 +17,17 @@ class DiscoveryClient {
   final discovery.Client _discoveryClient =
       new discovery.Client(shell.connectToService, _discoveryUrl);
 
-  static discovery.Service serviceMaker(
-      {String instanceId,
-      String instanceName,
+  static discovery.Advertisement advertisementMaker(
+      {List<int> id,
       String interfaceName,
       Map<String, String> attrs,
       List<String> addrs}) {
     // Discovery requires that some of these values must be set.
     assert(interfaceName != null && interfaceName != '');
     assert(addrs != null && addrs.length > 0);
-    return new discovery.Service()
-      ..instanceId = instanceId
-      ..instanceName = instanceName
-      ..interfaceName = interfaceName
-      ..attrs = attrs
-      ..addrs = addrs;
+    return new discovery.Advertisement(interfaceName, addrs)
+      ..id = id
+      ..attributes = attrs;
   }
 
   // Scans for this query and handles found/lost objects with the handler.
@@ -46,11 +42,11 @@ class DiscoveryClient {
     discovery.Scanner scanner = await _discoveryClient.scan(query);
     _scanners[key] = scanner;
 
-    scanner.onUpdate.listen((discovery.ScanUpdate update) {
-      if (update.updateType == discovery.UpdateType.found) {
-        onFound(update.service);
+    scanner.onUpdate.listen((discovery.Update update) {
+      if (update.updateType == discovery.UpdateTypes.found) {
+        onFound(update);
       } else {
-        onLost(update.service.instanceId);
+        onLost(update.id);
       }
     });
 
@@ -69,14 +65,14 @@ class DiscoveryClient {
 
   // Advertises the given service information. Keeps track of the advertiser
   // handle via the key.
-  Future advertise(String key, discovery.Service service,
+  Future advertise(String key, discovery.Advertisement ad,
       {List<String> visibility}) async {
     // Return the existing advertisement if one is already going.
     if (_advertisers.containsKey(key)) {
       return _advertisers[key];
     }
     _advertisers[key] =
-        await _discoveryClient.advertise(service, visibility: visibility);
+        await _discoveryClient.advertise(ad, visibility: visibility);
 
     return _advertisers[key];
   }

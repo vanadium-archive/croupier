@@ -10,11 +10,11 @@ import '../../settings/client.dart' as settings_client;
 import 'util.dart' as util;
 
 class SettingsManager {
-  final util.keyValueCallback updateCallback;
-  final util.keyValueCallback updateGamesCallback;
-  final util.keyValueCallback updatePlayerFoundCallback;
-  final util.keyValueCallback updateGameStatusCallback;
-  final util.asyncKeyValueCallback updateGameLogCallback;
+  final util.KeyValueCallback updateCallback;
+  final util.KeyValueCallback updateGamesCallback;
+  final util.KeyValueCallback updatePlayerFoundCallback;
+  final util.KeyValueCallback updateGameStatusCallback;
+  final util.AsyncKeyValueCallback updateGameLogCallback;
 
   SettingsManager(
       settings_client.AppSettings _,
@@ -35,12 +35,12 @@ class SettingsManager {
       }
       return new Future<String>(() => _data["settings"]);
     }
-    return new Future<String>(() => _data["${userID}"]);
+    return new Future<String>(() => _data["$userID"]);
   }
 
   Future save(int userID, String data) {
     _data["settings"] = data;
-    _data["${userID}"] = data;
+    _data["$userID"] = data;
     return new Future(() => null);
   }
 

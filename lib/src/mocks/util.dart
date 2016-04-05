@@ -4,8 +4,8 @@
 
 import 'dart:async';
 
-typedef void keyValueCallback(String key, String value);
-typedef Future asyncKeyValueCallback(String key, String value, bool duringScan);
+typedef void KeyValueCallback(String key, String value);
+typedef Future AsyncKeyValueCallback(String key, String value, bool duringScan);
 
 String gameIDFromGameKey(String gameKey) {
   return null;

@@ -39,7 +39,7 @@ class SolitaireCommand extends GameCommand {
   // Note: Depending on the target's position w.r.t. the targetPile, this may
   // actually move a group of cards instead.
   static String computeMove(Card target, int targetPile) {
-    return "${target.toString()}:${targetPile}:END";
+    return "${target.toString()}:$targetPile:END";
   }
 
   // Note: If there are no cards to draw, this will reset the draw pile.
@@ -48,7 +48,7 @@ class SolitaireCommand extends GameCommand {
   }
 
   static String computeFlip(int targetPile) {
-    return "${targetPile}:END";
+    return "$targetPile:END";
   }
 
   @override
@@ -58,7 +58,7 @@ class SolitaireCommand extends GameCommand {
     // logic.
     SolitaireGame game = g as SolitaireGame;
 
-    print("SolitaireCommand is checking: ${command}");
+    print("SolitaireCommand is checking: $command");
     List<String> parts = data.split(":");
     switch (phase) {
       case "Deal":
@@ -125,7 +125,7 @@ class SolitaireCommand extends GameCommand {
   void execute(Game g) {
     SolitaireGame game = g as SolitaireGame;
 
-    print("SolitaireCommand is executing: ${command}");
+    print("SolitaireCommand is executing: $command");
     List<String> parts = data.split(":");
     switch (phase) {
       case "Deal":
@@ -177,7 +177,7 @@ class SolitaireCommand extends GameCommand {
           throw new StateError("Cannot move unknown card ${c.toString()}");
         }
         if (targetId < 0 || targetId >= game.cardCollections.length) {
-          throw new StateError("Cannot move to unknown pile ${targetId}");
+          throw new StateError("Cannot move to unknown pile $targetId");
         }
         List<Card> source = game.cardCollections[sourceId];
         List<Card> dest = game.cardCollections[targetId];
@@ -186,7 +186,7 @@ class SolitaireCommand extends GameCommand {
         String reason = game.canPlay(c, dest);
         if (reason != null) {
           throw new StateError(
-              "Cannot move ${c.toString()} to Pile ${targetId} because ${reason}");
+              "Cannot move ${c.toString()} to Pile $targetId because $reason");
         }
         this.transferGroup(source, dest, c);
         return;
@@ -216,8 +216,7 @@ class SolitaireCommand extends GameCommand {
 
         int flipId = int.parse(parts[0]);
         if (flipId < 0 || flipId >= 7) {
-          throw new StateError(
-              "Cannot process flip command for index ${flipId}");
+          throw new StateError("Cannot process flip command for index $flipId");
         }
 
         List<Card> flipSource =
@@ -227,11 +226,11 @@ class SolitaireCommand extends GameCommand {
 
         if (flipDest.length != 0) {
           throw new StateError(
-              "Cannot flip ${flipId} because destination has cards");
+              "Cannot flip $flipId because destination has cards");
         }
         if (flipSource.length == 0) {
           throw new StateError(
-              "Cannot flip ${flipId} because source has no cards");
+              "Cannot flip $flipId because source has no cards");
         }
         this.transfer(flipSource, flipDest, flipSource[flipSource.length - 1]);
         return;

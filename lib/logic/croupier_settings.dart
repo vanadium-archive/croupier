@@ -8,18 +8,6 @@ import 'dart:convert' show JSON;
 /// CroupierSettings is a simple struct that contains player-specific settings.
 /// Players can modify a subset of their settings via the UI.
 class CroupierSettings {
-  // Values the user does not set.
-  int userID;
-  int lastGameID; // Note: Some versions of Croupier do not support lastGameID.
-  bool get hasLastGame => lastGameID != null;
-
-  // Values the user can customize
-  String avatar;
-  String name;
-  int color;
-
-  static String makeAvatarUrl(String key) => 'images/avatars/${key}';
-
   CroupierSettings.random() {
     _randomInitialization();
   }
@@ -39,6 +27,18 @@ class CroupierSettings {
     color = data["color"];
   }
 
+  // Values the user does not set.
+  int userID;
+  int lastGameID; // Note: Some versions of Croupier do not support lastGameID.
+  bool get hasLastGame => lastGameID != null;
+
+  // Values the user can customize
+  String avatar;
+  String name;
+  int color;
+
+  static String makeAvatarUrl(String key) => 'images/avatars/$key';
+
   String getStringValue(String key) {
     switch (key) {
       case "name":
@@ -46,7 +46,7 @@ class CroupierSettings {
       case "avatar":
         return avatar;
       case "color":
-        return "${color}";
+        return "$color";
       default:
         return null;
     }
@@ -55,11 +55,11 @@ class CroupierSettings {
   void setStringValue(String key, String data) {
     switch (key) {
       case "name":
-        print("Setting name to ${data}");
+        print("Setting name to $data");
         name = data;
         break;
       case "avatar":
-        print("Setting avatar to ${data}");
+        print("Setting avatar to $data");
         avatar = data;
         break;
       case "color":
@@ -73,7 +73,7 @@ class CroupierSettings {
         } catch (e) {
           print(e);
         }
-        print("Setting color to 0x${newColor}.");
+        print("Setting color to 0x$newColor.");
         color = newColor;
         break;
       default:

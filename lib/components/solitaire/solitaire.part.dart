@@ -9,6 +9,7 @@ class SolitaireGameComponent extends GameComponent {
       {Key key, double width, double height})
       : super(croupier, sounds, cb, key: key, width: width, height: height);
 
+  @override
   SolitaireGameComponentState createState() =>
       new SolitaireGameComponentState();
 }
@@ -83,7 +84,7 @@ class SolitaireGameComponentState
             decoration: new BoxDecoration(
                 border: new Border.all(width: 1.0, color: borderColor),
                 backgroundColor: backgroundColor),
-            padding: new EdgeDims.all(10.0),
+            padding: new EdgeInsets.all(10.0),
             child: new Text(text)),
         onPressed: inactive ? null : callback);
   }
@@ -118,7 +119,7 @@ class SolitaireGameComponentState
       if (reason == null) {
         game.move(card, collection);
       } else {
-        print("You can't do that! ${reason}");
+        print("You can't do that! $reason");
         game.debugString = reason;
       }
     });
@@ -194,9 +195,12 @@ class SolitaireGameComponentState
     }
 
     return new Column(children: [
-      new Row(children: row1, justifyContent: FlexJustifyContent.spaceBetween),
-      new Row(children: row2, justifyContent: FlexJustifyContent.spaceBetween),
-      new Row(children: row3, justifyContent: FlexJustifyContent.spaceBetween),
+      new Row(
+          children: row1, mainAxisAlignment: MainAxisAlignment.spaceBetween),
+      new Row(
+          children: row2, mainAxisAlignment: MainAxisAlignment.spaceBetween),
+      new Row(
+          children: row3, mainAxisAlignment: MainAxisAlignment.spaceBetween),
       _makeDebugButtons()
     ]);
   }
@@ -222,6 +226,6 @@ class SolitaireGameComponentState
           new Text('Player ${game.playerNumber}'),
           _makeButton('Deal', game.dealCardsUI),
           _makeDebugButtons()
-        ], justifyContent: FlexJustifyContent.spaceBetween));
+        ], mainAxisAlignment: MainAxisAlignment.spaceBetween));
   }
 }

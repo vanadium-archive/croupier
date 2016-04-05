@@ -11,7 +11,7 @@ const String tableNameGames = 'games';
 const String tableNameSettings = 'table_settings';
 
 String makeSgPrefix(String mounttable, String deviceID) {
-  return "${mounttable}/croupier-${deviceID}/%%sync";
+  return "$mounttable/croupier-$deviceID/%%sync";
 }
 
 const String sgSuffix = 'discovery';
@@ -22,8 +22,8 @@ const String discoveryInterfaceName = 'CroupierSettingsAndGame';
 const String settingsPersonalKey = "personal";
 const String settingsWatchSyncPrefix = "users";
 
-typedef void keyValueCallback(String key, String value);
-typedef Future asyncKeyValueCallback(String key, String value, bool duringScan);
+typedef void KeyValueCallback(String key, String value);
+typedef Future AsyncKeyValueCallback(String key, String value, bool duringScan);
 
 const String openPermsJson =
     '{"Admin":{"In":["..."]},"Write":{"In":["..."]},"Read":{"In":["..."]},"Resolve":{"In":["..."]},"Debug":{"In":["..."]}}';
@@ -36,11 +36,11 @@ void log(String msg) {
 
 // data should contain a JSON-encoded logic_game.GameStartData
 String syncgameSuffix(String data) {
-  return "${sgSuffixGame}-${data}";
+  return "$sgSuffixGame-$data";
 }
 
 String syncgamePrefix(int gameID) {
-  return "${gameID}";
+  return "$gameID";
 }
 
 const String syncgameSettingsAttr = "settings_sgname";
@@ -62,27 +62,27 @@ String playerIDFromPlayerKey(String playerKey) {
 }
 
 String gameOwnerKey(int gameID) {
-  return "${gameID}/owner";
+  return "$gameID/owner";
 }
 
 String gameTypeKey(int gameID) {
-  return "${gameID}/type";
+  return "$gameID/type";
 }
 
 String gameStatusKey(int gameID) {
-  return "${gameID}/status";
+  return "$gameID/status";
 }
 
 String gameSyncgroupKey(int gameID) {
-  return "${gameID}/game_sg";
+  return "$gameID/game_sg";
 }
 
 String playerSettingsKeyFromData(int gameID, int userID) {
-  return "${gameID}/players/${userID}/settings_sg";
+  return "$gameID/players/$userID/settings_sg";
 }
 
 String playerNumberKeyFromData(int gameID, int userID) {
-  return "${gameID}/players/${userID}/player_number";
+  return "$gameID/players/$userID/player_number";
 }
 
 bool isSettingsKey(String key) {
@@ -90,7 +90,7 @@ bool isSettingsKey(String key) {
 }
 
 String settingsDataKeyFromUserID(int userID) {
-  return "${settingsWatchSyncPrefix}/${userID}/settings";
+  return "$settingsWatchSyncPrefix/$userID/settings";
 }
 
 String userIDFromSettingsDataKey(String dataKey) {
