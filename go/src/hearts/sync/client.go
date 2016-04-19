@@ -20,7 +20,7 @@ import (
 	ldiscovery "v.io/x/ref/lib/discovery"
 	"v.io/x/ref/lib/discovery/plugins/mdns"
 	"v.io/x/ref/lib/signals"
-	_ "v.io/x/ref/runtime/factories/generic"
+	_ "v.io/x/ref/runtime/factories/roaming"
 )
 
 // Searches for new syncgroups being advertised, sends found syncgroups to sgChan
